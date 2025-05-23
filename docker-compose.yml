@@ -1,0 +1,13 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./:/app
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    stdin_open: true
+    tty: true
+    command: sh
