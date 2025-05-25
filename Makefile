@@ -27,6 +27,7 @@ up: build
 up-detach: build
 	docker-compose up -d
 
+# docker run -it --rm --entrypoint sh node:22-alpine
 shell: build
 	docker-compose run --rm --service-ports app sh
 
@@ -37,6 +38,8 @@ clean:
 	docker-compose down --rmi all --volumes --remove-orphans
 
 restart: down up
+
+re: clean shell
 
 ps:
 	docker-compose ps
@@ -53,4 +56,5 @@ logs:
 	clean \
 	restart \
 	ps \
+	re \
 	logs
