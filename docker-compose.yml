@@ -1,0 +1,20 @@
+services:
+  dev_fabi:
+    container_name: dev_fabi
+    image: dev_fabi
+    build:
+      context: .
+      dockerfile: docker/dev_fabi.Dockerfile
+    working_dir: /home/${USER}/app
+    tty: true
+
+    user: "${UID}:${GID}"
+    volumes:
+      - .:/home/${USER}/app
+      - .config/nvim:/home/${USER}/.config/nvim
+      - ${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY}:${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY}
+      - ${XDG_RUNTIME_DIR}/bus:${XDG_RUNTIME_DIR}/bus   # lets wl-clipboard announce selections
+    environment:
+      - WAYLAND_DISPLAY
+      - XDG_RUNTIME_DIR                   # will be /run/user/1000 on Ubuntu
+      - DBUS_SESSION_BUS_ADDRESS=unix:path=${XDG_RUNTIME_DIR}/bus
