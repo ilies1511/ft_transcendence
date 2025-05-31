@@ -1,4 +1,6 @@
 
+.PHONY: all down ff_clean_docker dev_fabi
+
 all:
 
 down:
@@ -14,7 +16,15 @@ ff_clean_docker:
 
 
 dev_fabi:
-	docker compose build --build-arg UID=$(id -u) --build-arg GID=$(id -g) \
-		&& docker compose up dev_fabi -d \
-		&& docker exec -it dev_fabi bash
+	docker compose build \
+		--build-arg UID=$(shell id -u) \
+		--build-arg GID=$(shell id -g) \
+		--build-arg USERNAME=$(shell id -un) \
+	&& docker compose up -d dev_fabi \
+	&& docker exec -it dev_fabi bash
+
+#dev_fabi:
+#	docker compose build --build-arg UID=$(id -u) --build-arg GID=$(id -g) \
+#		&& docker compose up dev_fabi -d \
+#		&& docker exec -it dev_fabi bash
 

@@ -6,11 +6,14 @@ services:
     container_name: dev_fabi
     tty: true
     volumes:
-      - .:/home/fabi/app
-      - .config/nvim:/home/fabi/.config/nvim
+      - .:/home/$USER/app
+      - .config/nvim:/home/$USER/.config/nvim
     environment:
       - WAYLAND_DISPLAY
       - XDG_RUNTIME_DIR
+    ports:
+      - "8080:8080"
+      - "3030:3030"
 
 #services:
 #  dev_fabi:
