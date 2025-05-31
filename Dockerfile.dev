@@ -1,7 +1,13 @@
 FROM node:22-alpine
 
-RUN npm install -g ts-node typescript
-
 WORKDIR /app
+
+# 1) package.json (und ggf. package-lock.json) kopieren
+COPY package*.json ./
+
+# 2) Dependencies IM IMAGE installieren (dazu zählt jetzt auch lodash)
+RUN npm ci
+
+RUN npm install -g ts-node typescript nodemon
 
 CMD ["sh"]
