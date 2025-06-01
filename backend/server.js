@@ -3,8 +3,13 @@ const fs = require('fs');
 const _ = require('lodash');
 
 const server = http.createServer((request, response) => {
-	console.log(request.url, request.method);
+
+	// console.log(request.url, request.method);
 	// console.log(request);
+
+	const num = _.random(0, 20);
+	console.log(num);
+
 	response.setHeader('Content-Type', 'text/html');
 
 	let path = './files/';
