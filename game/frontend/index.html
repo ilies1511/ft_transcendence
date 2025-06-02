@@ -1,13 +1,23 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Frontend</title>
+  <meta charset="UTF-8">
+  <title>Babylon.js No Webpack</title>
+  <style>
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    canvas { width: 100%; height: 100%; display: block; }
+  </style>
 </head>
 <body>
-  <h1>Frontend Page</h1>
-  <p id="data">Loading...</p>
+  <canvas id="renderCanvas"></canvas>
 
-  <script src="script.js"></script>
+  <!-- Babylon.js from CDN -->
+  <script type="module">
+    import * as BABYLON from 'https://cdn.jsdelivr.net/npm/babylonjs@6.47.0/+esm';
+    import './script.js';
+
+    // index.js should export a function or execute setup here
+  </script>
 </body>
 </html>
 

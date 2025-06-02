@@ -1,4 +1,3 @@
-"use strict";
 //const ws: any = new WebSocket("ws://localhost:8080");
 //const messages: any = document.getElementById("messages");
 //const input: any = document.getElementById("input");
@@ -22,29 +21,40 @@
 //  messages.appendChild(msg);
 //  input.value = "";
 //};
-Object.defineProperty(exports, "__esModule", { value: true });
-const babylonjs_1 = require("babylonjs");
+
+
+
+import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, MeshBuilder } from "babylonjs";
+
 // Get the canvas element
-const canvas = document.getElementById("renderCanvas");
+const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
+
 // Create the Babylon engine and scene
-const engine = new babylonjs_1.Engine(canvas, true);
-const scene = new babylonjs_1.Scene(engine);
+const engine = new Engine(canvas, true);
+const scene = new Scene(engine);
+
 // Create a camera and attach controls
-const camera = new babylonjs_1.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 4, 4, babylonjs_1.Vector3.Zero(), scene);
+const camera = new ArcRotateCamera("camera", Math.PI / 2, Math.PI / 4, 4, Vector3.Zero(), scene);
 camera.attachControl(canvas, true);
+
 // Add a light
-const light = new babylonjs_1.HemisphericLight("light", new babylonjs_1.Vector3(1, 1, 0), scene);
+const light = new HemisphericLight("light", new Vector3(1, 1, 0), scene);
+
 // Create a box
-const box = babylonjs_1.MeshBuilder.CreateBox("box", {}, scene);
+const box = MeshBuilder.CreateBox("box", {}, scene);
+
 // Rotate box every frame
 scene.onBeforeRenderObservable.add(() => {
-    box.rotation.y += 0.01;
+  box.rotation.y += 0.01;
 });
+
 // Run the render loop
 engine.runRenderLoop(() => {
-    scene.render();
+  scene.render();
 });
+
 // Resize on window resize
 window.addEventListener("resize", () => {
-    engine.resize();
+  engine.resize();
 });
+

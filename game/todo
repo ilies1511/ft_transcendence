@@ -1,0 +1,26 @@
+
+misc:
+	- 1.[ ] figure out proper way to handle js packages and ts compilation
+
+game:
+	- 2. [ ] implement a ball that moves on each frame using babylon-js
+	- [ ] implement basic pong using babylon-js
+
+game state:
+	- 3. [ ] frontend should connect via a socket to the backend
+	- 4. [ ] backend should be responsible for the balls position 
+		- frontend make a basic request by sending a single char through the socket
+		- backend always repsonds with the current ball position, frontend updates the render accordingly
+	- 6. [ ] backend: each game should have a unique id
+	- 7. [ ] backend: manage multiple games at the same time
+	- 8. [ ] add sidewalls with ball interaction
+	- 9. [ ] movable player paddles with ball interaction
+	- 10. [ ] point scoring
+	- 11. [ ] score board
+	- 12. [ ] win conditon (timer/score)
+
+
+sockets:
+	- 5. [ ] backend/frontend: implement a rquest-response structure where the client can request the game state and render the game accordingly
+
+
