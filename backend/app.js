@@ -4,16 +4,25 @@ const express = require('express');
 //here, we are invoking that fnc to create an instance of express app --> gets stored in 'app'
 const app = express();
 
+//register view engine
+app.set('view engine', 'ejs');
+
 app.listen(3000);
 
 //listens for request
 app.get('/', (req, res) => {
+	res.render('index', {
+		title: 'Ilies',
+		message: 'Alo',
+		description: 'Ouey Zizou'
+		});
 	// res.send('<p>Ouey Zizou</p>');
-	res.sendFile('./files/index.html', {root: __dirname});
+	// res.sendFile('./files/index.html', {root: __dirname});
 });
 
 app.get('/about', (req, res) => {
-	res.sendFile('./files/about.html', {root: __dirname});
+	res.render('about');
+	// res.sendFile('./files/about.html', {root: __dirname});
 	// res.send('<p>About Zizou</p>');
 });
 
@@ -27,5 +36,6 @@ app.get('/about-us', (req, res) => {
 	everytime if Code reaches that point
 */
 app.use((req, res) => {
-	res.status(404).sendFile('./files/404.html', {root: __dirname});
+	res.status(404).render('404');
+	// res.status(404).sendFile('./files/404.html', {root: __dirname});
 });
