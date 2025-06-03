@@ -26,5 +26,4 @@ dev_fabi:
 #dev_fabi:
 #	docker compose build --build-arg UID=$(id -u) --build-arg GID=$(id -g) \
 #		&& docker compose up dev_fabi -d \
-#		&& docker exec -it dev_fabi bash
-
+#		&& docker exec -it dev_fabi bas

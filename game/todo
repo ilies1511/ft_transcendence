@@ -1,6 +1,7 @@
 
 misc:
-	- 1.[ ] figure out proper way to handle js packages and ts compilation
+	- 1.[x] frontend: figure out proper way to handle js packages and ts compilation
+	- ?.[ ] backend: figure out proper way to handle js packages and ts compilation
 
 game:
 	- 2. [ ] implement a ball that moves on each frame using babylon-js

@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
 #install node
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
 RUN apt install nodejs -y
-RUN npm install -g typescript
+RUN npm install -g typescript --save-dev
 
 # Clipboard helpers for Neovim ---------------------
 RUN apt-get update && apt-get install -y \
@@ -27,8 +27,8 @@ RUN cd neovim \
 	&& make CMAKE_BUILD_TYPE=RelWithDebInfo \
 	&& make install
 
-RUN npm install -g http-server
-RUN npm install -g express
+#RUN npm install -g http-server
+#RUN npm install -g express
 
 ARG USERNAME=frapp
 ARG UID=1000
