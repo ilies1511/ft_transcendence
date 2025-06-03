@@ -1,14 +1,14 @@
 
 misc:
 	- 1.[x] frontend: figure out proper way to handle js packages and ts compilation
-	- ?.[ ] backend: figure out proper way to handle js packages and ts compilation
+	- 3.1.[ ] backend: figure out proper way to handle js packages and ts compilation
 
 game:
-	- 2. [ ] implement a ball that moves on each frame using babylon-js
+	- 2. [x] implement a ball that moves on each frame using babylon-js
 	- [ ] implement basic pong using babylon-js
 
 game state:
-	- 3. [ ] frontend should connect via a socket to the backend
+	- 3.2. [ ] frontend should connect via a socket to the backend
 	- 4. [ ] backend should be responsible for the balls position 
 		- frontend make a basic request by sending a single char through the socket
 		- backend always repsonds with the current ball position, frontend updates the render accordingly
