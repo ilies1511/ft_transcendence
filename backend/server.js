@@ -24,6 +24,10 @@ const server = http.createServer((request, response) => {
 			path += 'about.html';
 			response.statusCode = 200;
 			break;
+		case '/alo':
+			path += 'about.html';
+			response.statusCode = 200;
+			break;
 		case '/about-us':
 			response.statusCode = 307;
 			response.setHeader('Location', '/about')

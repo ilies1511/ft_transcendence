@@ -1,16 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Node.js Crash Course</title>
-</head>
+<!-- <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog Ninja | <%= titel%> </title>
+</head> -->
+<%- include('./partials/head.ejs') %>
 <body>
-  <h1>Home</h1>
-  <h2>Your path to becoming a Node.js ninja!</h2>
-  <nav>
-    <a href="/">Homepage</a>
-    <a href="/about">About page</a>
-  </nav>
+  <!-- <% const name = 'Zizou' %> -->
+  <!-- <nav>
+    <div class="site-title">
+		<p><%= name %></p>
+      <a href="/"><h1>Blog Ninja</h1></a>
+      <p>A Net Ninja Site</p>
+    </div>
+    <ul>
+      <li><a href="/">Blogs</a></li>
+      <li><a href="/about">About</a></li>
+      <li><a href="/blogs/create">New Blog</a></li>
+    </ul>
+  </nav> -->
+  <%- include('./partials/nav.ejs') %>
+
+  <div class="blogs content">
+    <h2>All Blogs</h2>
+	<% if(blogs.length > 0) { %>
+		<% blogs.forEach(blog => { %>
+			<h3 class = "titel"> <%= blog.titel %></h3>
+			<p class = "snippet"> <%= blog.snippet  %> </p>
+		<% }) %>
+	<% } else { %>
+		<p>Bebsi, there are no Blogs to display</p>
+	<% } %>
+  </div>
+<%- include('./partials/footer.ejs') %>
 </body>
 </html>

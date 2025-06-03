@@ -16,19 +16,33 @@ app.get('/', (req, res) => {
 	// 	message: 'Alo',
 	// 	description: 'Ouey Zizou'
 	// 	});
-	res.render('index');
+	const blogs = [
+		{titel: 'Alo1', snippet: 'Ouey Zizou1'},
+		{titel: 'Alo2', snippet: 'Ouey Zizou2'},
+		{titel: 'Alo2', snippet: 'Ouey Zizou3 '},
+	];
+	res.render('index', {
+		titel: 'The legend of Zizou',
+		message: 'Zizou is the best',
+		description: 'alo ',
+		blogs: blogs,
+	});
 	// res.send('<p>Ouey Zizou</p>');
 	// res.sendFile('./files/index.html', {root: __dirname});
 });
 
 app.get('/about', (req, res) => {
-	res.render('about');
+	res.render('about', {
+		titel: 'Was diese'
+	});
 	// res.sendFile('./files/about.html', {root: __dirname});
 	// res.send('<p>About Zizou</p>');
 });
 
 app.get('/blogs/create', (req, res) => {
-	res.render('create');
+	res.render('create', {
+		titel: 'Bob der Baumeister'
+	});
 });
 
 //redirect
@@ -41,6 +55,8 @@ app.get('/about-us', (req, res) => {
 	everytime if Code reaches that point
 */
 app.use((req, res) => {
-	res.status(404).render('404');
+	res.status(404).render('404', {
+		titel: '404 Not found'
+	});
 	// res.status(404).sendFile('./files/404.html', {root: __dirname});
 });
