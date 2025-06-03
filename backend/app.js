@@ -11,11 +11,12 @@ app.listen(3000);
 
 //listens for request
 app.get('/', (req, res) => {
-	res.render('index', {
-		title: 'Ilies',
-		message: 'Alo',
-		description: 'Ouey Zizou'
-		});
+	// res.render('index', {
+	// 	title: 'Ilies',
+	// 	message: 'Alo',
+	// 	description: 'Ouey Zizou'
+	// 	});
+	res.render('index');
 	// res.send('<p>Ouey Zizou</p>');
 	// res.sendFile('./files/index.html', {root: __dirname});
 });
@@ -24,6 +25,10 @@ app.get('/about', (req, res) => {
 	res.render('about');
 	// res.sendFile('./files/about.html', {root: __dirname});
 	// res.send('<p>About Zizou</p>');
+});
+
+app.get('/blogs/create', (req, res) => {
+	res.render('create');
 });
 
 //redirect
