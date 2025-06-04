@@ -1,5 +1,6 @@
 //returns us a fnc
 const express = require('express');
+const morgan = require('morgan');
 
 //here, we are invoking that fnc to create an instance of express app --> gets stored in 'app'
 const app = express();
@@ -9,18 +10,26 @@ app.set('view engine', 'ejs');
 
 app.listen(3000);
 
-app.use((req, res, next) => {
-	console.log('new request made');
-	console.log('host: ', req.hostname);
-	console.log('path: ', req.path);
-	console.log('method: ', req.method);
-	next();
-});
+/* Manual Middleware
+	// app.use((req, res, next) => {
+	// 	console.log('new request made');
+	// 	console.log('host: ', req.hostname);
+	// 	console.log('path: ', req.path);
+	// 	console.log('method: ', req.method);
+	// 	next();
+	// });
+*/
 
-app.use((req, res, next) => {
-	console.log('In the next middleware');
-	next();
-});
+// app.use((req, res, next) => {
+// 	console.log('In the next middleware');
+// 	next();
+// });
+
+/*
+	MiddleWare & static files (.css files, images etc..)
+ */
+app.use(express.static('public'));
+app.use(morgan('dev'));
 
 //listens for request
 app.get('/', (req, res) => {
