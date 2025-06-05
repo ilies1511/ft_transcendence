@@ -1,27 +1,46 @@
 
 misc:
-	- 1.[x] frontend: figure out proper way to handle js packages and ts compilation
-	- 3.1.[ ] backend: figure out proper way to handle js packages and ts compilation
+	- [x] frontend: figure out proper way to handle js packages and ts compilation
+	- [ ] backend: figure out proper way to handle js packages and ts compilation
+
+game options:
+	- [ ] client: have a frontend ui to select differnt game options (dummy checkboxes)
+	- [ ] client: on confirmation enter matchmaking
+
+matchmaking:
+	- [ ] have a basic websocket connection where the client sets up a connection
+	- [ ] server: send json msg for updates
+	- [ ] client: parse json msg fn
+
+sockets:
+	- [ ] server: manage many connections with their corresponding client data
+	- [ ] implement a basic json format for default communication
+	- [ ] server: be able to send json for performance uncritical parts
+	- [ ] client: implement msg type multiplexor
+	- [ ] server: connection state multiplexor
+		-> go to execute specific action when the client is in for example matchmaking or a game
 
 game:
-	- 2. [x] implement a ball that moves on each frame using babylon-js
+	- [x] implement a ball that moves on each frame using babylon-js
+	- [ ] implement a binary msg format for frame updates
+	- [ ] server: send binary messages for frame updates
+	- [ ] client: parse binary msg fn
 	- [ ] implement basic pong using babylon-js
 
 game state:
-	- 3.2. [ ] frontend should connect via a socket to the backend
-	- 4. [ ] backend should be responsible for the balls position 
-		- frontend make a basic request by sending a single char through the socket
-		- backend always repsonds with the current ball position, frontend updates the render accordingly
-	- 6. [ ] backend: each game should have a unique id
-	- 7. [ ] backend: manage multiple games at the same time
-	- 8. [ ] add sidewalls with ball interaction
-	- 9. [ ] movable player paddles with ball interaction
-	- 10. [ ] point scoring
-	- 11. [ ] score board
-	- 12. [ ] win conditon (timer/score)
+	- [ ] backend should be responsible for the balls position
+	- [ ] backend: each game should have a unique id
+	- [ ] backend: manage multiple games at the same time
+	- [ ] add sidewalls with ball interaction
+	- [ ] movable player paddles with ball interaction
+	- [ ] point scoring
+	- [ ] score board
+	- [ ] win conditon (timer/score)
 
 
-sockets:
-	- 5. [ ] backend/frontend: implement a rquest-response structure where the client can request the game state and render the game accordingly
+DOCS:
+match making:
+	- first connection of client to server via a websocket
 
-
+websocket:
+	- persistant connection from client joining matchmaking to leaving a game
