@@ -54,7 +54,8 @@ const wss = new WebSocketServer({ port: PORT });
 const games: Game[] = [];
 
 function game_input_msg(game: Game, player_id: number, message: ArrayBuffer) {
-
+	const view = new DataView(message);
+	const type: BinType = view.getUint8(0);
 }
 
 function join_game(ws: any, player_id: number, options: GameOptions, game: Game) {
@@ -73,11 +74,15 @@ function join_game(ws: any, player_id: number, options: GameOptions, game: Game)
 			};
 			client.socket.send(JSON.stringify(msg));
 		}
-
 		//todo: start game
+		//todo: flush ws so no old request are left inside
 		ws.on('message', (message: unknown) => {
-			//todo: verify message is of type ArrayBuffer and handle erros
-			//game_input_msg(game, player_id, message);
+			//todo: multiplexor for message type (example Leave or ArrayBuffer)
+			//case (ArrayBuffer) :
+				// game_input_msg(game, player_id, message);
+				// break ;
+			// case ('leave_game'):
+			// ...
 		});
 
 	} else {
@@ -119,6 +124,9 @@ function first_ws_msg(ws: any, message: string) {
 		json = JSON.parse(message) as ClientToServerMessage;
 	} catch (e) {
 		console.log("Error: new connection with message in not valid ClientToServerMessage json format");
+		//todo: maybe simply show a front end error msg:
+		//	'There was an issue with the game server communiction,
+		//	try to reconnect if you were in a game'
 		ws.close();
 		return ;
 	}
@@ -134,6 +142,9 @@ function first_ws_msg(ws: any, message: string) {
 		case ('search_game'):
 			enter_matchmaking(ws, player_id, json.payload.options);
 			break ;
+		//todo:
+		//case('leave_game'):
+		//break ;
 		case ('reconnect'):
 		console.log(`client tries to reconnect`);
 		case ('send_input'):
@@ -147,7 +158,7 @@ function first_ws_msg(ws: any, message: string) {
 					}
 				}
 			}
-			//todo: give client some error
+			//todo: give client some error, maybe deiffer between the types
 			console.log("client did not search for game and was also not in game");
 			return ;
 		default:

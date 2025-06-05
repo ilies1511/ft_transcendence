@@ -28,7 +28,7 @@ export type ServerToClientJson =
 export type ServerToClientMessage = ServerToClientJson | ArrayBuffer;
 
 
-
+//todo: leave game option
 export type ClientToServerMessage =
 	| {
 		type: 'search_game';
