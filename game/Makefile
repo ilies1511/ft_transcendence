@@ -1,4 +1,6 @@
 
+all: backend frontend
+
 frontend:
 	cd game_frontend && npm run dev -- --host
 

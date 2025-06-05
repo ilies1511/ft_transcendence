@@ -1,7 +1,7 @@
 {
   "name": "game_backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn src/server.ts"
   },
@@ -9,6 +9,7 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@types/ws": "^8.18.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3"
   },

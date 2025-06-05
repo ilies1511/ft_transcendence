@@ -8,13 +8,13 @@ game options:
 	- [ ] client: on confirmation enter matchmaking
 
 matchmaking:
-	- [ ] have a basic websocket connection where the client sets up a connection
+	- [x] have a basic websocket connection where the client sets up a connection
 	- [ ] server: send json msg for updates
 	- [ ] client: parse json msg fn
 
 sockets:
-	- [ ] server: manage many connections with their corresponding client data
-	- [ ] implement a basic json format for default communication
+	- [x] server: manage many connections with their corresponding client data
+	- [x] implement a basic json format for default communication
 	- [ ] server: be able to send json for performance uncritical parts
 	- [ ] client: implement msg type multiplexor
 	- [ ] server: connection state multiplexor
@@ -22,8 +22,8 @@ sockets:
 
 game:
 	- [x] implement a ball that moves on each frame using babylon-js
-	- [ ] implement a binary msg format for frame updates
-	- [ ] server: send binary messages for frame updates
+	- [x] implement a binary msg format for frame updates
+	- [x] server: send binary messages for frame updates
 	- [ ] client: parse binary msg fn
 	- [ ] implement basic pong using babylon-js
 
@@ -36,7 +36,6 @@ game state:
 	- [ ] point scoring
 	- [ ] score board
 	- [ ] win conditon (timer/score)
-
 
 DOCS:
 match making:
