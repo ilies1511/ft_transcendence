@@ -6,7 +6,8 @@ RUN apt-get update && apt-get install -y \
   git curl build-essential cmake sudo
 
 #install node
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+#RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash - 
 RUN apt install nodejs -y
 RUN npm install -g typescript --save-dev
 
@@ -37,12 +38,6 @@ RUN groupadd -g $GID $USERNAME
 RUN useradd  -u $UID -g $GID -m $USERNAME
 RUN echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USERNAME
 RUN chown -R $UID:$GID /usr/local /opt /home/$USERNAME
-
-
-
-
-
-
 
 
 
