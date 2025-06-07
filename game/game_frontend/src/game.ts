@@ -5,6 +5,9 @@ import type { ClientToServerMessage } from '../../game_shared/message_types';
 import type { GameOptions } from '../../game_shared/message_types';
 import type { BinType } from '../../game_shared/message_types';
 
+const server_ip: string = import.meta.env.VITE_IP;
+const game_port: string = import.meta.env.VITE_GAME_PORT;
+
 enum State {
 	START = 0,
 	GAME = 1,
@@ -82,7 +85,8 @@ export class Game {
 	}
 
 	private _open_socket() {
-		this._socket = new WebSocket("ws://localhost:3333");
+		//this._socket = new WebSocket("ws://" + server_ip + ":" + game_port + "/game");
+		this._socket = new WebSocket("ws://" + server_ip + ":" + "5173" + "/game");
 
 		this._socket.binaryType = "arraybuffer";
 
@@ -161,7 +165,5 @@ export class Game {
 		document.body.appendChild(this._canvas);
 		return (this._canvas);
 	}
-
-
-
 }
+

@@ -1,12 +1,39 @@
 {
   "compilerOptions": {
-    "target": "es6",
-    "module": "commonjs",
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": true,
-    "esModuleInterop": true
-  },
- "include": ["src", "../game_shared"]
-}
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "module": "NodeNext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+    "types": ["node"], // Added for Node.js types
+    
+    /* Bundler mode */
+    "moduleResolution": "nodenext", // Set moduleResolution to "bundler", "node16", or "nodenext" (recommended for ESM projects)
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
 
+    /* Path resolution */
+    "baseUrl": ".", // Added for path mapping
+    "paths": {
+      "@/*": ["./client/*"] // Alias for client directory
+    },
+
+    /* Node.js compatibility */
+    "esModuleInterop": true, // Added for better CJS/ESM interop
+    
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
+  },
+  "include": [
+    "client/**/*",  // Client-side code
+    "server/**/*",  // Server-side code
+    //"vite.config.ts"
+  ]
+}
