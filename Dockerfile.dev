@@ -10,6 +10,14 @@ RUN npm ci
 
 RUN npm install -g ts-node typescript nodemon
 
+# 3)buildtools for node-gyp
+RUN apk add --no-cache \
+	python3 \
+	make \
+	g++
+
+RUN npm install -g mongosh
+
 COPY backend/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 

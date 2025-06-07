@@ -1,14 +1,31 @@
 //returns us a fnc
 const express = require('express');
 const morgan = require('morgan');
+const mongoose = require('mongoose');
+const Blog = require('./models/blog')
 
 //here, we are invoking that fnc to create an instance of express app --> gets stored in 'app'
 const app = express();
 
+// const dbURI = 'mongodb+srv://<credentials>@nodejs.wepkrky.mongodb.net/?appName=mongosh+2.5.2';
+// const dbURI = 'mongodb://iziane:1234@localhost:3000/nodejs';
+
+
+// const dbURI = 'mongodb+srv://iziane:1234@nodejs.wepkrky.mongodb.net/?appName=mongosh+2.5.2';
+const dbURI = 'mongodb+srv://iziane:1234@nodejs.wepkrky.mongodb.net/node_DB';
+// const dbURI = 'mongodb+srv://nodejs.wepkrky.mongodb.net/';
+
+mongoose.connect(dbURI)
+	.then((result) => {
+		console.log('Connected to DB')
+		app.listen(3000);
+	})
+	.catch((err) => console.log(err));
+
 //register view engine
 app.set('view engine', 'ejs');
 
-app.listen(3000);
+// app.listen(3000);
 
 /* Manual Middleware
 	// app.use((req, res, next) => {
@@ -30,6 +47,44 @@ app.listen(3000);
  */
 app.use(express.static('public'));
 app.use(morgan('dev'));
+
+
+app.get('/add-blog', (req, res) => {
+	const blog = new Blog({
+		title: 'new blog',
+		snippet: 'about my new blog',
+		body: 'more about my new blog'
+	});
+
+	blog.save()
+		.then((result) => {
+			res.send(result)
+		})
+		.catch((err) => {
+			console.log(err)
+		});
+});
+
+
+app.get('/all-blogs', (req, res) => {
+	Blog.find()
+		.then((result) => {
+			res.send(result);
+		})
+		.catch((err) => {
+			console.log(err);
+		})
+})
+
+app.get('/single-blog', (req, res) => {
+	Blog.findById('68449137354829bb8291c317')
+		.then((result) => {
+			res.send(result);
+		})
+		.catch((err) => {
+			console.log(err);
+		});
+})
 
 //listens for request
 app.get('/', (req, res) => {
