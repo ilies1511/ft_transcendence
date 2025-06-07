@@ -1,4 +1,6 @@
 # Logs
+.enfrontend/vite/fastify-maksim
+.env
 logs
 *.log
 npm-debug.log*
