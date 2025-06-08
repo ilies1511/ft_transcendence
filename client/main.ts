@@ -7,6 +7,7 @@ import homePage from './pages/home.ts';
 // import apiPage from './pages/apiPage.ts';
 import { apiPage, setupApiPage } from './pages/apiPage.ts'; // Add 
 // import { apiPage } from './pages/apiPage.ts'; // Add 
+import type { GameOptions } from '../../game_shared/message_types';
 import {Game} from './game';
 
 document.querySelector<HTMLDivElement>('#main')!.innerHTML = `
@@ -39,10 +40,14 @@ function loadPage(page: string) {
     if (page === 'apiPage') {
       setupApiPage();
     }
+	//added game here because I don't know where it is supposed to be
 	if (main) {
+		const options: GameOptions = {
+			player_count: 3,
+		};
 		main.innerHTML = '';
 		const userId = 123;
-		new Game(userId, main);
+		new Game(userId, main, options);
 	}
   }
 }

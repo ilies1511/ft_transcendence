@@ -9,14 +9,14 @@ game options:
 
 matchmaking:
 	- [x] have a basic websocket connection where the client sets up a connection
-	- [ ] server: send json msg for updates
-	- [ ] client: parse json msg fn
+	- [x] server: send json msg for updates
+	- [x] client: parse json msg fn
 
 sockets:
 	- [x] server: manage many connections with their corresponding client data
 	- [x] implement a basic json format for default communication
-	- [ ] server: be able to send json for performance uncritical parts
-	- [ ] client: implement msg type multiplexor
+	- [x] server: be able to send json for performance uncritical parts
+	- [x] client: implement msg type multiplexor
 	- [ ] server: connection state multiplexor
 		-> go to execute specific action when the client is in for example matchmaking or a game
 

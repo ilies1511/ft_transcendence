@@ -33,16 +33,18 @@ export class Game {
 	private _socket: WebSocket;
 	private _id: number;
 
-	
+	public options: GameOptions;
+
 	constructor(
 		id: number, //some number that is unique for each client, ideally bound to the account
-		container: HTMLElement
+		container: HTMLElement,
+		options: GameOptions,
 	) {
 		console.log("GAME: game constructor");
 		this._id = id;
+		this.options = options;
 
 		this._open_socket();
-		return ;
 
 		this._next_update_time = Date.now();
 
@@ -96,35 +98,35 @@ export class Game {
 			//this._socket = new WebSocket("ws://" + server_ip + ":" + game_port + "/game");
 			this._socket = new WebSocket('ws://localhost:5173/game')
 			
-			this._socket.onopen = () => {
-			  console.log('[FRONT-END GAME WS] Connected to /game!');
-			  this._socket.send('Hello from the game frontend!');
-			};
-			
-			this._socket.onmessage = (event) => {
-			  console.log('[FRONT-END GAME WS] Received:', event.data);
-			};
-			//this._socket.binaryType = "arraybuffer";
+			//this._socket.onopen = () => {
+			//  console.log('[FRONT-END GAME WS] Connected to /game!');
+			//  this._socket.send('Hello from the game frontend!');
+			//};
+			//
+			//this._socket.onmessage = (event) => {
+			//  console.log('[FRONT-END GAME WS] Received:', event.data);
+			//};
 
-			//this._socket.addEventListener("open", (event) => {
-			//	console.log("GAME: Connected to server");
-			//	const msg: ClientToServerMessage = {
-			//		type: 'search_game',
-			//		player_id: 123,
-			//		payload: {
-			//			options: {
-			//				player_count: 1
-			//			}
-			//		}
-			//	};
-			//	this._socket.send(JSON.stringify(msg));
-			//});
+			this._socket.binaryType = "arraybuffer";
 
-			//this._socket.onmessage = (
-			//	event: MessageEvent<ServerToClientMessage>) => this._rcv_msg(event);
-			//this._socket.addEventListener("close", () => {
-			//	console.log("GAME: Disconnected");
-			//});
+			this._socket.addEventListener("open", (event) => {
+				console.log("GAME: Connected to server");
+				const msg: ClientToServerMessage = {
+					type: 'search_game',
+					player_id: 123,
+					payload: {
+						options: this.options
+					}
+				};
+				console.log("sending: ", JSON.stringify(msg));
+				this._socket.send(JSON.stringify(msg));
+			});
+
+			this._socket.onmessage = (
+				event: MessageEvent<ServerToClientMessage>) => this._rcv_msg(event);
+			this._socket.addEventListener("close", () => {
+				console.log("GAME: Disconnected");
+			});
 		} catch (e) {
 			console.log("GAME: error: ", e);
 		}
@@ -140,24 +142,21 @@ export class Game {
 			console.log("GAME: BinType: ", type);
 		} else if (typeof data === 'string') {
 			console.log("GAME: got string: ", data);
-			const json: any = JSON.parse(data);
+			const json: ServerToClientMessage = JSON.parse(data);
+			console.log("GAME: got ServerToClientMessage object: ", json);
+			switch (json.type) {
+				case ('game_lobby_update'):
+					// todo: have a user UI for the lobby screen while waiting for players
+					break ;
+				case ('starting_game'):
+					break ;
+			}
 		} else {
 			console.log("GAME: Error: unknown message type recieved: ", typeof data);
 		}
 	}
 
 	private _upate(): undefined {
-		//const now = Date.now();
-		//if (now < this._next_update_time) {
-		//	return ;
-		//}
-		//this._next_update_time = now + this._update_interval;
-		////console.log("GAME: hi");
-		////this._sphere.position.x += 1;
-		////console.log(this._sphere.position);
-		//console.log(this._sphere.position);
-		//this._sphere.position.x += 1;
-		//console.log(this._sphere.position);
 	}
 
 
