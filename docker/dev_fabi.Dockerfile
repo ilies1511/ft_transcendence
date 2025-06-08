@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
 #RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash - 
 RUN apt install nodejs -y
-RUN npm install -g typescript --save-dev
+#RUN npm install -g typescript --save-dev
 
 # Clipboard helpers for Neovim ---------------------
 RUN apt-get update && apt-get install -y \

@@ -7,6 +7,7 @@ import homePage from './pages/home.ts';
 // import apiPage from './pages/apiPage.ts';
 import { apiPage, setupApiPage } from './pages/apiPage.ts'; // Add 
 // import { apiPage } from './pages/apiPage.ts'; // Add 
+import {Game} from './game';
 
 document.querySelector<HTMLDivElement>('#main')!.innerHTML = `
 
@@ -38,6 +39,11 @@ function loadPage(page: string) {
     if (page === 'apiPage') {
       setupApiPage();
     }
+	if (main) {
+		main.innerHTML = '';
+		const userId = 123;
+		new Game(userId, main);
+	}
   }
 }
 

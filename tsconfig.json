@@ -5,7 +5,10 @@
     "module": "NodeNext",
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
-    "types": ["node"], // Added for Node.js types
+    "types": [
+				"node",
+				"babylonjs"
+		],
     
     /* Bundler mode */
     "moduleResolution": "nodenext", // Set moduleResolution to "bundler", "node16", or "nodenext" (recommended for ESM projects)
@@ -34,6 +37,7 @@
   "include": [
     "client/**/*",  // Client-side code
     "server/**/*",  // Server-side code
+	"game_shared/*",
     "vite.config.ts"
   ]
 }

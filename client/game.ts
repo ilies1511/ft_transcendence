@@ -1,12 +1,15 @@
-import { Engine, Scene, Mesh, ArcRotateCamera, PointLight, Vector3, HemisphericLight, MeshBuilder, ArcRotateCameraGamepadInput } from "@babylonjs/core";
-
+import * as BABYLON from 'babylonjs';
 import type { ServerToClientMessage } from '../../game_shared/message_types';
 import type { ClientToServerMessage } from '../../game_shared/message_types';
 import type { GameOptions } from '../../game_shared/message_types';
 import type { BinType } from '../../game_shared/message_types';
 
-const server_ip: string = import.meta.env.VITE_IP;
-const game_port: string = import.meta.env.VITE_GAME_PORT;
+//import { Engine, Scene, Mesh, ArcRotateCamera, PointLight, Vector3, HemisphericLight, MeshBuilder, ArcRotateCameraGamepadInput } from "@babylonjs/core";
+//const server_ip: string = import.meta.env.VITE_IP;
+//const game_port: string = import.meta.env.VITE_GAME_PORT;
+const server_ip: string = "localhost";
+
+const game_port: string = "5173";
 
 enum State {
 	START = 0,
@@ -15,12 +18,12 @@ enum State {
 }
 
 export class Game {
-	private _scene: Scene;
+	private _scene: BABYLON.Scene;
 	private _canvas: HTMLCanvasElement;
-	private _engine: Engine;
-	private _camera: ArcRotateCamera;
+	private _engine: BABYLON.Engine;
+	private _camera: BABYLON.ArcRotateCamera;
 
-	private _sphere: Mesh;
+	private _sphere: BABYLON.Mesh;
 
 	private _state: number = 0;
 
@@ -32,35 +35,39 @@ export class Game {
 
 	
 	constructor(
-		id: number //some number that is unique for each client, ideally bound to the account
+		id: number, //some number that is unique for each client, ideally bound to the account
+		container: HTMLElement
 	) {
+		console.log("GAME: game constructor");
 		this._id = id;
 
 		this._open_socket();
+		return ;
 
 		this._next_update_time = Date.now();
 
 		this._canvas = this._createCanvas();
-		document.body.appendChild(this._canvas);
+		//document.body.appendChild(this._canvas);
+		//document.getElementById('main')?.appendChild(this._canvas);
+		container.appendChild(this._canvas);
 	
-		this._engine = new Engine(this._canvas, true);
-		this._scene = new Scene(this._engine);
+		this._engine = new BABYLON.Engine(this._canvas, true);
+		this._scene = new BABYLON.Scene(this._engine);
 
-
-		this._camera = new ArcRotateCamera(
+		this._camera = new BABYLON.ArcRotateCamera(
 			"Camera",
 			Math.PI / 2,
 			Math.PI / 2,
 			2,
-			Vector3.Zero(),
+			BABYLON.Vector3.Zero(),
 			this._scene
 		);
 		this._camera.attachControl(this._canvas, true);
 
-		this._sphere = MeshBuilder.CreateSphere("sphere", {diameter: 1}, this._scene);
+		this._sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 1}, this._scene);
 
-		const light: PointLight = new PointLight(
-			"pointLight", new Vector3(1, 10, 1), this._scene);
+		const light: BABYLON.PointLight = new BABYLON.PointLight(
+			"pointLight", new BABYLON.Vector3(1, 10, 1), this._scene);
 	
 		window.addEventListener("keydown", (ev) => {
 			//if (ev.shiftKey && ev.ctrlKey && ev.altKey &&
@@ -85,44 +92,57 @@ export class Game {
 	}
 
 	private _open_socket() {
-		this._socket = new WebSocket("ws://" + server_ip + ":" + game_port + "/game");
-		//this._socket = new WebSocket("ws://" + server_ip + ":" + "5173" + "/game");
-		this._socket.binaryType = "arraybuffer";
-
-		this._socket.addEventListener("open", (event) => {
-			console.log("Connected to server");
-			const msg: ClientToServerMessage = {
-				type: 'search_game',
-				player_id: 123,
-				payload: {
-					options: {
-						player_count: 1
-					}
-				}
+		try {
+			//this._socket = new WebSocket("ws://" + server_ip + ":" + game_port + "/game");
+			this._socket = new WebSocket('ws://localhost:5173/game')
+			
+			this._socket.onopen = () => {
+			  console.log('[FRONT-END GAME WS] Connected to /game!');
+			  this._socket.send('Hello from the game frontend!');
 			};
-			this._socket.send(JSON.stringify(msg));
-		});
+			
+			this._socket.onmessage = (event) => {
+			  console.log('[FRONT-END GAME WS] Received:', event.data);
+			};
+			//this._socket.binaryType = "arraybuffer";
 
-		this._socket.onmessage = (event: MessageEvent<ServerToClientMessage>) => this._rcv_msg(event);
+			//this._socket.addEventListener("open", (event) => {
+			//	console.log("GAME: Connected to server");
+			//	const msg: ClientToServerMessage = {
+			//		type: 'search_game',
+			//		player_id: 123,
+			//		payload: {
+			//			options: {
+			//				player_count: 1
+			//			}
+			//		}
+			//	};
+			//	this._socket.send(JSON.stringify(msg));
+			//});
 
-		this._socket.addEventListener("close", () => {
-			console.log("Disconnected");
-		});
+			//this._socket.onmessage = (
+			//	event: MessageEvent<ServerToClientMessage>) => this._rcv_msg(event);
+			//this._socket.addEventListener("close", () => {
+			//	console.log("GAME: Disconnected");
+			//});
+		} catch (e) {
+			console.log("GAME: error: ", e);
+		}
 	}
 
 	private _rcv_msg(event: MessageEvent<ServerToClientMessage>): undefined {
-		console.log("recieved msg");
+		console.log("GAME: recieved msg");
 		const data = event.data;
 		if (data instanceof ArrayBuffer) {
-			console.log("got ArrayBuffer");
+			console.log("GAME: got ArrayBuffer");
 			const view = new DataView(data);
 			const type: BinType = view.getUint8(0);
-			console.log("BinType: ", type);
+			console.log("GAME: BinType: ", type);
 		} else if (typeof data === 'string') {
-			console.log("got string: ", data);
+			console.log("GAME: got string: ", data);
 			const json: any = JSON.parse(data);
 		} else {
-			console.log("Error: unknown message type recieved: ", typeof data);
+			console.log("GAME: Error: unknown message type recieved: ", typeof data);
 		}
 	}
 
@@ -132,7 +152,7 @@ export class Game {
 		//	return ;
 		//}
 		//this._next_update_time = now + this._update_interval;
-		////console.log("hi");
+		////console.log("GAME: hi");
 		////this._sphere.position.x += 1;
 		////console.log(this._sphere.position);
 		//console.log(this._sphere.position);
@@ -165,4 +185,3 @@ export class Game {
 		return (this._canvas);
 	}
 }
-

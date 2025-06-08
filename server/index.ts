@@ -1,6 +1,7 @@
 import Fastify from 'fastify'
 import websocket from '@fastify/websocket'
 import type { WebSocket } from '@fastify/websocket' // <-- use 'import type'
+import {GameServer} from './game/game_server';
 
 const fastify = Fastify({ logger: true })
 
@@ -20,6 +21,8 @@ fastify.get('/api/hello', async (request, reply) => {
   return { hello: 'world' }
 })
 
+const game_server = new GameServer(fastify);
+
 // Start the server
 try {
   await fastify.listen({ port: 3000 })
@@ -28,3 +31,6 @@ try {
   fastify.log.error(err)
   process.exit(1)
 }
+
+//game_server.start();
+
