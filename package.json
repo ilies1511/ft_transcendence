@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm:dev:vite\" \"npm:dev:fastify\"",
+    "dev": "concurrently \"npm:dev:vite -- --host\" \"npm:dev:fastify -- --host\"",
     "dev:vite": "vite",
     "dev:fastify": "tsx watch server/index.ts",
     "build": "tsc && vite build",
