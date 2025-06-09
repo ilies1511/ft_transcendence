@@ -11,19 +11,15 @@ import { BinType } from '../../game_shared/message_types';
 import type { GameOptions } from '../../game_shared/message_types';
 import type { WebSocket } from '@fastify/websocket';
 
-import { Effects } from '../../game_shared/message_types';
-import { vec2 } from '../../game_shared/message_types';
-import { Wall } from '../../game_shared/message_types';
-import { Ball } from '../../game_shared/message_types';
-import { Client } from '../../game_shared/message_types';
-import { GameState } from '../../game_shared/message_types';
+import { Effects, vec2, Wall, Ball, Client, GameState }
+	from '../../game_shared/serialization';
 
 
 const PORT: number = 3333;
 
 
 
-class Game {
+export class Game {
 	running: boolean = false;
 	public options: GameOptions;
 	public clients: Client[] = [];

@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 // or for jest: import { describe, it, expect } from '@jest/globals';
-import { Effects, vec2, Client, Ball, Wall, Game, GameState } from '../game_shared/message_types';
+import { Effects, vec2, Client, Ball, Wall, GameState }
+	from '../game_shared/serialization';
+import {Game} from '../server/game/game_server'
 
 function eqVec2(a: vec2, b: vec2) {
   expect(a.x).toBeCloseTo(b.x);
@@ -21,7 +23,7 @@ describe('Serialization', () => {
 
   it('Ball round-trip', () => {
     const b1 = new Ball();
-    b1.pos = new vec2(-1, 7.77);
+	b1.pos = new vec2(-1, 7.77);
     b1.effects = [Effects.FIRE];
     b1.lifetime = 9.99;
     const buf = b1.serialize();
