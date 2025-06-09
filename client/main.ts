@@ -44,6 +44,8 @@ function loadPage(page: string) {
 	if (main) {
 		const options: GameOptions = {
 			player_count: 3,
+			timer: 10,
+			no_tie: false,
 		};
 		main.innerHTML = '';
 		const userId = 123;

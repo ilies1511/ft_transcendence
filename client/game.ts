@@ -113,7 +113,7 @@ export class Game {
 				console.log("GAME: Connected to server");
 				const msg: ClientToServerMessage = {
 					type: 'search_game',
-					player_id: 123,
+					player_id: this._id,
 					payload: {
 						options: this.options
 					}

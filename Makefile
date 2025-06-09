@@ -3,6 +3,9 @@
 
 all:
 
+test:
+	npx vitest run
+
 down:
 	docker compose down
 

@@ -11,53 +11,38 @@ import { BinType } from '../../game_shared/message_types';
 import type { GameOptions } from '../../game_shared/message_types';
 import type { WebSocket } from '@fastify/websocket';
 
+import { Effects } from '../../game_shared/message_types';
+import { vec2 } from '../../game_shared/message_types';
+import { Wall } from '../../game_shared/message_types';
+import { Ball } from '../../game_shared/message_types';
+import { Client } from '../../game_shared/message_types';
+import { GameState } from '../../game_shared/message_types';
+
+
 const PORT: number = 3333;
 
-//placeholder
-enum Effects {
-	FIRE = 0,
-};
 
-type vec3 = {
-	x: number;
-	y: number;
-	z: number; //for now ignore z, just incase of future features use 3d movement
-};
-
-type Client = {
-	id: number;
-	socket: WebSocket;
-	effects: Effects[];
-	pos: vec3;
-};
-
-type Ball = {
-	pos: vec3;
-	direct: vec3;
-	effects: Effects[];
-	lifetime: number;
-};
-
-
-//const wss = new WebSocketServer({ port: PORT });
 
 class Game {
 	running: boolean = false;
 	public options: GameOptions;
-	clients: Client[] = [];
-	private balls: Ball[] = [];
+	public clients: Client[] = [];
+	public balls: Ball[] = [];
+	public walls: Wall[] = [];
 	constructor(options: GameOptions) {
 		this.options = options;
 	}
 
-	send_game_state(ws: WebSocket) {
-		const arr = new ArrayBuffer(1);
-		const view = new DataView(arr);
-		view.setUint8(0, BinType.GAME_STATE);
-		//msg.setUint8(0, BinType.GAME_STATE);
-		ws.send(arr);
+	serialize_game_state(): ArrayBuffer {
+		const state = new GameState(this);
+		return state.serialize();
 	}
-};
+
+	send_game_state(ws: WebSocket) {
+		ws.send(this.serialize_game_state());
+	}
+}
+;
 
 class Connection {
 	private _ws: WebSocket;
@@ -145,6 +130,7 @@ class Connection {
 			for (let client of game.clients) {
 				const msg: ServerToClientJson = {
 					type: 'starting_game',
+					game_id: 321, //todo: get a new unique id with the db that is bound to this game
 					options: options,
 				};
 				client.socket.send(JSON.stringify(msg));
