@@ -46,6 +46,7 @@ app.set('view engine', 'ejs');
 	MiddleWare & static files (.css files, images etc..)
  */
 app.use(express.static('public'));
+app.use(express.urlencoded({extended: true}));
 app.use(morgan('dev'));
 
 
@@ -135,11 +136,52 @@ app.get('/blogs', (req, res) => {
 		})
 })
 
+app.post('/blogs', (req, res) => {
+	console.log(req.body);
+	const blog = new Blog(req.body);
+
+	blog.save()
+		.then((result) => {
+			res.redirect('/blogs');
+		})
+		.catch((err) => {
+			console.log(err);
+		})
+});
+
 app.get('/blogs/create', (req, res) => {
 	res.render('create', {
 		title: 'Bob der Baumeister'
 	});
 });
+
+app.get('/blogs/:id', (req, res) => {
+	const id = req.params.id;
+	Blog.findById(id)
+		.then(result => {
+			res.render('details', { blog: result, title: 'Blog Details '})
+		})
+		.catch(err => {
+			console.log(err);
+		});
+});
+
+app.delete('/blogs/:id', (req, res) => {
+	const id = req.params.id;
+	Blog.findByIdAndDelete(id)
+		.then(result => {
+			res.json({ redirect: '/blogs '});
+		})
+		.catch(err => {
+			console.log(err);
+		});
+});
+
+// app.get('/blogs/create', (req, res) => {
+// 	res.render('create', {
+// 		title: 'Bob der Baumeister'
+// 	});
+// });
 
 //redirect
 app.get('/about-us', (req, res) => {
