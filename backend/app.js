@@ -49,139 +49,16 @@ app.use(express.static('public'));
 app.use(express.urlencoded({extended: true}));
 app.use(morgan('dev'));
 
-
-/* Mongoose and mongo routes
-app.get('/add-blog', (req, res) => {
-const blog = new Blog({
-	title: 'new blog 3',
-	snippet: 'about my new blog',
-	body: 'more about my new blog'
-});
-
-blog.save()
-	.then((result) => {
-		res.send(result)
-	})
-	.catch((err) => {
-		console.log(err)
-	});
-});
-
-
-app.get('/all-blogs', (req, res) => {
-	Blog.find()
-		.then((result) => {
-			res.send(result);
-		})
-		.catch((err) => {
-			console.log(err);
-		})
-})
-
-app.get('/single-blog', (req, res) => {
-	Blog.findById('68449137354829bb8291c317')
-		.then((result) => {
-			res.send(result);
-		})
-		.catch((err) => {
-			console.log(err);
-		});
-}) */
-
-
 //listens for request
 app.get('/', (req, res) => {
-	// res.render('index', {
-	// 	title: 'Ilies',
-	// 	message: 'Alo',
-	// 	description: 'Ouey Zizou'
-	// 	});
-
-	// const blogs = [
-	// 	{titel: 'Alo1', snippet: 'Ouey Zizou1'},
-	// 	{titel: 'Alo2', snippet: 'Ouey Zizou2'},
-	// 	{titel: 'Alo2', snippet: 'Ouey Zizou3 '},
-	// ];
-	// res.render('index', {
-	// 	titel: 'The legend of Zizou',
-	// 	message: 'Zizou is the best',
-	// 	description: 'alo ',
-	// 	blogs: blogs,
-	// });
-
 	res.redirect('/blogs');
-
-	// res.send('<p>Ouey  Zizou</p>');
-	// res.sendFile('./files/index.html', {root: __dirname});
 });
 
 app.get('/about', (req, res) => {
 	res.render('about', {
 		title: 'Was diese'
 	});
-	// res.sendFile('./files/about.html', {root: __dirname});
-	// res.send('<p>About Zizou</p>');
 });
-
-// app.get('/blogs', (req, res) => {
-// 	Blog.find().sort({createdAt: -1})
-// 		.then((result) => {
-// 			res.render('index', {
-// 				title: 'All Blogs',
-// 				blogs: result
-// 			})
-// 		})
-// 		.catch((err) => {
-// 			console.log(err);
-// 		})
-// })
-
-// app.post('/blogs', (req, res) => {
-// 	console.log(req.body);
-// 	const blog = new Blog(req.body);
-
-// 	blog.save()
-// 		.then((result) => {
-// 			res.redirect('/blogs');
-// 		})
-// 		.catch((err) => {
-// 			console.log(err);
-// 		})
-// });
-
-// app.get('/blogs/create', (req, res) => {
-// 	res.render('create', {
-// 		title: 'Bob der Baumeister'
-// 	});
-// });
-
-// app.get('/blogs/:id', (req, res) => {
-// 	const id = req.params.id;
-// 	Blog.findById(id)
-// 		.then(result => {
-// 			res.render('details', { blog: result, title: 'Blog Details '})
-// 		})
-// 		.catch(err => {
-// 			console.log(err);
-// 		});
-// });
-
-// app.delete('/blogs/:id', (req, res) => {
-// 	const id = req.params.id;
-// 	Blog.findByIdAndDelete(id)
-// 		.then(result => {
-// 			res.json({ redirect: '/blogs '});
-// 		})
-// 		.catch(err => {
-// 			console.log(err);
-// 		});
-// });
-
-// app.get('/blogs/create', (req, res) => {
-// 	res.render('create', {
-// 		title: 'Bob der Baumeister'
-// 	});
-// });
 
 //redirect
 app.get('/about-us', (req, res) => {
@@ -189,7 +66,6 @@ app.get('/about-us', (req, res) => {
 });
 
 /* Blog Routes */
-
 // app.use(blogRoutes);
 app.use('/blogs', blogRoutes);
 
@@ -201,5 +77,4 @@ app.use((req, res) => {
 	res.status(404).render('404', {
 		title: '404 Not found'
 	});
-	// res.status(404).sendFile('./files/404.html', {root: __dirname});
 });
