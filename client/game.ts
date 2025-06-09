@@ -4,6 +4,9 @@ import type { ClientToServerMessage } from '../../game_shared/message_types';
 import type { GameOptions } from '../../game_shared/message_types';
 import type { BinType } from '../../game_shared/message_types';
 
+import { Effects, vec2, Wall, Ball, Client, GameState }
+	from './game_shared/serialization';
+
 //import { Engine, Scene, Mesh, ArcRotateCamera, PointLight, Vector3, HemisphericLight, MeshBuilder, ArcRotateCameraGamepadInput } from "@babylonjs/core";
 //const server_ip: string = import.meta.env.VITE_IP;
 //const game_port: string = import.meta.env.VITE_GAME_PORT;
@@ -25,7 +28,6 @@ export class Game {
 
 	private _sphere: BABYLON.Mesh;
 
-	private _state: number = 0;
 
 	private _next_update_time: number = 0;
 	private _update_interval: number = 1000;
@@ -34,6 +36,7 @@ export class Game {
 	private _id: number;
 
 	public options: GameOptions;
+	public state: State = State.START;
 
 	constructor(
 		id: number, //some number that is unique for each client, ideally bound to the account
@@ -83,14 +86,7 @@ export class Game {
 			}
 		});
 
-		//for now
-		this._state = State.GAME;
 
-		this._engine.runRenderLoop(() => {
-			this._scene.render();
-			this._upate();
-
-		});
 	}
 
 	private _open_socket() {
@@ -137,9 +133,13 @@ export class Game {
 		const data = event.data;
 		if (data instanceof ArrayBuffer) {
 			console.log("GAME: got ArrayBuffer");
-			const view = new DataView(data);
-			const type: BinType = view.getUint8(0);
-			console.log("GAME: BinType: ", type);
+			if (this.state != State.GAME) {
+				throw new Error("Got array buffer but game state is not GAME");
+			}
+			const game_state: GameState = GameState.deserialize(data);
+			console.log("got game state: ", game_state);
+			this._sphere.position.x = game_state.balls[0].pos.x;
+			this._sphere.position.y = game_state.balls[0].pos.y;
 		} else if (typeof data === 'string') {
 			console.log("GAME: got string: ", data);
 			const json: ServerToClientMessage = JSON.parse(data);
@@ -149,17 +149,17 @@ export class Game {
 					// todo: have a user UI for the lobby screen while waiting for players
 					break ;
 				case ('starting_game'):
+					this.state = State.GAME;
+					//todo: render some loading screen or smth like that
+					this._engine.runRenderLoop(() => {
+						this._scene.render();
+					});
 					break ;
 			}
 		} else {
 			console.log("GAME: Error: unknown message type recieved: ", typeof data);
 		}
 	}
-
-	private _upate(): undefined {
-	}
-
-
 
 	private _createCanvas(): HTMLCanvasElement {
 		//Commented out for development

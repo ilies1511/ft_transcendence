@@ -1,7 +1,7 @@
 
 misc:
 	- [x] frontend: figure out proper way to handle js packages and ts compilation
-	- [ ] backend: figure out proper way to handle js packages and ts compilation
+	- [x] backend: figure out proper way to handle js packages and ts compilation
 
 game options:
 	- [ ] client: have a frontend ui to select differnt game options (dummy checkboxes)
@@ -24,13 +24,13 @@ game:
 	- [x] implement a ball that moves on each frame using babylon-js
 	- [x] implement a binary msg format for frame updates
 	- [x] server: send binary messages for frame updates
-	- [ ] client: parse binary msg fn
+	- [x] client: parse binary msg fn
 	- [ ] implement basic pong using babylon-js
 
 game state:
-	- [ ] backend should be responsible for the balls position
+	- [x] backend should be responsible for the balls position
 	- [ ] backend: each game should have a unique id
-	- [ ] backend: manage multiple games at the same time
+	- [x] backend: manage multiple games at the same time
 	- [ ] add sidewalls with ball interaction
 	- [ ] movable player paddles with ball interaction
 	- [ ] point scoring

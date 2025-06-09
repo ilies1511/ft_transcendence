@@ -17,9 +17,8 @@ import { Effects, vec2, Wall, Ball, Client, GameState }
 
 const PORT: number = 3333;
 
-
-
 export class Game {
+	private _interval: NodeJS.Timeout | null = null;
 	running: boolean = false;
 	public options: GameOptions;
 	public clients: Client[] = [];
@@ -37,8 +36,55 @@ export class Game {
 	send_game_state(ws: WebSocket) {
 		ws.send(this.serialize_game_state());
 	}
+
+	public init_game_state() {
+		this.running = true;
+		const ball: Ball = new Ball();
+		ball.speed.x = 0.001;
+		ball.speed.y = 0.001;
+		this.balls.push(ball);
+		this.start_loop();
+	}
+
+	broadcast_game_state() {
+		const buffer = this.serialize_game_state();
+		for (const client of this.clients) {
+			if (client.socket.readyState === client.socket.OPEN) {
+				client.socket.send(buffer);
+			}
+		}
+	}
+
+	update() {
+		console.log("game update");
+		for (const ball of this.balls) {
+			ball.pos.x += ball.speed.x;
+			ball.pos.y += ball.speed.y;
+		}
+		// ...
+		this.broadcast_game_state();
+	}
+
+	start_loop() {
+		if (this._interval) return;
+		this.running = true;
+		this._interval= setInterval(() => {
+			try {
+				this.update();
+			} catch (e) {
+				console.error("game update error:", e);
+			}
+		}, 1000 / 30);
+	}
+
+	stop_loop() {
+		if (this._interval) {
+			clearInterval(this._interval);
+			this._interval = null;
+		}
+		this.running = false;
+	}
 }
-;
 
 class Connection {
 	private _ws: WebSocket;
@@ -115,12 +161,14 @@ class Connection {
 	}
 	
 	private join_game(ws: WebSocket, player_id: number, options: GameOptions, game: Game) {
-		const client: Client = {
-			id: player_id,
-			socket: ws,
-			effects: [],
-			pos: { x: 0, y:0, z: 0}
-		};
+
+		const client: Client = new Client(
+			new vec2(0, 0),
+			player_id,
+			ws,
+			new vec2(1, 1)
+		);
+
 		game.clients.push(client);
 		if (game.clients.length == game.options.player_count) {
 			for (let client of game.clients) {
@@ -130,6 +178,7 @@ class Connection {
 					options: options,
 				};
 				client.socket.send(JSON.stringify(msg));
+				game.init_game_state();
 			}
 			//todo: start game
 			//todo: flush ws so no old request are left inside

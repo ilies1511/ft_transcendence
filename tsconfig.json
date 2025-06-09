@@ -20,6 +20,7 @@
     /* Path resolution */
     "baseUrl": ".", // Added for path mapping
     "paths": {
+	  "@shared/*": ["./game_shared/*"],
       "@/*": ["./client/*"] // Alias for client directory
     },
 
