@@ -56,12 +56,11 @@ export class Game {
 	}
 
 	update() {
-		console.log("game update");
+		//console.log("game update");
 		for (const ball of this.balls) {
 			ball.pos.x += ball.speed.x;
 			ball.pos.y += ball.speed.y;
 		}
-		// ...
 		this.broadcast_game_state();
 	}
 
@@ -168,8 +167,16 @@ class Connection {
 			ws,
 			new vec2(1, 1)
 		);
-
-		game.clients.push(client);
+		let in_game: boolean = false;
+		for (const old_client of game.clients) {
+			if (old_client.player_id == client.player_id) {
+				Object.assign(old_client, client);
+				in_game = true;
+			}
+		}
+		if (!in_game) {
+			game.clients.push(client);
+		}
 		if (game.clients.length == game.options.player_count) {
 			for (let client of game.clients) {
 				const msg: ServerToClientJson = {
@@ -218,6 +225,18 @@ class Connection {
 
 	private enter_matchmaking(player_id: number, options: GameOptions) {
 		console.log("enter_matchmaking");
+		for (const game of this._game_server.get_games()) {
+			for (const client of game.clients) {
+				if (client.id == player_id) {
+					console.log("rejoined game instead");
+					this.join_game(this._ws, player_id, options, game);
+					return ;
+				} else {
+					console.log("id: ", player_id);
+					console.log(client);
+				}
+			}
+		}
 		//todo: check if the player is allready in a lobby and leave it first
 		//todo: validate options
 		//ws.on('message', (message: ClientToServerMessage) => {
