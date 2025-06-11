@@ -1,11 +1,17 @@
-import * as BABYLON from 'babylonjs';
-import type { ServerToClientMessage } from '../../game_shared/message_types';
+import * as BABYLON from '@babylonjs/core/Legacy/legacy';
+//import * as BABYLON from 'babylonjs';
+import type { ServerToClientMessage, GameStartInfo } from '../../game_shared/message_types';
 import type { ClientToServerMessage } from '../../game_shared/message_types';
 import type { GameOptions } from '../../game_shared/message_types';
-import type { BinType } from '../../game_shared/message_types';
+
+import { GridMaterial } from '@babylonjs/materials/Grid';
+import { FireProceduralTexture } from '@babylonjs/procedural-textures/fire';
 
 import { Effects, vec2, Wall, Ball, Client, GameState }
 	from './game_shared/serialization';
+
+
+
 
 //import { Engine, Scene, Mesh, ArcRotateCamera, PointLight, Vector3, HemisphericLight, MeshBuilder, ArcRotateCameraGamepadInput } from "@babylonjs/core";
 //const server_ip: string = import.meta.env.VITE_IP;
@@ -20,6 +26,58 @@ enum State {
 	END = 2,
 }
 
+
+function showAxis(size: number, scene: BABYLON.Scene): void {
+    const makeTextPlane = (text: string, color: string, size: number): BABYLON.Mesh => {
+        const dynamicTexture = new BABYLON.DynamicTexture("DynamicTexture", 50, scene, true);
+        dynamicTexture.drawText(text, 5, 40, "bold 36px Arial", color, "transparent", true);
+
+        const plane = BABYLON.MeshBuilder.CreatePlane("TextPlane", { size: size }, scene);
+        const mat = new BABYLON.StandardMaterial("TextPlaneMaterial", scene);
+        mat.backFaceCulling = false;
+        mat.specularColor = new BABYLON.Color3(0, 0, 0);
+        mat.diffuseTexture = dynamicTexture;
+
+        plane.material = mat;
+        return plane;
+    };
+
+    const axisX = BABYLON.MeshBuilder.CreateLines("axisX", {
+        points: [
+            BABYLON.Vector3.Zero(),
+            new BABYLON.Vector3(size, 0, 0)
+        ]
+    }, scene);
+    axisX.color = new BABYLON.Color3(1, 0, 0);
+
+    const xChar = makeTextPlane("X", "red", size / 10);
+    xChar.position = new BABYLON.Vector3(0.9 * size, 0.05 * size, 0);
+
+    const axisY = BABYLON.MeshBuilder.CreateLines("axisY", {
+        points: [
+            BABYLON.Vector3.Zero(),
+            new BABYLON.Vector3(0, size, 0)
+        ]
+    }, scene);
+    axisY.color = new BABYLON.Color3(0, 1, 0);
+
+    const yChar = makeTextPlane("Y", "green", size / 10);
+    yChar.position = new BABYLON.Vector3(0, 0.9 * size, 0.05 * size);
+
+    const axisZ = BABYLON.MeshBuilder.CreateLines("axisZ", {
+        points: [
+            BABYLON.Vector3.Zero(),
+            new BABYLON.Vector3(0, 0, size)
+        ]
+    }, scene);
+    axisZ.color = new BABYLON.Color3(0, 0, 1);
+
+    const zChar = makeTextPlane("Z", "blue", size / 10);
+    zChar.position = new BABYLON.Vector3(0, 0.05 * size, 0.9 * size);
+}
+
+
+
 export class Game {
 	private _scene: BABYLON.Scene;
 	private _canvas: HTMLCanvasElement;
@@ -27,6 +85,8 @@ export class Game {
 	private _camera: BABYLON.ArcRotateCamera;
 
 	private _sphere: BABYLON.Mesh;
+
+	private _start_info: GameStartInfo | undefined = undefined;
 
 
 	private _next_update_time: number = 0;
@@ -73,6 +133,26 @@ export class Game {
 
 		const light: BABYLON.PointLight = new BABYLON.PointLight(
 			"pointLight", new BABYLON.Vector3(1, 10, 1), this._scene);
+
+
+		const ground = BABYLON.MeshBuilder.CreateGround("ground", {
+			width: 50,
+			height: 50
+			}, this._scene);
+//
+//
+		ground.material = new BABYLON.StandardMaterial("fireMat", this._scene);
+		ground.material.ambientTexture = new FireProceduralTexture("fireTex", 256, this._scene);
+//var grassTexture = new BABYLON.FireProceduralTexture("fireTex", 256, this._scene);
+//grassMaterial.ambientTexture = grassTexture;
+//
+//ground.material = grassMaterial;
+
+
+		this._sphere.material = new GridMaterial("groundMaterial", this._scene);
+
+		showAxis(100, this._scene);
+
 	
 		window.addEventListener("keydown", (ev) => {
 			//if (ev.shiftKey && ev.ctrlKey && ev.altKey &&
@@ -129,15 +209,15 @@ export class Game {
 	}
 
 	private _rcv_msg(event: MessageEvent<ServerToClientMessage>): undefined {
-		console.log("GAME: recieved msg");
+		//console.log("GAME: recieved msg");
 		const data = event.data;
 		if (data instanceof ArrayBuffer) {
-			console.log("GAME: got ArrayBuffer");
+			//console.log("GAME: got ArrayBuffer");
 			if (this.state != State.GAME) {
 				throw new Error("Got array buffer but game state is not GAME");
 			}
 			const game_state: GameState = GameState.deserialize(data);
-			console.log("got game state: ", game_state);
+			//console.log("got game state: ", game_state);
 			this._sphere.position.x = game_state.balls[0].pos.x;
 			this._sphere.position.y = game_state.balls[0].pos.y;
 		} else if (typeof data === 'string') {
@@ -149,6 +229,8 @@ export class Game {
 					// todo: have a user UI for the lobby screen while waiting for players
 					break ;
 				case ('starting_game'):
+					//console.log(this._start_info);
+					this._start_info = json;
 					this.state = State.GAME;
 					//todo: render some loading screen or smth like that
 					this._engine.runRenderLoop(() => {
