@@ -1,4 +1,5 @@
 
+
 //placeholder
 export enum Effects {
 	FIRE = 0,
@@ -33,28 +34,41 @@ export class vec2 {
 
 export class Client {
 	public id: number;
+	public obj_id: number = -1;
 	public game_player_id: number = -1;
 	public socket?: WebSocket;
 	public effects: Effects[];
 	public pos: vec2;
 	public direct: vec2;
 
-	constructor(pos?: vec2, id?: number, socket?: WebSocket, direct?: vec2) {
+	constructor(pos?: vec2, id?: number, socket?: WebSocket, direct?: vec2, obj_id?: number) {
 		this.id = id || 0;
 		this.socket = socket;
 		this.effects = [];
 		this.pos = pos || new vec2();
 		this.direct = direct || new vec2();
+		this.obj_id = obj_id || -1;
 	}
 
 	// serializes the id, effects, pos, direct
 	public serialize(): ArrayBuffer {
 		const effectsCount = this.effects.length;
-		const buffer = new ArrayBuffer(4 + 1 + effectsCount + 8 + 8); // id, effects, pos, direct
+		const buffer = new ArrayBuffer(
+			2 // obj_id
+			+ 4 // id
+			+ 1 + effectsCount //effects
+			+ 8 // pos
+			+ 8 // direct
+		);
 		const view = new DataView(buffer);
 		let offset = 0;
+		//obj_id
+		view.setUint16(offset, this.obj_id, true);
+		offset += 2;
+		// id
 		view.setUint32(offset, this.id, true);
 		offset += 4;
+		//effects
 		view.setUint8(offset, effectsCount);
 		offset += 1;
 		for (let i = 0; i < effectsCount; i++) {
@@ -75,8 +89,13 @@ export class Client {
 
 	public static deserialize(array: ArrayBuffer, offset: number = 0): { client: Client, offset: number } {
 		const view = new DataView(array);
-		let id = view.getUint32(offset, true);
+		//obj_id
+		const obj_id = view.getUint16(offset, true);
+		offset += 2;
+		//id
+		const id = view.getUint32(offset, true);
 		offset += 4;
+		//effects
 		const effectsCount = view.getUint8(offset++); 
 		let effects: Effects[] = [];
 		for (let i = 0; i < effectsCount; i++) {
@@ -90,31 +109,41 @@ export class Client {
 		offset = off3;
 		const client = new Client(pos, id, undefined, direct);
 		client.effects = effects;
+		client.obj_id = obj_id;
 		return { client, offset };
 	}
 }
 
 export class Ball {
 	public pos: vec2;
+	public obj_id: number = -1;
 	public speed?: vec2; // not serialized
 	public acceleration?: vec2; // not serialized
 	public effects: Effects[];
 	public lifetime: number;
-	constructor() {
+	constructor(obj_id?: number) {
 		this.pos = new vec2();
 		this.speed = new vec2();
 		this.effects = [];
 		this.lifetime = 0;
+		this.obj_id = obj_id || -1;
 	}
 
 	// serializes the pos, effects, lifetime
 	public serialize(): ArrayBuffer {
 		const effectsCount = this.effects.length;
-		const buffer = new ArrayBuffer(8 + 1 + effectsCount + 4);
+		const buffer = new ArrayBuffer(
+			2 // obj_id
+			+ 8 //pos
+			+ 1 + effectsCount //effects
+			+ 4 // lifetime
+		);
 		const view = new DataView(buffer);
 		let offset = 0;
+		//obj_id
+		view.setUint16(offset, this.obj_id, true);
+		offset += 2;
 		// pos
-		let arr = new Float32Array(buffer, offset, 2);
 		view.setFloat32(offset, this.pos.x, true);
 		offset += 4;
 		view.setFloat32(offset, this.pos.y, true);
@@ -133,9 +162,14 @@ export class Ball {
 	static deserialize(array: ArrayBuffer, offset: number = 0):
 		{ ball: Ball, offset: number }
 	{
+		const view = new DataView(array);
+		//obj_id
+		const obj_id = view.getUint16(offset);
+		offset += 2;
+		//pos
 		const { vec: pos, offset: off2 } = vec2.deserialize(array, offset);
 		offset = off2;
-		const view = new DataView(array);
+		//effects
 		const effectsCount = view.getUint8(offset++);
 		let effects: Effects[] = [];
 		for (let i = 0; i < effectsCount; i++) {
@@ -147,6 +181,7 @@ export class Ball {
 		ball.pos = pos;
 		ball.effects = effects;
 		ball.lifetime = lifetime;
+		ball.obj_id = obj_id;
 		return { ball, offset };
 	}
 }
@@ -156,20 +191,31 @@ export class Wall {
 	public normal: vec2;
 	public length: number;
 	public effects: Effects[];
+	public obj_id: number = -1;
 
-	constructor(center: vec2, normal: vec2, length: number, effects?: Effects[]) {
+	constructor(center: vec2, normal: vec2, length: number, effects?: Effects[], obj_id?: number) {
 		this.center = center;
 		this.normal = normal;
 		this.length = length;
 		this.effects = effects || [];
+		this.obj_id = obj_id || -1;
 	}
 
 	// Serialization: center(8), normal(8), length(4), effects(1+N)
 	public serialize(): ArrayBuffer {
 		const effectsCount = this.effects.length;
-		const buffer = new ArrayBuffer(8 + 8 + 4 + 1 + effectsCount);
+		const buffer = new ArrayBuffer(
+			2 // obj_id
+			+ 8 // center
+			+ 8 // normal
+			+ 4 //length
+			+ 1 + effectsCount //effects
+		);
 		const view = new DataView(buffer);
 		let offset = 0;
+		//obj_id
+		view.setUint16(offset, this.obj_id, true);
+		offset += 2;
 		// center
 		view.setFloat32(offset, this.center.x, true);
 		offset += 4;
@@ -195,11 +241,14 @@ export class Wall {
 	static deserialize(array: ArrayBuffer, offset: number = 0):
 		{ wall: Wall, offset: number }
 	{
+		const view = new DataView(array);
+		const obj_id = view.getUint16(offset, true);
+		offset += 2;
+
 		const { vec: center, offset: o2 } = vec2.deserialize(array, offset);
 		offset = o2;
 		const { vec: normal, offset: o3 } = vec2.deserialize(array, offset);
 		offset = o3;
-		const view = new DataView(array);
 		const length = view.getFloat32(offset, true);
 		offset += 4;
 		const effectsCount = view.getUint8(offset++); 
@@ -207,7 +256,7 @@ export class Wall {
 		for (let i = 0; i < effectsCount; i++) {
 			effects.push(view.getUint8(offset++));
 		}
-		const wall = new Wall(center, normal, length, effects);
+		const wall = new Wall(center, normal, length, effects, obj_id);
 		return { wall, offset };
 	}
 }
@@ -299,4 +348,3 @@ export class GameState {
 		return state;
 	}
 }
-

@@ -27,56 +27,6 @@ enum State {
 }
 
 
-function showAxis(size: number, scene: BABYLON.Scene): void {
-    const makeTextPlane = (text: string, color: string, size: number): BABYLON.Mesh => {
-        const dynamicTexture = new BABYLON.DynamicTexture("DynamicTexture", 50, scene, true);
-        dynamicTexture.drawText(text, 5, 40, "bold 36px Arial", color, "transparent", true);
-
-        const plane = BABYLON.MeshBuilder.CreatePlane("TextPlane", { size: size }, scene);
-        const mat = new BABYLON.StandardMaterial("TextPlaneMaterial", scene);
-        mat.backFaceCulling = false;
-        mat.specularColor = new BABYLON.Color3(0, 0, 0);
-        mat.diffuseTexture = dynamicTexture;
-
-        plane.material = mat;
-        return plane;
-    };
-
-    const axisX = BABYLON.MeshBuilder.CreateLines("axisX", {
-        points: [
-            BABYLON.Vector3.Zero(),
-            new BABYLON.Vector3(size, 0, 0)
-        ]
-    }, scene);
-    axisX.color = new BABYLON.Color3(1, 0, 0);
-
-    const xChar = makeTextPlane("X", "red", size / 10);
-    xChar.position = new BABYLON.Vector3(0.9 * size, 0.05 * size, 0);
-
-    const axisY = BABYLON.MeshBuilder.CreateLines("axisY", {
-        points: [
-            BABYLON.Vector3.Zero(),
-            new BABYLON.Vector3(0, size, 0)
-        ]
-    }, scene);
-    axisY.color = new BABYLON.Color3(0, 1, 0);
-
-    const yChar = makeTextPlane("Y", "green", size / 10);
-    yChar.position = new BABYLON.Vector3(0, 0.9 * size, 0.05 * size);
-
-    const axisZ = BABYLON.MeshBuilder.CreateLines("axisZ", {
-        points: [
-            BABYLON.Vector3.Zero(),
-            new BABYLON.Vector3(0, 0, size)
-        ]
-    }, scene);
-    axisZ.color = new BABYLON.Color3(0, 0, 1);
-
-    const zChar = makeTextPlane("Z", "blue", size / 10);
-    zChar.position = new BABYLON.Vector3(0, 0.05 * size, 0.9 * size);
-}
-
-
 
 export class Game {
 	private _scene: BABYLON.Scene;
@@ -84,7 +34,9 @@ export class Game {
 	private _engine: BABYLON.Engine;
 	private _camera: BABYLON.ArcRotateCamera;
 
-	private _sphere: BABYLON.Mesh;
+	//private _sphere: BABYLON.Mesh;
+
+	private _meshes: Map<number, BABYLON.Mesh> = new Map<number, BABYLON.Mesh>;
 
 	private _start_info: GameStartInfo | undefined = undefined;
 
@@ -129,7 +81,7 @@ export class Game {
 		);
 		this._camera.attachControl(this._canvas, true);
 
-		this._sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 1}, this._scene);
+		//this._sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 1}, this._scene);
 
 		const light: BABYLON.PointLight = new BABYLON.PointLight(
 			"pointLight", new BABYLON.Vector3(1, 10, 1), this._scene);
@@ -149,9 +101,8 @@ export class Game {
 //ground.material = grassMaterial;
 
 
-		this._sphere.material = new GridMaterial("groundMaterial", this._scene);
+		//this._sphere.material = new GridMaterial("groundMaterial", this._scene);
 
-		showAxis(100, this._scene);
 
 	
 		window.addEventListener("keydown", (ev) => {
@@ -217,9 +168,23 @@ export class Game {
 				throw new Error("Got array buffer but game state is not GAME");
 			}
 			const game_state: GameState = GameState.deserialize(data);
+			game_state.balls.forEach((b: Ball) => {
+				if (this._meshes.has(b.obj_id)) {
+					this._meshes.get(b.obj_id).position.x = b.pos.x;
+					this._meshes.get(b.obj_id).position.y = b.pos.y;
+				} else {
+					const ball: BABYLON.Mesh = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 1}, this._scene);
+					ball.position.x = b.pos.x;
+					ball.position.y = b.pos.y;
+					this._meshes.set(b.obj_id, ball);
+				}
+				//this._sphere.material = new GridMaterial("groundMaterial", this._scene);
+			});
+			game_state.walls.forEach((w: Wall) => {
+			});
+			game_state.clients.forEach((c: Client) => {
+			});
 			//console.log("got game state: ", game_state);
-			this._sphere.position.x = game_state.balls[0].pos.x;
-			this._sphere.position.y = game_state.balls[0].pos.y;
 		} else if (typeof data === 'string') {
 			console.log("GAME: got string: ", data);
 			const json: ServerToClientMessage = JSON.parse(data);

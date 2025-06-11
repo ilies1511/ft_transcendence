@@ -17,6 +17,7 @@ import { Effects, vec2, Wall, Ball, Client, GameState }
 const PORT: number = 3333;
 
 export class Game {
+	private _next_obj_id: number = 0;
 	private _interval: NodeJS.Timeout | null = null;
 	running: boolean = false;
 	public options: GameOptions;
