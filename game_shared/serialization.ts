@@ -33,6 +33,7 @@ export class vec2 {
 
 export class Client {
 	public id: number;
+	public game_player_id: number = -1;
 	public socket?: WebSocket;
 	public effects: Effects[];
 	public pos: vec2;
