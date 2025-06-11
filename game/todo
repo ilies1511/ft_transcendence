@@ -6,6 +6,7 @@ misc:
 game options:
 	- [ ] client: have a frontend ui to select differnt game options (dummy checkboxes)
 	- [ ] client: on confirmation enter matchmaking
+	- [~] json map format: create a json map format to define maps
 
 matchmaking:
 	- [x] have a basic websocket connection where the client sets up a connection
@@ -19,6 +20,24 @@ sockets:
 	- [x] client: implement msg type multiplexor
 	- [ ] server: connection state multiplexor
 		-> go to execute specific action when the client is in for example matchmaking or a game
+	! [ ] update game update coms: split into 3 parts
+		- 1.: new obj notification
+		- 2.: obj deactivation
+		- 3.: obj update
+		-> needs game specicific ID for each object
+		-- [x] update classes
+		-- [~] update serilization
+		-- [~] update deserilization
+		-- [x] create objects on frontend
+		-- [ ] deactive objects on frontend
+		-- [~] update objects on frontend
+	- [ ] add score and time communication
+	- [ ] check if server side code can be simplified without much work
+	! [ ] communicate button press/release from frontend to backend
+		-- [ ] client: include account bound unique client ID
+		-- [ ] server: map the client id to the correct object
+			--- (and set some state with timestamp?
+				-> [ ] think of how to handle server side position updates)
 
 game:
 	- [x] implement a ball that moves on each frame using babylon-js
@@ -26,6 +45,16 @@ game:
 	- [x] server: send binary messages for frame updates
 	- [x] client: parse binary msg fn
 	- [ ] implement basic pong using babylon-js
+	- [ ] make it possible for each client to be 1 or 2 players
+	- [ ] client: implement a recconect fn that can be called from the main menu
+	- [ ] client: implement ESC to leave the game (to be used to go back to main menu)
+
+game_mechanics:
+	- [ ] babylonjs has an exposive barrel asset
+	- [ ] babylonjs lava/fire look good
+	- [ ] rubber type
+	- [ ] magnet type
+	- [ ] items (scope creep xd)
 
 game state:
 	- [x] backend should be responsible for the balls position
@@ -36,6 +65,19 @@ game state:
 	- [ ] point scoring
 	- [ ] score board
 	- [ ] win conditon (timer/score)
+
+tournament:
+	- [ ] TBD
+
+ai:
+	- [ ] TBD
+
+cli:
+	- [ ] TBD
+
+live chat:
+	- [ ] game invitation
+	- [ ] tournament notification
 
 DOCS:
 match making:

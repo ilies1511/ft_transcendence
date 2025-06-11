@@ -1,0 +1,28 @@
+{
+	"player_count": 2,
+	"players": {
+		"1": {
+			"center": [-10, 0],
+			"normal": [1, 0]
+		},
+		"2": {
+			"center": [10, 0],
+			"normal": [-1, 0]
+		}
+	},
+	"walls": {
+		"1": {
+			"center": [0, 5],
+			"normal": [0, -1],
+			"length": 20,
+			"effects": []
+		},
+		"2": {
+			"center": [0, 5],
+			"normal": [0, -1],
+			"length": 20,
+			"effects": []
+		}
+	},
+	"camera_dist": 10
+}

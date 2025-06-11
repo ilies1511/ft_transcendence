@@ -1,7 +1,11 @@
 
-.PHONY: all down ff_clean_docker dev_fabi
+.PHONY: all down ff_clean_docker dev_fabi game_shared i run
 
-all:
+run: game_shared
+	npm run dev
+
+i:
+	npm i
 
 test:
 	npx vitest run
@@ -25,6 +29,12 @@ dev_fabi:
 		--build-arg USERNAME=$(shell id -un) \
 	&& docker compose up -d dev_fabi \
 	&& docker exec -it dev_fabi bash
+
+
+
+game_shared:
+	rm -rf client/shared_game
+	cp -r game_shared client
 
 #dev_fabi:
 #	docker compose build --build-arg UID=$(id -u) --build-arg GID=$(id -g) \
