@@ -6,6 +6,7 @@ misc:
 game options:
 	- [ ] client: have a frontend ui to select differnt game options (dummy checkboxes)
 	- [ ] client: on confirmation enter matchmaking
+	- [ ] json map format: create a json map format to define maps
 
 matchmaking:
 	- [x] have a basic websocket connection where the client sets up a connection
