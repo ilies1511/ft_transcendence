@@ -5,9 +5,8 @@ import type { fastifyWebsocket } from '@fastify/websocket';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 //import websocketPlugin, { SocketStream } from '@fastify/websocket'
 import type { ClientToServerMessage } from '../../game_shared/message_types';
-import type { ServerToClientMessage } from '../../game_shared/message_types';
+import type { ServerToClientMessage, GameStartInfo } from '../../game_shared/message_types';
 import type { ServerToClientJson } from '../../game_shared/message_types';
-import { BinType } from '../../game_shared/message_types';
 import type { GameOptions } from '../../game_shared/message_types';
 import type { WebSocket } from '@fastify/websocket';
 
@@ -96,14 +95,13 @@ class Connection {
 		this.first_ws_msg = this.first_ws_msg.bind(this);
 		this.join_game = this.join_game.bind(this);
 		this.enter_matchmaking = this.enter_matchmaking.bind(this);
-		this.game_input_msg = this.game_input_msg.bind(this);
 
 		this._ws.on('message', this.first_ws_msg);
 	}
 
 	private first_ws_msg(message: string) {
 		console.log("[GAME-BACK-END] got msg: ", message);
-		console.log("[GAME-BACK-END] msg type: ", typeof(message));
+		//console.log("[GAME-BACK-END] msg type: ", typeof(message));
 		let json: ClientToServerMessage;// = JSON.parse(message);
 		try {
 			json = JSON.parse(message) as ClientToServerMessage;
@@ -122,7 +120,7 @@ class Connection {
 		//	ws.close();
 		//	return ;
 		//}
-		const player_id: number = json.player_id;
+		const player_id: number = json.player_id; //unique id bound to account of the player
 		switch (json.type) {
 			case ('search_game'):
 				this.enter_matchmaking(player_id, json.payload.options);
@@ -137,7 +135,7 @@ class Connection {
 					for (let client of game.clients) {
 						if (client.id == player_id) {
 							client.socket.close();
-							client.socket = ws;
+							Object.assign(client.socket, this._ws);
 							console.log("client was reconnected to game");
 							//todo: update handler
 							return ;
@@ -145,6 +143,7 @@ class Connection {
 					}
 				}
 				//todo: give client some error, maybe deiffer between the types
+				this._ws.close();
 				console.log("client did not search for game and was also not in game");
 				return ;
 			default:
@@ -154,13 +153,7 @@ class Connection {
 		}
 	}
 
-	private game_input_msg(game: Game, player_id: number, message: ArrayBuffer) {
-		const view = new DataView(message);
-		const type: BinType = view.getUint8(0);
-	}
-	
 	private join_game(ws: WebSocket, player_id: number, options: GameOptions, game: Game) {
-
 		const client: Client = new Client(
 			new vec2(0, 0),
 			player_id,
@@ -178,13 +171,16 @@ class Connection {
 			game.clients.push(client);
 		}
 		if (game.clients.length == game.options.player_count) {
-			for (let client of game.clients) {
-				const msg: ServerToClientJson = {
+			console.log("starting game");
+			for (let i: number = 0; i < game.clients.length; i++) {
+				const msg: GameStartInfo = {
 					type: 'starting_game',
+					game_player_id: i,
 					game_id: 321, //todo: get a new unique id with the db that is bound to this game
 					options: options,
 				};
-				client.socket.send(JSON.stringify(msg));
+				game.clients[i].game_player_id = i;
+				game.clients[i].socket.send(JSON.stringify(msg));
 				game.init_game_state();
 			}
 			//todo: start game
