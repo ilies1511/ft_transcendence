@@ -17,8 +17,8 @@
 			"effects": []
 		},
 		"2": {
-			"center": [0, 5],
-			"normal": [0, -1],
+			"center": [8, 3],
+			"normal": [0, 1],
 			"length": 20,
 			"effects": []
 		}
