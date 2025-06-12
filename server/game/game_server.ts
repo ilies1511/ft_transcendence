@@ -1,23 +1,25 @@
 import Fastify from 'fastify';
 //import websocketPlugin, { SocketStream } from '@fastify/websocket'
-import websocketPlugin from '@fastify/websocket';
 import type { fastifyWebsocket } from '@fastify/websocket';
+import websocketPlugin from '@fastify/websocket';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 //import websocketPlugin, { SocketStream } from '@fastify/websocket'
-import type { ClientToServerMessage } from '../../game_shared/message_types';
-import type { ServerToClientMessage, GameStartInfo } from '../../game_shared/message_types';
-import type { ServerToClientJson } from '../../game_shared/message_types';
-import type { GameOptions } from '../../game_shared/message_types';
+//import type { ClientToServerMessage } from '../../game_shared/message_types';
 import type { WebSocket } from '@fastify/websocket';
+import type { ClientToServerMessage } from '@shared/message_types.ts';
+import type { GameOptions, GameStartInfo, ServerToClientJson, ServerToClientMessage } from '@shared/message_types.ts';
+//import type { GameOptions, GameStartInfo, ServerToClientJson, ServerToClientMessage } from '../../game_shared/message_types';
 
-import { Effects, vec2, Wall, Ball, Client, GameState }
-	from '../../game_shared/serialization';
+import { Ball, Client, Effects, GameState, vec2, Wall } from '@shared/serialization.ts';
+import default_map from './maps/default.json';
+//import { Effects, vec2, Wall, Ball, Client, GameState }
+//	from '../../game_shared/serialization';
 
 
 const PORT: number = 3333;
 
 export class Game {
-	private _next_obj_id: number = 0;
+	private _next_obj_id: number = 1;//has to start at 1
 	private _interval: NodeJS.Timeout | null = null;
 	running: boolean = false;
 	public options: GameOptions;
@@ -39,10 +41,32 @@ export class Game {
 
 	public init_game_state() {
 		this.running = true;
+		const game_state: GameState = new GameState(this);
+		const parse_map = (map_name?: string) => {
+			map_name = map_name || "default";
+			let map_data: any;
+			if (map_name == "default") {
+				map_data = default_map;
+			} else {
+				throw new Error("Unknown map name");
+			}
+			console.log(map_data);
+			Object.values(map_data.walls).forEach((w: any) => {
+				const cent: vec2 = new vec2(w.center[0], w.center[1]);
+				const nor: vec2 = new vec2(w.normal[0], w.normal[1]);
+				const len: number = w.length;
+				this.walls.push(new Wall(cent, nor, len, undefined, this._next_obj_id++));
+			});
+		}
+		parse_map("default");
 		const ball: Ball = new Ball();
 		ball.speed.x = 0.001;
 		ball.speed.y = 0.001;
+		ball.obj_id = this._next_obj_id++;
 		this.balls.push(ball);
+		console.log(this.walls);
+		console.log(this.balls);
+
 		this.start_loop();
 	}
 

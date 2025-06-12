@@ -75,5 +75,49 @@ describe('Serialization', () => {
     expect(gs.walls[0].length).toBeCloseTo(g.walls[0].length);
     expect(gs.walls[0].effects).toEqual(g.walls[0].effects);
   });
+	describe('obj_id serialization edge cases', () => {
+  it('Client with default obj_id (-1) serializes as 65535', () => {
+    const c = new Client();
+    const buf = c.serialize();
+    const { client: c2 } = Client.deserialize(buf);
+    expect(c2.obj_id).toBe(65535); // because -1 gets encoded as Uint16(65535)
+  });
+
+  it('Ball with default obj_id (-1) serializes as 65535', () => {
+    const b = new Ball();
+    const buf = b.serialize();
+    const { ball: b2 } = Ball.deserialize(buf);
+    expect(b2.obj_id).toBe(65535);
+  });
+
+  it('Wall with default obj_id (-1) serializes as 65535', () => {
+    const w = new Wall(new vec2(0, 0), new vec2(1, 0), 1.0);
+    const buf = w.serialize();
+    const { wall: w2 } = Wall.deserialize(buf);
+    expect(w2.obj_id).toBe(65535);
+  });
+
+  it('Client with explicit obj_id = 0', () => {
+    const c = new Client(undefined, undefined, undefined, undefined, 0);
+    const buf = c.serialize();
+    const { client: c2 } = Client.deserialize(buf);
+    expect(c2.obj_id).toBe(0);
+  });
+
+  it('Ball with explicit obj_id = 123', () => {
+    const b = new Ball(123);
+    const buf = b.serialize();
+    const { ball: b2 } = Ball.deserialize(buf);
+    expect(b2.obj_id).toBe(123);
+  });
+
+  it('Wall with explicit obj_id = 65535', () => {
+    const w = new Wall(new vec2(0, 0), new vec2(1, 0), 1.0, [], 65535);
+    const buf = w.serialize();
+    const { wall: w2 } = Wall.deserialize(buf);
+    expect(w2.obj_id).toBe(65535);
+  });
+});
+
 });
 

@@ -26,10 +26,10 @@ sockets:
 		- 3.: obj update
 		-> needs game specicific ID for each object
 		-- [x] update classes
-		-- [~] update serilization
-		-- [~] update deserilization
+		-- [x] update serilization
+		-- [x] update deserilization
 		-- [x] create objects on frontend
-		-- [ ] deactive objects on frontend
+		-- [x] deactive objects on frontend
 		-- [~] update objects on frontend
 	- [ ] add score and time communication
 	- [ ] check if server side code can be simplified without much work

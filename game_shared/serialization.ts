@@ -34,8 +34,8 @@ export class vec2 {
 
 export class Client {
 	public id: number;
-	public obj_id: number = -1;
-	public game_player_id: number = -1;
+	public obj_id: number;
+	public game_player_id: number = undefined;
 	public socket?: WebSocket;
 	public effects: Effects[];
 	public pos: vec2;
@@ -47,10 +47,10 @@ export class Client {
 		this.effects = [];
 		this.pos = pos || new vec2();
 		this.direct = direct || new vec2();
-		this.obj_id = obj_id || -1;
+		this.obj_id = obj_id !== undefined ? obj_id : -1;
 	}
 
-	// serializes the id, effects, pos, direct
+	// serializes the obj_id, id, effects, pos, direct
 	public serialize(): ArrayBuffer {
 		const effectsCount = this.effects.length;
 		const buffer = new ArrayBuffer(
@@ -116,25 +116,29 @@ export class Client {
 
 export class Ball {
 	public pos: vec2;
-	public obj_id: number = -1;
-	public speed?: vec2; // not serialized
+	public obj_id: number;
+	public speed: vec2; // not serialized
 	public acceleration?: vec2; // not serialized
 	public effects: Effects[];
 	public lifetime: number;
-	constructor(obj_id?: number) {
+	public dispose: boolean;
+
+	constructor(obj_id?: number, dispose?: boolean) {
 		this.pos = new vec2();
 		this.speed = new vec2();
 		this.effects = [];
 		this.lifetime = 0;
-		this.obj_id = obj_id || -1;
+		this.obj_id = obj_id !== undefined ? obj_id : -1;
+		this.dispose = dispose || false;
 	}
 
-	// serializes the pos, effects, lifetime
+	// serializes the pos, effects, lifetime, dispose
 	public serialize(): ArrayBuffer {
 		const effectsCount = this.effects.length;
 		const buffer = new ArrayBuffer(
 			2 // obj_id
 			+ 8 //pos
+			+ 1 // dispose
 			+ 1 + effectsCount //effects
 			+ 4 // lifetime
 		);
@@ -148,6 +152,9 @@ export class Ball {
 		offset += 4;
 		view.setFloat32(offset, this.pos.y, true);
 		offset += 4;
+		// dispose
+		view.setUint8(offset, this.dispose ? 1 : 0);
+		offset += 1;
 		// effects
 		view.setUint8(offset, effectsCount);
 		offset += 1;
@@ -164,11 +171,13 @@ export class Ball {
 	{
 		const view = new DataView(array);
 		//obj_id
-		const obj_id = view.getUint16(offset);
+		const obj_id = view.getUint16(offset, true);
 		offset += 2;
 		//pos
 		const { vec: pos, offset: off2 } = vec2.deserialize(array, offset);
 		offset = off2;
+		// dispose
+		const dispose = view.getUint8(offset++) !== 0;
 		//effects
 		const effectsCount = view.getUint8(offset++);
 		let effects: Effects[] = [];
@@ -182,6 +191,7 @@ export class Ball {
 		ball.effects = effects;
 		ball.lifetime = lifetime;
 		ball.obj_id = obj_id;
+		ball.dispose = dispose;
 		return { ball, offset };
 	}
 }
@@ -191,24 +201,33 @@ export class Wall {
 	public normal: vec2;
 	public length: number;
 	public effects: Effects[];
-	public obj_id: number = -1;
+	public obj_id: number;
+	public dispose: boolean;
 
-	constructor(center: vec2, normal: vec2, length: number, effects?: Effects[], obj_id?: number) {
+	constructor(center: vec2,
+		normal: vec2,
+		length: number,
+		effects?: Effects[],
+		obj_id?: number,
+		dispose?: boolean)
+	{
 		this.center = center;
 		this.normal = normal;
 		this.length = length;
 		this.effects = effects || [];
-		this.obj_id = obj_id || -1;
+		this.obj_id = obj_id !== undefined ? obj_id : -1;
+		this.dispose = dispose || false;
 	}
 
-	// Serialization: center(8), normal(8), length(4), effects(1+N)
+	// Serialization: center(8), normal(8), length(4), dispose(1), effects(1+N)
 	public serialize(): ArrayBuffer {
 		const effectsCount = this.effects.length;
 		const buffer = new ArrayBuffer(
 			2 // obj_id
 			+ 8 // center
 			+ 8 // normal
-			+ 4 //length
+			+ 4 // length
+			+ 1 // dispose
 			+ 1 + effectsCount //effects
 		);
 		const view = new DataView(buffer);
@@ -229,6 +248,9 @@ export class Wall {
 		// length
 		view.setFloat32(offset, this.length, true);
 		offset += 4;
+		// dispose
+		view.setUint8(offset, this.dispose ? 1 : 0);
+		offset += 1;
 		// effects
 		view.setUint8(offset, effectsCount);
 		offset += 1;
@@ -251,15 +273,17 @@ export class Wall {
 		offset = o3;
 		const length = view.getFloat32(offset, true);
 		offset += 4;
-		const effectsCount = view.getUint8(offset++); 
+		const dispose = view.getUint8(offset++) !== 0;
+		const effectsCount = view.getUint8(offset++);
 		let effects: Effects[] = [];
 		for (let i = 0; i < effectsCount; i++) {
 			effects.push(view.getUint8(offset++));
 		}
-		const wall = new Wall(center, normal, length, effects, obj_id);
+		const wall = new Wall(center, normal, length, effects, obj_id, dispose);
 		return { wall, offset };
 	}
 }
+
 
 // serializable game state
 export class GameState {

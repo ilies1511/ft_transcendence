@@ -73,9 +73,9 @@ export class Game {
 
 		this._camera = new BABYLON.ArcRotateCamera(
 			"Camera",
+			-Math.PI / 2,
 			Math.PI / 2,
-			Math.PI / 2,
-			2,
+			70,
 			BABYLON.Vector3.Zero(),
 			this._scene
 		);
@@ -84,8 +84,7 @@ export class Game {
 		//this._sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 1}, this._scene);
 
 		const light: BABYLON.PointLight = new BABYLON.PointLight(
-			"pointLight", new BABYLON.Vector3(1, 10, 1), this._scene);
-
+				"pointLight", new BABYLON.Vector3(10, 0, -1), this._scene);
 
 		const ground = BABYLON.MeshBuilder.CreateGround("ground", {
 			width: 50,
@@ -94,7 +93,13 @@ export class Game {
 //
 //
 		ground.material = new BABYLON.StandardMaterial("fireMat", this._scene);
-		ground.material.ambientTexture = new FireProceduralTexture("fireTex", 256, this._scene);
+		ground.material.ambientTexture = new FireProceduralTexture(
+			"fireTex",
+			256,
+			this._scene
+		);
+		//ground.roation.y = M.PI / 2;
+		ground.rotate(BABYLON.Axis.X, -Math.PI / 2, BABYLON.Space.LOCAL);
 //var grassTexture = new BABYLON.FireProceduralTexture("fireTex", 256, this._scene);
 //grassMaterial.ambientTexture = grassTexture;
 //
@@ -170,17 +175,48 @@ export class Game {
 			const game_state: GameState = GameState.deserialize(data);
 			game_state.balls.forEach((b: Ball) => {
 				if (this._meshes.has(b.obj_id)) {
-					this._meshes.get(b.obj_id).position.x = b.pos.x;
-					this._meshes.get(b.obj_id).position.y = b.pos.y;
+					const cur: BABYLON.Mesh = this._meshes.get(b.obj_id);
+					if (!b.dispose) {
+						cur.position.x = b.pos.x;
+						cur.position.y = b.pos.y;
+						cur.position.z = 0;
+					} else {
+						cur.dispose(true);
+						this._meshes.delete(b.obj_id);
+						// todo: clean up object from data structs?
+					}
 				} else {
-					const ball: BABYLON.Mesh = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 1}, this._scene);
+					const ball: BABYLON.Mesh = BABYLON.MeshBuilder.CreateSphere(
+						`sphere_${b.obj_id}`, {diameter: 1}, this._scene);
 					ball.position.x = b.pos.x;
 					ball.position.y = b.pos.y;
+					ball.position.z = 0;
 					this._meshes.set(b.obj_id, ball);
 				}
-				//this._sphere.material = new GridMaterial("groundMaterial", this._scene);
 			});
 			game_state.walls.forEach((w: Wall) => {
+				if (this._meshes.has(w.obj_id)) {
+				} else {
+					const wall: BABYLON.Mesh = BABYLON.MeshBuilder.CreateBox(
+						`wall_${w.obj_id}`,
+						{
+							width: w.length,
+							height: 1,
+							depth: 0.5
+						},
+						this._scene
+					);
+					wall.position.x = w.center.x;
+					wall.position.y = w.center.y;
+					wall.position.z = 0;
+					//todo: idk if this is the correct roation/optimal one
+					const normal: vec2 = new vec2(w.normal[0], w.normal[1]);
+					const rot_angle = Math.atan2(normal.x, normal.y);
+					//wall.roation.y = angle;
+					//wall.position.y = -5;
+					console.log(wall);
+					this._meshes.set(w.obj_id, wall);
+				}
 			});
 			game_state.clients.forEach((c: Client) => {
 			});
