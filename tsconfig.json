@@ -32,13 +32,15 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true,
+    "noFallthroughCasesInSwitch": false,
     "noUncheckedSideEffectImports": true
   },
   "include": [
     "client/**/*",  // Client-side code
     "server/**/*",  // Server-side code
+    "server/**/**/*",  // Server-side code
 	"game_shared/*",
+	"game_shared/**/*",
     "vite.config.ts"
   ]
 }

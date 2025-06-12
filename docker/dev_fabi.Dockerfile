@@ -28,6 +28,8 @@ RUN cd neovim \
 	&& make CMAKE_BUILD_TYPE=RelWithDebInfo \
 	&& make install
 
+RUN npm install -g typescript typescript-language-server
+
 #RUN npm install -g http-server
 #RUN npm install -g express
 

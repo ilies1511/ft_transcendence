@@ -170,8 +170,13 @@ export class Game {
 			const game_state: GameState = GameState.deserialize(data);
 			game_state.balls.forEach((b: Ball) => {
 				if (this._meshes.has(b.obj_id)) {
-					this._meshes.get(b.obj_id).position.x = b.pos.x;
-					this._meshes.get(b.obj_id).position.y = b.pos.y;
+					const cur: BABYLON.Mesh = this._meshes.get(b.obj_id);
+					if (!b.dispose) {
+						cur.position.x = b.pos.x;
+						cur.position.y = b.pos.y;
+					} else {
+						cur.dispose(true);
+					}
 				} else {
 					const ball: BABYLON.Mesh = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 1}, this._scene);
 					ball.position.x = b.pos.x;
@@ -184,7 +189,7 @@ export class Game {
 			});
 			game_state.clients.forEach((c: Client) => {
 			});
-			//console.log("got game state: ", game_state);
+			console.log("got game state: ", game_state);
 		} else if (typeof data === 'string') {
 			console.log("GAME: got string: ", data);
 			const json: ServerToClientMessage = JSON.parse(data);
