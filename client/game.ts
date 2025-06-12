@@ -220,7 +220,7 @@ export class Game {
 			});
 			game_state.clients.forEach((c: Client) => {
 			});
-			console.log("got game state: ", game_state);
+			//console.log("got game state: ", game_state);
 		} else if (typeof data === 'string') {
 			console.log("GAME: got string: ", data);
 			const json: ServerToClientMessage = JSON.parse(data);
