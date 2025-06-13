@@ -20,7 +20,7 @@ sockets:
 	- [x] client: implement msg type multiplexor
 	- [ ] server: connection state multiplexor
 		-> go to execute specific action when the client is in for example matchmaking or a game
-	! [ ] update game update coms: split into 3 parts
+	! [x] update game update coms: split into 3 parts->not needed anymore but still works
 		- 1.: new obj notification
 		- 2.: obj deactivation
 		- 3.: obj update

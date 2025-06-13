@@ -17,8 +17,20 @@
 			"effects": []
 		},
 		"2": {
-			"center": [8, 3],
+			"center": [0, -5],
 			"normal": [0, 1],
+			"length": 20,
+			"effects": []
+		},
+		"3": {
+			"center": [-5, 0],
+			"normal": [1, 0],
+			"length": 20,
+			"effects": []
+		},
+		"4": {
+			"center": [5, 0],
+			"normal": [-1, 0],
 			"length": 20,
 			"effects": []
 		}

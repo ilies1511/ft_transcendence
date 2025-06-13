@@ -8,7 +8,7 @@ import { GridMaterial } from '@babylonjs/materials/Grid';
 import { FireProceduralTexture } from '@babylonjs/procedural-textures/fire';
 
 import { Effects, vec2, Wall, Ball, Client, GameState }
-	from './game_shared/serialization';
+	from './game_shared/serialization.ts';
 
 
 
@@ -25,6 +25,7 @@ enum State {
 	GAME = 1,
 	END = 2,
 }
+
 
 
 
@@ -84,7 +85,7 @@ export class Game {
 		//this._sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 1}, this._scene);
 
 		const light: BABYLON.PointLight = new BABYLON.PointLight(
-				"pointLight", new BABYLON.Vector3(10, 0, -1), this._scene);
+				"pointLight", new BABYLON.Vector3(10, 10, -5), this._scene);
 
 		const ground = BABYLON.MeshBuilder.CreateGround("ground", {
 			width: 50,
@@ -196,6 +197,10 @@ export class Game {
 			});
 			game_state.walls.forEach((w: Wall) => {
 				if (this._meshes.has(w.obj_id)) {
+					const wall: BABYLON.Mesh = this._meshes.get(w.obj_id);
+					wall.position.x = w.center.x;
+					wall.position.y = w.center.y;
+					console.log(wall);
 				} else {
 					const wall: BABYLON.Mesh = BABYLON.MeshBuilder.CreateBox(
 						`wall_${w.obj_id}`,
@@ -209,12 +214,15 @@ export class Game {
 					wall.position.x = w.center.x;
 					wall.position.y = w.center.y;
 					wall.position.z = 0;
-					//todo: idk if this is the correct roation/optimal one
-					const normal: vec2 = new vec2(w.normal[0], w.normal[1]);
-					const rot_angle = Math.atan2(normal.x, normal.y);
-					//wall.roation.y = angle;
-					//wall.position.y = -5;
-					console.log(wall);
+					const default_normal: vec2 = new vec2(0, 1);
+					default_normal.unit();
+					//todo: rotation
+					const normal: vec2 = w.normal;
+					normal.unit();
+					const dot: number = default_normal.x * normal.x
+						+ default_normal.y * normal.y;
+					const rot: number = Math.acos(dot);
+					wall.rotation.z = rot;
 					this._meshes.set(w.obj_id, wall);
 				}
 			});
