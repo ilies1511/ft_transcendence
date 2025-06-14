@@ -17,10 +17,6 @@ import { GameScene } from './scenes/game_scene.ts';
 
 
 
-
-//import { Engine, Scene, Mesh, ArcRotateCamera, PointLight, Vector3, HemisphericLight, MeshBuilder, ArcRotateCameraGamepadInput } from "@babylonjs/core";
-//const server_ip: string = import.meta.env.VITE_IP;
-//const game_port: string = import.meta.env.VITE_GAME_PORT;
 const server_ip: string = "localhost";
 
 const game_port: string = "5173";
@@ -78,7 +74,6 @@ export class Game {
 
 	private _open_socket() {
 		try {
-			//this._socket = new WebSocket("ws://" + server_ip + ":" + game_port + "/game");
 			this._socket = new WebSocket('ws://localhost:5173/game')
 
 			this._socket.binaryType = "arraybuffer";

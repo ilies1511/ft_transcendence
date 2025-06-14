@@ -2,6 +2,10 @@
 client:
 	- [x] refactor
 
+server:
+	- [ ] fix buggy intersection fn
+	- [ ] why does the server stop sending updates with buggy intersection fn
+
 server game lobby:
 	- [ ] change 'Game' class to be a 'GameLobby' instead
 	- [ ] game lobbys can he hidden from matchmaking and require some key to join

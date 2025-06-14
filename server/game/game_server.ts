@@ -15,8 +15,8 @@ import default_map from './maps/default.json';
 //import { Effects, vec2, Wall, Ball, Client, GameState }
 //	from '../../game_shared/serialization';
 
-//const EPSILON: number = 1e-7;
-const EPSILON: number = 0;
+const EPSILON: number = 1e-4;
+//const EPSILON: number = 0;
 
 const PORT: number = 3333;
 
@@ -138,7 +138,7 @@ export class Game {
 	private _last_game_tick: number = 0;
 	private _next_obj_id: number = 1;//has to start at 1
 	private _interval: NodeJS.Timeout | null = null;
-	private _frame_time: number = 1000 / 30;
+	private _frame_time: number = 1000 / 60;
 	running: boolean = false;
 	public options: GameOptions;
 	public clients: Client[] = [];
@@ -178,8 +178,8 @@ export class Game {
 		}
 		parse_map("default");
 		const ball: Ball = new Ball();
-		ball.speed.x = 1;
-		ball.speed.y = 1;
+		ball.speed.x = 10;
+		ball.speed.y = 10;
 		ball.pos.x = 1;
 		ball.obj_id = this._next_obj_id++;
 		this.balls.push(ball);
@@ -213,7 +213,7 @@ export class Game {
 		//}
 		for (const ball of this.balls) {
 			//console.log(ball);
-			let delta_time: number = 1 / this._frame_time;
+			let delta_time: number = this._frame_time / 1000;
 			while (delta_time > EPSILON) {
 				//console.log("delta time: ", delta_time);
 				const intersecs: intersection_point[] = [];
@@ -225,6 +225,7 @@ export class Game {
 						intersecs.push(intersection);
 					}
 				}
+
 				//console.log("interec count: ", intersecs.length);
 				//console.log(intersecs);
 				if (intersecs.length) {
@@ -235,6 +236,7 @@ export class Game {
 						}
 					}
 					const hit_walls: Wall[] = [];
+
 					for (const intersc of intersecs) {
 						if (Math.abs(intersc.time -first_intersec.time) < EPSILON) {
 							ball.cur_collision_obj_id.push(intersc.wall.obj_id);
@@ -245,6 +247,8 @@ export class Game {
 						delta_time -= first_intersec.time;
 						delta_time -= EPSILON;
 						ball.pos = first_intersec.p;
+
+				//console.log("1: ", i++);//, ": ", ball);
 						reflect(ball, hit_walls);
 					//}
 					ball.last_collision_obj_id = ball.cur_collision_obj_id;
@@ -253,16 +257,18 @@ export class Game {
 					//offset.unit();
 					//offset.scale(ball.radius + EPSILON);
 					//ball.pos.add(offset);
+					//
 				} else {
 					const ball_movement: vec2 = ball.speed.clone()
 					ball_movement.scale(delta_time);
 					ball.pos.add(ball_movement);
 					delta_time = 0
+
+				//console.log("2: ", i++);//, ": ", ball);
 				}
-				//console.log(i++, ": ", ball);
 				//console.log(intersecs);
 				if (ball.pos.x == Infinity || isNaN(ball.pos.x)) {
-					console.log(ball);
+					console.log("error: ball data corrupted: ", ball);
 					process.exit(1);
 				}
 			}
@@ -389,8 +395,8 @@ class Connection {
 				};
 				game.clients[i].game_player_id = i;
 				game.clients[i].socket.send(JSON.stringify(msg));
-				game.init_game_state();
 			}
+			game.init_game_state();
 			//todo: start game
 			//todo: flush ws so no old request are left inside
 			//ws.onmessage = (event) => {
@@ -478,4 +484,6 @@ export class GameServer {
 		return this._games;
 	}
 }
+
+
 
