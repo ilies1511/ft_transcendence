@@ -12,9 +12,6 @@ import { Effects, vec2, Wall, Ball, Client, GameState }
 
 
 export abstract class BaseScene extends BABYLON.Scene {
-	public active: boolean = false;
-	public static active_scenes: BaseScene[] = [];
-
 	protected _engine: BABYLON.Engine;
 	protected _canvas: HTMLCanvasElement;
 
@@ -22,6 +19,16 @@ export abstract class BaseScene extends BABYLON.Scene {
 		super(engine);
 		this._engine = engine;
 		this._canvas = canvas;
+		window.addEventListener("keydown", (ev) => {
+			if ((ev.key === "I" || ev.key === "i"))
+			{
+				if (this.debugLayer.isVisible()) {
+					this.debugLayer.hide();
+				} else {
+					this.debugLayer.show();
+				}
+			}
+		});
 	}
 
 	abstract loop(): void;

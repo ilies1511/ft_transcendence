@@ -1,4 +1,11 @@
 
+client:
+	- [x] refactor
+
+server game lobby:
+	- [ ] change 'Game' class to be a 'GameLobby' instead
+	- [ ] game lobbys can he hidden from matchmaking and require some key to join
+
 misc:
 	- [x] frontend: figure out proper way to handle js packages and ts compilation
 	- [x] backend: figure out proper way to handle js packages and ts compilation
