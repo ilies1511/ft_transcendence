@@ -1,14 +1,17 @@
 import * as BABYLON from '@babylonjs/core/Legacy/legacy';
 //import * as BABYLON from 'babylonjs';
-import type { ServerToClientMessage, GameStartInfo } from '../../game_shared/message_types';
-import type { ClientToServerMessage } from '../../game_shared/message_types';
-import type { GameOptions } from '../../game_shared/message_types';
+import type { ServerToClientMessage, GameStartInfo } from '../../../game_shared/message_types.ts';
+import type { ClientToServerMessage } from '../../../game_shared/message_types';
+import type { GameOptions } from '../../../game_shared/message_types';
 
 import { GridMaterial } from '@babylonjs/materials/Grid';
 import { FireProceduralTexture } from '@babylonjs/procedural-textures/fire';
 
 import { Effects, vec2, Wall, Ball, Client, GameState }
 	from './game_shared/serialization.ts';
+
+import { BaseScene } from './scenes/base.ts';
+import { GameScene } from './scenes/game_scene.ts';
 
 
 
@@ -20,20 +23,14 @@ const server_ip: string = "localhost";
 
 const game_port: string = "5173";
 
-enum State {
-	START = 0,
-	GAME = 1,
-	END = 2,
-}
-
-
-
-
 export class Game {
-	private _scene: BABYLON.Scene;
 	private _canvas: HTMLCanvasElement;
 	private _engine: BABYLON.Engine;
-	private _camera: BABYLON.ArcRotateCamera;
+
+	private _scenes: BaseScene[] = [];
+
+	private _game_scene: GameScene;
+
 
 	//private _sphere: BABYLON.Mesh;
 
@@ -41,105 +38,63 @@ export class Game {
 
 	private _start_info: GameStartInfo | undefined = undefined;
 
-	private _latestMessage: MessageEvent<ServerToClientMessage> | null = null;
-
-	private _next_update_time: number = 0;
-	private _update_interval: number = 1000;
+	private _last_server_msg: MessageEvent<ServerToClientMessage> | null = null;
 
 	private _socket: WebSocket;
 	private _id: number;
 
 	public options: GameOptions;
-	public state: State = State.START;
 
 	constructor(
 		id: number, //some number that is unique for each client, ideally bound to the account
 		container: HTMLElement,
 		options: GameOptions,
 	) {
+		this._process_msg = this._process_msg.bind(this);
+		this._rcv_msg = this._rcv_msg.bind(this);
+	
 		console.log("GAME: game constructor");
 		this._id = id;
 		this.options = options;
 
 		this._open_socket();
 
-		this._next_update_time = Date.now();
-
 		this._canvas = this._createCanvas();
-		//document.body.appendChild(this._canvas);
-		//document.getElementById('main')?.appendChild(this._canvas);
 		container.appendChild(this._canvas);
 	
 		this._engine = new BABYLON.Engine(this._canvas, true);
-		this._scene = new BABYLON.Scene(this._engine);
 
-		this._camera = new BABYLON.ArcRotateCamera(
-			"Camera",
-			-Math.PI / 2,
-			Math.PI / 2,
-			70,
-			BABYLON.Vector3.Zero(),
-			this._scene
-		);
-		this._camera.attachControl(this._canvas, true);
-
-		//this._sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 1}, this._scene);
-
-		const light: BABYLON.PointLight = new BABYLON.PointLight(
-				"pointLight", new BABYLON.Vector3(10, 10, -5), this._scene);
-
-		const ground = BABYLON.MeshBuilder.CreateGround("ground", {
-			width: 50,
-			height: 50
-			}, this._scene);
-//
-//
-		ground.material = new BABYLON.StandardMaterial("fireMat", this._scene);
-		ground.material.ambientTexture = new FireProceduralTexture(
-			"fireTex",
-			256,
-			this._scene
-		);
-		//ground.roation.y = M.PI / 2;
-		ground.rotate(BABYLON.Axis.X, -Math.PI / 2, BABYLON.Space.LOCAL);
-//var grassTexture = new BABYLON.FireProceduralTexture("fireTex", 256, this._scene);
-//grassMaterial.ambientTexture = grassTexture;
-//
-//ground.material = grassMaterial;
-
-
-		//this._sphere.material = new GridMaterial("groundMaterial", this._scene);
-
+		this._game_scene = new GameScene(this._engine, this._canvas);
+		this._game_scene.active = true;
+		this._scenes.push(this._game_scene);
 
 	
 		window.addEventListener("keydown", (ev) => {
-			//if (ev.shiftKey && ev.ctrlKey && ev.altKey &&
 			if ((ev.key === "I" || ev.key === "i"))
 			{
-				if (this._scene.debugLayer.isVisible()) {
-					this._scene.debugLayer.hide();
+				if (this._game_scene.debugLayer.isVisible()) {
+					this._game_scene.debugLayer.hide();
 				} else {
-					this._scene.debugLayer.show();
+					this._game_scene.debugLayer.show();
 				}
 			}
 		});
 
-
+		this._engine.runRenderLoop(() => {
+			this._process_msg();
+			for (const scene of this._scenes) {
+				if (scene.active) {
+					scene.loop();
+					scene.render();
+				}
+			}
+		});
 	}
 
 	private _open_socket() {
 		try {
 			//this._socket = new WebSocket("ws://" + server_ip + ":" + game_port + "/game");
 			this._socket = new WebSocket('ws://localhost:5173/game')
-			
-			//this._socket.onopen = () => {
-			//  console.log('[FRONT-END GAME WS] Connected to /game!');
-			//  this._socket.send('Hello from the game frontend!');
-			//};
-			//
-			//this._socket.onmessage = (event) => {
-			//  console.log('[FRONT-END GAME WS] Received:', event.data);
-			//};
 
 			this._socket.binaryType = "arraybuffer";
 
@@ -166,15 +121,21 @@ export class Game {
 		}
 	}
 
-	private _rcv_msg(event: MessageEvent<ServerToClientMessage>): undefined {
-		//console.log("GAME: recieved msg");
-		const data = event.data;
-		if (data instanceof ArrayBuffer) {
-			//console.log("GAME: got ArrayBuffer");
-			if (this.state != State.GAME) {
-				throw new Error("Got array buffer but game state is not GAME");
+	private _process_msg() {
+		//console.log("_process_msg");
+		if (this._last_server_msg == null) {
+			console.log("no message to process");
+			return ;
+		}
+		const msg: ServerToClientMessage = this._last_server_msg;
+		if (msg instanceof ArrayBuffer) {
+			/* msg is a game state update */
+			console.log("GAME: got ArrayBuffer");
+			if (!this._game_scene.active) {
+				this._game_scene.active = true;
+				/* activate/deactivate other scenes for gameplay */
 			}
-			const game_state: GameState = GameState.deserialize(data);
+			const game_state: GameState = GameState.deserialize(msg);
 			game_state.balls.forEach((b: Ball) => {
 				if (this._meshes.has(b.obj_id)) {
 					const cur: BABYLON.Mesh = this._meshes.get(b.obj_id);
@@ -189,7 +150,7 @@ export class Game {
 					}
 				} else {
 					const ball: BABYLON.Mesh = BABYLON.MeshBuilder.CreateSphere(
-						`sphere_${b.obj_id}`, {diameter: 1}, this._scene);
+						`sphere_${b.obj_id}`, {diameter: 1}, this._game_scene);
 					ball.position.x = b.pos.x;
 					ball.position.y = b.pos.y;
 					ball.position.z = 0;
@@ -210,7 +171,7 @@ export class Game {
 							height: 1,
 							depth: 0.5
 						},
-						this._scene
+						this._game_scene
 					);
 					wall.position.x = w.center.x;
 					wall.position.y = w.center.y;
@@ -229,10 +190,9 @@ export class Game {
 			});
 			game_state.clients.forEach((c: Client) => {
 			});
-			//console.log("got game state: ", game_state);
-		} else if (typeof data === 'string') {
-			console.log("GAME: got string: ", data);
-			const json: ServerToClientMessage = JSON.parse(data);
+		} else if (typeof msg === 'string') {
+			console.log("GAME: got string: ", msg);
+			const json: ServerToClientMessage = JSON.parse(msg);
 			console.log("GAME: got ServerToClientMessage object: ", json);
 			switch (json.type) {
 				case ('game_lobby_update'):
@@ -241,16 +201,21 @@ export class Game {
 				case ('starting_game'):
 					//console.log(this._start_info);
 					this._start_info = json;
-					this.state = State.GAME;
 					//todo: render some loading screen or smth like that
-					this._engine.runRenderLoop(() => {
-						this._scene.render();
-					});
+
 					break ;
 			}
 		} else {
-			console.log("GAME: Error: unknown message type recieved: ", typeof data);
+			console.log("GAME: Error: unknown message type recieved: ", typeof msg);
 		}
+		this._last_server_msg = null;
+	}
+
+	private _rcv_msg(event: MessageEvent<ServerToClientMessage>): undefined {
+		//console.log("GAME: recieved msg");
+		const data = event.data;
+		//console.log(data);
+		this._last_server_msg = data;
 	}
 
 	private _createCanvas(): HTMLCanvasElement {
