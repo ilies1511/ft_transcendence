@@ -15,12 +15,130 @@ import default_map from './maps/default.json';
 //import { Effects, vec2, Wall, Ball, Client, GameState }
 //	from '../../game_shared/serialization';
 
+//const EPSILON: number = 1e-7;
+const EPSILON: number = 0;
 
 const PORT: number = 3333;
 
+let i: number = 0;
+
+function dot(a: vec2, b: vec2): number {
+	return (a.x * b.x + a.y * b.y);
+}
+
+function reflect(ball: Ball, surface: Wall[]) {
+	//console.log("initial ball speed: ", ball.speed);
+
+	for (let wall of surface) {
+		const normal = wall.normal.clone();
+		//console.log("wall normal: ", normal);
+
+		const dot_p: number = dot(ball.speed, normal);
+		const n = normal.clone();
+		n.scale(2 * dot_p);
+		ball.speed.sub(n);
+		//console.log("intermediate ball speed: ", ball.speed);
+	}
+
+	//console.log("after: ball speed: ", ball.speed);
+}
+
+
+
+type intersection_point = {
+	p: vec2,
+	time: number,
+	wall: Wall,
+};
+
+function intersec(ball: Ball, wall: Wall, delta_time?: number):
+	intersection_point | undefined
+{
+	if (ball.last_collision_obj_id.includes(wall.obj_id)) {
+		return undefined;
+	}
+	const dist_rate: number = dot(ball.speed, wall.normal);
+	//console.log("dist_rate:", dist_rate);
+	if (dist_rate < EPSILON && dist_rate > -EPSILON) {
+		return (undefined);
+	}
+	/* this can be used for walls that have no hitbox on one side */
+	//if (dist_rate >= 0) { 
+	//	return undefined;
+	//}
+
+	const w_direct: vec2 = wall.get_direct();
+	const endpoints = wall.get_endpoints();
+	
+	const center_diff = new vec2(ball.pos.x - wall.center.x, ball.pos.y - wall.center.y);
+	const signed_dist: number = dot(center_diff, wall.normal);
+
+	let impact_time;
+
+	if (signed_dist + EPSILON > ball.radius) {
+		impact_time = (ball.radius - signed_dist) / (-dist_rate);
+	} else if (signed_dist - EPSILON < -ball.radius) {
+		impact_time = (-ball.radius - signed_dist) / (-dist_rate);
+	} else {
+		impact_time = 0;
+	}
+	if (impact_time < 0) {
+		return (undefined);
+	}
+	if (delta_time !== undefined && impact_time - EPSILON > delta_time) {
+		return (undefined);
+	}
+	if (impact_time < EPSILON) {
+		impact_time = EPSILON;
+	}
+
+
+
+	//dosn't fully fix stuck/going-throug-wall ball
+	const ball_offset_pos: vec2 = ball.pos.clone();
+	const ball_offset: vec2 = ball.speed.clone();
+	ball_offset.scale(EPSILON);
+	ball_offset_pos.add(ball_offset);
+	ball_offset_pos.sub(wall.center);
+	const offset_signed_dist: number = dot(ball_offset_pos, wall.normal);
+	if (Math.abs(offset_signed_dist) > Math.abs(signed_dist)) {
+		return undefined;
+	}
+
+
+
+	const ball_movement: vec2 = new vec2(ball.speed.x, ball.speed.y);
+	ball_movement.scale(impact_time);
+	const ball_impact_pos: vec2 = new vec2(ball.pos.x, ball.pos.y);
+	ball_impact_pos.add(ball_movement);
+
+
+	const ball_direct: vec2 = ball.speed.clone();
+	ball_direct.unit();
+	const diff_vec: vec2 = new vec2(ball.pos.x - ball_impact_pos.x,
+		ball.pos.y - ball_impact_pos.y);
+	diff_vec.unit();
+	//if (vec2.eq(ball_direct, diff_vec)) {
+	//	return undefined;
+	//}
+	
+
+
+
+	const vec_from_wall_center = new vec2(wall.center.x, wall.center.y);
+	vec_from_wall_center.sub(ball_impact_pos);
+	const dist_from_center = Math.abs(dot(vec_from_wall_center, wall.get_direct()));
+	if (dist_from_center <= (wall.length / 2) + 1e-6) {
+		return {p: ball_impact_pos, time: impact_time, wall};
+	}
+	return (undefined);
+}
+
 export class Game {
+	private _last_game_tick: number = 0;
 	private _next_obj_id: number = 1;//has to start at 1
 	private _interval: NodeJS.Timeout | null = null;
+	private _frame_time: number = 1000 / 30;
 	running: boolean = false;
 	public options: GameOptions;
 	public clients: Client[] = [];
@@ -60,8 +178,9 @@ export class Game {
 		}
 		parse_map("default");
 		const ball: Ball = new Ball();
-		ball.speed.x = 0.001;
-		ball.speed.y = 0.001;
+		ball.speed.x = 1;
+		ball.speed.y = 1;
+		ball.pos.x = 1;
 		ball.obj_id = this._next_obj_id++;
 		this.balls.push(ball);
 		console.log(this.walls);
@@ -70,7 +189,7 @@ export class Game {
 		this.start_loop();
 	}
 
-	broadcast_game_state() {
+	private broadcast_game_state() {
 		const buffer = this.serialize_game_state();
 		for (const client of this.clients) {
 			if (client.socket.readyState === client.socket.OPEN) {
@@ -79,28 +198,92 @@ export class Game {
 		}
 	}
 
-	update() {
-		//console.log("game update");
+	/* 1. update walls (idk if this will be feature, for now ignore)
+	 * 2. update player paddles
+	 * 3. update balls
+	 * 4. broadcast */
+	private update() {
+		//console.log("update");
+		//this.walls[0].center.y += 0.01;//for testing move the wall
+		//for (const ball of this.balls) {
+		//	console.log(ball);
+		//}
+		//for (const wall of this.walls) {
+		//	console.log(wall);
+		//}
 		for (const ball of this.balls) {
-			ball.pos.x += ball.speed.x;
-			ball.pos.y += ball.speed.y;
+			//console.log(ball);
+			let delta_time: number = 1 / this._frame_time;
+			while (delta_time > EPSILON) {
+				//console.log("delta time: ", delta_time);
+				const intersecs: intersection_point[] = [];
+				for (const wall of this.walls) {
+					//console.log(wall);
+					const intersection: intersection_point | undefined =
+						intersec(ball, wall, delta_time);
+					if (intersection !== undefined) {
+						intersecs.push(intersection);
+					}
+				}
+				//console.log("interec count: ", intersecs.length);
+				//console.log(intersecs);
+				if (intersecs.length) {
+					let first_intersec: intersection_point = intersecs[0];
+					for (const intersc of intersecs) {
+						if (intersc.time < first_intersec.time) {
+							first_intersec = intersc;
+						}
+					}
+					const hit_walls: Wall[] = [];
+					for (const intersc of intersecs) {
+						if (Math.abs(intersc.time -first_intersec.time) < EPSILON) {
+							ball.cur_collision_obj_id.push(intersc.wall.obj_id);
+							hit_walls.push(intersc.wall);
+						}
+					}
+					//if (hit_walls.length == 1) {
+						delta_time -= first_intersec.time;
+						delta_time -= EPSILON;
+						ball.pos = first_intersec.p;
+						reflect(ball, hit_walls);
+					//}
+					ball.last_collision_obj_id = ball.cur_collision_obj_id;
+					ball.cur_collision_obj_id = [];
+					//const offset: vec2 = ball.speed.clone();
+					//offset.unit();
+					//offset.scale(ball.radius + EPSILON);
+					//ball.pos.add(offset);
+				} else {
+					const ball_movement: vec2 = ball.speed.clone()
+					ball_movement.scale(delta_time);
+					ball.pos.add(ball_movement);
+					delta_time = 0
+				}
+				//console.log(i++, ": ", ball);
+				//console.log(intersecs);
+				if (ball.pos.x == Infinity || isNaN(ball.pos.x)) {
+					console.log(ball);
+					process.exit(1);
+				}
+			}
 		}
 		this.broadcast_game_state();
 	}
 
-	start_loop() {
+	private start_loop() {
 		if (this._interval) return;
 		this.running = true;
+
 		this._interval= setInterval(() => {
 			try {
 				this.update();
 			} catch (e) {
 				console.error("game update error:", e);
 			}
-		}, 1000 / 30);
+		}, this._frame_time);
 	}
 
-	stop_loop() {
+	private stop_loop() {
 		if (this._interval) {
 			clearInterval(this._interval);
 			this._interval = null;

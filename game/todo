@@ -1,4 +1,11 @@
 
+client:
+	- [x] refactor
+
+server game lobby:
+	- [ ] change 'Game' class to be a 'GameLobby' instead
+	- [ ] game lobbys can he hidden from matchmaking and require some key to join
+
 misc:
 	- [x] frontend: figure out proper way to handle js packages and ts compilation
 	- [x] backend: figure out proper way to handle js packages and ts compilation
@@ -20,7 +27,7 @@ sockets:
 	- [x] client: implement msg type multiplexor
 	- [ ] server: connection state multiplexor
 		-> go to execute specific action when the client is in for example matchmaking or a game
-	! [ ] update game update coms: split into 3 parts
+	! [x] update game update coms: split into 3 parts->not needed anymore but still works
 		- 1.: new obj notification
 		- 2.: obj deactivation
 		- 3.: obj update

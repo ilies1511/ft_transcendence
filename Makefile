@@ -1,6 +1,9 @@
 
 .PHONY: all down ff_clean_docker dev_fabi game_shared i run
 
+kill_node:
+	kill -9 $(pidof node)
+
 run: game_shared
 	npm run dev
 
@@ -33,8 +36,8 @@ dev_fabi:
 
 
 game_shared:
-	rm -rf client/shared_game
-	cp -r game_shared client
+	rm -rf client/game/shared_game
+	cp -r game_shared client/game
 
 #dev_fabi:
 #	docker compose build --build-arg UID=$(id -u) --build-arg GID=$(id -g) \

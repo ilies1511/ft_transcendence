@@ -1,4 +1,4 @@
-
+const EPSILON: number = 1e-6;
 
 //placeholder
 export enum Effects {
@@ -12,6 +12,38 @@ export class vec2 {
 	constructor(x?: number, y?: number) {
 		this.x = x || 0;
 		this.y = y || 0;
+	}
+
+	static eq(a: vec2, b:vec2): boolean {
+		if (Math.abs(a.x - b.x) < EPSILON && Math.abs(a.y - b.y)) {
+			return (true);
+		}
+		return (false);
+	}
+
+	public clone(): vec2 {
+		return new vec2(this.x, this.y);
+	}
+
+	public unit() {
+		const len: number = this.x + this.y;
+		this.x /= len;
+		this.y /= len;
+	}
+
+	public add(a: vec2) {
+		this.x += a.x;
+		this.y += a.y;
+	}
+
+	public sub(a: vec2) {
+		this.x -= a.x;
+		this.y -= a.y;
+	}
+
+	public scale(a: number) {
+		this.x *= a;
+		this.y *= a;
 	}
 
 	public serialize(): ArrayBuffer {
@@ -114,6 +146,7 @@ export class Client {
 	}
 }
 
+//todo: add radius to serialization
 export class Ball {
 	public pos: vec2;
 	public obj_id: number;
@@ -122,6 +155,10 @@ export class Ball {
 	public effects: Effects[];
 	public lifetime: number;
 	public dispose: boolean;
+	public radius: number = 1;
+	public last_collision_obj_id: number[] = [];
+	public cur_collision_obj_id: number[] = [];
+
 
 	constructor(obj_id?: number, dispose?: boolean) {
 		this.pos = new vec2();
@@ -204,6 +241,11 @@ export class Wall {
 	public obj_id: number;
 	public dispose: boolean;
 
+	private _direct: vec2 = new vec2();
+	private _endpoint1: vec2 = new vec2();
+	private _endpoint2: vec2 = new vec2();
+
+
 	constructor(center: vec2,
 		normal: vec2,
 		length: number,
@@ -213,10 +255,48 @@ export class Wall {
 	{
 		this.center = center;
 		this.normal = normal;
+		this.normal.unit();
 		this.length = length;
 		this.effects = effects || [];
 		this.obj_id = obj_id !== undefined ? obj_id : -1;
 		this.dispose = dispose || false;
+		this.update();
+	}
+
+	private _set_direct() {
+		this._direct = new vec2(this.normal.y * -1, this.normal.x);
+	}
+
+	private _set_endpoints() {
+		this._endpoint1 = new vec2(this.center.x, this.center.y);
+		this._endpoint2 = new vec2(this.center.x, this.center.y);
+		const offset: vec2 = new vec2(this._direct.x, this._direct.y);
+		offset.scale(this.length / 2);
+		this._endpoint1.add(offset);
+		offset.scale(this.length * - 1);
+		this._endpoint2.add(offset);
+	}
+
+	private _unit() {
+		this.normal.unit();
+	}
+
+	//todo: make it possible to adjust normal, center + len; for now idc
+	public update() {
+		this._unit();
+		this._set_direct();
+		this._set_endpoints();
+	}
+
+	public get_endpoints(): {p1: vec2, p2: vec2} {
+		return {
+			p1: new vec2(this._endpoint1.x, this._endpoint1.y), 
+			p2: new vec2(this._endpoint2.x, this._endpoint2.y)
+		};
+	}
+
+	public get_direct(): vec2 {
+		return new vec2(this._direct.x, this._direct.y);
 	}
 
 	// Serialization: center(8), normal(8), length(4), dispose(1), effects(1+N)
