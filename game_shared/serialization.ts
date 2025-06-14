@@ -1,4 +1,4 @@
-
+const EPSILON: number = 1e-6;
 
 //placeholder
 export enum Effects {
@@ -12,6 +12,13 @@ export class vec2 {
 	constructor(x?: number, y?: number) {
 		this.x = x || 0;
 		this.y = y || 0;
+	}
+
+	static eq(a: vec2, b:vec2): boolean {
+		if (Math.abs(a.x - b.x) < EPSILON && Math.abs(a.y - b.y)) {
+			return (true);
+		}
+		return (false);
 	}
 
 	public clone(): vec2 {
@@ -149,6 +156,9 @@ export class Ball {
 	public lifetime: number;
 	public dispose: boolean;
 	public radius: number = 1;
+	public last_collision_obj_id: number[] = [];
+	public cur_collision_obj_id: number[] = [];
+
 
 	constructor(obj_id?: number, dispose?: boolean) {
 		this.pos = new vec2();
