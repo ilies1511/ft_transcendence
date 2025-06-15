@@ -3,6 +3,7 @@ client:
 	- [x] refactor
 
 server:
+	- [ ] refactor
 	- [ ] fix buggy intersection fn
 	- [ ] why does the server stop sending updates with buggy intersection fn
 

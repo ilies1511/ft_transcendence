@@ -91,9 +91,6 @@ function intersec(ball: Ball, wall: Wall, delta_time?: number):
 	if (impact_time < EPSILON) {
 		impact_time = EPSILON;
 	}
-
-
-
 	//dosn't fully fix stuck/going-throug-wall ball
 	const ball_offset_pos: vec2 = ball.pos.clone();
 	const ball_offset: vec2 = ball.speed.clone();
@@ -104,8 +101,6 @@ function intersec(ball: Ball, wall: Wall, delta_time?: number):
 	if (Math.abs(offset_signed_dist) > Math.abs(signed_dist)) {
 		return undefined;
 	}
-
-
 
 	const ball_movement: vec2 = new vec2(ball.speed.x, ball.speed.y);
 	ball_movement.scale(impact_time);
@@ -121,10 +116,6 @@ function intersec(ball: Ball, wall: Wall, delta_time?: number):
 	//if (vec2.eq(ball_direct, diff_vec)) {
 	//	return undefined;
 	//}
-	
-
-
-
 	const vec_from_wall_center = new vec2(wall.center.x, wall.center.y);
 	vec_from_wall_center.sub(ball_impact_pos);
 	const dist_from_center = Math.abs(dot(vec_from_wall_center, wall.get_direct()));
@@ -178,8 +169,8 @@ export class Game {
 		}
 		parse_map("default");
 		const ball: Ball = new Ball();
-		ball.speed.x = 10;
-		ball.speed.y = 10;
+		ball.speed.x = 100;
+		ball.speed.y = 100;
 		ball.pos.x = 1;
 		ball.obj_id = this._next_obj_id++;
 		this.balls.push(ball);
