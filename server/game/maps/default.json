@@ -12,7 +12,7 @@
 	"walls": {
 		"1": {
 			"center": [0, 5],
-			"normal": [0, -1],
+			"normal": [1, 1],
 			"length": 20,
 			"effects": []
 		},

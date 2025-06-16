@@ -113,7 +113,7 @@ gui.addControl(text);
 				const dot: number = default_normal.x * normal.x
 					+ default_normal.y * normal.y;
 				const rot: number = Math.acos(dot);
-				wall.rotation.z = rot;
+				wall.rotation.z = -rot;
 				this._meshes.set(w.obj_id, wall);
 			}
 		});

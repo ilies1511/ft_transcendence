@@ -27,11 +27,13 @@ function dot(a: vec2, b: vec2): number {
 }
 
 function reflect(ball: Ball, surface: Wall[]) {
-	//console.log("initial ball speed: ", ball.speed);
-
+	console.log("reflecting ball..");
+	console.log("initial ball speed: ", ball.speed);
+	console.log("walls hit: ", surface.length);
+	console.log("ball pos: ", ball.pos);
 	for (let wall of surface) {
 		const normal = wall.normal.clone();
-		//console.log("wall normal: ", normal);
+		console.log("wall normal: ", normal);
 
 		const dot_p: number = dot(ball.speed, normal);
 		const n = normal.clone();
@@ -39,6 +41,8 @@ function reflect(ball: Ball, surface: Wall[]) {
 		ball.speed.sub(n);
 		//console.log("intermediate ball speed: ", ball.speed);
 	}
+	console.log("ball speed after: ", ball.speed);
+	console.log("****************");
 
 	//console.log("after: ball speed: ", ball.speed);
 }
@@ -51,13 +55,16 @@ type intersection_point = {
 	wall: Wall,
 };
 
-function intersec(ball: Ball, wall: Wall, delta_time?: number):
+function intersec(ball: Ball, wall: Wall, delta_time: number):
 	intersection_point | undefined
 {
+	const ball_speed: vec2 = ball.speed.clone();
+	//ball_speed.scale(0.01);
+	//delta_time *= 100;
 	if (ball.last_collision_obj_id.includes(wall.obj_id)) {
 		return undefined;
 	}
-	const dist_rate: number = dot(ball.speed, wall.normal);
+	const dist_rate: number = dot(ball_speed, wall.normal);
 	//console.log("dist_rate:", dist_rate);
 	if (dist_rate < EPSILON && dist_rate > -EPSILON) {
 		return (undefined);
@@ -85,7 +92,7 @@ function intersec(ball: Ball, wall: Wall, delta_time?: number):
 	if (impact_time < 0) {
 		return (undefined);
 	}
-	if (delta_time !== undefined && impact_time - EPSILON > delta_time) {
+	if (impact_time - EPSILON > delta_time) {
 		return (undefined);
 	}
 	if (impact_time < EPSILON) {
@@ -93,7 +100,7 @@ function intersec(ball: Ball, wall: Wall, delta_time?: number):
 	}
 	//dosn't fully fix stuck/going-throug-wall ball
 	const ball_offset_pos: vec2 = ball.pos.clone();
-	const ball_offset: vec2 = ball.speed.clone();
+	const ball_offset: vec2 = ball_speed.clone();
 	ball_offset.scale(EPSILON);
 	ball_offset_pos.add(ball_offset);
 	ball_offset_pos.sub(wall.center);
@@ -102,13 +109,13 @@ function intersec(ball: Ball, wall: Wall, delta_time?: number):
 		return undefined;
 	}
 
-	const ball_movement: vec2 = new vec2(ball.speed.x, ball.speed.y);
+	const ball_movement: vec2 = new vec2(ball_speed.x, ball_speed.y);
 	ball_movement.scale(impact_time);
 	const ball_impact_pos: vec2 = new vec2(ball.pos.x, ball.pos.y);
 	ball_impact_pos.add(ball_movement);
 
 
-	const ball_direct: vec2 = ball.speed.clone();
+	const ball_direct: vec2 = ball_speed.clone();
 	ball_direct.unit();
 	const diff_vec: vec2 = new vec2(ball.pos.x - ball_impact_pos.x,
 		ball.pos.y - ball_impact_pos.y);
@@ -168,10 +175,11 @@ export class Game {
 			});
 		}
 		parse_map("default");
+
 		const ball: Ball = new Ball();
-		ball.speed.x = 100;
-		ball.speed.y = 100;
-		ball.pos.x = 1;
+		ball.speed.x = 1;
+		ball.speed.y = 4;
+		ball.pos.x = -1;
 		ball.obj_id = this._next_obj_id++;
 		this.balls.push(ball);
 		console.log(this.walls);
