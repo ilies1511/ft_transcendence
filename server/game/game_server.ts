@@ -15,7 +15,7 @@ import default_map from './maps/default.json';
 //import { Effects, vec2, Wall, Ball, Client, GameState }
 //	from '../../game_shared/serialization';
 
-const EPSILON: number = 1e-4;
+const EPSILON: number = 1e-7;
 //const EPSILON: number = 0;
 
 const PORT: number = 3333;
@@ -27,22 +27,22 @@ function dot(a: vec2, b: vec2): number {
 }
 
 function reflect(ball: Ball, surface: Wall[]) {
-	console.log("reflecting ball.. ", i++);
-	console.log("initial ball speed: ", ball.speed);
-	console.log("walls hit: ", surface.length);
-	console.log("ball pos: ", ball.pos);
+	//console.log("reflecting ball.. ", i++);
+	//console.log("initial ball speed: ", ball.speed);
+	//console.log("walls hit: ", surface.length);
+	//console.log("ball pos: ", ball.pos);
 	for (let wall of surface) {
 		const normal = wall.normal.clone();
-		console.log("wall normal: ", normal);
+		//console.log("wall normal: ", normal);
 
 		const dot_p: number = dot(ball.speed, normal);
 		const n = normal.clone();
 		n.scale(2 * dot_p);
 		ball.speed.sub(n);
-		console.log("intermediate ball speed: ", ball.speed);
+		//console.log("intermediate ball speed: ", ball.speed);
 	}
-	console.log("ball speed after: ", ball.speed);
-	console.log("****************");
+	//console.log("ball speed after: ", ball.speed);
+	//console.log("****************");
 }
 
 
@@ -56,15 +56,11 @@ type intersection_point = {
 function intersec(ball: Ball, wall: Wall, delta_time: number):
 	intersection_point | undefined
 {
-	const ball_speed: vec2 = ball.speed.clone();
-	const speed_len: number = ball_speed.len();
-	delta_time *= speed_len;
-	ball_speed.div(speed_len);
 
 	if (ball.last_collision_obj_id.includes(wall.obj_id)) {
 		return undefined;
 	}
-	const dist_rate: number = dot(ball_speed, wall.normal);
+	const dist_rate: number = dot(ball.speed, wall.normal);
 	//console.log("dist_rate:", dist_rate);
 	if (Math.abs(dist_rate) < EPSILON) {
 		return (undefined);
@@ -78,25 +74,22 @@ function intersec(ball: Ball, wall: Wall, delta_time: number):
 	const signed_dist: number = dot(center_diff, wall.normal);
 
 	let impact_time;
-
-	if (signed_dist + EPSILON > 0) {
-		impact_time = (signed_dist - ball.radius) / (-dist_rate);
-	} else if (signed_dist - EPSILON < 0) {
-		impact_time = (signed_dist + ball.radius) / (-dist_rate);
+	if (signed_dist != 0) {
+		impact_time = (signed_dist) / (-dist_rate);
 	} else {
 		impact_time = 0;
 	}
 	if (impact_time < 0) {
 		return (undefined);
 	}
-	if (impact_time > delta_time - EPSILON) {
-		return (undefined);
-	}
 	if (impact_time < EPSILON) {
 		impact_time = EPSILON;
 	}
+	if (impact_time > delta_time - EPSILON) {
+		return (undefined);
+	}
 
-	const ball_movement: vec2 = new vec2(ball_speed.x, ball_speed.y);
+	const ball_movement: vec2 = new vec2(ball.speed.x, ball.speed.y);
 	ball_movement.scale(impact_time);
 	const ball_impact_pos: vec2 = new vec2(ball.pos.x, ball.pos.y);
 	ball_impact_pos.add(ball_movement);
@@ -155,8 +148,8 @@ export class Game {
 		parse_map("default");
 
 		const ball: Ball = new Ball();
-		ball.speed.x = 200;
-		ball.speed.y = 200;
+		ball.speed.x = 83;
+		ball.speed.y = 97;
 		ball.pos.x = -1;
 		ball.obj_id = this._next_obj_id++;
 		this.balls.push(ball);
