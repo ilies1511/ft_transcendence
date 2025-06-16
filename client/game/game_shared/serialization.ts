@@ -26,7 +26,7 @@ export class vec2 {
 	}
 
 	public unit() {
-		const len: number = this.x + this.y;
+		const len: number = Math.sqrt(this.x * this.x + this.y * this.y);
 		this.x /= len;
 		this.y /= len;
 	}
