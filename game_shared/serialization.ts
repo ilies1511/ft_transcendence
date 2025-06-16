@@ -21,6 +21,11 @@ export class vec2 {
 		return (false);
 	}
 
+	public len(): number {
+		const len: number = Math.sqrt(this.x * this.x + this.y * this.y);
+		return (len);
+	}
+
 	public clone(): vec2 {
 		return new vec2(this.x, this.y);
 	}
@@ -44,6 +49,11 @@ export class vec2 {
 	public scale(a: number) {
 		this.x *= a;
 		this.y *= a;
+	}
+
+	public div(a: number) {
+		this.x /= a;
+		this.y /= a;
 	}
 
 	public serialize(): ArrayBuffer {

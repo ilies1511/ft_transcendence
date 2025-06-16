@@ -27,7 +27,7 @@ function dot(a: vec2, b: vec2): number {
 }
 
 function reflect(ball: Ball, surface: Wall[]) {
-	console.log("reflecting ball..");
+	console.log("reflecting ball.. ", i++);
 	console.log("initial ball speed: ", ball.speed);
 	console.log("walls hit: ", surface.length);
 	console.log("ball pos: ", ball.pos);
@@ -39,12 +39,10 @@ function reflect(ball: Ball, surface: Wall[]) {
 		const n = normal.clone();
 		n.scale(2 * dot_p);
 		ball.speed.sub(n);
-		//console.log("intermediate ball speed: ", ball.speed);
+		console.log("intermediate ball speed: ", ball.speed);
 	}
 	console.log("ball speed after: ", ball.speed);
 	console.log("****************");
-
-	//console.log("after: ball speed: ", ball.speed);
 }
 
 
@@ -59,14 +57,16 @@ function intersec(ball: Ball, wall: Wall, delta_time: number):
 	intersection_point | undefined
 {
 	const ball_speed: vec2 = ball.speed.clone();
-	//ball_speed.scale(0.01);
-	//delta_time *= 100;
+	const speed_len: number = ball_speed.len();
+	delta_time *= speed_len;
+	ball_speed.div(speed_len);
+
 	if (ball.last_collision_obj_id.includes(wall.obj_id)) {
 		return undefined;
 	}
 	const dist_rate: number = dot(ball_speed, wall.normal);
 	//console.log("dist_rate:", dist_rate);
-	if (dist_rate < EPSILON && dist_rate > -EPSILON) {
+	if (Math.abs(dist_rate) < EPSILON) {
 		return (undefined);
 	}
 	/* this can be used for walls that have no hitbox on one side */
@@ -74,39 +74,26 @@ function intersec(ball: Ball, wall: Wall, delta_time: number):
 	//	return undefined;
 	//}
 
-	const w_direct: vec2 = wall.get_direct();
-	const endpoints = wall.get_endpoints();
-	
 	const center_diff = new vec2(ball.pos.x - wall.center.x, ball.pos.y - wall.center.y);
 	const signed_dist: number = dot(center_diff, wall.normal);
 
 	let impact_time;
 
-	if (signed_dist + EPSILON > ball.radius) {
-		impact_time = (ball.radius - signed_dist) / (-dist_rate);
-	} else if (signed_dist - EPSILON < -ball.radius) {
-		impact_time = (-ball.radius - signed_dist) / (-dist_rate);
+	if (signed_dist + EPSILON > 0) {
+		impact_time = (signed_dist - ball.radius) / (-dist_rate);
+	} else if (signed_dist - EPSILON < 0) {
+		impact_time = (signed_dist + ball.radius) / (-dist_rate);
 	} else {
 		impact_time = 0;
 	}
 	if (impact_time < 0) {
 		return (undefined);
 	}
-	if (impact_time - EPSILON > delta_time) {
+	if (impact_time > delta_time - EPSILON) {
 		return (undefined);
 	}
 	if (impact_time < EPSILON) {
 		impact_time = EPSILON;
-	}
-	//dosn't fully fix stuck/going-throug-wall ball
-	const ball_offset_pos: vec2 = ball.pos.clone();
-	const ball_offset: vec2 = ball_speed.clone();
-	ball_offset.scale(EPSILON);
-	ball_offset_pos.add(ball_offset);
-	ball_offset_pos.sub(wall.center);
-	const offset_signed_dist: number = dot(ball_offset_pos, wall.normal);
-	if (Math.abs(offset_signed_dist) > Math.abs(signed_dist)) {
-		return undefined;
 	}
 
 	const ball_movement: vec2 = new vec2(ball_speed.x, ball_speed.y);
@@ -114,19 +101,10 @@ function intersec(ball: Ball, wall: Wall, delta_time: number):
 	const ball_impact_pos: vec2 = new vec2(ball.pos.x, ball.pos.y);
 	ball_impact_pos.add(ball_movement);
 
-
-	const ball_direct: vec2 = ball_speed.clone();
-	ball_direct.unit();
-	const diff_vec: vec2 = new vec2(ball.pos.x - ball_impact_pos.x,
-		ball.pos.y - ball_impact_pos.y);
-	diff_vec.unit();
-	//if (vec2.eq(ball_direct, diff_vec)) {
-	//	return undefined;
-	//}
 	const vec_from_wall_center = new vec2(wall.center.x, wall.center.y);
 	vec_from_wall_center.sub(ball_impact_pos);
 	const dist_from_center = Math.abs(dot(vec_from_wall_center, wall.get_direct()));
-	if (dist_from_center <= (wall.length / 2) + 1e-6) {
+	if (dist_from_center <= (wall.length / 2) + EPSILON) {
 		return {p: ball_impact_pos, time: impact_time, wall};
 	}
 	return (undefined);
@@ -177,14 +155,13 @@ export class Game {
 		parse_map("default");
 
 		const ball: Ball = new Ball();
-		ball.speed.x = 1;
-		ball.speed.y = 4;
+		ball.speed.x = 200;
+		ball.speed.y = 200;
 		ball.pos.x = -1;
 		ball.obj_id = this._next_obj_id++;
 		this.balls.push(ball);
 		console.log(this.walls);
 		console.log(this.balls);
-
 		this.start_loop();
 	}
 
