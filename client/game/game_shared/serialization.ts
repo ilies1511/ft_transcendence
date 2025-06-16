@@ -1,3 +1,8 @@
+//import * as math from 'mathjs';
+
+import { create, all, BigNumber } from 'mathjs';
+const math = create(all, {});
+
 const EPSILON: number = 1e-6;
 
 //placeholder
@@ -6,19 +11,35 @@ export enum Effects {
 }
 
 export class vec2 {
-	public x: number;
-	public y: number;
+	public x: number | BigNumber;
+	public y: number | BigNumber;
 
-	constructor(x?: number, y?: number) {
-		this.x = x || 0;
-		this.y = y || 0;
+	constructor(x?: number | BigNumber, y?: number | BigNumber) {
+		this.x = x ?? 0;
+		this.y = y ?? 0;
 	}
 
-	static eq(a: vec2, b:vec2): boolean {
-		if (Math.abs(a.x - b.x) < EPSILON && Math.abs(a.y - b.y)) {
-			return (true);
-		}
-		return (false);
+	public to_big_number() {
+		this.x = math.bignumber(this.x);
+		this.y = math.bignumber(this.y);
+	}
+
+	public to_number() {
+		if (math.isBigNumber(this.x)) this.x = this.x.toNumber();
+		if (math.isBigNumber(this.y)) this.y = this.y.toNumber();
+	}
+
+	static eq(a: vec2, b: vec2): boolean {
+		// Compare as numbers, convert if needed
+		const ax = math.isBigNumber(a.x) ? a.x.toNumber() : a.x;
+		const ay = math.isBigNumber(a.y) ? a.y.toNumber() : a.y;
+		const bx = math.isBigNumber(b.x) ? b.x.toNumber() : b.x;
+		const by = math.isBigNumber(b.y) ? b.y.toNumber() : b.y;
+
+		return (
+			Math.abs(ax - bx) < EPSILON &&
+			Math.abs(ay - by) < EPSILON
+		);
 	}
 
 	public clone(): vec2 {
@@ -26,37 +47,66 @@ export class vec2 {
 	}
 
 	public unit() {
-		const len: number = this.x + this.y;
-		this.x /= len;
-		this.y /= len;
+		// Normalize vector (handle BigNumber and number)
+		let len: number;
+		if (math.isBigNumber(this.x) || math.isBigNumber(this.y)) {
+			const x = math.isBigNumber(this.x) ? this.x : math.bignumber(this.x);
+			const y = math.isBigNumber(this.y) ? this.y : math.bignumber(this.y);
+			const length = math.sqrt(math.add(math.pow(x, 2), math.pow(y, 2)));
+			if (math.equal(length, 0)) return; // Avoid div by zero
+			this.x = math.divide(x, length);
+			this.y = math.divide(y, length);
+		} else {
+			len = Math.sqrt(this.x * this.x + this.y * this.y);
+			if (len === 0) return;
+			this.x /= len;
+			this.y /= len;
+		}
 	}
 
 	public add(a: vec2) {
-		this.x += a.x;
-		this.y += a.y;
+		// Add, supporting BigNumber or number
+		if (math.isBigNumber(this.x) || math.isBigNumber(a.x)) {
+			this.x = math.add(math.bignumber(this.x), math.bignumber(a.x));
+			this.y = math.add(math.bignumber(this.y), math.bignumber(a.y));
+		} else {
+			this.x += a.x as number;
+			this.y += a.y as number;
+		}
 	}
 
 	public sub(a: vec2) {
-		this.x -= a.x;
-		this.y -= a.y;
+		if (math.isBigNumber(this.x) || math.isBigNumber(a.x)) {
+			this.x = math.subtract(math.bignumber(this.x), math.bignumber(a.x));
+			this.y = math.subtract(math.bignumber(this.y), math.bignumber(a.y));
+		} else {
+			this.x -= a.x as number;
+			this.y -= a.y as number;
+		}
 	}
 
-	public scale(a: number) {
-		this.x *= a;
-		this.y *= a;
+	public scale(a: number | BigNumber) {
+		if (math.isBigNumber(this.x)) {
+			this.x = math.multiply(this.x, a);
+			this.y = math.multiply(this.y, a);
+		} else {
+			this.x *= a;
+			this.y *= a;
+		}
 	}
 
 	public serialize(): ArrayBuffer {
-		const ret: ArrayBuffer = new ArrayBuffer(8);
-		const view: DataView = new DataView(ret);
-		view.setFloat32(0, this.x, true);
-		view.setFloat32(4, this.y, true);
+		const x = math.isBigNumber(this.x) ? this.x.toNumber() : this.x;
+		const y = math.isBigNumber(this.y) ? this.y.toNumber() : this.y;
+
+		const ret = new ArrayBuffer(8);
+		const view = new DataView(ret);
+		view.setFloat32(0, x, true);
+		view.setFloat32(4, y, true);
 		return ret;
 	}
 
-	static deserialize(array: ArrayBuffer, offset: number = 0):
-		{ vec: vec2, offset: number }
-	{
+	static deserialize(array: ArrayBuffer, offset: number = 0): { vec: vec2; offset: number } {
 		const view = new DataView(array);
 		const x = view.getFloat32(offset, true);
 		const y = view.getFloat32(offset + 4, true);
@@ -84,6 +134,7 @@ export class Client {
 
 	// serializes the obj_id, id, effects, pos, direct
 	public serialize(): ArrayBuffer {
+		this.pos.to_number();
 		const effectsCount = this.effects.length;
 		const buffer = new ArrayBuffer(
 			2 // obj_id
@@ -107,14 +158,14 @@ export class Client {
 			view.setUint8(offset++, this.effects[i]);
 		}
 		// pos
-		view.setFloat32(offset, this.pos.x, true);
+		view.setFloat32(offset, this.pos.x as number, true);
 		offset += 4;
-		view.setFloat32(offset, this.pos.y, true);
+		view.setFloat32(offset, this.pos.y as number, true);
 		offset += 4;
 		// direct
-		view.setFloat32(offset, this.direct.x, true);
+		view.setFloat32(offset, this.direct.x as number, true);
 		offset += 4;
-		view.setFloat32(offset, this.direct.y, true);
+		view.setFloat32(offset, this.direct.y as number, true);
 		offset += 4;
 		return buffer;
 	}
@@ -172,6 +223,8 @@ export class Ball {
 	// serializes the pos, effects, lifetime, dispose
 	public serialize(): ArrayBuffer {
 		const effectsCount = this.effects.length;
+		this.pos.to_number();
+		this.speed.to_number();
 		const buffer = new ArrayBuffer(
 			2 // obj_id
 			+ 8 //pos
@@ -236,7 +289,7 @@ export class Ball {
 export class Wall {
 	public center: vec2;
 	public normal: vec2;
-	public length: number;
+	public length: number | math.BigNumber;
 	public effects: Effects[];
 	public obj_id: number;
 	public dispose: boolean;
@@ -301,6 +354,14 @@ export class Wall {
 
 	// Serialization: center(8), normal(8), length(4), dispose(1), effects(1+N)
 	public serialize(): ArrayBuffer {
+		let len: number;
+		if (math.isBigNumber(this.length)) {
+			len = this.length.toNumber();
+		} else {
+			len = this.length as number;
+		}
+		this.center.to_number();
+		this.normal.to_number();
 		const effectsCount = this.effects.length;
 		const buffer = new ArrayBuffer(
 			2 // obj_id
@@ -316,17 +377,17 @@ export class Wall {
 		view.setUint16(offset, this.obj_id, true);
 		offset += 2;
 		// center
-		view.setFloat32(offset, this.center.x, true);
+		view.setFloat32(offset, this.center.x as number, true);
 		offset += 4;
-		view.setFloat32(offset, this.center.y, true);
+		view.setFloat32(offset, this.center.y as number, true);
 		offset += 4;
 		// normal
-		view.setFloat32(offset, this.normal.x, true);
+		view.setFloat32(offset, this.normal.x as number, true);
 		offset += 4;
-		view.setFloat32(offset, this.normal.y, true);
+		view.setFloat32(offset, this.normal.y as number, true);
 		offset += 4;
 		// length
-		view.setFloat32(offset, this.length, true);
+		view.setFloat32(offset, len, true);
 		offset += 4;
 		// dispose
 		view.setUint8(offset, this.dispose ? 1 : 0);

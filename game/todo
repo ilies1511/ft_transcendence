@@ -5,6 +5,7 @@ client:
 server:
 	- [ ] refactor
 	- [ ] fix buggy intersection fn
+		-- improve floating point precison/try with Math lib high precison nubers
 	- [ ] why does the server stop sending updates with buggy intersection fn
 
 server game lobby:

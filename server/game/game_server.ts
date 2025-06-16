@@ -15,6 +15,12 @@ import default_map from './maps/default.json';
 //import { Effects, vec2, Wall, Ball, Client, GameState }
 //	from '../../game_shared/serialization';
 
+//import * as math from 'mathjs';
+import { create, all, BigNumber } from 'mathjs';
+const math = create(all, {});
+
+import { on } from 'events';
+
 const EPSILON: number = 1e-4;
 //const EPSILON: number = 0;
 
@@ -22,9 +28,44 @@ const PORT: number = 3333;
 
 let i: number = 0;
 
-function dot(a: vec2, b: vec2): number {
-	return (a.x * b.x + a.y * b.y);
+function dot(a: vec2, b: vec2): BigNumber {
+	return (math.add(math.multiply(a.x, b.x), math.multiply(a.y, b.y)));
 }
+
+function dot2(
+	x1: math.BigNumber,
+	y1: math.BigNumber,
+	x2: math.BigNumber,
+	y2: math.BigNumber
+):
+	BigNumber
+{
+	 return math.add(
+		math.multiply(x1, x2),
+		math.multiply(y1, y2)
+	);
+}
+
+//function dot_precise(a: vec2, b: vec2): math.BigNumber {
+//	 return math.add(
+//		math.multiply(math.bignumber(a.x), math.bignumber(b.x)),
+//		math.multiply(math.bignumber(a.y), math.bignumber(b.y))
+//	);
+//}
+//
+//function dot_precise2(
+//	x1: math.BigNumber,
+//	y1: math.BigNumber,
+//	x2: math.BigNumber,
+//	y2: math.BigNumber
+//):
+//	math.BigNumber
+//{
+//	 return math.add(
+//		math.multiply(x1, x2),
+//		math.multiply(y1, y2)
+//	);
+//}
 
 function reflect(ball: Ball, surface: Wall[]) {
 	//console.log("initial ball speed: ", ball.speed);
@@ -43,87 +84,164 @@ function reflect(ball: Ball, surface: Wall[]) {
 	//console.log("after: ball speed: ", ball.speed);
 }
 
-
-
 type intersection_point = {
 	p: vec2,
-	time: number,
+	time: BigNumber,
 	wall: Wall,
 };
 
-function intersec(ball: Ball, wall: Wall, delta_time?: number):
+
+function intersec(ball: Ball, wall: Wall, delta_time_input?: BigNumber):
 	intersection_point | undefined
 {
+	ball.speed.to_big_number();
+	ball.pos.to_big_number();
+	wall.center.to_big_number();
+	wall.normal.to_big_number();
+
+	let delta_time: BigNumber;
+	if (delta_time_input) {
+		delta_time = math.bignumber(delta_time_input);
+	} else {
+		delta_time = math.bignumber(1000000);
+	}
+
 	if (ball.last_collision_obj_id.includes(wall.obj_id)) {
 		return undefined;
 	}
-	const dist_rate: number = dot(ball.speed, wall.normal);
+	const dist_rate: BigNumber = dot(ball.speed, wall.normal);
 	//console.log("dist_rate:", dist_rate);
-	if (dist_rate < EPSILON && dist_rate > -EPSILON) {
+	if (math.smaller(dist_rate, EPSILON) && math.larger(dist_rate, -EPSILON)) {
 		return (undefined);
 	}
-	/* this can be used for walls that have no hitbox on one side */
-	//if (dist_rate >= 0) { 
-	//	return undefined;
-	//}
 
-	const w_direct: vec2 = wall.get_direct();
-	const endpoints = wall.get_endpoints();
-	
-	const center_diff = new vec2(ball.pos.x - wall.center.x, ball.pos.y - wall.center.y);
-	const signed_dist: number = dot(center_diff, wall.normal);
+	const center_diff = new vec2(math.subtract(ball.pos.x, wall.center.x), math.subtract(ball.pos.y, wall.center.y));
+	const signed_dist: BigNumber = dot(center_diff, wall.normal);
 
-	let impact_time;
+	let impact_time: BigNumber;
 
-	if (signed_dist + EPSILON > ball.radius) {
-		impact_time = (ball.radius - signed_dist) / (-dist_rate);
-	} else if (signed_dist - EPSILON < -ball.radius) {
-		impact_time = (-ball.radius - signed_dist) / (-dist_rate);
+	if (math.larger(math.add(signed_dist, EPSILON), math.bignumber(ball.radius))) {
+		impact_time = math.divide(math.subtract(math.bignumber(ball.radius), signed_dist), math.multiply(-1, dist_rate));
+	} else if (math.smaller(math.subtract(signed_dist, EPSILON), math.bignumber(-ball.radius))) {
+		impact_time = math.divide(math.subtract(math.bignumber(-ball.radius), signed_dist), math.multiply(-1, dist_rate));
 	} else {
-		impact_time = 0;
+		impact_time = math.bignumber(0);
 	}
-	if (impact_time < 0) {
+	if (math.smaller(impact_time, 0)) {
 		return (undefined);
 	}
-	if (delta_time !== undefined && impact_time - EPSILON > delta_time) {
+	//if (delta_time !== undefined && math.larger(math.bignumber(math.subtract(impact_time, EPSILON)), delta_time)) {
+	if (delta_time_input !== undefined && math.larger(impact_time, delta_time)) {
 		return (undefined);
 	}
-	if (impact_time < EPSILON) {
-		impact_time = EPSILON;
-	}
-	//dosn't fully fix stuck/going-throug-wall ball
-	const ball_offset_pos: vec2 = ball.pos.clone();
-	const ball_offset: vec2 = ball.speed.clone();
-	ball_offset.scale(EPSILON);
-	ball_offset_pos.add(ball_offset);
-	ball_offset_pos.sub(wall.center);
-	const offset_signed_dist: number = dot(ball_offset_pos, wall.normal);
-	if (Math.abs(offset_signed_dist) > Math.abs(signed_dist)) {
-		return undefined;
+	if (math.smaller(impact_time, EPSILON)) {
+		impact_time = math.bignumber(EPSILON);
 	}
 
-	const ball_movement: vec2 = new vec2(ball.speed.x, ball.speed.y);
-	ball_movement.scale(impact_time);
-	const ball_impact_pos: vec2 = new vec2(ball.pos.x, ball.pos.y);
-	ball_impact_pos.add(ball_movement);
+//const ball_movement: vec2 = new vec2(ball.speed.x, ball.speed.y);
+	//ball_movement.scale(impact_time);
+	//const ball_impact_pos: vec2 = new vec2(ball.pos.x, ball.pos.y);
+	//ball_impact_pos.add(ball_movement);
+//	const vec_from_wall_center = new vec2(wall.center.x, wall.center.y);
+//	vec_from_wall_center.sub(ball_impact_pos);
+	const ball_movement_x: BigNumber = math.multiply(ball.speed.x, impact_time);
+	const ball_movement_y: BigNumber = math.multiply(ball.speed.y, impact_time);
 
+	const ball_impact_pos_x: BigNumber = math.add(math.bignumber(ball.pos.x), ball_movement_x);
+	const ball_impact_pos_y: BigNumber = math.add(math.bignumber(ball.pos.y), ball_movement_y);
 
-	const ball_direct: vec2 = ball.speed.clone();
-	ball_direct.unit();
-	const diff_vec: vec2 = new vec2(ball.pos.x - ball_impact_pos.x,
-		ball.pos.y - ball_impact_pos.y);
-	diff_vec.unit();
-	//if (vec2.eq(ball_direct, diff_vec)) {
-	//	return undefined;
-	//}
-	const vec_from_wall_center = new vec2(wall.center.x, wall.center.y);
-	vec_from_wall_center.sub(ball_impact_pos);
-	const dist_from_center = Math.abs(dot(vec_from_wall_center, wall.get_direct()));
-	if (dist_from_center <= (wall.length / 2) + 1e-6) {
-		return {p: ball_impact_pos, time: impact_time, wall};
+	const dist_center_x: BigNumber = math.subtract(math.bignumber(wall.center.x), ball_impact_pos_x);
+	const dist_center_y: BigNumber = math.subtract(math.bignumber(wall.center.y), ball_impact_pos_y);
+
+//	const dist_from_center = Math.abs(dot_precise(dist_center_x, dist_center_y, wall.get_direct()));
+	const dist_from_center = math.abs(dot2(
+			dist_center_x, dist_center_y,
+			math.bignumber(wall.get_direct().x), math.bignumber(wall.get_direct().y)
+	));
+
+	if (math.smallerEq(dist_from_center, math.add(math.divide(wall.length, 2), 1e-6))) {
+		const p: vec2 = new vec2(ball_impact_pos_x, ball_impact_pos_y);
+		return {p: p, time: impact_time, wall};
 	}
 	return (undefined);
+
 }
+
+
+//function intersec(ball: Ball, wall: Wall, delta_time?: number):
+//	intersection_point | undefined
+//{
+//	if (ball.last_collision_obj_id.includes(wall.obj_id)) {
+//		return undefined;
+//	}
+//	const dist_rate: number = dot(ball.speed, wall.normal);
+//	//console.log("dist_rate:", dist_rate);
+//	if (dist_rate < EPSILON && dist_rate > -EPSILON) {
+//		return (undefined);
+//	}
+//	/* this can be used for walls that have no hitbox on one side */
+//	//if (dist_rate >= 0) { 
+//	//	return undefined;
+//	//}
+//
+//	const w_direct: vec2 = wall.get_direct();
+//	const endpoints = wall.get_endpoints();
+//	
+//	const center_diff = new vec2(ball.pos.x - wall.center.x, ball.pos.y - wall.center.y);
+//	const signed_dist: number = dot(center_diff, wall.normal);
+//
+//	let impact_time;
+//
+//	if (signed_dist + EPSILON > ball.radius) {
+//		impact_time = (ball.radius - signed_dist) / (-dist_rate);
+//	} else if (signed_dist - EPSILON < -ball.radius) {
+//		impact_time = (-ball.radius - signed_dist) / (-dist_rate);
+//	} else {
+//		impact_time = 0;
+//	}
+//	if (impact_time < 0) {
+//		return (undefined);
+//	}
+//	if (delta_time !== undefined && impact_time - EPSILON > delta_time) {
+//		return (undefined);
+//	}
+//	if (impact_time < EPSILON) {
+//		impact_time = EPSILON;
+//	}
+//
+//	////dosn't fully fix stuck/going-throug-wall ball
+//	//const ball_offset_pos: vec2 = ball.pos.clone();
+//	//const ball_offset: vec2 = ball.speed.clone();
+//	//ball_offset.scale(EPSILON);
+//	//ball_offset_pos.add(ball_offset);
+//	//ball_offset_pos.sub(wall.center);
+//	//const offset_signed_dist: number = dot(ball_offset_pos, wall.normal);
+//	//if (Math.abs(offset_signed_dist) > Math.abs(signed_dist)) {
+//	//	return undefined;
+//	//}
+//
+//	const ball_movement: vec2 = new vec2(ball.speed.x, ball.speed.y);
+//	ball_movement.scale(impact_time);
+//	const ball_impact_pos: vec2 = new vec2(ball.pos.x, ball.pos.y);
+//	ball_impact_pos.add(ball_movement);
+//
+//
+//	const ball_direct: vec2 = ball.speed.clone();
+//	ball_direct.unit();
+//	const diff_vec: vec2 = new vec2(ball.pos.x - ball_impact_pos.x,
+//		ball.pos.y - ball_impact_pos.y);
+//	diff_vec.unit();
+//	//if (vec2.eq(ball_direct, diff_vec)) {
+//	//	return undefined;
+//	//}
+//	const vec_from_wall_center = new vec2(wall.center.x, wall.center.y);
+//	vec_from_wall_center.sub(ball_impact_pos);
+//	const dist_from_center = Math.abs(dot(vec_from_wall_center, wall.get_direct()));
+//	if (dist_from_center <= (wall.length / 2) + 1e-6) {
+//		return {p: ball_impact_pos, time: impact_time, wall};
+//	}
+//	return (undefined);
+//}
 
 export class Game {
 	private _last_game_tick: number = 0;
@@ -161,17 +279,20 @@ export class Game {
 			}
 			console.log(map_data);
 			Object.values(map_data.walls).forEach((w: any) => {
-				const cent: vec2 = new vec2(w.center[0], w.center[1]);
-				const nor: vec2 = new vec2(w.normal[0], w.normal[1]);
-				const len: number = w.length;
+				const cent: vec2 = new vec2(
+					math.bignumber(w.center[0]), math.bignumber(w.center[1]));
+				const nor: vec2 = new vec2(
+					math.bignumber(w.normal[0]),
+					math.bignumber(w.normal[1]));
+				const len: math.BigNumber = math.bignumber(w.length);
 				this.walls.push(new Wall(cent, nor, len, undefined, this._next_obj_id++));
 			});
 		}
 		parse_map("default");
 		const ball: Ball = new Ball();
-		ball.speed.x = 100;
-		ball.speed.y = 100;
-		ball.pos.x = 1;
+		ball.speed.x = math.bignumber(10);
+		ball.speed.y = math.bignumber(10);
+		ball.pos.x = math.bignumber(1);
 		ball.obj_id = this._next_obj_id++;
 		this.balls.push(ball);
 		console.log(this.walls);
@@ -204,8 +325,8 @@ export class Game {
 		//}
 		for (const ball of this.balls) {
 			//console.log(ball);
-			let delta_time: number = this._frame_time / 1000;
-			while (delta_time > EPSILON) {
+			let delta_time: BigNumber = math.divide(math.bignumber(this._frame_time), math.bignumber(1000));
+			while (math.larger(delta_time, EPSILON)) {
 				//console.log("delta time: ", delta_time);
 				const intersecs: intersection_point[] = [];
 				for (const wall of this.walls) {
@@ -229,14 +350,16 @@ export class Game {
 					const hit_walls: Wall[] = [];
 
 					for (const intersc of intersecs) {
-						if (Math.abs(intersc.time -first_intersec.time) < EPSILON) {
+						if (math.smaller(math.abs(math.subtract(intersc.time, first_intersec.time)),
+								math.bignumber(EPSILON)))
+						{
 							ball.cur_collision_obj_id.push(intersc.wall.obj_id);
 							hit_walls.push(intersc.wall);
 						}
 					}
 					//if (hit_walls.length == 1) {
-						delta_time -= first_intersec.time;
-						delta_time -= EPSILON;
+						delta_time = math.subtract(delta_time, first_intersec.time);
+						delta_time = math.subtract(delta_time, math.bignumber(EPSILON));
 						ball.pos = first_intersec.p;
 
 				//console.log("1: ", i++);//, ": ", ball);
@@ -253,7 +376,7 @@ export class Game {
 					const ball_movement: vec2 = ball.speed.clone()
 					ball_movement.scale(delta_time);
 					ball.pos.add(ball_movement);
-					delta_time = 0
+					delta_time = math.bignumber(0);
 
 				//console.log("2: ", i++);//, ": ", ball);
 				}
