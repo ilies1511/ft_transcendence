@@ -78,7 +78,6 @@ gui.addControl(text);
 				if (!b.dispose) {
 					cur.position.x = b.pos.x;
 					cur.position.y = b.pos.y;
-					cur.position.z = 0;
 				} else {
 					cur.dispose(true);
 					this._meshes.delete(b.obj_id);
@@ -89,7 +88,6 @@ gui.addControl(text);
 					`sphere_${b.obj_id}`, {diameter: 1}, this);
 				ball.position.x = b.pos.x;
 				ball.position.y = b.pos.y;
-				ball.position.z = 0;
 				this._meshes.set(b.obj_id, ball);
 			}
 		});
@@ -98,6 +96,16 @@ gui.addControl(text);
 				const wall: BABYLON.Mesh = this._meshes.get(w.obj_id);
 				wall.position.x = w.center.x;
 				wall.position.y = w.center.y;
+				const default_normal: vec2 = new vec2(0, 1);
+				default_normal.unit();
+				//todo: rotation
+				const normal: vec2 = w.normal;
+				normal.unit();
+				const dot: number = default_normal.x * normal.x
+					+ default_normal.y * normal.y;
+				const rot: number = Math.acos(dot);
+				wall.rotation.z = -rot;
+				this._meshes.set(w.obj_id, wall);
 				//console.log(wall);
 			} else {
 				const wall: BABYLON.Mesh = BABYLON.MeshBuilder.CreateBox(

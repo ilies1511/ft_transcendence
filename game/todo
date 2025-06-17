@@ -7,7 +7,8 @@ server:
 	- [ ] refactor
 	- [ ] player paddles should be walls
 		-> [ ] add type to walls
-	- [ ] fix buggy intersection fn: Ball still flies out after a few minutes with high speed..
+	- [x] fix buggy intersection fn: Ball still flies out after a few minutes with high speed..
+	- [ ] fix buggy intersection fn: Ball still flies out after a few minutes with rotating wall..
 	- [x] why does the server stop sending updates with buggy intersection fn
 	- [ ] break down 'Game' class into smaller ones like 'GameLobby' and 'Physics'
 
@@ -81,7 +82,7 @@ game state:
 	- [ ] point scoring
 	- [ ] score board
 	- [ ] win conditon (timer/score)
-
+ball.pos.x == Infinity || isNaN(ball.pos.x)
 tournament:
 	- [ ] TBD
 

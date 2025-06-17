@@ -19,6 +19,14 @@ export class vec2 {
 		this.y = y || 0;
 	}
 
+	public sane(): boolean {
+		return !(isNaN(this.x)
+			|| isNaN(this.y)
+			|| this.x == Infinity
+			|| this.y == Infinity
+		);
+	}
+
 	static eq(a: vec2, b:vec2): boolean {
 		if (Math.abs(a.x - b.x) < EPSILON && Math.abs(a.y - b.y)) {
 			return (true);
@@ -182,6 +190,10 @@ export class Ball {
 		this.lifetime = 0;
 		this.obj_id = obj_id !== undefined ? obj_id : -1;
 		this.dispose = dispose || false;
+	}
+
+	public sane(): boolean {
+		return this.pos.sane() && this.speed.sane();
 	}
 
 	public reflect(walls: Wall[]) {

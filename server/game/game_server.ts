@@ -21,7 +21,7 @@ const EPSILON: number = 1e-6;
 
 let i: number = 0;
 
-//todo: currently not in any class
+//should be join lobby
 function join_game(ws: WebSocket, player_id: number, options: GameOptions, game: Game) {
 	const client: Client = new Client(
 		new vec2(0, 0),
@@ -64,38 +64,6 @@ function join_game(ws: WebSocket, player_id: number, options: GameOptions, game:
 	}
 }
 
-//todo: currently not in any class
-function enter_matchmaking(game_server: GameServer, ws: WebSocket, player_id: number, options: GameOptions) {
-	console.log("enter_matchmaking");
-	for (const game of game_server.get_games()) {
-		for (const client of game.clients) {
-			if (client.id == player_id) {
-				console.log("rejoined game instead");
-				join_game(ws, player_id, options, game);
-				return ;
-			} else {
-				console.log("id: ", player_id);
-				console.log(client);
-			}
-		}
-	}
-	//todo: check if the player is allready in a lobby and leave it first
-	//todo: validate options
-	for (let game of game_server.get_games()) {
-		if (game.running != true
-			&& game.options == options
-			&& game.clients.length < game.options.player_count
-		) {
-			join_game(ws, player_id, options, game);
-			return ;
-		}
-	}
-	const game: Game = new Game(options);
-	game_server.get_games().push(game);
-	join_game(ws, player_id, options, game);
-}
-
-
 //todo: split this into smaller classes
 export class Game {
 	private _next_obj_id: number = 1;//has to start at 1
@@ -129,8 +97,8 @@ export class Game {
 		parse_map("default");
 
 		const ball: Ball = new Ball();
-		ball.speed.x = -1000;
-		ball.speed.y = -1000;
+		ball.speed.x = -1;
+		ball.speed.y = -3;
 		ball.pos.x = 0;
 		ball.obj_id = this._next_obj_id++;
 		this.balls.push(ball);
@@ -163,50 +131,49 @@ export class Game {
 					//console.log(wall);
 					const intersection: ft_math.intersection_point | undefined =
 						ball.intersec(wall, delta_time);
-					if (intersection !== undefined) {
-						if (intersecs.length == 0) {
-							intersecs.push(intersection);
-						} else {
-							const diff: number =
-								intersection.time - intersecs[0].time;
-							if (Math.abs(diff) < EPSILON) {
-								intersecs.push(intersection);
-							} else if (diff < 0) {
-								intersecs.length = 0;
-								intersecs.push(intersection);
-							}
-						}
+					if (intersection === undefined) {
+						continue ;
+					}
+					if (intersecs.length == 0) {
+						intersecs.push(intersection);
+						continue ;
+					}
+					const diff: number = intersection.time - intersecs[0].time;
+					if (Math.abs(diff) < EPSILON) {
+						intersecs.push(intersection);
+					} else if (diff < 0) {
+						intersecs.length = 0;
+						intersecs.push(intersection);
 					}
 				}
 
-				if (intersecs.length) {
-					//console.log("interec count: ", intersecs.length);
-					//console.log(intersecs);
-					let first_intersec: ft_math.intersection_point = intersecs[0];
-					const hit_walls: Wall[] = [];
-
-					for (const intersc of intersecs) {
-						if (intersc.time < first_intersec.time) {
-							first_intersec = intersc;
-						}
-						ball.cur_collision_obj_id.push(intersc.wall.obj_id);
-						hit_walls.push(intersc.wall);
-					}
-
-					delta_time -= first_intersec.time;
-					delta_time -= EPSILON; /* idk why but without this the ball flys through walls */
-					ball.pos = first_intersec.p;
-					ball.reflect(hit_walls);
-
-					ball.last_collision_obj_id = ball.cur_collision_obj_id;
-					ball.cur_collision_obj_id = [];
-				} else {
+				if (!intersecs.length) {
 					const ball_movement: vec2 = ball.speed.clone()
 					ball_movement.scale(delta_time);
 					ball.pos.add(ball_movement);
-					delta_time = 0
+					delta_time = 0;
+					continue ;
 				}
-				if (ball.pos.x == Infinity || isNaN(ball.pos.x)) {
+				//console.log("interec count: ", intersecs.length);
+				//console.log(intersecs);
+				let first_intersec: ft_math.intersection_point = intersecs[0];
+				const hit_walls: Wall[] = [];
+				for (const intersc of intersecs) {
+					if (intersc.time < first_intersec.time) {
+						first_intersec = intersc;
+					}
+					ball.cur_collision_obj_id.push(intersc.wall.obj_id);
+					hit_walls.push(intersc.wall);
+				}
+
+				delta_time -= first_intersec.time;
+				delta_time -= EPSILON; /* idk why but without this the ball flys through walls */
+				ball.pos = first_intersec.p;
+				ball.reflect(hit_walls);
+
+				ball.last_collision_obj_id = ball.cur_collision_obj_id;
+				ball.cur_collision_obj_id = [];
+				if (!ball.sane()) {
 					console.log("error: ball data corrupted: ", ball);
 					process.exit(1);
 				}
@@ -227,6 +194,20 @@ export class Game {
 		//	console.log(wall);
 		//}
 		/* this.update_walls(delta_time); */
+		const theta = 1 * Math.PI / 180;
+		
+		// grab the old normal
+		const n = this.walls[4].normal;
+		
+		// compute the rotated components
+		const cos = Math.cos(theta);
+		const sin = Math.sin(theta);
+		const newX = n.x * cos - n.y * sin;
+		const newY = n.x * sin + n.y * cos;
+		
+		this.walls[4].normal.x = newX;
+		this.walls[4].normal.y = newY;
+		this.walls[4].normal.unit();
 		this.update_balls(delta_time);
 		this.broadcast_game_state();
 	}
@@ -254,17 +235,29 @@ export class Game {
 };
 
 //todo
+//currently not active
 export class GameLobby {
 	public options: GameOptions;
 	public game: Game;
+	public password?: string;
 
-	constructor(options: GameOptions) {
+	constructor(options: GameOptions, password?: string) {
 		this.options = options;
 		this.game = new Game(options);
+		password = password;
+	}
+
+	public can_join(options: GameOptions): boolean {
+		if (this.game.clients.length >= this.options.player_count
+			|| this.options != options)
+		{
+			return (false);
+		}
+		return (true);
 	}
 
 	public join(player_id: number, password?: string) {
-		if (this.options.player_count /* == ???*/) {
+		if (this.options.player_count  == this.game.clients.length) {
 			this.game.start_loop();
 		}
 	}
@@ -273,9 +266,49 @@ export class GameLobby {
 	}
 };
 
+export class MatchMaking {
+	static enter_matchmaking(
+		game_server: GameServer,
+		ws: WebSocket,
+		player_id: number,
+		options: GameOptions)
+	{
+		console.log("enter_matchmaking");
+		for (const game of game_server.get_games()) {
+			for (const client of game.clients) {
+				if (client.id == player_id) {
+					console.log("rejoined game instead");
+					join_game(ws, player_id, options, game);
+					return ;
+				} else {
+					console.log("id: ", player_id);
+					console.log(client);
+				}
+			}
+		}
+		//todo: check if the player is allready in a lobby and leave it first
+		//todo: validate options
+		for (let game of game_server.get_games()) {
+			if (game.running != true
+				&& game.options == options
+				&& game.clients.length < game.options.player_count
+			) {
+				join_game(ws, player_id, options, game);
+				return ;
+			}
+		}
+		const game: Game = new Game(options);
+		game_server.get_games().push(game);
+		join_game(ws, player_id, options, game);
+	}
+};
+
 export class GameServer {
 	private _fastify: FastifyInstance;
+	//todo: should be array of GameLobby
 	private _games: Game[] = [];
+	private _next_lobby_id = 1;
+	private _lobbys: Map<number, GameLobby> = new Map<number, GameLobby>;
 
 	constructor(fastify: FastifyInstance) {
 		this._rcv_msg = this._rcv_msg.bind(this);
@@ -288,8 +321,12 @@ export class GameServer {
 		});
 	}
 
+	private _create_lobby(options: GameOptions, password?: string) {
+		this._lobbys.set(this._next_lobby_id++, new GameLobby(options, password));
+	}
+
 	//closes the websocket
-	private _send_error(ws: WebSocket, error?: Error, msg?: string) {
+	private _send_error(ws: WebSocket, error?: any, msg?: string) {
 		if (error) {
 			console.log("Game: Error: ", error);
 		}
@@ -310,8 +347,8 @@ export class GameServer {
 		let json: ClientToServerMessage;// = JSON.parse(message);
 		try {
 			json = JSON.parse(message) as ClientToServerMessage;
-		} catch (e) {
-			//this._send_error(ws, e/*, some error msg*/);
+		} catch (e: any) {
+			this._send_error(ws, e/*, some error msg*/);
 			return ;
 		}
 		console.log(`Game received: ${message}`);
@@ -322,7 +359,7 @@ export class GameServer {
 		const player_id: number = json.player_id; //unique id bound to account of the player
 		switch (json.type) {
 			case ('search_game'):
-				enter_matchmaking(this, ws, player_id, json.payload.options);
+				MatchMaking.enter_matchmaking(this, ws, player_id, json.payload.options);
 				break ;
 
 			case ('send_input'):
@@ -332,13 +369,12 @@ export class GameServer {
 							client.socket.close();
 							Object.assign(client.socket, this._ws);
 							console.log("Game: client was reconnected to game");
-							//todo: update handler
 							return ;
 						}
 					}
 				}
 				/* Game was not found */
-				//this._send_error(ws, undefined, /* some error msg */);
+				this._send_error(ws, undefined, /* some error msg */);
 				return ;
 			//todo:
 			//case('leave_game'):
@@ -347,7 +383,7 @@ export class GameServer {
 				//break ;
 			default:
 				/* Error: first msg type was not matched */
-				//this._send_error(ws, undefined, /* some error msg */);
+				this._send_error(ws, undefined, /* some error msg */);
 				return ;
 		}
 	}
