@@ -6,7 +6,6 @@ export default defineConfig({
   plugins: [tailwindcss()],
   resolve: {
     alias: {
-      '@shared': path.resolve(__dirname, 'game_shared'),
       '@': path.resolve(__dirname, 'client'), // optional but useful for client code
     }
   },

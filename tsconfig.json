@@ -20,8 +20,9 @@
     /* Path resolution */
     "baseUrl": ".", // Added for path mapping
     "paths": {
-	  "@shared/*": ["./game_shared/*"],
-      "@/*": ["./client/*"] // Alias for client directory
+		"@game_shared/*": ["./game_shared/*"],
+		"@game_server/*": ["./server/game/*"],
+		"@client/*": ["./client/*"] // Alias for client directory
     },
 
     /* Node.js compatibility */
@@ -38,7 +39,6 @@
   "include": [
     "client/**/*",  // Client-side code
     "server/**/*",  // Server-side code
-    "server/**/**/*",  // Server-side code
 	"game_shared/*",
 	"game_shared/**/*",
     "vite.config.ts"

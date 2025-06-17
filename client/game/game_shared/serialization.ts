@@ -1,3 +1,5 @@
+import * as ft_math from './math.ts';
+
 const EPSILON: number = 1e-6;
 
 //placeholder
@@ -177,6 +179,74 @@ export class Ball {
 		this.lifetime = 0;
 		this.obj_id = obj_id !== undefined ? obj_id : -1;
 		this.dispose = dispose || false;
+	}
+
+	public reflect(walls: Wall[]) {
+		//console.log("reflecting ball.. ", i++);
+		//console.log("initial ball speed: ", ball.speed);
+		//console.log("walls hit: ", wall.length);
+		//console.log("ball pos: ", ball.pos);
+		for (let wall of walls) {
+			const normal = wall.normal.clone();
+			//console.log("wall normal: ", normal);
+	
+			const dot_p: number = ft_math.dot(this.speed, normal);
+			const n = normal.clone();
+			n.scale(2 * dot_p);
+			this.speed.sub(n);
+			//console.log("intermediate ball speed: ", ball.speed);
+		}
+		//console.log("ball speed after: ", ball.speed);
+		//console.log("****************");
+	}
+
+	public intersec(wall: Wall, delta_time: number):
+		ft_math.intersection_point | undefined
+	{
+		if (this.last_collision_obj_id.includes(wall.obj_id)) {
+			return undefined;
+		}
+		const dist_rate: number = ft_math.dot(this.speed, wall.normal);
+		//console.log("dist_rate:", dist_rate);
+		if (Math.abs(dist_rate) < EPSILON) {
+			return (undefined);
+		}
+		/* this can be used for walls that have no hitbox on one side */
+		//if (dist_rate >= 0) { 
+		//	return undefined;
+		//}
+	
+		const center_diff = new vec2(this.pos.x - wall.center.x, this.pos.y - wall.center.y);
+		const signed_dist: number = ft_math.dot(center_diff, wall.normal);
+	
+		let impact_time: number;
+		if (signed_dist != 0) {
+			impact_time = (signed_dist) / (-dist_rate);
+		} else {
+			impact_time = 0;
+		}
+		if (impact_time < 0) {
+			return (undefined);
+		}
+		if (impact_time < EPSILON) {
+			impact_time = EPSILON;
+		}
+		if (impact_time > delta_time - EPSILON) {
+			return (undefined);
+		}
+	
+		const ball_movement: vec2 = new vec2(this.speed.x, this.speed.y);
+		ball_movement.scale(impact_time);
+		const ball_impact_pos: vec2 = new vec2(this.pos.x, this.pos.y);
+		ball_impact_pos.add(ball_movement);
+	
+		const vec_from_wall_center = new vec2(wall.center.x, wall.center.y);
+		vec_from_wall_center.sub(ball_impact_pos);
+		const dist_from_center = Math.abs(ft_math.dot(vec_from_wall_center, wall.get_direct()));
+		if (dist_from_center <= (wall.length / 2) + EPSILON) {
+			return {p: ball_impact_pos, time: impact_time, wall};
+		}
+		return (undefined);
 	}
 
 	// serializes the pos, effects, lifetime, dispose

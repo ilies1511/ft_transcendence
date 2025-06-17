@@ -1,13 +1,17 @@
 import * as BABYLON from '@babylonjs/core/Legacy/legacy';
+
 //import * as BABYLON from 'babylonjs';
-import type { ServerToClientMessage, GameStartInfo } from '../../../game_shared/message_types.ts';
-import type { ClientToServerMessage } from '../../../game_shared/message_types';
-import type { GameOptions } from '../../../game_shared/message_types';
+import type {
+	ServerToClientMessage,
+	GameStartInfo,
+	ClientToServerMessage,
+	GameOptions
+} from './game_shared/message_types.ts';
 
-import { GridMaterial } from '@babylonjs/materials/Grid';
-import { FireProceduralTexture } from '@babylonjs/procedural-textures/fire';
+//import { GridMaterial } from '@babylonjs/materials/Grid.ts';
+//import { FireProceduralTexture } from '@babylonjs/procedural-textures/fire';
+
 import * as GUI from '@babylonjs/gui';
-
 
 import { Effects, vec2, Wall, Ball, Client, GameState }
 	from './game_shared/serialization.ts';
