@@ -1,4 +1,5 @@
 import * as ft_math from './math.ts';
+import type { WebSocket } from '@fastify/websocket';
 
 const EPSILON: number = 1e-6;
 

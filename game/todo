@@ -6,7 +6,7 @@ server:
 	- [ ] refactor
 	- [ ] player paddles should be walls
 		-> [ ] add type to walls
-	- [x] fix buggy intersection fn
+	- [ ] fix buggy intersection fn: Ball still flies out after a few minutes with hight speed..
 	- [x] why does the server stop sending updates with buggy intersection fn
 
 server game lobby:

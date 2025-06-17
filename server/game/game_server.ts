@@ -6,11 +6,11 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 //import websocketPlugin, { SocketStream } from '@fastify/websocket'
 //import type { ClientToServerMessage } from '../../game_shared/message_types';
 import type { WebSocket } from '@fastify/websocket';
-import type { ClientToServerMessage } from '@game_shared/message_types';
-import type { GameOptions, GameStartInfo, ServerToClientJson, ServerToClientMessage } from '@game_shared/message_types';
+import type { ClientToServerMessage } from '@game_shared/message_types.ts';
+import type { GameOptions, GameStartInfo, ServerToClientJson, ServerToClientMessage } from '@game_shared/message_types.ts';
 //import type { GameOptions, GameStartInfo, ServerToClientJson, ServerToClientMessage } from '../../game_shared/message_types';
 
-import { Ball, Client, Effects, GameState, vec2, Wall } from '@game_shared/serialization';
+import { Ball, Client, Effects, GameState, vec2, Wall } from '@game_shared/serialization.ts';
 import default_map from './maps/default.json';
 //import { Effects, vec2, Wall, Ball, Client, GameState }
 //	from '../../game_shared/serialization';
@@ -23,6 +23,7 @@ const PORT: number = 3333;
 
 let i: number = 0;
 
+//todo: split this into smaller classes
 export class Game {
 	private _next_obj_id: number = 1;//has to start at 1
 	private _interval: NodeJS.Timeout | null = null;
@@ -102,7 +103,6 @@ export class Game {
 								intersecs.push(intersection);
 							}
 						}
-						//intersecs.push(intersection);
 					}
 				}
 
@@ -177,8 +177,9 @@ export class Game {
 		}
 		this.running = false;
 	}
-}
+};
 
+//todo: get rid of Connection class
 class Connection {
 	private _ws: WebSocket;
 	private _game_server: GameServer;
@@ -187,63 +188,54 @@ class Connection {
 		this._ws = ws;
 		this._game_server = game_server;
 	
-		this.first_ws_msg = this.first_ws_msg.bind(this);
-		this.join_game = this.join_game.bind(this);
-		this.enter_matchmaking = this.enter_matchmaking.bind(this);
+		this.rcv_msg = this.rcv_msg.bind(this);
 
-		this._ws.on('message', this.first_ws_msg);
+		this._ws.on('message', this.rcv_msg);
 	}
 
-	private first_ws_msg(message: string) {
-		console.log("[GAME-BACK-END] got msg: ", message);
+	private rcv_msg(message: string) {
 		//console.log("[GAME-BACK-END] msg type: ", typeof(message));
 		let json: ClientToServerMessage;// = JSON.parse(message);
 		try {
 			json = JSON.parse(message) as ClientToServerMessage;
 		} catch (e) {
-			console.log("Error: new connection with message in not valid ClientToServerMessage json format");
-			//todo: maybe simply show a front end error msg:
-			//	'There was an issue with the game server communiction,
-			//	try to reconnect if you were in a game'
-			this._ws.close();
+			//this._send_error(ws, e/*, some error msg*/);
 			return ;
 		}
-		console.log(`initial. Received: ${message}`);
-		//if (typeof message !== "string") {
-		//	console.log("Error: new connection with message not of type string, type: ",
-		//		typeof message);
-		//	ws.close();
-		//	return ;
-		//}
+		console.log(`Game received: ${message}`);
+		this.msg_multiplexer(json);
+	}
+
+	private msg_multiplexer(json: ClientToServerMessage) {
 		const player_id: number = json.player_id; //unique id bound to account of the player
 		switch (json.type) {
 			case ('search_game'):
 				this.enter_matchmaking(player_id, json.payload.options);
 				break ;
-			//todo:
-			//case('leave_game'):
-			//break ;
-			case ('reconnect'):
-			console.log(`client tries to reconnect`);
+
 			case ('send_input'):
 				for (let game of this._game_server.get_games()) {
 					for (let client of game.clients) {
 						if (client.id == player_id) {
 							client.socket.close();
 							Object.assign(client.socket, this._ws);
-							console.log("client was reconnected to game");
+							console.log("Game: client was reconnected to game");
 							//todo: update handler
 							return ;
 						}
 					}
 				}
-				//todo: give client some error, maybe deiffer between the types
-				this._ws.close();
-				console.log("client did not search for game and was also not in game");
+				/* Game was not found */
+				//this._send_error(ws, undefined, /* some error msg */);
 				return ;
+			//todo:
+			//case('leave_game'):
+				//break ;
+			//case ('reconnect'):
+				//break ;
 			default:
-				console.log("Error: first msg type was not matched");
-				this._ws.close();//ws.close() is not a function??
+				/* Error: first msg type was not matched */
+				//this._send_error(ws, undefined, /* some error msg */);
 				return ;
 		}
 	}
@@ -257,7 +249,7 @@ class Connection {
 		);
 		let in_game: boolean = false;
 		for (const old_client of game.clients) {
-			if (old_client.player_id == client.player_id) {
+			if (old_client.id == client.id) {
 				Object.assign(old_client, client);
 				in_game = true;
 			}
@@ -278,31 +270,6 @@ class Connection {
 				game.clients[i].socket.send(JSON.stringify(msg));
 			}
 			game.start_loop();
-			//game.init_game_state();
-			//todo: start game
-			//todo: flush ws so no old request are left inside
-			//ws.onmessage = (event) => {
-
-			//todo: update handler
-			
-			//ws.on('message', this.first_ws_msg);
-			//ws.on('message') => {
-			//	//if (event.data instanceof ArrayBuffer) {
-			//	//	// game_input_msg(game, player_id, event.data);
-			//	//} else {
-			//	//	const json = JSON.parse(event.data as string) as ClientToServerMessage;
-			//	//}
-			//};
-	
-			//ws.on('message', (message: unknown) => {
-			//	//todo: multiplexor for message type (example Leave or ArrayBuffer)
-			//	//case (ArrayBuffer) :
-			//		// game_input_msg(game, player_id, message);
-			//		// break ;
-			//	// case ('leave_game'):
-			//	// ...
-			//});
-	
 		} else {
 			for (let client of game.clients) {
 				const msg: ServerToClientJson = {
@@ -331,24 +298,22 @@ class Connection {
 		}
 		//todo: check if the player is allready in a lobby and leave it first
 		//todo: validate options
-		//ws.on('message', (message: ClientToServerMessage) => {
-			//console.log(`Received in enter_matchmaking: ${message}`);
-			for (let game of this._game_server.get_games()) {
-				if (game.running != true
-					&& game.options == options
-					&& game.clients.length < game.options.player_count
-				) {
-					this.join_game(this._ws, player_id, options, game);
-					return ;
-				}
+		for (let game of this._game_server.get_games()) {
+			if (game.running != true
+				&& game.options == options
+				&& game.clients.length < game.options.player_count
+			) {
+				this.join_game(this._ws, player_id, options, game);
+				return ;
 			}
-			const game: Game = new Game(options);
-			this._game_server.get_games().push(game);
-			this.join_game(this._ws, player_id, options, game);
-		//});
+		}
+		const game: Game = new Game(options);
+		this._game_server.get_games().push(game);
+		this.join_game(this._ws, player_id, options, game);
 	}
-}
+};
 
+//todo
 export class GameLobby {
 	public options: GameOptions;
 	public game: Game;
@@ -380,8 +345,21 @@ export class GameServer {
 		});
 	}
 
+	//closes the websocket
+	private _send_error(ws: WebSocket, error?: Error, msg?: string) {
+		if (error) {
+			console.log("Game: Error: ", error);
+		}
+		if (ws.readyState === ws.OPEN) {
+			if (msg) {
+				ws.send(msg);
+			}
+			ws.close();
+		}
+	}
+
 	public get_games() {
 		return this._games;
 	}
-}
+};
 
