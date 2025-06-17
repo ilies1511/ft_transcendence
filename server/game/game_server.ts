@@ -17,11 +17,84 @@ import default_map from './maps/default.json';
 
 import * as ft_math from '@game_shared/math.ts';
 
-const EPSILON: number = 1e-7;
-
-const PORT: number = 3333;
+const EPSILON: number = 1e-6;
 
 let i: number = 0;
+
+//todo: currently not in any class
+function join_game(ws: WebSocket, player_id: number, options: GameOptions, game: Game) {
+	const client: Client = new Client(
+		new vec2(0, 0),
+		player_id,
+		ws,
+		new vec2(1, 1)
+	);
+	let in_game: boolean = false;
+	for (const old_client of game.clients) {
+		if (old_client.id == client.id) {
+			Object.assign(old_client, client);
+			in_game = true;
+		}
+	}
+	if (!in_game) {
+		game.clients.push(client);
+	}
+	if (game.clients.length == game.options.player_count) {
+		console.log("starting game");
+		for (let i: number = 0; i < game.clients.length; i++) {
+			const msg: GameStartInfo = {
+				type: 'starting_game',
+				game_player_id: i,
+				game_id: 321, //todo: get a new unique id with the db that is bound to this game
+				options: options,
+			};
+			game.clients[i].game_player_id = i;
+			game.clients[i].socket.send(JSON.stringify(msg));
+		}
+		game.start_loop();
+	} else {
+		for (let client of game.clients) {
+			const msg: ServerToClientJson = {
+				type: 'game_lobby_update',
+				player_count: game.clients.length,
+				target_player_count: game.options.player_count
+			};
+			client.socket.send(JSON.stringify(msg));
+		}
+	}
+}
+
+//todo: currently not in any class
+function enter_matchmaking(game_server: GameServer, ws: WebSocket, player_id: number, options: GameOptions) {
+	console.log("enter_matchmaking");
+	for (const game of game_server.get_games()) {
+		for (const client of game.clients) {
+			if (client.id == player_id) {
+				console.log("rejoined game instead");
+				join_game(ws, player_id, options, game);
+				return ;
+			} else {
+				console.log("id: ", player_id);
+				console.log(client);
+			}
+		}
+	}
+	//todo: check if the player is allready in a lobby and leave it first
+	//todo: validate options
+	for (let game of game_server.get_games()) {
+		if (game.running != true
+			&& game.options == options
+			&& game.clients.length < game.options.player_count
+		) {
+			join_game(ws, player_id, options, game);
+			return ;
+		}
+	}
+	const game: Game = new Game(options);
+	game_server.get_games().push(game);
+	join_game(ws, player_id, options, game);
+}
+
 
 //todo: split this into smaller classes
 export class Game {
@@ -56,9 +129,9 @@ export class Game {
 		parse_map("default");
 
 		const ball: Ball = new Ball();
-		ball.speed.x = 830;
-		ball.speed.y = 970;
-		ball.pos.x = -1;
+		ball.speed.x = -1000;
+		ball.speed.y = -1000;
+		ball.pos.x = 0;
 		ball.obj_id = this._next_obj_id++;
 		this.balls.push(ball);
 		console.log(this.walls);
@@ -141,7 +214,7 @@ export class Game {
 		}
 	}
 
-	/* 1. update walls (idk if this will be feature, for now ignore)
+	/* 1. update walls
 	 * 2. update balls
 	 * 3. broadcast */
 	private update(delta_time: number) {
@@ -153,14 +226,15 @@ export class Game {
 		//for (const wall of this.walls) {
 		//	console.log(wall);
 		//}
+		/* this.update_walls(delta_time); */
 		this.update_balls(delta_time);
 		this.broadcast_game_state();
 	}
 
 	public start_loop() {
-		if (this._interval) return;
+		if (this._interval)
+			return;
 		this.running = true;
-
 		this._interval= setInterval(() => {
 			try {
 				this.update(this.frame_time / 1000);
@@ -176,140 +250,6 @@ export class Game {
 			this._interval = null;
 		}
 		this.running = false;
-	}
-};
-
-//todo: get rid of Connection class
-class Connection {
-	private _ws: WebSocket;
-	private _game_server: GameServer;
-
-	constructor(game_server: GameServer, ws: WebSocket) {
-		this._ws = ws;
-		this._game_server = game_server;
-	
-		this.rcv_msg = this.rcv_msg.bind(this);
-
-		this._ws.on('message', this.rcv_msg);
-	}
-
-	private rcv_msg(message: string) {
-		//console.log("[GAME-BACK-END] msg type: ", typeof(message));
-		let json: ClientToServerMessage;// = JSON.parse(message);
-		try {
-			json = JSON.parse(message) as ClientToServerMessage;
-		} catch (e) {
-			//this._send_error(ws, e/*, some error msg*/);
-			return ;
-		}
-		console.log(`Game received: ${message}`);
-		this.msg_multiplexer(json);
-	}
-
-	private msg_multiplexer(json: ClientToServerMessage) {
-		const player_id: number = json.player_id; //unique id bound to account of the player
-		switch (json.type) {
-			case ('search_game'):
-				this.enter_matchmaking(player_id, json.payload.options);
-				break ;
-
-			case ('send_input'):
-				for (let game of this._game_server.get_games()) {
-					for (let client of game.clients) {
-						if (client.id == player_id) {
-							client.socket.close();
-							Object.assign(client.socket, this._ws);
-							console.log("Game: client was reconnected to game");
-							//todo: update handler
-							return ;
-						}
-					}
-				}
-				/* Game was not found */
-				//this._send_error(ws, undefined, /* some error msg */);
-				return ;
-			//todo:
-			//case('leave_game'):
-				//break ;
-			//case ('reconnect'):
-				//break ;
-			default:
-				/* Error: first msg type was not matched */
-				//this._send_error(ws, undefined, /* some error msg */);
-				return ;
-		}
-	}
-
-	private join_game(ws: WebSocket, player_id: number, options: GameOptions, game: Game) {
-		const client: Client = new Client(
-			new vec2(0, 0),
-			player_id,
-			ws,
-			new vec2(1, 1)
-		);
-		let in_game: boolean = false;
-		for (const old_client of game.clients) {
-			if (old_client.id == client.id) {
-				Object.assign(old_client, client);
-				in_game = true;
-			}
-		}
-		if (!in_game) {
-			game.clients.push(client);
-		}
-		if (game.clients.length == game.options.player_count) {
-			console.log("starting game");
-			for (let i: number = 0; i < game.clients.length; i++) {
-				const msg: GameStartInfo = {
-					type: 'starting_game',
-					game_player_id: i,
-					game_id: 321, //todo: get a new unique id with the db that is bound to this game
-					options: options,
-				};
-				game.clients[i].game_player_id = i;
-				game.clients[i].socket.send(JSON.stringify(msg));
-			}
-			game.start_loop();
-		} else {
-			for (let client of game.clients) {
-				const msg: ServerToClientJson = {
-					type: 'game_lobby_update',
-					player_count: game.clients.length,
-					target_player_count: game.options.player_count
-				};
-				client.socket.send(JSON.stringify(msg));
-			}
-		}
-	}
-
-	private enter_matchmaking(player_id: number, options: GameOptions) {
-		console.log("enter_matchmaking");
-		for (const game of this._game_server.get_games()) {
-			for (const client of game.clients) {
-				if (client.id == player_id) {
-					console.log("rejoined game instead");
-					this.join_game(this._ws, player_id, options, game);
-					return ;
-				} else {
-					console.log("id: ", player_id);
-					console.log(client);
-				}
-			}
-		}
-		//todo: check if the player is allready in a lobby and leave it first
-		//todo: validate options
-		for (let game of this._game_server.get_games()) {
-			if (game.running != true
-				&& game.options == options
-				&& game.clients.length < game.options.player_count
-			) {
-				this.join_game(this._ws, player_id, options, game);
-				return ;
-			}
-		}
-		const game: Game = new Game(options);
-		this._game_server.get_games().push(game);
-		this.join_game(this._ws, player_id, options, game);
 	}
 };
 
@@ -338,10 +278,13 @@ export class GameServer {
 	private _games: Game[] = [];
 
 	constructor(fastify: FastifyInstance) {
+		this._rcv_msg = this._rcv_msg.bind(this);
 		console.log("[GAME-BACK-END] constructor");
 		this._fastify = fastify;
 		this._fastify.get('/game', { websocket: true }, (socket: WebSocket, req: FastifyRequest) => {
-			new Connection(this, socket);
+			socket.on('message', (raw) => {
+				this._rcv_msg(raw.toString(), socket);
+			});
 		});
 	}
 
@@ -361,5 +304,53 @@ export class GameServer {
 	public get_games() {
 		return this._games;
 	}
+
+	private _rcv_msg(message: string, ws: WebSocket) {
+		//console.log("[GAME-BACK-END] msg type: ", typeof(message));
+		let json: ClientToServerMessage;// = JSON.parse(message);
+		try {
+			json = JSON.parse(message) as ClientToServerMessage;
+		} catch (e) {
+			//this._send_error(ws, e/*, some error msg*/);
+			return ;
+		}
+		console.log(`Game received: ${message}`);
+		this.msg_multiplexer(json, ws);
+	}
+
+	private msg_multiplexer(json: ClientToServerMessage, ws: WebSocket) {
+		const player_id: number = json.player_id; //unique id bound to account of the player
+		switch (json.type) {
+			case ('search_game'):
+				enter_matchmaking(this, ws, player_id, json.payload.options);
+				break ;
+
+			case ('send_input'):
+				for (let game of this._games) {
+					for (let client of game.clients) {
+						if (client.id == player_id) {
+							client.socket.close();
+							Object.assign(client.socket, this._ws);
+							console.log("Game: client was reconnected to game");
+							//todo: update handler
+							return ;
+						}
+					}
+				}
+				/* Game was not found */
+				//this._send_error(ws, undefined, /* some error msg */);
+				return ;
+			//todo:
+			//case('leave_game'):
+				//break ;
+			//case ('reconnect'):
+				//break ;
+			default:
+				/* Error: first msg type was not matched */
+				//this._send_error(ws, undefined, /* some error msg */);
+				return ;
+		}
+	}
 };
+
 

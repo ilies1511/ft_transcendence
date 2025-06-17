@@ -1,12 +1,14 @@
 import * as ft_math from './math.ts';
 import type { WebSocket } from '@fastify/websocket';
 
-const EPSILON: number = 1e-6;
+const EPSILON: number = 1e-8;
 
 //placeholder
 export enum Effects {
 	FIRE = 0,
 }
+
+let i: number = 0;
 
 export class vec2 {
 	public x: number;
@@ -183,22 +185,22 @@ export class Ball {
 	}
 
 	public reflect(walls: Wall[]) {
-		//console.log("reflecting ball.. ", i++);
-		//console.log("initial ball speed: ", ball.speed);
-		//console.log("walls hit: ", wall.length);
-		//console.log("ball pos: ", ball.pos);
+		console.log("reflecting ball.. ", i++);
+		console.log("initial ball speed: ", this.speed);
+		console.log("walls hit: ", walls.length);
+		console.log("ball pos: ", this.pos);
 		for (let wall of walls) {
 			const normal = wall.normal.clone();
-			//console.log("wall normal: ", normal);
+			console.log("wall normal: ", normal);
 	
 			const dot_p: number = ft_math.dot(this.speed, normal);
 			const n = normal.clone();
 			n.scale(2 * dot_p);
 			this.speed.sub(n);
-			//console.log("intermediate ball speed: ", ball.speed);
+			console.log("intermediate ball speed: ", this.speed);
 		}
-		//console.log("ball speed after: ", ball.speed);
-		//console.log("****************");
+		console.log("ball speed after: ", this.speed);
+		console.log("****************");
 	}
 
 	public intersec(wall: Wall, delta_time: number):
@@ -207,11 +209,18 @@ export class Ball {
 		if (this.last_collision_obj_id.includes(wall.obj_id)) {
 			return undefined;
 		}
-		const dist_rate: number = ft_math.dot(this.speed, wall.normal);
-		//console.log("dist_rate:", dist_rate);
-		if (Math.abs(dist_rate) < EPSILON) {
+		const ball_direct: vec2 = this.speed.clone();
+		ball_direct.unit();
+		if (Math.abs(ft_math.dot(ball_direct, wall.normal)) < 1e-12) {
 			return (undefined);
 		}
+		const dist_rate: number = ft_math.dot(this.speed, wall.normal);
+		//console.log("dist_rate:", dist_rate);
+
+		//if (Math.abs(dist_rate) < EPSILON) {
+		//	return (undefined);
+		//}
+	
 		/* this can be used for walls that have no hitbox on one side */
 		//if (dist_rate >= 0) { 
 		//	return undefined;
