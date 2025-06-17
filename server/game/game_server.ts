@@ -18,38 +18,24 @@ import default_map from './maps/default.json';
 import * as ft_math from '@game_shared/math.ts';
 
 const EPSILON: number = 1e-7;
-//const EPSILON: number = 0;
 
 const PORT: number = 3333;
 
 let i: number = 0;
 
 export class Game {
-	private _last_game_tick: number = 0;
 	private _next_obj_id: number = 1;//has to start at 1
 	private _interval: NodeJS.Timeout | null = null;
-	private _frame_time: number = 1000 / 60;
+	public frame_time: number = 1000 / 60;
 	running: boolean = false;
-	public options: GameOptions;
 	public clients: Client[] = [];
 	public balls: Ball[] = [];
 	public walls: Wall[] = [];
+	public options: GameOptions;
+
 	constructor(options: GameOptions) {
 		this.options = options;
-	}
-
-	serialize_game_state(): ArrayBuffer {
-		const state = new GameState(this);
-		return state.serialize();
-	}
-
-	send_game_state(ws: WebSocket) {
-		ws.send(this.serialize_game_state());
-	}
-
-	public init_game_state() {
-		this.running = true;
-		const game_state: GameState = new GameState(this);
+		this.running = false;
 		const parse_map = (map_name?: string) => {
 			map_name = map_name || "default";
 			let map_data: any;
@@ -76,7 +62,12 @@ export class Game {
 		this.balls.push(ball);
 		console.log(this.walls);
 		console.log(this.balls);
-		this.start_loop();
+		//this.start_loop();
+	}
+
+	private serialize_game_state(): ArrayBuffer {
+		const state = new GameState(this);
+		return state.serialize();
 	}
 
 	private broadcast_game_state() {
@@ -88,11 +79,72 @@ export class Game {
 		}
 	}
 
+	private update_balls(delta_time: number) {
+		for (const ball of this.balls) {
+			//console.log(ball);
+			while (delta_time > EPSILON) {
+				//console.log("delta time: ", delta_time);
+				const intersecs: ft_math.intersection_point[] = [];
+				for (const wall of this.walls) {
+					//console.log(wall);
+					const intersection: ft_math.intersection_point | undefined =
+						ball.intersec(wall, delta_time);
+					if (intersection !== undefined) {
+						if (intersecs.length == 0) {
+							intersecs.push(intersection);
+						} else {
+							const diff: number =
+								intersection.time - intersecs[0].time;
+							if (Math.abs(diff) < EPSILON) {
+								intersecs.push(intersection);
+							} else if (diff < 0) {
+								intersecs.length = 0;
+								intersecs.push(intersection);
+							}
+						}
+						//intersecs.push(intersection);
+					}
+				}
+
+				if (intersecs.length) {
+					//console.log("interec count: ", intersecs.length);
+					//console.log(intersecs);
+					let first_intersec: ft_math.intersection_point = intersecs[0];
+					const hit_walls: Wall[] = [];
+
+					for (const intersc of intersecs) {
+						if (intersc.time < first_intersec.time) {
+							first_intersec = intersc;
+						}
+						ball.cur_collision_obj_id.push(intersc.wall.obj_id);
+						hit_walls.push(intersc.wall);
+					}
+
+					delta_time -= first_intersec.time;
+					delta_time -= EPSILON; /* idk why but without this the ball flys through walls */
+					ball.pos = first_intersec.p;
+					ball.reflect(hit_walls);
+
+					ball.last_collision_obj_id = ball.cur_collision_obj_id;
+					ball.cur_collision_obj_id = [];
+				} else {
+					const ball_movement: vec2 = ball.speed.clone()
+					ball_movement.scale(delta_time);
+					ball.pos.add(ball_movement);
+					delta_time = 0
+				}
+				if (ball.pos.x == Infinity || isNaN(ball.pos.x)) {
+					console.log("error: ball data corrupted: ", ball);
+					process.exit(1);
+				}
+			}
+		}
+	}
+
 	/* 1. update walls (idk if this will be feature, for now ignore)
-	 * 2. update player paddles
-	 * 3. update balls
-	 * 4. broadcast */
-	private update() {
+	 * 2. update balls
+	 * 3. broadcast */
+	private update(delta_time: number) {
 		//console.log("update");
 		//this.walls[0].center.y += 0.01;//for testing move the wall
 		//for (const ball of this.balls) {
@@ -101,82 +153,24 @@ export class Game {
 		//for (const wall of this.walls) {
 		//	console.log(wall);
 		//}
-		for (const ball of this.balls) {
-			//console.log(ball);
-			let delta_time: number = this._frame_time / 1000;
-			while (delta_time > EPSILON) {
-				//console.log("delta time: ", delta_time);
-				const intersecs: ft_math.intersection_point[] = [];
-				for (const wall of this.walls) {
-					//console.log(wall);
-					const intersection: intersection_point | undefined =
-						ball.intersec(wall, delta_time);
-					if (intersection !== undefined) {
-						intersecs.push(intersection);
-					}
-				}
-
-				//console.log("interec count: ", intersecs.length);
-				//console.log(intersecs);
-				if (intersecs.length) {
-					let first_intersec: intersection_point = intersecs[0];
-					for (const intersc of intersecs) {
-						if (intersc.time < first_intersec.time) {
-							first_intersec = intersc;
-						}
-					}
-					const hit_walls: Wall[] = [];
-
-					for (const intersc of intersecs) {
-						if (Math.abs(intersc.time -first_intersec.time) < EPSILON) {
-							ball.cur_collision_obj_id.push(intersc.wall.obj_id);
-							hit_walls.push(intersc.wall);
-						}
-					}
-					delta_time -= first_intersec.time;
-					delta_time -= EPSILON;
-					ball.pos = first_intersec.p;
-					ball.reflect(hit_walls);
-
-					ball.last_collision_obj_id = ball.cur_collision_obj_id;
-					ball.cur_collision_obj_id = [];
-					//const offset: vec2 = ball.speed.clone();
-					//offset.unit();
-					//offset.scale(ball.radius + EPSILON);
-					//ball.pos.add(offset);
-					//
-				} else {
-					const ball_movement: vec2 = ball.speed.clone()
-					ball_movement.scale(delta_time);
-					ball.pos.add(ball_movement);
-					delta_time = 0
-
-				//console.log("2: ", i++);//, ": ", ball);
-				}
-				//console.log(intersecs);
-				if (ball.pos.x == Infinity || isNaN(ball.pos.x)) {
-					console.log("error: ball data corrupted: ", ball);
-					process.exit(1);
-				}
-			}
-		}
+		this.update_balls(delta_time);
 		this.broadcast_game_state();
 	}
 
-	private start_loop() {
+	public start_loop() {
 		if (this._interval) return;
 		this.running = true;
 
 		this._interval= setInterval(() => {
 			try {
-				this.update();
+				this.update(this.frame_time / 1000);
 			} catch (e) {
 				console.error("game update error:", e);
 			}
-		}, this._frame_time);
+		}, this.frame_time);
 	}
 
-	private stop_loop() {
+	public stop_loop() {
 		if (this._interval) {
 			clearInterval(this._interval);
 			this._interval = null;
@@ -283,7 +277,8 @@ class Connection {
 				game.clients[i].game_player_id = i;
 				game.clients[i].socket.send(JSON.stringify(msg));
 			}
-			game.init_game_state();
+			game.start_loop();
+			//game.init_game_state();
 			//todo: start game
 			//todo: flush ws so no old request are left inside
 			//ws.onmessage = (event) => {
@@ -354,6 +349,25 @@ class Connection {
 	}
 }
 
+export class GameLobby {
+	public options: GameOptions;
+	public game: Game;
+
+	constructor(options: GameOptions) {
+		this.options = options;
+		this.game = new Game(options);
+	}
+
+	public join(player_id: number, password?: string) {
+		if (this.options.player_count /* == ???*/) {
+			this.game.start_loop();
+		}
+	}
+
+	public reconnect(player_id: number, password?: string) {
+	}
+};
+
 export class GameServer {
 	private _fastify: FastifyInstance;
 	private _games: Game[] = [];
@@ -363,7 +377,6 @@ export class GameServer {
 		this._fastify = fastify;
 		this._fastify.get('/game', { websocket: true }, (socket: WebSocket, req: FastifyRequest) => {
 			new Connection(this, socket);
-			//socket.on('message', first_ws_msg);
 		});
 	}
 
@@ -371,8 +384,4 @@ export class GameServer {
 		return this._games;
 	}
 }
-
-
-
-
 

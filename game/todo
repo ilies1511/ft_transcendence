@@ -4,8 +4,10 @@ client:
 
 server:
 	- [ ] refactor
-	- [ ] fix buggy intersection fn
-	- [ ] why does the server stop sending updates with buggy intersection fn
+	- [ ] player paddles should be walls
+		-> [ ] add type to walls
+	- [x] fix buggy intersection fn
+	- [x] why does the server stop sending updates with buggy intersection fn
 
 server game lobby:
 	- [ ] change 'Game' class to be a 'GameLobby' instead
