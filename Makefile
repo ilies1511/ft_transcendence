@@ -25,6 +25,14 @@ ff_clean_docker:
 	docker system prune -a --volumes
 
 
+dev_maksim:
+	docker compose build \
+		--build-arg UID=$(shell id -u) \
+		--build-arg GID=$(shell id -g) \
+		--build-arg USERNAME=$(shell id -un) \
+	&& docker compose up -d dev_maksim \
+	&& docker exec -it dev_maksim bash
+
 dev_fabi:
 	docker compose build \
 		--build-arg UID=$(shell id -u) \
