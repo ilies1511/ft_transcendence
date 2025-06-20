@@ -1,7 +1,7 @@
 import * as ft_math from './math.ts';
 import type { WebSocket } from '@fastify/websocket';
 
-const EPSILON: number = 1e-8;
+const EPSILON: number = 1e-6;
 
 //placeholder
 export enum Effects {
@@ -17,6 +17,10 @@ export class vec2 {
 	constructor(x?: number, y?: number) {
 		this.x = x || 0;
 		this.y = y || 0;
+	}
+
+	public length(): number {
+		return Math.sqrt(this.x * this.x + this.y * this.y);
 	}
 
 	public sane(): boolean {
@@ -43,30 +47,35 @@ export class vec2 {
 		return new vec2(this.x, this.y);
 	}
 
-	public unit() {
+	public unit(): vec2 {
 		const len: number = Math.sqrt(this.x * this.x + this.y * this.y);
 		this.x /= len;
 		this.y /= len;
+		return this;
 	}
 
-	public add(a: vec2) {
+	public add(a: vec2): vec2 {
 		this.x += a.x;
 		this.y += a.y;
+		return this;
 	}
 
-	public sub(a: vec2) {
+	public sub(a: vec2): vec2 {
 		this.x -= a.x;
 		this.y -= a.y;
+		return this;
 	}
 
-	public scale(a: number) {
+	public scale(a: number): vec2 {
 		this.x *= a;
 		this.y *= a;
+		return this;
 	}
 
-	public div(a: number) {
+	public div(a: number): vec2 {
 		this.x /= a;
 		this.y /= a;
+		return this;
 	}
 
 	public serialize(): ArrayBuffer {
@@ -196,19 +205,30 @@ export class Ball {
 		return this.pos.sane() && this.speed.sane();
 	}
 
-	public reflect(walls: Wall[]) {
+	public reflect(walls: Wall[], hit_points: vec2[]) {
 		console.log("reflecting ball.. ", i++);
 		console.log("initial ball speed: ", this.speed);
 		console.log("walls hit: ", walls.length);
 		console.log("ball pos: ", this.pos);
-		for (let wall of walls) {
+		
+		for (let i = 0; i < walls.length; i++) {
+			const wall: Wall = walls[i];
+			const hit_point: vec2 = hit_points[i];
 			const normal = wall.normal.clone();
 			console.log("wall normal: ", normal);
-	
-			const dot_p: number = ft_math.dot(this.speed, normal);
-			const n = normal.clone();
-			n.scale(2 * dot_p);
-			this.speed.sub(n);
+			if (wall.angular_vel) {
+				const r: vec2 = hit_point.clone().sub(wall.center);
+				const wall_velocity: vec2 = new vec2(-wall.angular_vel * r.y, wall.angular_vel * r.x);
+				const rel_velocity: vec2 = this.speed.clone().sub(wall_velocity);
+				const dot_p: number = ft_math.dot(rel_velocity, normal);
+				normal.scale(2 * dot_p);
+				rel_velocity.sub(normal);
+				this.speed = rel_velocity.add(wall_velocity);
+			} else {
+				const dot_p: number = ft_math.dot(this.speed, normal);
+				normal.scale(2 * dot_p);
+				this.speed.sub(normal);
+			}
 			console.log("intermediate ball speed: ", this.speed);
 		}
 		console.log("ball speed after: ", this.speed);
@@ -219,8 +239,11 @@ export class Ball {
 		ft_math.intersection_point | undefined
 	{
 		if (this.last_collision_obj_id.includes(wall.obj_id)) {
-			return undefined;
+			//return undefined;
 		}
+		//if (wall.angular_vel) {
+		//	return undefined;
+		//}
 		const ball_direct: vec2 = this.speed.clone();
 		ball_direct.unit();
 		if (Math.abs(ft_math.dot(ball_direct, wall.normal)) < 1e-12) {
@@ -240,13 +263,20 @@ export class Ball {
 	
 		const center_diff = new vec2(this.pos.x - wall.center.x, this.pos.y - wall.center.y);
 		const signed_dist: number = ft_math.dot(center_diff, wall.normal);
-	
-		let impact_time: number;
-		if (signed_dist != 0) {
-			impact_time = (signed_dist) / (-dist_rate);
-		} else {
-			impact_time = 0;
+
+		if (signed_dist * dist_rate >= 0) {
+			return (undefined); // ball flying away from the wall
 		}
+	
+		//let impact_time: number;
+		//if (signed_dist != 0) {
+		//	impact_time = (signed_dist) / (-dist_rate);
+		//} else {
+		//	impact_time = 0;
+		//}
+		const signed_dist_to_surface =
+			signed_dist - this.radius * Math.sign(signed_dist);
+		let impact_time = signed_dist_to_surface / (-dist_rate);
 		if (impact_time < 0) {
 			return (undefined);
 		}
@@ -265,7 +295,7 @@ export class Ball {
 		const vec_from_wall_center = new vec2(wall.center.x, wall.center.y);
 		vec_from_wall_center.sub(ball_impact_pos);
 		const dist_from_center = Math.abs(ft_math.dot(vec_from_wall_center, wall.get_direct()));
-		if (dist_from_center <= (wall.length / 2) + EPSILON) {
+		if (dist_from_center <= (wall.length / 2 + this.radius) + EPSILON) {
 			return {p: ball_impact_pos, time: impact_time, wall};
 		}
 		return (undefined);
@@ -342,6 +372,7 @@ export class Wall {
 	public effects: Effects[];
 	public obj_id: number;
 	public dispose: boolean;
+	public angular_vel?: number;
 
 	private _direct: vec2 = new vec2();
 	private _endpoint1: vec2 = new vec2();
@@ -554,3 +585,7 @@ export class GameState {
 		return state;
 	}
 }
+
+
+
+

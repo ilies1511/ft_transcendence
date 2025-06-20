@@ -104,15 +104,27 @@ gui.addControl(text);
 				const dot: number = default_normal.x * normal.x
 					+ default_normal.y * normal.y;
 				const rot: number = Math.acos(dot);
-				wall.rotation.z = -rot;
-				this._meshes.set(w.obj_id, wall);
+				//wall.rotation.z = -rot;
+
+				const angle1 = Math.atan2(wall.normal.y, wall.normal.x)
+				let angle2 = Math.atan2(w.normal.y, w.normal.x)
+				angle2 += Math.PI / 2;
+
+				const new_angle = angle2;// - angle1;
+
+				wall.rotation.z = new_angle;
+				wall.rotation.x = 0;
+				wall.rotation.y = 0;
+				wall.normal = w.normal;
+
+				//this._meshes.set(w.obj_id, wall);
 				//console.log(wall);
 			} else {
 				const wall: BABYLON.Mesh = BABYLON.MeshBuilder.CreateBox(
 					`wall_${w.obj_id}`,
 					{
 						width: w.length,
-						height: 1,
+						height: 0.2,
 						depth: 0.5
 					},
 					this
@@ -129,6 +141,7 @@ gui.addControl(text);
 					+ default_normal.y * normal.y;
 				const rot: number = Math.acos(dot);
 				wall.rotation.z = -rot;
+				wall.normal = normal;
 				this._meshes.set(w.obj_id, wall);
 			}
 		});
