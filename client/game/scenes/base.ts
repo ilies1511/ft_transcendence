@@ -10,14 +10,14 @@ import type {
 import { GridMaterial } from '@babylonjs/materials/Grid';
 import { FireProceduralTexture } from '@babylonjs/procedural-textures/fire';
 
-import {
-	Effects,
-	vec2,
-	Wall,
-	Ball,
-	Client,
-	GameState
-} from '../game_shared/serialization.ts';
+
+import { Effects, GameState }
+	from '../game_shared/serialization.ts';
+
+import { ClientVec2 } from '../objects/ClientVec2.ts';
+import { ClientWall } from '../objects/ClientWall.ts';
+import { ClientBall } from '../objects/ClientBall.ts';
+import { ClientClient } from '../objects/ClientClient.ts';
 
 
 export abstract class BaseScene extends BABYLON.Scene {

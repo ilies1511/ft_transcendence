@@ -9,14 +9,14 @@ import type {
 import { GridMaterial } from '@babylonjs/materials/Grid';
 import { FireProceduralTexture } from '@babylonjs/procedural-textures/fire';
 import * as GUI from '@babylonjs/gui';
-import {
-	Effects,
-	vec2,
-	Wall,
-	Ball,
-	Client,
-	GameState
-} from '../game_shared/serialization';
+
+import { Effects, GameState }
+	from '../game_shared/serialization.ts';
+
+import { ClientVec2 } from '../objects/ClientVec2.ts';
+import { ClientWall } from '../objects/ClientWall.ts';
+import { ClientBall } from '../objects/ClientBall.ts';
+import { ClientClient } from '../objects/ClientClient.ts';
 
 import { BaseScene } from './base.ts';
 
@@ -72,7 +72,7 @@ gui.addControl(text);
 	}
 
 	update(game_state: GameState): void {
-		game_state.balls.forEach((b: Ball) => {
+		game_state.balls.forEach((b: ClientBall) => {
 			if (this._meshes.has(b.obj_id)) {
 				const cur: BABYLON.Mesh = this._meshes.get(b.obj_id);
 				if (!b.dispose) {
@@ -91,15 +91,15 @@ gui.addControl(text);
 				this._meshes.set(b.obj_id, ball);
 			}
 		});
-		game_state.walls.forEach((w: Wall) => {
+		game_state.walls.forEach((w: ClientWall) => {
 			if (this._meshes.has(w.obj_id)) {
 				const wall: BABYLON.Mesh = this._meshes.get(w.obj_id);
 				wall.position.x = w.center.x;
 				wall.position.y = w.center.y;
-				const default_normal: vec2 = new vec2(0, 1);
+				const default_normal: ClientVec2 = new ClientVec2(0, 1);
 				default_normal.unit();
 				//todo: rotation
-				const normal: vec2 = w.normal;
+				const normal: ClientVec2 = w.normal;
 				normal.unit();
 				const dot: number = default_normal.x * normal.x
 					+ default_normal.y * normal.y;
@@ -132,10 +132,10 @@ gui.addControl(text);
 				wall.position.x = w.center.x;
 				wall.position.y = w.center.y;
 				wall.position.z = 0;
-				const default_normal: vec2 = new vec2(0, 1);
+				const default_normal: ClientVec2 = new ClientVec2(0, 1);
 				default_normal.unit();
 				//todo: rotation
-				const normal: vec2 = w.normal;
+				const normal: ClientVec2 = w.normal;
 				normal.unit();
 				const dot: number = default_normal.x * normal.x
 					+ default_normal.y * normal.y;
@@ -145,7 +145,7 @@ gui.addControl(text);
 				this._meshes.set(w.obj_id, wall);
 			}
 		});
-		game_state.clients.forEach((c: Client) => {
+		game_state.clients.forEach((c: ClientClient) => {
 		});
 	}
 };

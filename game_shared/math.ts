@@ -1,13 +1,9 @@
-import { Ball, Client, Effects, GameState, vec2, Wall } from './serialization.ts';
 
-export function dot(a: vec2, b: vec2): number {
-	return (a.x * b.x + a.y * b.y);
-}
+import { SharedVec2 } from './objects/SharedVec2.ts'
+import { SharedBall } from './objects/SharedBall.ts'
+import { SharedWall } from './objects/SharedWall.ts'
+import { SharedClient } from './objects/SharedClient.ts'
 
-export type intersection_point = {
-	p: vec2,
-	time: number,
-	wall: Wall,
-};
 
+export const EPSILON: number = 1e-6;
 

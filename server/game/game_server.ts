@@ -10,12 +10,19 @@ import type { ClientToServerMessage } from '@game_shared/message_types.ts';
 import type { GameOptions, GameStartInfo, ServerToClientJson, ServerToClientMessage } from '@game_shared/message_types.ts';
 //import type { GameOptions, GameStartInfo, ServerToClientJson, ServerToClientMessage } from '../../game_shared/message_types';
 
-import { Ball, Client, Effects, GameState, vec2, Wall } from '@game_shared/serialization.ts';
+import { Effects, GameState }
+	from '@game_shared/serialization.ts';
+
+import { ServerVec2 } from './objects/ServerVec2.ts';
+import { ServerWall } from './objects/ServerWall.ts';
+import { ServerBall } from './objects/ServerBall.ts';
+import { ServerClient } from './objects/ServerClient.ts';
+
 import default_map from './maps/default.json';
 //import { Effects, vec2, Wall, Ball, Client, GameState }
 //	from '../../game_shared/serialization';
 
-import * as ft_math from '@game_shared/math.ts';
+import * as ft_math from './math.ts';
 
 const EPSILON: number = 1e-6;
 
@@ -23,11 +30,11 @@ let i: number = 0;
 
 //should be join lobby
 function join_game(ws: WebSocket, player_id: number, options: GameOptions, game: Game) {
-	const client: Client = new Client(
-		new vec2(0, 0),
-		player_id,
+	const client: ServerClient = new ServerClient(
 		ws,
-		new vec2(1, 1)
+		new ServerVec2(0, 0),
+		player_id,
+		new ServerVec2(1, 1)
 	);
 	let in_game: boolean = false;
 	for (const old_client of game.clients) {
@@ -70,9 +77,9 @@ export class Game {
 	private _interval: NodeJS.Timeout | null = null;
 	public frame_time: number = 1000 / 60;
 	running: boolean = false;
-	public clients: Client[] = [];
-	public balls: Ball[] = [];
-	public walls: Wall[] = [];
+	public clients: ServerClient[] = [];
+	public balls: ServerBall[] = [];
+	public walls: ServerWall[] = [];
 	public options: GameOptions;
 
 	constructor(options: GameOptions) {
@@ -90,15 +97,15 @@ export class Game {
 			}
 			console.log(map_data);
 			Object.values(map_data.walls).forEach((w: any) => {
-				const cent: vec2 = new vec2(w.center[0], w.center[1]);
-				const nor: vec2 = new vec2(w.normal[0], w.normal[1]);
+				const cent: ServerVec2 = new ServerVec2(w.center[0], w.center[1]);
+				const nor: ServerVec2 = new ServerVec2(w.normal[0], w.normal[1]);
 				const len: number = w.length;
-				this.walls.push(new Wall(cent, nor, len, undefined, this._next_obj_id++));
+				this.walls.push(new ServerWall(cent, nor, len, undefined, this._next_obj_id++));
 			});
 		}
 		parse_map("default");
 
-		const ball: Ball = new Ball();
+		const ball: ServerBall = new ServerBall();
 		ball.speed.x = -1;
 		ball.speed.y = -3;
 		ball.pos.x = 0;
@@ -152,7 +159,7 @@ export class Game {
 				}
 
 				if (!intersecs.length) {
-					const ball_movement: vec2 = ball.speed.clone()
+					const ball_movement: ServerVec2 = ball.speed.clone()
 					ball_movement.scale(delta_time);
 					ball.pos.add(ball_movement);
 					delta_time = 0;
@@ -161,8 +168,8 @@ export class Game {
 				console.log("interec count: ", intersecs.length);
 				console.log(intersecs);
 				let first_intersec: ft_math.intersection_point = intersecs[0];
-				const hit_walls: Wall[] = [];
-				const hit_points: vec2[] = [];
+				const hit_walls: ServerWall[] = [];
+				const hit_points: ServerVec2[] = [];
 				for (const intersc of intersecs) {
 					if (intersc.time < first_intersec.time) {
 						first_intersec = intersc;
@@ -175,7 +182,7 @@ export class Game {
 				delta_time -= first_intersec.time;
 				delta_time -= EPSILON; /* idk why but without this the ball flys through walls */
 				ball.pos = first_intersec.p;
-				const offset: vec2 =  first_intersec.wall.normal.clone();
+				const offset: ServerVec2 = first_intersec.wall.normal.clone();
 				offset.scale(0.01);
 				if (ft_math.dot(ball.speed, first_intersec.wall.normal) < 0) {
 					ball.pos.add(offset);
@@ -204,7 +211,7 @@ export class Game {
 					continue ;
 				}
 				/* 1. signed distance from the ball centre to the wall plane */
-				const c2w:vec2 = ball.pos.clone();
+				const c2w: ServerVec2 = ball.pos.clone();
 				c2w.sub(wall.center);
 
 				const signed_dist = ft_math.dot(c2w, wall.normal);
@@ -215,7 +222,7 @@ export class Game {
 
 				/* 2. minimum translation to put the surfaces flush */
 				const penetration: number = ball.radius - abs_dist + EPSILON;
-				const push_dir: vec2 = wall.normal.clone();
+				const push_dir: ServerVec2 = wall.normal.clone();
 
 				push_dir.scale(signed_dist >= 0 ? +1 : -1); // away from wall
 				push_dir.scale(penetration);
@@ -237,7 +244,7 @@ export class Game {
 				const r = ball.pos.clone();
 				r.sub(wall.center);
 				const w: number = wall.angular_vel;		// rad/s, +ve = CCW
-				const wall_vel = new vec2(-w * r.y, w * r.x); // ω × r (2-D)
+				const wall_vel = new ServerVec2(-w * r.y, w * r.x); // ω × r (2-D)
 	
 				ball.speed.add(wall_vel);
 	
@@ -253,7 +260,7 @@ export class Game {
 		}
 	}
 
-	private rotate_wall(wall: Wall, angle: number, delta_time: number) {
+	private rotate_wall(wall: ServerWall, angle: number, delta_time: number) {
 		const theta = angle * delta_time;
 		
 		// grab the old normal

@@ -1,7 +1,11 @@
 
+[x] - shared serilized classes refactor: split into classes Shared|Server|Client
+	- [ ] utilize these split classes more
+
 client:
 	- [x] refactor
 	- [ ] send map json instead of game options
+
 
 server:
 	- [ ] refactor

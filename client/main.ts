@@ -23,6 +23,7 @@ document.querySelector<HTMLDivElement>('#main')!.innerHTML = `
 
 setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
 
+
 const routes: Record<string, () => string> = {
   home: homePage,
   about: aboutPage,

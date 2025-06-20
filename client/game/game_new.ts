@@ -13,8 +13,13 @@ import type {
 
 import * as GUI from '@babylonjs/gui';
 
-import { Effects, vec2, Wall, Ball, Client, GameState }
+import { Effects, GameState }
 	from './game_shared/serialization.ts';
+
+import { ClientVec2 } from './objects/ClientVec2.ts';
+import { ClientWall } from './objects/ClientWall.ts';
+import { ClientBall } from './objects/ClientBall.ts';
+import { ClientClient } from './objects/ClientClient.ts';
 
 import { BaseScene } from './scenes/base.ts';
 import { GameScene } from './scenes/game_scene.ts';
