@@ -1,15 +1,22 @@
 import * as BABYLON from '@babylonjs/core/Legacy/legacy';
-//import * as BABYLON from 'babylonjs';
-import type { ServerToClientMessage, GameStartInfo } from '../../../../game_shared/message_types.ts';
-import type { ClientToServerMessage } from '../../../../game_shared/message_types';
-import type { GameOptions } from '../../../../game_shared/message_types';
+import type {
+	ServerToClientMessage,
+	GameStartInfo,
+	ClientToServerMessage,
+	GameOptions
+} from '../game_shared/message_types';
 
 import { GridMaterial } from '@babylonjs/materials/Grid';
 import { FireProceduralTexture } from '@babylonjs/procedural-textures/fire';
 import * as GUI from '@babylonjs/gui';
 
-import { Effects, vec2, Wall, Ball, Client, GameState }
-	from './../game_shared/serialization.ts';
+import { Effects, GameState }
+	from '../game_shared/serialization.ts';
+
+import { ClientVec2 } from '../objects/ClientVec2.ts';
+import { ClientWall } from '../objects/ClientWall.ts';
+import { ClientBall } from '../objects/ClientBall.ts';
+import { ClientClient } from '../objects/ClientClient.ts';
 
 import { BaseScene } from './base.ts';
 
@@ -65,13 +72,12 @@ gui.addControl(text);
 	}
 
 	update(game_state: GameState): void {
-		game_state.balls.forEach((b: Ball) => {
+		game_state.balls.forEach((b: ClientBall) => {
 			if (this._meshes.has(b.obj_id)) {
 				const cur: BABYLON.Mesh = this._meshes.get(b.obj_id);
 				if (!b.dispose) {
 					cur.position.x = b.pos.x;
 					cur.position.y = b.pos.y;
-					cur.position.z = 0;
 				} else {
 					cur.dispose(true);
 					this._meshes.delete(b.obj_id);
@@ -82,22 +88,43 @@ gui.addControl(text);
 					`sphere_${b.obj_id}`, {diameter: 1}, this);
 				ball.position.x = b.pos.x;
 				ball.position.y = b.pos.y;
-				ball.position.z = 0;
 				this._meshes.set(b.obj_id, ball);
 			}
 		});
-		game_state.walls.forEach((w: Wall) => {
+		game_state.walls.forEach((w: ClientWall) => {
 			if (this._meshes.has(w.obj_id)) {
 				const wall: BABYLON.Mesh = this._meshes.get(w.obj_id);
 				wall.position.x = w.center.x;
 				wall.position.y = w.center.y;
+				const default_normal: ClientVec2 = new ClientVec2(0, 1);
+				default_normal.unit();
+				//todo: rotation
+				const normal: ClientVec2 = w.normal;
+				normal.unit();
+				const dot: number = default_normal.x * normal.x
+					+ default_normal.y * normal.y;
+				const rot: number = Math.acos(dot);
+				//wall.rotation.z = -rot;
+
+				const angle1 = Math.atan2(wall.normal.y, wall.normal.x)
+				let angle2 = Math.atan2(w.normal.y, w.normal.x)
+				angle2 += Math.PI / 2;
+
+				const new_angle = angle2;// - angle1;
+
+				wall.rotation.z = new_angle;
+				wall.rotation.x = 0;
+				wall.rotation.y = 0;
+				wall.normal = w.normal;
+
+				//this._meshes.set(w.obj_id, wall);
 				//console.log(wall);
 			} else {
 				const wall: BABYLON.Mesh = BABYLON.MeshBuilder.CreateBox(
 					`wall_${w.obj_id}`,
 					{
 						width: w.length,
-						height: 1,
+						height: 0.2,
 						depth: 0.5
 					},
 					this
@@ -105,19 +132,20 @@ gui.addControl(text);
 				wall.position.x = w.center.x;
 				wall.position.y = w.center.y;
 				wall.position.z = 0;
-				const default_normal: vec2 = new vec2(0, 1);
+				const default_normal: ClientVec2 = new ClientVec2(0, 1);
 				default_normal.unit();
 				//todo: rotation
-				const normal: vec2 = w.normal;
+				const normal: ClientVec2 = w.normal;
 				normal.unit();
 				const dot: number = default_normal.x * normal.x
 					+ default_normal.y * normal.y;
 				const rot: number = Math.acos(dot);
-				wall.rotation.z = rot;
+				wall.rotation.z = -rot;
+				wall.normal = normal;
 				this._meshes.set(w.obj_id, wall);
 			}
 		});
-		game_state.clients.forEach((c: Client) => {
+		game_state.clients.forEach((c: ClientClient) => {
 		});
 	}
 };

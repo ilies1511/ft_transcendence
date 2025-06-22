@@ -1,26 +1,31 @@
 import * as BABYLON from '@babylonjs/core/Legacy/legacy';
-//import * as BABYLON from 'babylonjs';
-import type { ServerToClientMessage, GameStartInfo } from '../../../game_shared/message_types.ts';
-import type { ClientToServerMessage } from '../../../game_shared/message_types';
-import type { GameOptions } from '../../../game_shared/message_types';
 
-import { GridMaterial } from '@babylonjs/materials/Grid';
-import { FireProceduralTexture } from '@babylonjs/procedural-textures/fire';
+//import * as BABYLON from 'babylonjs';
+import type {
+	ServerToClientMessage,
+	GameStartInfo,
+	ClientToServerMessage,
+	GameOptions
+} from './game_shared/message_types.ts';
+
+//import { GridMaterial } from '@babylonjs/materials/Grid.ts';
+//import { FireProceduralTexture } from '@babylonjs/procedural-textures/fire';
+
 import * as GUI from '@babylonjs/gui';
 
-
-import { Effects, vec2, Wall, Ball, Client, GameState }
+import { Effects, GameState }
 	from './game_shared/serialization.ts';
+
+import { ClientVec2 } from './objects/ClientVec2.ts';
+import { ClientWall } from './objects/ClientWall.ts';
+import { ClientBall } from './objects/ClientBall.ts';
+import { ClientClient } from './objects/ClientClient.ts';
 
 import { BaseScene } from './scenes/base.ts';
 import { GameScene } from './scenes/game_scene.ts';
 
 
 
-
-//import { Engine, Scene, Mesh, ArcRotateCamera, PointLight, Vector3, HemisphericLight, MeshBuilder, ArcRotateCameraGamepadInput } from "@babylonjs/core";
-//const server_ip: string = import.meta.env.VITE_IP;
-//const game_port: string = import.meta.env.VITE_GAME_PORT;
 const server_ip: string = "localhost";
 
 const game_port: string = "5173";
@@ -78,7 +83,6 @@ export class Game {
 
 	private _open_socket() {
 		try {
-			//this._socket = new WebSocket("ws://" + server_ip + ":" + game_port + "/game");
 			this._socket = new WebSocket('ws://localhost:5173/game')
 
 			this._socket.binaryType = "arraybuffer";

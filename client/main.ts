@@ -7,7 +7,7 @@ import homePage from './pages/home.ts';
 // import apiPage from './pages/apiPage.ts';
 import { apiPage, setupApiPage } from './pages/apiPage.ts'; // Add
 // import { apiPage } from './pages/apiPage.ts'; // Add
-import type { GameOptions } from '../../game_shared/message_types.ts';
+import type { GameOptions } from '@game_shared/message_types';
 import {Game} from './game/game_new.ts';
 
 // document.querySelector<HTMLDivElement>('#main')!.innerHTML = `
@@ -22,6 +22,7 @@ import {Game} from './game/game_new.ts';
 // `
 
 setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+
 
 const routes: Record<string, () => string> = {
   home: homePage,

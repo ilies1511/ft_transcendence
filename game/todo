@@ -1,9 +1,22 @@
 
+[x] - shared serilized classes refactor: split into classes Shared|Server|Client
+	- [ ] utilize these split classes more
+
 client:
 	- [x] refactor
+	- [ ] send map json instead of game options
+
+
+server:
+	- [ ] refactor
+	- [ ] player paddles should be walls
+		-> [ ] add type to walls
+	- [x] fix buggy intersection fn: Ball still flies out after a few minutes with high speed..
+	- [ ] fix buggy intersection fn: Ball still flies out after a few minutes with rotating wall..
+	- [x] why does the server stop sending updates with buggy intersection fn
+	- [ ] break down 'Game' class into smaller ones like 'GameLobby' and 'Physics'
 
 server game lobby:
-	- [ ] change 'Game' class to be a 'GameLobby' instead
 	- [ ] game lobbys can he hidden from matchmaking and require some key to join
 
 misc:
@@ -25,8 +38,10 @@ sockets:
 	- [x] implement a basic json format for default communication
 	- [x] server: be able to send json for performance uncritical parts
 	- [x] client: implement msg type multiplexor
-	- [ ] server: connection state multiplexor
-		-> go to execute specific action when the client is in for example matchmaking or a game
+	- [x]: no server side state anymore, msg fully determines action
+			{{--server: connection state multiplexor
+				-> go to execute specific action when the client is in for example 
+				matchmaking or a game--}}
 	! [x] update game update coms: split into 3 parts->not needed anymore but still works
 		- 1.: new obj notification
 		- 2.: obj deactivation
@@ -37,9 +52,8 @@ sockets:
 		-- [x] update deserilization
 		-- [x] create objects on frontend
 		-- [x] deactive objects on frontend
-		-- [~] update objects on frontend
+		-- [x] update objects on frontend
 	- [ ] add score and time communication
-	- [ ] check if server side code can be simplified without much work
 	! [ ] communicate button press/release from frontend to backend
 		-- [ ] client: include account bound unique client ID
 		-- [ ] server: map the client id to the correct object
@@ -67,12 +81,12 @@ game state:
 	- [x] backend should be responsible for the balls position
 	- [ ] backend: each game should have a unique id
 	- [x] backend: manage multiple games at the same time
-	- [ ] add sidewalls with ball interaction
+	- [x] add sidewalls with ball interaction
 	- [ ] movable player paddles with ball interaction
 	- [ ] point scoring
 	- [ ] score board
 	- [ ] win conditon (timer/score)
-
+ball.pos.x == Infinity || isNaN(ball.pos.x)
 tournament:
 	- [ ] TBD
 

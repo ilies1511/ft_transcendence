@@ -12,13 +12,13 @@
 	"walls": {
 		"1": {
 			"center": [0, 5],
-			"normal": [0, -1],
+			"normal": [1, 1],
 			"length": 20,
 			"effects": []
 		},
 		"2": {
 			"center": [0, -5],
-			"normal": [0, 1],
+			"normal": [0.3, 1],
 			"length": 20,
 			"effects": []
 		},
@@ -33,7 +33,14 @@
 			"normal": [-1, 0],
 			"length": 20,
 			"effects": []
+		},
+		"5": {
+			"center": [0, 0],
+			"normal": [-1, 1],
+			"length": 4,
+			"effects": []
 		}
 	},
+
 	"camera_dist": 10
 }
