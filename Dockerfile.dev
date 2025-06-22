@@ -1,0 +1,15 @@
+FROM node:22-alpine
+
+WORKDIR /app
+
+# COPY core/*.json ./core/
+# RUN cd core && npm ci
+
+RUN apk add --no-cache make
+
+RUN apk update && apk add bash
+
+RUN echo 'alias dev="npm run dev"' >> /etc/bash/bashrc
+
+ENTRYPOINT [ "./init.sh" ]
+
