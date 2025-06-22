@@ -3,6 +3,7 @@ import * as BABYLON from '@babylonjs/core/Legacy/legacy';
 //import * as BABYLON from 'babylonjs';
 import type {
 	ServerToClientMessage,
+	ServerToClientJson,
 	GameStartInfo,
 	ClientToServerMessage,
 	GameOptions
@@ -58,6 +59,9 @@ export class Game {
 	) {
 		this._process_msg = this._process_msg.bind(this);
 		this._rcv_msg = this._rcv_msg.bind(this);
+		this._key_up_handler = this._key_up_handler.bind(this);
+		this._key_down_handler = this._key_down_handler.bind(this);
+
 	
 		console.log("GAME: game constructor");
 		this._id = id;
@@ -110,6 +114,63 @@ export class Game {
 		}
 	}
 
+	private _key_up_handler(event: KeyboardEvent) {
+		const msg: ClientToServerMessage = {
+			type: "send_input",
+			player_id: this._id,
+			game_id: this._start_info.game_id,
+			payload: { 
+				key: "",
+				type: "up",
+			}
+		}
+		if (event.key === "w") {
+			msg.payload.key = "w";
+		} else if (event.key === "a") {
+			msg.payload.key = "a";
+		} else if (event.key === "s") {
+			msg.payload.key = "s";
+		} else if (event.key === "d") {
+			msg.payload.key = "d";
+		} else {
+			return ;
+		}
+		console.log("key up ", msg.payload.key);
+		this._socket.send(JSON.stringify(msg));
+	}
+
+	private _key_down_handler(event: KeyboardEvent) {
+		const msg: ClientToServerMessage = {
+			type: "send_input",
+			player_id: this._id,
+			game_id: this._start_info.game_id,
+			payload: { 
+				key: "",
+				type: "down",
+			}
+		}
+		if (event.key === "w") {
+			msg.payload.key = "w";
+		} else if (event.key === "a") {
+			msg.payload.key = "a";
+		} else if (event.key === "s") {
+			msg.payload.key = "s";
+		} else if (event.key === "d") {
+			msg.payload.key = "d";
+		} else {
+			return ;
+		}
+		console.log("key down ", msg.payload.key);
+		this._socket.send(JSON.stringify(msg));
+	}
+
+	private _start_game() {
+		//console.log(this._start_info);
+		//todo: render some loading screen or smth like that
+		window.addEventListener("keyup", this._key_up_handler);
+		window.addEventListener("keydown", this._key_down_handler);
+	}
+
 	private _process_msg() {
 		//console.log("_process_msg");
 		if (this._last_server_msg == null) {
@@ -124,17 +185,15 @@ export class Game {
 			this._game_scene.update(GameState.deserialize(msg));
 		} else if (typeof msg === 'string') {
 			console.log("GAME: got string: ", msg);
-			const json: ServerToClientMessage = JSON.parse(msg);
+			const json: ServerToClientJson = JSON.parse(msg);
 			console.log("GAME: got ServerToClientMessage object: ", json);
 			switch (json.type) {
 				case ('game_lobby_update'):
 					// todo: have a user UI for the lobby screen while waiting for players
 					break ;
 				case ('starting_game'):
-					//console.log(this._start_info);
-					this._start_info = json;
-					//todo: render some loading screen or smth like that
-
+					this._start_info = json as GameStartInfo;
+					this._start_game();
 					break ;
 			}
 		} else {

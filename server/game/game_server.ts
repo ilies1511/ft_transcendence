@@ -7,7 +7,16 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 //import type { ClientToServerMessage } from '../../game_shared/message_types';
 import type { WebSocket } from '@fastify/websocket';
 import type { ClientToServerMessage } from '@game_shared/message_types.ts';
-import type { GameOptions, GameStartInfo, ServerToClientJson, ServerToClientMessage } from '@game_shared/message_types.ts';
+import type {
+	GameOptions,
+	GameStartInfo,
+	ServerToClientJson,
+	ServerToClientMessage,
+	ClientToServerInput,
+} from '@game_shared/message_types.ts';
+
+import { Map } from './maps/Map.ts';
+
 //import type { GameOptions, GameStartInfo, ServerToClientJson, ServerToClientMessage } from '../../game_shared/message_types';
 
 import { Effects, GameState }
@@ -87,23 +96,11 @@ export class Game {
 		this.update = this.update.bind(this);
 
 		this.running = false;
-		const parse_map = (map_name?: string) => {
-			map_name = map_name || "default";
-			let map_data: any;
-			if (map_name == "default") {
-				map_data = default_map;
-			} else {
-				throw new Error("Unknown map name");
-			}
-			console.log(map_data);
-			Object.values(map_data.walls).forEach((w: any) => {
-				const cent: ServerVec2 = new ServerVec2(w.center[0], w.center[1]);
-				const nor: ServerVec2 = new ServerVec2(w.normal[0], w.normal[1]);
-				const len: number = w.length;
-				this.walls.push(new ServerWall(cent, nor, len, undefined, this._next_obj_id++));
-			});
-		}
-		parse_map("default");
+		const map: Map = new Map("default");
+		this._next_obj_id = map.next_obj_id;
+
+		this.walls = map.walls;
+		this.balls = map.balls;
 
 		const ball: ServerBall = new ServerBall();
 		ball.speed.x = -1;
@@ -111,7 +108,7 @@ export class Game {
 		ball.pos.x = 0;
 		ball.obj_id = this._next_obj_id++;
 		this.balls.push(ball);
-		console.log(this.walls);
+		//console.log(this.walls);
 		console.log(this.balls);
 		//this.start_loop();
 	}
@@ -134,9 +131,9 @@ export class Game {
 
 	private update_balls(delta_time: number) {
 		for (const ball of this.balls) {
-			console.log(ball);
+			//console.log(ball);
 			while (delta_time > EPSILON) {
-				console.log("delta time: ", delta_time);
+				//console.log("delta time: ", delta_time);
 				const intersecs: ft_math.intersection_point[] = [];
 				for (const wall of this.walls) {
 					//console.log(wall);
@@ -165,8 +162,8 @@ export class Game {
 					delta_time = 0;
 					continue ;
 				}
-				console.log("interec count: ", intersecs.length);
-				console.log(intersecs);
+				//console.log("interec count: ", intersecs.length);
+				//console.log(intersecs);
 				let first_intersec: ft_math.intersection_point = intersecs[0];
 				const hit_walls: ServerWall[] = [];
 				const hit_points: ServerVec2[] = [];
@@ -311,6 +308,13 @@ export class Game {
 		}
 		this.running = false;
 	}
+
+	public process_input(input: ClientToServerInput, client: ServerClient) {
+		console.log('got input');
+		if (input.player_id != client.id) {
+			throw("Game.process_input: got id missmatch");
+		}
+	}
 };
 
 //todo
@@ -442,12 +446,16 @@ export class GameServer {
 				break ;
 
 			case ('send_input'):
+				const input:  ClientToServerInput = json as ClientToServerInput;
 				for (let game of this._games) {
 					for (let client of game.clients) {
 						if (client.id == player_id) {
-							client.socket.close();
-							Object.assign(client.socket, this._ws);
-							console.log("Game: client was reconnected to game");
+							if (client.socket !== ws) {
+								client.socket.close();
+								Object.assign(client.socket, ws);
+								console.log("Game: client was reconnected to game");
+							}
+							game.process_input(input, client);
 							return ;
 						}
 					}

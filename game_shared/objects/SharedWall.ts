@@ -8,7 +8,6 @@ export class SharedWall {
 	public effects: Effects[];
 	public obj_id: number;
 	public dispose: boolean;
-	public angular_vel?: number;
 
 	private _direct: SharedVec2 = new SharedVec2();
 	private _endpoint1: SharedVec2 = new SharedVec2();

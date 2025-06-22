@@ -12,6 +12,6 @@ export function dot(a: ServerVec2, b: ServerVec2): number {
 export type intersection_point = {
 	p: ServerVec2,
 	time: number,
-	wall: ServerVec2,
+	wall: ServerWall,
 };
 

@@ -1,5 +1,7 @@
 {
 	"players": {
+		"paddle_length": 2,
+		"base_length": 10,
 		"1": {
 			"center": [-10, 0],
 			"normal": [1, 0]
@@ -41,6 +43,16 @@
 			"effects": []
 		}
 	},
-
-	"camera_dist": 10
+	"balls": {
+		"1": {
+			"point": [0.2, 0],
+			"speed": [3, 0],
+			"effects": []
+		},
+		"2": {
+			"point": [-0.2, 0],
+			"speed": [-3, 0],
+			"effects": []
+		}
+	}
 }

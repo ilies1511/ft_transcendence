@@ -42,16 +42,16 @@ function loadPage(page: string) {
       setupApiPage();
     }
 	//added game here because I don't know where it is supposed to be
-	// if (main) {
-	// 	const options: GameOptions = {
-	// 		player_count: 1,
-	// 		timer: 10,
-	// 		no_tie: false,
-	// 	};
-	// 	main.innerHTML = '';
-	// 	const userId = 123;
-	// 	new Game(userId, main, options);
-	// }
+	 if (main) {
+	 	const options: GameOptions = {
+	 		player_count: 1,
+	 		timer: 10,
+	 		no_tie: false,
+	 	};
+	 	main.innerHTML = '';
+	 	const userId = 123;
+	 	new Game(userId, main, options);
+	 }
   }
 }
 

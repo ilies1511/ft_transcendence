@@ -11,16 +11,16 @@ export class ServerBall extends SharedBall {
 	}
 
 	public reflect(walls: ServerWall[], hit_points: ServerVec2[]) {
-		console.log("reflecting ball.. ", i++);
-		console.log("initial ball speed: ", this.speed);
-		console.log("walls hit: ", walls.length);
-		console.log("ball pos: ", this.pos);
+		//console.log("reflecting ball.. ", i++);
+		//console.log("initial ball speed: ", this.speed);
+		//console.log("walls hit: ", walls.length);
+		//console.log("ball pos: ", this.pos);
 		
 		for (let i = 0; i < walls.length; i++) {
 			const wall: ServerWall = walls[i];
 			const hit_point: ServerVec2 = hit_points[i];
 			const normal = wall.normal.clone();
-			console.log("wall normal: ", normal);
+			//console.log("wall normal: ", normal);
 			if (wall.angular_vel) {
 				const r: ServerVec2 = hit_point.clone().sub(wall.center);
 				const wall_velocity: ServerVec2 = new ServerVec2(-wall.angular_vel * r.y, wall.angular_vel * r.x);
@@ -34,10 +34,10 @@ export class ServerBall extends SharedBall {
 				normal.scale(2 * dot_p);
 				this.speed.sub(normal);
 			}
-			console.log("intermediate ball speed: ", this.speed);
+			//console.log("intermediate ball speed: ", this.speed);
 		}
-		console.log("ball speed after: ", this.speed);
-		console.log("****************");
+		//console.log("ball speed after: ", this.speed);
+		//console.log("****************");
 	}
 
 	public intersec(wall: ServerWall, delta_time: number):

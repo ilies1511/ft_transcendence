@@ -23,6 +23,16 @@ export type ServerToClientJson =
 
 export type ServerToClientMessage = ServerToClientJson | ArrayBuffer;
 
+export type ClientToServerInput = {
+	type: 'send_input';
+	player_id: number;
+	game_id: number;
+	payload: {
+		key: string,
+		type: "up" | "down",
+	}
+};
+
 //todo: leave game option
 export type ClientToServerMessage =
 	| {
@@ -38,13 +48,5 @@ export type ClientToServerMessage =
 		payload: {
 		}
 	}
-	| {
-		type: 'send_input';
-		player_id: number;
-		game_id: number;
-		payload: {
-		}
-	};
-
-
+	| ClientToServerInput;
 
