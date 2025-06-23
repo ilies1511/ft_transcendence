@@ -1,0 +1,96 @@
+import './style.css'
+
+// import typescriptLogo from './typescript.svg'
+// import viteLogo from '/vite.svg'
+import { setupCounter } from './counter.ts'
+import aboutPage from './pages/about.ts';
+import homePage from './pages/home.ts';
+// import apiPage from './pages/apiPage.ts';
+import { apiPage, setupApiPage } from './pages/apiPage.ts'; // Add
+// import { apiPage } from './pages/apiPage.ts'; // Add
+import type { GameOptions } from '@game_shared/message_types';
+import {Game} from './game/game_new.ts';
+
+// document.querySelector<HTMLDivElement>('#main')!.innerHTML = `
+
+//       <div class="text-center">
+//         <h1 class="text-3xl md:text-5xl font-bold mb-4">Welcome to MySite</h1>
+//         <p class="text-gray-400 mb-8">A super simple responsive page using Tailwind CSS with a dark theme.</p>
+//         <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-lg transition font-semibold">
+//           Get Started
+//         </button>
+//       </div>
+// `
+
+setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+
+
+const routes: Record<string, () => string> = {
+  home: homePage,
+  about: aboutPage,
+  apiPage: apiPage,
+  // services: servicesPage,
+  // ... add others
+};
+
+function loadPage(page: string) {
+  const main = document.querySelector('main');
+  if (main && routes[page]) {
+    main.innerHTML = routes[page]();
+
+    // Attach event listeners after rendering
+    if (page === 'apiPage') {
+      setupApiPage();a
+    }
+	//added game here because I don't know where it is supposed to be
+	 if (main) {
+	 	const options: GameOptions = {
+	 		player_count: 2,
+	 		timer: 10,
+	 		no_tie: false,
+	 	};
+	 	main.innerHTML = '';
+	 	const userId = Math.random();
+	 	new Game(userId, main, options);
+	 }
+  }
+}
+
+// Listen for menu clicks
+document.querySelectorAll('[data-page]').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    const page = (e.target as HTMLElement).getAttribute('data-page');
+    if (page) {
+      loadPage(page);
+      history.pushState({ page }, '', ''); // This keeps the URL unchanged
+    }
+  });
+});
+
+// Handle browser back/forward
+window.addEventListener('popstate', (event) => {
+  const page = event.state?.page || 'home';
+  loadPage(page);
+});
+
+// Load home page by default
+window.addEventListener('DOMContentLoaded', () => {
+  loadPage('home');
+});
+
+// Update WebSocket connection to use proxy
+// const ws = new WebSocket('ws://localhost:5173/ws') // Vite proxy
+
+// If using Vite proxy, use ws://localhost:5173/ws
+const ws = new WebSocket('ws://localhost:5173/ws')
+
+ws.addEventListener('open', () => {
+  console.log('[FRONT-END PART] WebSocket connected!')
+  ws.send('[FRONT-END PART] Hello from the browser!')
+})
+
+ws.addEventListener('message', (event) => {
+  console.log('[FRONT-END PART] Received from server:', event.data)
+  // You can also display this in your page if you want
+})

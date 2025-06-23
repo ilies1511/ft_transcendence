@@ -1,0 +1,33 @@
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "@types/ws": "^8.18.1",
+    "concurrently": "^9.1.2",
+    "tsx": "^4.19.4",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5",
+    "vitest": "^3.2.2"
+  },
+  "dependencies": {
+    "@babylonjs/core": "^8.11.0",
+    "@babylonjs/gui": "^8.12.1",
+    "@babylonjs/materials": "^8.11.0",
+    "@babylonjs/post-processes": "^8.11.0",
+    "@babylonjs/procedural-textures": "^8.11.0",
+    "@fastify/static": "^8.2.0",
+    "@fastify/websocket": "^11.1.0",
+    "@tailwindcss/vite": "^4.1.8",
+    "babylonjs": "^8.11.0",
+    "fastify": "^5.3.3",
+    "tailwindcss": "^4.1.8"
+  }
+}
