@@ -27,12 +27,12 @@
 import Fastify from 'fastify'
 import websocket from '@fastify/websocket'
 import type { WebSocket } from '@fastify/websocket' // <-- use 'import type'
-import {GameServer} from './game/game_server';
+import {GameServer} from './game/game_server.ts';
 
 const fastify = Fastify({ logger: true })
 
 // Register the websocket plugin BEFORE routes
-fastify.register(websocket)
+await fastify.register(websocket)
 
 // WebSocket echo endpoint
 fastify.get('/ws', { websocket: true }, (socket: WebSocket, req) => {
@@ -56,7 +56,7 @@ const game_server = new GameServer(fastify);
 
 // Start the server
 try {
-  fastify.listen({ port: 3000 })
+  await fastify.listen({ port: 3000 })
   console.log('[BACK-END PART] Fastify WebSocket server running on ws://localhost:3000/ws')
 } catch (err) {
   fastify.log.error(err)

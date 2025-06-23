@@ -87,7 +87,7 @@ export class Game {
 
 	private _open_socket() {
 		try {
-			this._socket = new WebSocket('ws://localhost:5173/api/game')
+			this._socket = new WebSocket('ws://localhost:5173/game')
 
 			this._socket.binaryType = "arraybuffer";
 
