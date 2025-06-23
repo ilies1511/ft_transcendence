@@ -34,8 +34,8 @@ import homePage from './pages/home.ts';
 // import apiPage from './pages/apiPage.ts';
 import { apiPage, setupApiPage } from './pages/apiPage.ts'; // Add
 // import { apiPage } from './pages/apiPage.ts'; // Add
-// import type { GameOptions } from '@game_shared/message_types';
-// import {Game} from './game/game_new.ts';
+import type { GameOptions } from './game/game_shared/message_types.ts';
+import {Game} from './game/game_new.ts';
 
 // document.querySelector<HTMLDivElement>('#main')!.innerHTML = `
 
@@ -66,19 +66,19 @@ function loadPage(page: string) {
 
     // Attach event listeners after rendering
     if (page === 'apiPage') {
-      setupApiPage();a
+      setupApiPage();
     }
 	//added game here because I don't know where it is supposed to be
-	//  if (main) {
-	//  	const options: GameOptions = {
-	//  		player_count: 2,
-	//  		timer: 10,
-	//  		no_tie: false,
-	//  	};
-	//  	main.innerHTML = '';
-	//  	const userId = Math.random();
-	//  	new Game(userId, main, options);
-	//  }
+	if (main) {
+	 	const options: GameOptions = {
+	 		player_count: 2,
+	 		timer: 10,
+	 		no_tie: false,
+	 	};
+	 	main.innerHTML = '';
+	 	const userId = Math.random();
+	 	new Game(userId, main, options);
+	 }
   }
 }
 
