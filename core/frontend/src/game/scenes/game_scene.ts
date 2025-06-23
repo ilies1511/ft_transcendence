@@ -4,7 +4,7 @@ import type {
 	GameStartInfo,
 	ClientToServerMessage,
 	GameOptions
-} from '../game_shared/message_types';
+} from '../game_shared/message_types.ts';
 
 import { GridMaterial } from '@babylonjs/materials/Grid';
 import { FireProceduralTexture } from '@babylonjs/procedural-textures/fire';
@@ -92,6 +92,10 @@ gui.addControl(text);
 				this._meshes.set(b.obj_id, ball);
 			}
 		});
+
+		game_state.clients.forEach((c: ClientClient) => {
+		});
+
 		game_state.walls.forEach((w: ClientWall) => {
 			if (this._meshes.has(w.obj_id)) {
 				const wall: BABYLON.Mesh = this._meshes.get(w.obj_id);
