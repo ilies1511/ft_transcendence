@@ -39,17 +39,17 @@ function loadPage(page: string) {
 
     // Attach event listeners after rendering
     if (page === 'apiPage') {
-      setupApiPage();
+      setupApiPage();a
     }
 	//added game here because I don't know where it is supposed to be
 	 if (main) {
 	 	const options: GameOptions = {
-	 		player_count: 1,
+	 		player_count: 2,
 	 		timer: 10,
 	 		no_tie: false,
 	 	};
 	 	main.innerHTML = '';
-	 	const userId = 123;
+	 	const userId = Math.random();
 	 	new Game(userId, main, options);
 	 }
   }

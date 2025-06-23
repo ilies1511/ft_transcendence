@@ -7,6 +7,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 //import type { ClientToServerMessage } from '../../game_shared/message_types';
 import type { WebSocket } from '@fastify/websocket';
 import type { ClientToServerMessage } from '@game_shared/message_types.ts';
+import { eq_options } from 'game_shared/message_types.ts';
 import type {
 	GameOptions,
 	GameStartInfo,
@@ -63,7 +64,7 @@ function join_game(ws: WebSocket, player_id: number, options: GameOptions, game:
 		game.start_loop();
 	} else {
 		for (let client of game.clients) {
-			if (client.global_id = 0) {
+			if (client.global_id == 0) {
 				continue ;
 			}
 			const msg: ServerToClientJson = {
@@ -358,7 +359,9 @@ export class MatchMaking {
 		options: GameOptions
 	) {
 		console.log("enter_matchmaking");
+		i = 0;
 		for (const game of game_server.get_games()) {
+			//console.log(i++, ": ", game);
 			for (const client of game.clients) {
 				if (client.global_id == player_id) {
 					//todo: rejoin fn instead
@@ -376,7 +379,7 @@ export class MatchMaking {
 		for (let game of game_server.get_games()) {
 			if (game.running != true
 				&& game.connected_client_count < options.player_count
-				&& game.options == options
+				&& eq_options(game.options, options)
 			) {
 				join_game(ws, player_id, options, game);
 				return ;

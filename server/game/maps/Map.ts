@@ -24,19 +24,18 @@ export class Map {
 		const base_len: number = map_data.base_length;
 		
 		Object.values(map_data.players).forEach((c: any) => {
-			const obj_id: number = this.next_obj_id++;
 			const center: ServerVec2 = new ServerVec2(c.center[0], c.center[1]);
 			const normal: ServerVec2 = new ServerVec2(c.normal[0], c.normal[1]);
 			normal.unit();
 			const paddle_effects: Effects[] = [];
 			const base_effects: Effects[] = [];
 			const paddle = new ServerWall(
-				center, normal, paddle_len, paddle_effects, obj_id, false);
+				center, normal, paddle_len, paddle_effects, this.next_obj_id++, false);
 			const base_center: ServerVec2 = normal.clone().scale(-0.1).add(center);
 			const base = new ServerWall(
-				base_center, normal, base_len, base_effects, obj_id, false);
-
-			const client: ServerClient = new ServerClient(paddle, base, obj_id, obj_id);
+				base_center, normal, base_len, base_effects, this.next_obj_id++, false);
+			const id: number = this.next_obj_id++;
+			const client: ServerClient = new ServerClient(paddle, base, id, id);
 			this.clients.push(client);
 		});
 

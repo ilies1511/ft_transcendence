@@ -5,6 +5,16 @@ export type GameOptions = {
 	no_tie: boolean;//for tournament, game goes unitl time is over and one player leads
 };
 
+export function eq_options(a: GameOptions, b: GameOptions): boolean {
+	if (a.player_count != b.player_count
+		|| a.timer != b.timer
+		|| a.no_tie != b.no_tie
+	) {
+		return (false);
+	}
+	return (true);
+}
+
 export type GameStartInfo = 
 {
 		type: 'starting_game',
