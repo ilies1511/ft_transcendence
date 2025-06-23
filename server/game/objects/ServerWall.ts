@@ -5,7 +5,8 @@ import { Effects } from 'game_shared/serialization.ts';
 export class ServerWall extends SharedWall {
 	public angular_vel: number;
 
-	constructor(center: ServerVec2,
+	constructor(
+		center: ServerVec2,
 		normal: ServerVec2,
 		length: number,
 		effects?: Effects[],

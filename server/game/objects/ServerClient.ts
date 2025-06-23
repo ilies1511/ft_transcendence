@@ -1,18 +1,27 @@
 import { ServerVec2 } from './ServerVec2.ts'
+import { ServerWall } from './ServerWall.ts'
 import { SharedClient } from 'game_shared/objects/SharedClient.ts';
 import type { WebSocket } from '@fastify/websocket';
 
 export class ServerClient extends SharedClient {
-	public socket: WebSocket;
+	public socket?: WebSocket = undefined;
+	public global_id: number;
+	declare public paddle: ServerWall;
+	declare public base: ServerWall;
 
 	constructor(
-		socket: WebSocket,
-		pos?: ServerVec2,
-		id?: number,
-		direct?: ServerVec2,
+		paddle: ServerWall,
+		base: ServerWall,
+		ingame_id?: number,
 		obj_id?: number,
 	) {
-		super(pos, id, direct, obj_id);
+		super(paddle, base, ingame_id, obj_id);
+		this.paddle = paddle;
+		this.base = base;
+		this.global_id = 0;
+	}
+
+	public set_socket(socket: WebSocket) {
 		this.socket = socket;
 	}
 };

@@ -27,10 +27,6 @@ import { ServerWall } from './objects/ServerWall.ts';
 import { ServerBall } from './objects/ServerBall.ts';
 import { ServerClient } from './objects/ServerClient.ts';
 
-import default_map from './maps/default.json';
-//import { Effects, vec2, Wall, Ball, Client, GameState }
-//	from '../../game_shared/serialization';
-
 import * as ft_math from './math.ts';
 
 const EPSILON: number = 1e-6;
@@ -39,40 +35,40 @@ let i: number = 0;
 
 //should be join lobby
 function join_game(ws: WebSocket, player_id: number, options: GameOptions, game: Game) {
-	const client: ServerClient = new ServerClient(
-		ws,
-		new ServerVec2(0, 0),
-		player_id,
-		new ServerVec2(1, 1)
-	);
 	let in_game: boolean = false;
-	for (const old_client of game.clients) {
-		if (old_client.id == client.id) {
-			Object.assign(old_client, client);
+	for (const client of game.clients) {
+		if (client.global_id == 0) {
+			client.global_id = player_id;
+			client.set_socket(ws);
+			game.connected_client_count++;
+			break ;
+		} else if (client.global_id == player_id) {
+			client.set_socket(ws);
 			in_game = true;
+			break ;
 		}
 	}
-	if (!in_game) {
-		game.clients.push(client);
-	}
-	if (game.clients.length == game.options.player_count) {
+	if (game.connected_client_count == game.options.player_count) {
 		console.log("starting game");
-		for (let i: number = 0; i < game.clients.length; i++) {
+		for (let i: number = 0; i < game.options.player_count; i++) {
 			const msg: GameStartInfo = {
 				type: 'starting_game',
-				game_player_id: i,
+				ingame_id: i,
 				game_id: 321, //todo: get a new unique id with the db that is bound to this game
 				options: options,
 			};
-			game.clients[i].game_player_id = i;
+			game.clients[i].ingame_id = i;
 			game.clients[i].socket.send(JSON.stringify(msg));
 		}
 		game.start_loop();
 	} else {
 		for (let client of game.clients) {
+			if (client.global_id = 0) {
+				continue ;
+			}
 			const msg: ServerToClientJson = {
 				type: 'game_lobby_update',
-				player_count: game.clients.length,
+				player_count: game.connected_client_count,
 				target_player_count: game.options.player_count
 			};
 			client.socket.send(JSON.stringify(msg));
@@ -86,6 +82,7 @@ export class Game {
 	private _interval: NodeJS.Timeout | null = null;
 	public frame_time: number = 1000 / 60;
 	running: boolean = false;
+	public connected_client_count: number = 0;
 	public clients: ServerClient[] = [];
 	public balls: ServerBall[] = [];
 	public walls: ServerWall[] = [];
@@ -101,6 +98,7 @@ export class Game {
 
 		this.walls = map.walls;
 		this.balls = map.balls;
+		this.clients = map.clients;
 
 		const ball: ServerBall = new ServerBall();
 		ball.speed.x = -1;
@@ -123,6 +121,9 @@ export class Game {
 	private broadcast_game_state() {
 		const buffer = this.serialize_game_state();
 		for (const client of this.clients) {
+			if (client.global_id == 0) {
+				continue ;
+			}
 			if (client.socket.readyState === client.socket.OPEN) {
 				client.socket.send(buffer);
 			}
@@ -331,7 +332,7 @@ export class GameLobby {
 	}
 
 	public can_join(options: GameOptions): boolean {
-		if (this.game.clients.length >= this.options.player_count
+		if (this.game.connected_client_count >= this.options.player_count
 			|| this.options != options)
 		{
 			return (false);
@@ -340,7 +341,7 @@ export class GameLobby {
 	}
 
 	public join(player_id: number, password?: string) {
-		if (this.options.player_count  == this.game.clients.length) {
+		if (this.options.player_count  == this.game.connected_client_count) {
 			this.game.start_loop();
 		}
 	}
@@ -354,12 +355,13 @@ export class MatchMaking {
 		game_server: GameServer,
 		ws: WebSocket,
 		player_id: number,
-		options: GameOptions)
-	{
+		options: GameOptions
+	) {
 		console.log("enter_matchmaking");
 		for (const game of game_server.get_games()) {
 			for (const client of game.clients) {
-				if (client.id == player_id) {
+				if (client.global_id == player_id) {
+					//todo: rejoin fn instead
 					console.log("rejoined game instead");
 					join_game(ws, player_id, options, game);
 					return ;
@@ -373,8 +375,8 @@ export class MatchMaking {
 		//todo: validate options
 		for (let game of game_server.get_games()) {
 			if (game.running != true
+				&& game.connected_client_count < options.player_count
 				&& game.options == options
-				&& game.clients.length < game.options.player_count
 			) {
 				join_game(ws, player_id, options, game);
 				return ;

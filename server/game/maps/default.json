@@ -1,7 +1,7 @@
 {
+	"paddle_length": 2,
+	"base_length": 10,
 	"players": {
-		"paddle_length": 2,
-		"base_length": 10,
 		"1": {
 			"center": [-10, 0],
 			"normal": [1, 0]

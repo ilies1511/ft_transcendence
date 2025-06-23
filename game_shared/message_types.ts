@@ -9,7 +9,7 @@ export type GameStartInfo =
 {
 		type: 'starting_game',
 		game_id: number,
-		game_player_id: number,
+		ingame_id: number,
 		options: GameOptions
 };
 

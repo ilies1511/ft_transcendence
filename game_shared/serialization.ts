@@ -5,8 +5,11 @@ import { SharedClient } from './objects/SharedClient.ts'
 
 //placeholder
 export enum Effects {
-	FIRE = 0,
-}
+	PADDLE = 0,
+	BASE = 1,
+	FIRE = 2,
+};
+
 let i: number = 0;
 
 
@@ -96,5 +99,4 @@ export class GameState {
 		state.walls = walls;
 		return state;
 	}
-}
-
+};

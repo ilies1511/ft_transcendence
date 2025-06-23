@@ -1,6 +1,11 @@
 
+[ ]: game server: parse clients
+
+[ ]: game server: handle clinet bases
+
 [x] - shared serilized classes refactor: split into classes Shared|Server|Client
 	- [ ] utilize these split classes more
+
 
 client:
 	- [x] refactor
@@ -54,7 +59,7 @@ sockets:
 		-- [x] deactive objects on frontend
 		-- [x] update objects on frontend
 	- [ ] add score and time communication
-	! [ ] communicate button press/release from frontend to backend
+	! [x] communicate button press/release from frontend to backend
 		-- [ ] client: include account bound unique client ID
 		-- [ ] server: map the client id to the correct object
 			--- (and set some state with timestamp?

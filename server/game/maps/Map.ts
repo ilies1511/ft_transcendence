@@ -6,31 +6,6 @@ import { Effects } from 'game_shared/serialization.ts';
 
 import default_map from './default.json';
 
-/**
- * Simple helper interfaces mirroring the JSON schema so that
- * we get strong property‑access typing while parsing.
- */
-interface PlayerJson {
-	center: [number, number];
-	normal: [number, number];
-}
-
-interface WallJson {
-	center: [number, number];
-	normal: [number, number];
-	length: number;
-	effects?: number[];
-}
-
-interface BallJson {
-	point: [number, number];
-	speed: [number, number];
-	effects?: number[];
-}
-		const parse_map = (map_name?: string) => {
-;
-		}
-
 export class Map {
 	public walls: ServerWall[] = [];
 	public balls: ServerBall[] = [];
@@ -45,6 +20,26 @@ export class Map {
 			throw new Error("Unknown map name");
 		}
 		console.log(map_data);
+		const paddle_len: number = map_data.paddle_length;
+		const base_len: number = map_data.base_length;
+		
+		Object.values(map_data.players).forEach((c: any) => {
+			const obj_id: number = this.next_obj_id++;
+			const center: ServerVec2 = new ServerVec2(c.center[0], c.center[1]);
+			const normal: ServerVec2 = new ServerVec2(c.normal[0], c.normal[1]);
+			normal.unit();
+			const paddle_effects: Effects[] = [];
+			const base_effects: Effects[] = [];
+			const paddle = new ServerWall(
+				center, normal, paddle_len, paddle_effects, obj_id, false);
+			const base_center: ServerVec2 = normal.clone().scale(-0.1).add(center);
+			const base = new ServerWall(
+				base_center, normal, base_len, base_effects, obj_id, false);
+
+			const client: ServerClient = new ServerClient(paddle, base, obj_id, obj_id);
+			this.clients.push(client);
+		});
+
 		Object.values(map_data.walls).forEach((w: any) => {
 			const cent: ServerVec2 = new ServerVec2(w.center[0], w.center[1]);
 			const nor: ServerVec2 = new ServerVec2(w.normal[0], w.normal[1]);

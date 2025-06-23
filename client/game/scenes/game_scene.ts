@@ -72,6 +72,7 @@ gui.addControl(text);
 	}
 
 	update(game_state: GameState): void {
+		console.log(game_state);
 		game_state.balls.forEach((b: ClientBall) => {
 			if (this._meshes.has(b.obj_id)) {
 				const cur: BABYLON.Mesh = this._meshes.get(b.obj_id);
