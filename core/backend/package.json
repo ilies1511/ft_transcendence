@@ -9,13 +9,14 @@
   "author": "",
   "license": "ISC",
   "description": "",
-  "dependencies": {
-    "fastify": "5.4.0"
-  },
   "devDependencies": {
     "@types/node": "^24.0.3",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "fastify": "5.4.0",
+	"@fastify/websocket": "^11.1.0"
   }
 }

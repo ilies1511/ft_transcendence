@@ -62,7 +62,7 @@ export class Game {
 		this._key_up_handler = this._key_up_handler.bind(this);
 		this._key_down_handler = this._key_down_handler.bind(this);
 
-	
+
 		console.log("GAME: game constructor");
 		this._id = id;
 		this.options = options;
@@ -71,7 +71,7 @@ export class Game {
 
 		this._canvas = this._createCanvas();
 		container.appendChild(this._canvas);
-	
+
 		this._engine = new BABYLON.Engine(this._canvas, true);
 
 
@@ -87,7 +87,7 @@ export class Game {
 
 	private _open_socket() {
 		try {
-			this._socket = new WebSocket('ws://localhost:5173/game')
+			this._socket = new WebSocket('ws://localhost:5173/api/game')
 
 			this._socket.binaryType = "arraybuffer";
 
@@ -119,7 +119,7 @@ export class Game {
 			type: "send_input",
 			player_id: this._id,
 			game_id: this._start_info.game_id,
-			payload: { 
+			payload: {
 				key: "",
 				type: "up",
 			}
@@ -144,7 +144,7 @@ export class Game {
 			type: "send_input",
 			player_id: this._id,
 			game_id: this._start_info.game_id,
-			payload: { 
+			payload: {
 				key: "",
 				type: "down",
 			}

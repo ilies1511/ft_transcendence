@@ -1,8 +1,7 @@
 import { defineConfig } from 'vite';
-import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
-	plugins: [tailwindcss()],
+  plugins: [],
   server: {
 	host: "0.0.0.0",
     port: 3001,
@@ -16,3 +15,31 @@ export default defineConfig({
     }
   }
 });
+// import path from 'path' // <-- Required for path.resolve
+// import { defineConfig } from 'vite'
+// import tailwindcss from '@tailwindcss/vite'
+
+// export default defineConfig({
+//   plugins: [tailwindcss()],
+//   resolve: {
+//     alias: {
+//       '@': path.resolve(__dirname, 'client'), // optional but useful for client code
+//     }
+//   },
+//   server: {
+// 	host: "0.0.0.0",
+//     proxy: {
+//       '/api': 'http://localhost:3000',
+//       '/ws': {
+//         target: 'ws://localhost:3000',
+//         ws: true
+//       },
+//       '/game': {
+//         target: 'ws://localhost:3000',
+//         ws: true
+//       }
+//     }
+//   }
+// })
+
+
