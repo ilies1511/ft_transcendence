@@ -24,6 +24,23 @@ export class SharedBall {
 		this.dispose = dispose || false;
 	}
 
+	public clone(): SharedBall {
+		const clone: SharedBall = new SharedBall(this.obj_id, this.dispose);
+		clone.pos = this.pos.clone();
+		clone.speed = this.speed.clone();
+		clone.effects = this.effects.slice();
+		clone.lifetime = this.lifetime;
+		clone.obj_id = this.obj_id;
+		clone.dispose = this.dispose;
+		clone.radius = this.radius;
+		if (this.acceleration) {
+			clone.acceleration = this.acceleration.clone();
+		}
+		clone.last_collision_obj_id = this.last_collision_obj_id.slice();
+		clone.cur_collision_obj_id = this.cur_collision_obj_id.slice();
+		return clone;
+	}
+
 	public sane(): boolean {
 		return this.pos.sane() && this.speed.sane();
 	}
