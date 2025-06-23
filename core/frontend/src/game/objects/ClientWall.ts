@@ -12,4 +12,8 @@ export class ClientWall extends SharedWall {
 	{
 		super(center, normal, length, effects, obj_id, dispose);
 	}
+
+	public update() {
+		return ;
+	}
 };
