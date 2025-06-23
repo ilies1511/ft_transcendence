@@ -19,3 +19,11 @@
 
 **Alternativ als Link**
 [Typescript-Vite Tutorial PDF](./docs/Fastify_Vite_TypeScript_Setup_Guide.pdf)
+
+
+### TS
+/*
+	Create with command:
+		npx tsc --init
+		Quellen: https://fastify.dev/docs/latest/Reference/TypeScript/
+*/

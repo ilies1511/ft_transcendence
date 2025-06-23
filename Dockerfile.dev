@@ -4,6 +4,10 @@ WORKDIR /app
 
 # COPY core/*.json ./core/
 # RUN cd core && npm ci
+COPY . .
+
+RUN cd core/frontend && npm install && npm ci
+RUN cd core/backend && npm install && npm ci
 
 RUN apk add --no-cache make
 

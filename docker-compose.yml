@@ -5,15 +5,21 @@ services:
       dockerfile: Dockerfile.dev
     volumes:
       - ./:/app
-      - node_modules:/app/vite-project/node_modules
+      - node_modules_FE:/app/core/frontend/node_modules
+      - node_modules_BE:/app/core/backend/node_modules
+      - node_modules_core:/app/core/node_modules
     working_dir: /app
     ports:
       - "3000:3000"
+      - "3001:3001"
       - "5173:5173"
     stdin_open: true
     tty: true
     command: sh
 
 volumes:
-  node_modules:
-    driver: local
+  node_modules_FE:
+  node_modules_BE:
+  node_modules_core:
+    # driver: local
+    # driver: local
