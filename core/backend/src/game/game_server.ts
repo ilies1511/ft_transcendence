@@ -402,7 +402,7 @@ export class GameServer {
 		this._rcv_msg = this._rcv_msg.bind(this);
 		console.log("[GAME-BACK-END] constructor");
 		this._fastify = fastify;
-		this._fastify.get('/api/game', { websocket: true }, (socket: WebSocket, req: FastifyRequest) => {
+		this._fastify.get('/game', { websocket: true }, (socket: WebSocket, req: FastifyRequest) => {
 			socket.on('message', (raw) => {
 				this._rcv_msg(raw.toString(), socket);
 			});
