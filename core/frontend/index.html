@@ -1,13 +1,72 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/pong.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + TS</title>
+    <title>Simple Dark Tailwind Demo</title>
+    <!-- Tailwind CSS should be included via your build process -->
   </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
+  <body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="bg-gray-800 shadow-md">
+      <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
+        <span class="font-bold text-lg text-white">MySite</span>
+        <ul class="hidden md:flex space-x-6">
+          <li><a href="#" data-page="home" class="hover:text-blue-400 transition">Home</a></li>
+          <li><a href="#" data-page="about" class="hover:text-blue-400 transition">About</a></li>
+          <li><a href="#" data-page="apiPage" class="hover:text-blue-400 transition">apiPage</a></li>
+          <!-- <li><a href="#" class="hover:text-blue-400 transition">Services</a></li>
+          <li><a href="#" class="hover:text-blue-400 transition">Blog</a></li>
+          <li><a href="#" class="hover:text-blue-400 transition">Contact</a></li> -->
+        </ul>
+        <!-- Mobile menu button -->
+        <button id="menu-btn" class="md:hidden text-gray-200 focus:outline-none">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
+      <!-- Mobile menu -->
+      <div id="mobile-menu" class="md:hidden px-4 pb-4 hidden">
+        <ul class="space-y-2">
+          <li><a href="#" data-page="home" class="block py-2 hover:text-blue-400 transition">Home</a></li>
+          <li><a href="#" data-page="about" class="block py-2 hover:text-blue-400 transition">About</a></li>
+          <!-- <li><a href="#" class="block py-2 hover:text-blue-400 transition">Services</a></li>
+          <li><a href="#" class="block py-2 hover:text-blue-400 transition">Blog</a></li>
+          <li><a href="#" class="block py-2 hover:text-blue-400 transition">Contact</a></li> -->
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <!-- <div id="app"></div> -->
+    <main id="main" class="flex-1 flex items-center justify-center"></main>
+    <button id="counter" class=""></button>
+    <!-- Footer -->
+    <footer class="bg-gray-800 shadow-inner">
+      <div class="max-w-5xl mx-auto px-4 py-6 flex flex-col md:flex-row items-center justify-between">
+        <span class="text-sm text-gray-400">© 2025 MySite. All rights reserved.</span>
+        <ul class="flex space-x-4 mt-2 md:mt-0">
+          <li><a href="#" class="hover:text-blue-400 transition">Privacy</a></li>
+          <li><a href="#" class="hover:text-blue-400 transition">Terms</a></li>
+          <li><a href="#" class="hover:text-blue-400 transition">Contact</a></li>
+        </ul>
+      </div>
+    </footer>
+
+    <!-- Simple JS for mobile menu toggle -->
+    <script>
+      const btn = document.getElementById('menu-btn');
+      const menu = document.getElementById('mobile-menu');
+      btn.addEventListener('click', () => {
+        menu.classList.toggle('hidden');
+      });
+    </script>
+        <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
+
+

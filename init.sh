@@ -4,8 +4,8 @@ cd core || exit 1
 
 if [ -f frontend/package.json ] && [ -f frontend/package-lock.json ]; then
 	echo "Dependencies cached"
-	# echo "Installing dependencies..."
-	# npm ci
+	echo "Installing dependencies..."
+	npm ci
 else
 	echo "package.json or package-lock.json missing. Set-Up with npm init -y ..."
 	# npm init -y
