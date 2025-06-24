@@ -5,9 +5,9 @@ services:
       dockerfile: docker/Dockerfile.dev
     volumes:
       - ./:/app
-      - node_modules_FE:/app/core/frontend/node_modules
-      - node_modules_BE:/app/core/backend/node_modules
-      - node_modules_core:/app/core/node_modules
+      # - node_modules_FE:/app/core/frontend/node_modules
+      # - node_modules_BE:/app/core/backend/node_modules
+      # - node_modules_core:/app/core/node_modules
     working_dir: /app
     ports:
       - "3000:3000"
@@ -47,7 +47,7 @@ services:
       - "3000:3000"
       - "5173:5173"
 
-volumes:
-  node_modules_FE:
-  node_modules_BE:
-  node_modules_core:
+# volumes:
+  # node_modules_FE:
+  # node_modules_BE:
+  # node_modules_core:

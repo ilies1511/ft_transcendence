@@ -1,6 +1,3 @@
-
-.PHONY: all down ff_clean_docker dev_fabi game_shared i run
-
 .DEFAULT_GOAL := shell
 
 build:
@@ -44,7 +41,7 @@ ff_clean_docker:
 	$$(docker rmi $(docker images -q) | true)
 	$$(docker volume rm $(docker volume ls -q) | true)
 	$$(docker network rm $(docker network ls -q) | true)
-	docker system prune -a --volumes
+	docker system prune -a --volumes --force
 
 
 dev_maksim:
@@ -73,6 +70,26 @@ game_shared:
 #		&& docker exec -it dev_fabi bas
 #
 #
+
+.PHONY: all \
+	build \
+	up \
+	up-detach \
+	shell \
+	down \
+	clean \
+	restart \
+	ps \
+	re \
+	all \
+	ff_clean_docker \
+	dev_fabi \
+	run_izi \
+	logs \
+	dev_fabi \
+	game_shared \
+	i \
+	run
 
 
 

@@ -2,12 +2,11 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-# COPY core/*.json ./core/
 COPY . .
 
-RUN cd core && npm ci
-RUN cd core/frontend && npm install && npm ci
-RUN cd core/backend && npm install && npm ci
+# RUN cd core && npm i
+# RUN cd core/frontend && npm i
+# RUN cd core/backend && npm i
 
 RUN apk add --no-cache make
 
