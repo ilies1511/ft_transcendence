@@ -1,6 +1,28 @@
 
 .PHONY: all down ff_clean_docker dev_fabi game_shared i run
 
+.DEFAULT_GOAL := shell
+
+build:
+	docker-compose build app
+
+up: build
+	docker-compose up app
+
+up-detach: build
+	docker-compose up -d app
+
+shell: build
+	docker-compose run --rm --service-ports app sh
+
+clean:
+	docker-compose down --rmi all --volumes --remove-orphans
+
+restart: down up
+
+re: ff_clean_docker shell
+
+
 kill_node:
 	kill -9 $(pidof node)
 
@@ -51,6 +73,7 @@ game_shared:
 #		&& docker exec -it dev_fabi bas
 #
 #
+
 
 
 
