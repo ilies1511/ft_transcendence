@@ -38,19 +38,27 @@ export class ServerClient extends SharedClient {
 		const direct: ServerVec2 = this.paddle.get_direct();
 		if (this.up) {
 			const new_paddle_pos: ServerVec2 = this.paddle.center.clone();
-			new_paddle_pos.add(direct.scale(0.01));
-			if (new_paddle_pos.clone().sub(this.origin).len() < this.paddle.length) {
+			new_paddle_pos.add(direct.scale(0.08));
+			//if (new_paddle_pos.clone().sub(this.origin).len() < this.paddle.length)
+			{
 				this.paddle.center = new_paddle_pos;
 				this.paddle.update();
 			}
 		}
 		if (this.down) {
 			const new_paddle_pos: ServerVec2 = this.paddle.center.clone();
-			new_paddle_pos.add(direct.scale(-0.01));
-			if (new_paddle_pos.clone().sub(this.origin).len() < this.paddle.length) {
+			new_paddle_pos.add(direct.scale(-0.08));
+			//if (new_paddle_pos.clone().sub(this.origin).len() < this.paddle.length)
+			{
 				this.paddle.center = new_paddle_pos;
 				this.paddle.update();
 			}
+		}
+		if (this.left && this.right) {
+		} else if (this.left) {
+			this.paddle.rotate(Math.PI / 2, delta_time);
+		} else if (this.right) {
+			this.paddle.rotate(Math.PI / -2, delta_time);
 		}
 	}
 };

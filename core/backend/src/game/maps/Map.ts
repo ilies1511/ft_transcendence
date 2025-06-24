@@ -33,7 +33,7 @@ export class Map {
 				center, normal, paddle_len, paddle_effects, this.next_obj_id++, false);
 			const base_center: ServerVec2 = normal.clone().scale(-0.1).add(center);
 			const base = new ServerWall(
-				base_center, normal, base_len, base_effects, this.next_obj_id++, false);
+				base_center, normal.clone(), base_len, base_effects, this.next_obj_id++, false);
 			const id: number = this.next_obj_id++;
 			const client: ServerClient = new ServerClient(paddle, base, id, id);
 			this.clients.push(client);
