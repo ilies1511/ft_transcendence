@@ -71,7 +71,7 @@ export class ServerBall extends SharedBall {
 		const ball_direct: ServerVec2 = this.speed.clone();
 		ball_direct.unit();
 		if (Math.abs(ft_math.dot(ball_direct, wall.normal)) < 1e-12) {
-			return (undefined);
+			//return (undefined);
 		}
 		const dist_rate: number = ft_math.dot(this.speed, wall.normal);
 		//console.log("dist_rate:", dist_rate);
@@ -89,7 +89,7 @@ export class ServerBall extends SharedBall {
 		const signed_dist: number = ft_math.dot(center_diff, wall.normal);
 
 		if (signed_dist * dist_rate >= 0) {
-			return (undefined); // ball flying away from the wall
+			//return (undefined); // ball flying away from the wall
 		}
 
 		//let impact_time: number;

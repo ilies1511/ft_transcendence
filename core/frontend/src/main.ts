@@ -59,6 +59,18 @@ const routes: Record<string, () => string> = {
   // ... add others
 };
 
+function getOrCreateUserId(): number {
+  const key = 'pong-user-id';
+  let id = sessionStorage.getItem(key);
+  if (!id) {
+    id = (Math.floor(Math.random() * 1_000_000_000)).toString(); // Random number between 0 and 999,999,999
+    sessionStorage.setItem(key, id);
+  }
+  return parseInt(id, 10);
+}
+
+
+
 function loadPage(page: string) {
   const main = document.querySelector('main');
   if (main && routes[page]) {
@@ -77,7 +89,9 @@ function loadPage(page: string) {
 	 	};
 	 	main.innerHTML = '';
 	 	//const userId = Math.random();
-	 	const userId = 222;
+	 	const userId = getOrCreateUserId();
+		console.log("userId: ", userId);
+	 	//const userId = 222;
 	 	new Game(userId, main, options);
 	 }
   }
