@@ -229,6 +229,7 @@ export class Game {
 
 	private update_paddles(delta_time: number) {
 		for (const client of this.clients) {
+			client.update(delta_time);
 		}
 	}
 
@@ -269,16 +270,16 @@ export class Game {
 		for (client of this.clients) {
 			if (client.global_id == input.player_id) {
 				switch (input.payload.key) {
-					case ("up"):
+					case ("w"):
 						client.up = input.payload.type == "down";
 						break ;
-					case ("down"):
+					case ("s"):
 						client.down = input.payload.type == "down";
 						break ;
-					case ("left"):
+					case ("a"):
 						client.left = input.payload.type == "down";
 						break ;
-					case ("right"):
+					case ("d"):
 						client.right = input.payload.type == "down";
 						break ;
 					default:
