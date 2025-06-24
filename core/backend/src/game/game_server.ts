@@ -98,6 +98,10 @@ export class Game {
 		this._next_obj_id = map.next_obj_id;
 
 		this.walls = map.walls;
+		for (const client of map.clients) {
+			this.walls.push(client.base);
+			this.walls.push(client.paddle);
+		}
 		this.balls = map.balls;
 		this.clients = map.clients;
 
@@ -200,65 +204,6 @@ export class Game {
 		}
 	}
 
-	private push_balls_by_wall(delta_time: number) {
-		for (const wall of this.walls) {
-			if (wall.angular_vel == 0 || !wall.angular_vel) {
-				continue ;
-			}
-			for (const ball of this.balls) {
-				if (wall.center.clone().sub(ball.pos).len() > wall.length / 2 + ball.radius) {
-					continue ;
-				}
-				/* 1. signed distance from the ball centre to the wall plane */
-				const c2w: ServerVec2 = ball.pos.clone();
-				c2w.sub(wall.center);
-
-				const signed_dist = ft_math.dot(c2w, wall.normal);
-				const abs_dist	= Math.abs(signed_dist);
-
-				if (abs_dist >= ball.radius)		  // no penetration – skip
-					continue ;
-
-				/* 2. minimum translation to put the surfaces flush */
-				const penetration: number = ball.radius - abs_dist + EPSILON;
-				const push_dir: ServerVec2 = wall.normal.clone();
-
-				push_dir.scale(signed_dist >= 0 ? +1 : -1); // away from wall
-				push_dir.scale(penetration);
-				ball.pos.add(push_dir);
-				push_dir.scale(1 / delta_time);
-				if (push_dir.x > 0 && push_dir.x > ball.speed.x) {
-					ball.speed.x = push_dir.x;
-				} else if (push_dir.x < 0 && push_dir.x < ball.speed.x) {
-					ball.speed.x = push_dir.x;
-				}
-				if (push_dir.y > 0 && push_dir.y > ball.speed.y) {
-					ball.speed.y = push_dir.y;
-				} else if (push_dir.y < 0 && push_dir.y < ball.speed.y) {
-					ball.speed.y = push_dir.y;
-				}
-
-				/* 3. give the ball the wall’s surface velocity at the contact point */
-				// r = vector from wall centre to (new) contact point
-				const r = ball.pos.clone();
-				r.sub(wall.center);
-				const w: number = wall.angular_vel;		// rad/s, +ve = CCW
-				const wall_vel = new ServerVec2(-w * r.y, w * r.x); // ω × r (2-D)
-
-				ball.speed.add(wall_vel);
-
-				/* 4. optional: remove any residual inward velocity */
-				//const vn = ft_math.dot(ball.speed, wall.normal);
-				//if (vn * signed_dist < 0) {		// still heading into the wall
-				//	const a: vec2 = wall.normal.clone();
-				//	a.scale(2 * vn);
-				//	ball.speed.sub(a);
-				//}
-			}
-			wall.angular_vel = 0;
-		}
-	}
-
 	private rotate_wall(wall: ServerWall, angle: number, delta_time: number) {
 		const theta = angle * delta_time;
 
@@ -282,11 +227,16 @@ export class Game {
 		this.rotate_wall(this.walls[4], Math.PI / 2, delta_time);
 	}
 
+	private update_paddles(delta_time: number) {
+		for (const client of this.clients) {
+		}
+	}
+
 	private update(delta_time: number) {
 		//console.log("update");
+		this.update_paddles(delta_time);
 		this.update_balls(delta_time);
 		this.update_walls(delta_time);
-		//this.push_balls_by_wall(delta_time);
 		this.broadcast_game_state();
 	}
 
@@ -313,9 +263,33 @@ export class Game {
 
 	public process_input(input: ClientToServerInput, client: ServerClient) {
 		console.log('got input');
-		if (input.player_id != client.id) {
+		if (input.player_id != client.global_id) {
 			throw("Game.process_input: got id missmatch");
 		}
+		for (client of this.clients) {
+			if (client.global_id == input.player_id) {
+				switch (input.payload.key) {
+					case ("up"):
+						client.up = input.payload.type == "down";
+						break ;
+					case ("down"):
+						client.down = input.payload.type == "down";
+						break ;
+					case ("left"):
+						client.left = input.payload.type == "down";
+						break ;
+					case ("right"):
+						client.right = input.payload.type == "down";
+						break ;
+					default:
+						//todo
+						console.log("got invalid input?");
+						break ;
+				}
+				break ;
+			}
+		}
+
 	}
 };
 
@@ -449,12 +423,12 @@ export class GameServer {
 			case ('search_game'):
 				MatchMaking.enter_matchmaking(this, ws, player_id, json.payload.options);
 				break ;
-
 			case ('send_input'):
 				const input:  ClientToServerInput = json as ClientToServerInput;
+				console.log(input);
 				for (let game of this._games) {
 					for (let client of game.clients) {
-						if (client.id == player_id) {
+						if (client.global_id == player_id) {
 							if (client.socket !== ws) {
 								client.socket.close();
 								Object.assign(client.socket, ws);
@@ -466,7 +440,7 @@ export class GameServer {
 					}
 				}
 				/* Game was not found */
-				this._send_error(ws, undefined, /* some error msg */);
+				this._send_error(ws, "send_input was received but client was not found", /* some error msg */);
 				return ;
 			//todo:
 			//case('leave_game'):
@@ -474,6 +448,7 @@ export class GameServer {
 			//case ('reconnect'):
 				//break ;
 			default:
+				console.log("error, could not match msg");
 				/* Error: first msg type was not matched */
 				this._send_error(ws, undefined, /* some error msg */);
 				return ;

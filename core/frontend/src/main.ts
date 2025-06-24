@@ -76,7 +76,8 @@ function loadPage(page: string) {
 	 		no_tie: false,
 	 	};
 	 	main.innerHTML = '';
-	 	const userId = Math.random();
+	 	//const userId = Math.random();
+	 	const userId = 222;
 	 	new Game(userId, main, options);
 	 }
   }

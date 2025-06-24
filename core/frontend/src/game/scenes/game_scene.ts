@@ -64,6 +64,7 @@ const text = new GUI.TextBlock();
 text.text = "Hello!";
 text.color = "white";
 text.fontSize = 32;
+		text.top = -380;
 gui.addControl(text);
 
 	}
