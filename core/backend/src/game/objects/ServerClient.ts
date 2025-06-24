@@ -9,6 +9,10 @@ export class ServerClient extends SharedClient {
 	public global_id: number;
 	declare public paddle: ServerWall;
 	declare public base: ServerWall;
+	public up: boolean = false;
+	public down: boolean = false;
+	public left: boolean = false;
+	public right: boolean = false;
 
 	constructor(
 		paddle: ServerWall,
