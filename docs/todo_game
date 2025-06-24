@@ -1,4 +1,8 @@
 
+[ ]: first serilization tests
+
+[ ]: fix game_shared dir
+
 [ ]: game server: parse clients
 
 [ ]: game server: handle clinet bases
