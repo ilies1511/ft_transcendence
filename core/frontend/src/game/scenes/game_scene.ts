@@ -6,7 +6,7 @@ import type {
 	GameOptions
 } from '../game_shared/message_types.ts';
 
-import { GridMaterial } from '@babylonjs/materials/Grid';
+//import { GridMaterial } from '@babylonjs/materials/Grid';
 import { FireProceduralTexture } from '@babylonjs/procedural-textures/fire';
 import * as GUI from '@babylonjs/gui';
 
