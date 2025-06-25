@@ -5,6 +5,7 @@ export class SharedWall {
 	public center: SharedVec2;
 	public normal: SharedVec2;
 	public length: number;
+	public width: number;
 	public effects: Effects[];
 	public obj_id: number;
 	public dispose: boolean;
@@ -20,6 +21,7 @@ export class SharedWall {
 		obj_id?: number,
 		dispose?: boolean)
 	{
+		this.width = 1;
 		this.center = center;
 		this.normal = normal;
 		this.normal.unit();

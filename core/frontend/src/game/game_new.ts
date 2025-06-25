@@ -124,16 +124,22 @@ export class Game {
 				type: "up",
 			}
 		}
-		if (event.key === "w") {
-			msg.payload.key = "w";
-		} else if (event.key === "a") {
-			msg.payload.key = "a";
-		} else if (event.key === "s") {
-			msg.payload.key = "s";
-		} else if (event.key === "d") {
-			msg.payload.key = "d";
-		} else {
-			return ;
+		console.log("key event: ", event);
+		switch (event.code) {
+			case "KeyW":
+				msg.payload.key = "w";
+				break;
+			case "KeyA":
+				msg.payload.key = "a";
+				break;
+			case "KeyS":
+				msg.payload.key = "s";
+				break;
+			case "KeyD":
+				msg.payload.key = "d";
+				break;
+			default:
+				return ;
 		}
 		console.log("key up ", msg.payload.key);
 		this._socket.send(JSON.stringify(msg));
@@ -149,7 +155,7 @@ export class Game {
 				type: "down",
 			}
 		}
-		if (event.key === "w") {
+		if (event.key.toLowerCase() === "w") {
 			msg.payload.key = "w";
 		} else if (event.key === "a") {
 			msg.payload.key = "a";
@@ -180,7 +186,7 @@ export class Game {
 		const msg: ServerToClientMessage = this._last_server_msg;
 		if (msg instanceof ArrayBuffer) {
 			/* msg is a game state update */
-			console.log("GAME: got ArrayBuffer");
+			//console.log("GAME: got ArrayBuffer");
 			this._active_scene = this._game_scene;
 			this._game_scene.update(GameState.deserialize(msg));
 		} else if (typeof msg === 'string') {

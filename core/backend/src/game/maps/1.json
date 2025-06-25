@@ -35,6 +35,12 @@
 			"normal": [-1, 0],
 			"length": 20,
 			"effects": []
+		},
+		"5": {
+			"center": [0, 0],
+			"normal": [-1, 1],
+			"length": 4,
+			"effects": []
 		}
 	},
 	"balls": {

@@ -63,7 +63,7 @@ export class ServerBall extends SharedBall {
 		ft_math.intersection_point | undefined
 	{
 		if (this.last_collision_obj_id.includes(wall.obj_id)) {
-			//return undefined;
+			return undefined;
 		}
 		//if (wall.angular_vel) {
 		//	return undefined;

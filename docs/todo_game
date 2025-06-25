@@ -1,6 +1,11 @@
 
 [ ]: first serilization tests
 
+[ ]: weird keyinput behaivior(sometimes dosnt work,
+		after refreshing might work, then after refreshing it might also break)
+	-> also sometimes the ball position gets updated but the player paddle dosn'the
+		--> simmilar weird behaivior to key inputs
+
 [ ]: fix game_shared dir
 
 [ ]: game server: parse clients

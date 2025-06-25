@@ -224,8 +224,7 @@ export class Game {
 	}
 
 	private update_walls(delta_time: number) {
-		this.walls[4].rotate(Math.PI / 2, delta_time);
-		//this.rotate_wall(this.walls[4], Math.PI / 2, delta_time);
+		//this.walls[4].rotate(Math.PI / 2, delta_time);
 	}
 
 	private update_paddles(delta_time: number) {

@@ -39,6 +39,7 @@ export class GameScene extends BaseScene {
 			BABYLON.Vector3.Zero(),
 			this
 		);
+
 		this._camera.attachControl(this._canvas, true);
 
 		this._light = new BABYLON.PointLight(
@@ -73,7 +74,7 @@ gui.addControl(text);
 	}
 
 	update(game_state: GameState): void {
-		console.log(game_state);
+		//console.log(game_state);
 		game_state.balls.forEach((b: ClientBall) => {
 			if (this._meshes.has(b.obj_id)) {
 				const cur: BABYLON.Mesh = this._meshes.get(b.obj_id);
