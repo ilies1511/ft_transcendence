@@ -22,15 +22,15 @@
 // })
 
 
-
-
 import Fastify from 'fastify'
 import websocket from '@fastify/websocket'
 import type { WebSocket } from '@fastify/websocket' // <-- use 'import type'
-// import sqlite3 from 'sqlite3'
-// const { Database, OPEN_READWRITE, OPEN_CREATE } = sqlite3
 import {GameServer} from './game/game_server.ts';
-import { db } from './db/db.ts';
+// import { db } from './db/db.ts';
+
+// import { helloRoute, randomRoute, test } from './routes/test_route.ts'; --> manuel
+//Mit namespace
+import * as testRoutes from './routes/test_route.ts'
 
 const fastify = Fastify({ logger: true })
 
@@ -45,54 +45,12 @@ fastify.get('/ws', { websocket: true }, (socket: WebSocket, req) => {
   })
 })
 
-// HTTP API endpoint
-fastify.get('/api/hello', async (request, reply) => {
-  return { hello: 'world' }
-})
-
-// // HTTP API endpoint
-// fastify.get('/api/game', async (request, reply) => {
-//   return { hello: 'Alooooo' }
-// })
-
-fastify.get('/api/test', async (req, reply) => {
-	fastify.log.info('/api/test wurde aufgerufen')
-	reply.send("Alooooo");
-  })
-
-// const db = new Database(
-//   'db.sqlite',
-//   OPEN_READWRITE | OPEN_CREATE,
-//   err => {
-//     if (err) fastify.log.error('SQLite Fehler:', err)
-//     else fastify.log.info('✔️ SQLite verbunden')
-//   }
-// )
-
-// fastify.decorate('db', db)
-// db.serialize(() => {
-//   db.run(`
-//     CREATE TABLE IF NOT EXISTS test (
-//       id    INTEGER PRIMARY KEY AUTOINCREMENT,
-//       value TEXT
-//     )
-//   `, err => {
-//     if (err) fastify.log.error('Tabelle test anlegen fehlgeschlagen:', err)
-//   })
-// })
-
-fastify.get('/api/random', (request, reply) => {
-  db.get(
-    'SELECT ABS(RANDOM()) % 100 AS result',
-    (err, row: { result: number }) => {
-      if (err) {
-        fastify.log.error(err)
-        return reply.code(500).send({ error: 'DB-Abfrage fehlgeschlagen' })
-      }
-      reply.send({ random: row.result })
-    }
-  )
-})
+// await fastify.register(randomRoute);
+// await fastify.register(helloRoute);
+// await fastify.register(test);
+await fastify.register(testRoutes.helloRoute);
+await fastify.register(testRoutes.randomRoute);
+await fastify.register(testRoutes.test);
 
 const game_server = new GameServer(fastify);
 
@@ -107,3 +65,24 @@ try {
 
 //game_server.start();
 
+
+// fastify.get('/api/random', (request, reply) => {
+//   db.get(
+//     'SELECT ABS(RANDOM()) % 100 AS result',
+//     (err, row: { result: number }) => {
+//       if (err) {
+//         fastify.log.error(err)
+//         return reply.code(500).send({ error: 'DB-Abfrage fehlgeschlagen' })
+//       }
+//       reply.send({ random: row.result })
+//     }
+//   )
+// })
+
+
+
+// fastify.get('/api/test', async (req, reply) => {
+// 	fastify.log.info('/api/test wurde aufgerufen')
+// 	reply.send("Alooooo");
+//   })
+// //
