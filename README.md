@@ -11,3 +11,8 @@ Design can be created using: https://stitch.withgoogle.com/ tool. New google AI 
 Login page.
 	- Registration page.
 	- User page
+
+
+https://github.com/yoav0gal/fastify-sqlite-typed
+
+SQLITE + TS.

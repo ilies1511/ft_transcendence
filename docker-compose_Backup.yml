@@ -22,14 +22,10 @@ services:
     build:
       context: .
       dockerfile: docker/dev_maksim.Dockerfile
-      args:
-        USERNAME: ${USERNAME:-maksimvolkmann}
-        UID: ${UID:-1000}
-        GID: ${GID:-1000}
     container_name: dev_maksim
     tty: true
     volumes:
-      - .:/home/${USERNAME:-maksimvolkmann}/app
+      - .:/home/$USER/app
     ports:
       - "3000:3000"
       - "3001:3001"

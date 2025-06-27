@@ -1,45 +1,55 @@
-// import fastify from 'fastify'
-// import {GameServer} from './game/game_server';
+// import Fastify from 'fastify'
 // import websocket from '@fastify/websocket'
 // import type { WebSocket } from '@fastify/websocket' // <-- use 'import type'
+// import {GameServer} from './game/game_server.ts';
+// import sqlitePlugin from './plugins/sqlite.ts'
+// import authRoutes from './auth.ts'
 
-// const server = fastify()
+// const fastify = Fastify({ logger: true })
 
-// // server.get('/api/ping', async (request, reply)
+// // Register the websocket plugin BEFORE routes
+// await fastify.register(websocket)
 
-// server.get('/ping', async (request, reply) => {
-//   return 'pong\n'
+// // WebSocket echo endpoint
+// fastify.get('/ws', { websocket: true }, (socket: WebSocket, req) => {
+//   socket.on('message', (message: Buffer) => {
+//     // Echo the received message back to the client
+//     socket.send('[BACK-END PART] Server received: ' + message.toString())
+//   })
 // })
 
-// const game_server = new GameServer(server);
-
-// server.listen({ port: 3000, host: '0.0.0.0'}, (err, address) => {
-//   if (err) {
-//     console.error(err)
-//     process.exit(1)
-//   }
-//   console.log(`Server listening at ${address}`)
+// // HTTP API endpoint
+// fastify.get('/api/hello', async (request, reply) => {
+//   return { hello: 'world' }
 // })
 
 
+// const game_server = new GameServer(fastify);
+
+// // Start the server
+
+// //game_server.start();
 
 
 import Fastify from 'fastify'
 import websocket from '@fastify/websocket'
-import type { WebSocket } from '@fastify/websocket' // <-- use 'import type'
-import {GameServer} from './game/game_server.ts';
+import type { WebSocket } from '@fastify/websocket'
+import { GameServer } from './game/game_server.js'
+import sqlitePlugin from './plugins/sqlite.js'
+import authRoutes from './auth.js'
 
 const fastify = Fastify({ logger: true })
 
-// Register the websocket plugin BEFORE routes
+// Register plugins
 await fastify.register(websocket)
+await fastify.register(sqlitePlugin)
+await fastify.register(authRoutes, { prefix: '/api' })
 
 // WebSocket echo endpoint
 fastify.get('/ws', { websocket: true }, (socket: WebSocket, req) => {
-  socket.on('message', (message: Buffer) => {
-    // Echo the received message back to the client
-    socket.send('[BACK-END PART] Server received: ' + message.toString())
-  })
+	socket.on('message', (message: Buffer) => {
+		socket.send('[BACK-END PART] Server received: ' + message.toString())
+	})
 })
 
 // HTTP API endpoint
@@ -47,21 +57,8 @@ fastify.get('/api/hello', async (request, reply) => {
   return { hello: 'world' }
 })
 
-// // HTTP API endpoint
-// fastify.get('/api/game', async (request, reply) => {
-//   return { hello: 'Alooooo' }
-// })
-
-const game_server = new GameServer(fastify);
+const game_server = new GameServer(fastify)
 
 // Start the server
-try {
-  await fastify.listen({ port: 3000 })
-  console.log('[BACK-END PART] Fastify WebSocket server running on ws://localhost:3000/ws')
-} catch (err) {
-  fastify.log.error(err)
-  process.exit(1)
-}
-
-//game_server.start();
+await fastify.listen({ port: 3000, host: '0.0.0.0' })
 
