@@ -4,19 +4,26 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/pong.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Simple Dark Tailwind Demo</title>
+    <title>PING PONG REVOLUTION!</title>
     <!-- Tailwind CSS should be included via your build process -->
   </head>
-  <body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col">
+  <body class="bg-[#221116] dark text-gray-100 min-h-screen flex flex-col">
 
     <!-- Navbar -->
-    <nav class="bg-gray-800 shadow-md">
+    <nav class="bg-[#221116] shadow-md border-b-2 border-solid border-b-[#48232f] rounded-[25px]">
       <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
         <span class="font-bold text-lg text-white">MySite</span>
         <ul class="hidden md:flex space-x-6">
-          <li><a href="#" data-page="home" class="hover:text-blue-400 transition">Home</a></li>
+			<li><a href="/" data-route class="hover:text-blue-900 transition">Home</a></li>
+			<li><a href="/about" data-route class="hover:text-blue-400 transition">About</a></li>
+			<li><a href="/login" data-route class="hover:text-blue-400 transition">Login</a></li>
+			<li><a href="/register" data-route class="hover:text-blue-400 transition">Register</a></li>
+			<li><a href="/profile" data-route class="hover:text-blue-400 transition">Profile</a></li>
+
+          <!-- <li><a href="#" data-page="home" class="hover:text-blue-400 transition">Home</a></li>
           <li><a href="#" data-page="about" class="hover:text-blue-400 transition">About</a></li>
-          <li><a href="#" data-page="apiPage" class="hover:text-blue-400 transition">apiPage</a></li>
+          <li><a href="#" data-page="apiPage" class="hover:text-blue-400 transition">apiPage</a></li> -->
+
           <!-- <li><a href="#" class="hover:text-blue-400 transition">Services</a></li>
           <li><a href="#" class="hover:text-blue-400 transition">Blog</a></li>
           <li><a href="#" class="hover:text-blue-400 transition">Contact</a></li> -->
@@ -43,10 +50,12 @@
 
     <!-- Main Content -->
     <!-- <div id="app"></div> -->
-    <main id="main" class="flex-1 flex items-center justify-center"></main>
+    <!-- <main id="main" class="flex-1 flex items-center justify-center"></main> -->
+	<main id="app" class="flex-1 flex items-center justify-center"></main>
     <button id="counter" class=""></button>
+	<div id="friend-ui-root"></div>
     <!-- Footer -->
-    <footer class="bg-gray-800 shadow-inner">
+    <footer class="bg-[#221116] shadow-inner border-t-2 border-solid border-t-[#48232f] rounded-[25px]">
       <div class="max-w-5xl mx-auto px-4 py-6 flex flex-col md:flex-row items-center justify-between">
         <span class="text-sm text-gray-400">© 2025 MySite. All rights reserved.</span>
         <ul class="flex space-x-4 mt-2 md:mt-0">
@@ -68,5 +77,4 @@
         <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
-
 

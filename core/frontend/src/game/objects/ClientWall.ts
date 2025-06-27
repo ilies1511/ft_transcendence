@@ -1,6 +1,7 @@
-import { SharedWall } from '../game_shared/objects/SharedWall.ts'
+// import { SharedWall } from '../game_shared/objects/SharedWall.ts'
+import { SharedWall } from '../../../../game_shared/objects/SharedWall.ts'
 import { ClientVec2 } from './ClientVec2.ts';
-import { Effects } from '../game_shared/serialization.ts';
+// import { Effects } from '../game_shared/serialization.ts';
 
 export class ClientWall extends SharedWall {
 	constructor(center: ClientVec2,

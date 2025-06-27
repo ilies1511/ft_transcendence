@@ -5,3 +5,9 @@ Fastify, Vite, and TypeScript Setup
 
 ## Design
 Design can be created using: https://stitch.withgoogle.com/ tool. New google AI for creating website/moble designs. For free for now.
+
+
+
+Login page.
+	- Registration page.
+	- User page

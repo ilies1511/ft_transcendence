@@ -1,8 +1,55 @@
+
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 @import "tailwindcss";
+
+
+/* global scrollbar style ------------------------------------------------ */
+
+/* 1. Firefox + other engines that support the spec */
+* {
+	scrollbar-width: thin;               /* "auto" | "thin" | "none" */  /*[5]*/
+	scrollbar-color: #494143 transparent;/* thumb        track          */
+  }
+
+  /* 2. Chrome / Edge / Safari (WebKit) */
+  *::-webkit-scrollbar {
+	width: 4px;
+	height: 4px;
+  }
+
+  *::-webkit-scrollbar-track {
+	background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+	background: #4b3740;
+	border-radius: 9999px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+	background: #644b55;
+  }
+
 
 body{
   /* background-color: darkslategray; */
+  font-family: "VT323", monospace;
+
+
 }
+h1{
+	/* font-weight: 400; */
+	/* font-style: normal; */
+	/* font-family: "VT323", monospace; */
+}
+
+
+
+
+/* <weight>: Use a value from 100 to 900 */
+/* <uniquifier>: Use a unique and descriptive class name */
+
+
 
 /* :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;

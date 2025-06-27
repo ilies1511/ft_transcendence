@@ -29,9 +29,10 @@ export default defineConfig({
     }
   },
   server: {
-    host: "0.0.0.0",
+    // host: "0.0.0.0",
+	host: true,
     port: 5173,
-allowedHosts: ['2-i-4.42heilbronn.de'],
+	// allowedHosts: ['2-i-4.42heilbronn.de', ],
     proxy: {
       '/api': {
 			target: 'http://localhost:3000',

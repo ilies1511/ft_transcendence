@@ -7,7 +7,8 @@
 	"skipLibCheck": true,
 
 	/* Bundler mode */
-	"moduleResolution": "nodenext",
+	// "moduleResolution": "nodenext", might need to use this in the production, not sure.
+	"moduleResolution": "bundler",
 	"allowImportingTsExtensions": true,
 	"verbatimModuleSyntax": true,
 	"moduleDetection": "force",
@@ -17,7 +18,7 @@
 	"strict": true,
 	"noUnusedLocals": true,
 	"noUnusedParameters": true,
-	"erasableSyntaxOnly": true,
+	// "erasableSyntaxOnly": true,
 	"noFallthroughCasesInSwitch": true,
 	"noUncheckedSideEffectImports": true
 	},
