@@ -25,7 +25,33 @@ export function apiPage(): string {
 	`
   }
 
-  export function setupApiPage() {
+// export function setupApiPage() {
+//   async function load() {
+//     const res = await fetch('/api/random')
+//     const { random } = await res.json();
+//     (document.getElementById('random-btn') as HTMLButtonElement)
+//       .textContent = `Zahl: ${random}`
+//   }
+//   document.getElementById('reload')!
+//     .addEventListener('click', load)
+// 	load()
+// }
+export function setupApiPage() {
+	async function load() {
+	  const res = await fetch('/api/random')
+	  const { random } = await res.json()          // Semikolon optional, da nun separate Zeile
+
+	  const btn = document.getElementById('random-btn') as HTMLButtonElement
+	  btn.textContent = `Zahl: ${random}`
+	}
+
+	const btn = document.getElementById('reload') as HTMLButtonElement
+	btn.addEventListener('click', load)
+	load()
+
+  }
+
+  export function setupApiPage3() {
 	async function load() {
 	  const res = await fetch('/api/random')
 	  if (!res.ok) {
@@ -41,3 +67,4 @@ export function apiPage(): string {
 
 	load()
   }
+

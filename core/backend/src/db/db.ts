@@ -35,34 +35,34 @@
 // export const dbRun = promisify(db.run.bind(db))
 
 
-import Fastify from 'fastify'
-const fastify = Fastify({ logger: true })
+// import Fastify from 'fastify'
+// const fastify = Fastify({ logger: true })
 
-import sqlite3 from 'sqlite3'
-const { Database, OPEN_READWRITE, OPEN_CREATE } = sqlite3
+// import sqlite3 from 'sqlite3'
+// const { Database, OPEN_READWRITE, OPEN_CREATE } = sqlite3
 
 
-const db = new Database(
-  'db.sqlite',
-  OPEN_READWRITE | OPEN_CREATE,
-  err => {
-    if (err) fastify.log.error('SQLite Fehler:', err)
-    else fastify.log.info('✔️ SQLite verbunden')
-  }
-)
+// const db = new Database(
+//   'db.sqlite',
+//   OPEN_READWRITE | OPEN_CREATE,
+//   err => {
+//     if (err) fastify.log.error('SQLite Fehler:', err)
+//     else fastify.log.info('✔️ SQLite verbunden')
+//   }
+// )
 
-fastify.decorate('db', db)
-db.serialize(() => {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS test (
-      id    INTEGER PRIMARY KEY AUTOINCREMENT,
-      value TEXT
-    )
-  `, err => {
-    if (err) fastify.log.error('Tabelle test anlegen fehlgeschlagen:', err)
-  })
-})
+// fastify.decorate('db', db)
+// db.serialize(() => {
+//   db.run(`
+//     CREATE TABLE IF NOT EXISTS test (
+//       id    INTEGER PRIMARY KEY AUTOINCREMENT,
+//       value TEXT
+//     )
+//   `, err => {
+//     if (err) fastify.log.error('Tabelle test anlegen fehlgeschlagen:', err)
+//   })
+// })
 
-export {
-	db
-}
+// export {
+// 	db
+// }

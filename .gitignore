@@ -4,8 +4,10 @@
 node_modules/
 dist/
 *.pdf
+*.sqlite
+*.db
 
-.gitkeep
+# .gitkeep
 
 # Logs
 logs
