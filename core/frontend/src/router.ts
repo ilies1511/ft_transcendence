@@ -1,7 +1,12 @@
 // client/router.ts
 export type PageModule = {               // contract every page must fulfil
 	render(root: HTMLElement): void;
-	destroy?(): void;                      // optional clean-up
+	// optional clean-up.
+	// Still need to implement it.
+	// Might need to remove listenders, awaits and so on fron the pages.
+	// Need to research more about it.
+	destroy?(): void;
+	afterRender?(root: HTMLElement): void   // ← optional hook
   };
 
   type Loader = () => Promise<PageModule>;
@@ -12,6 +17,7 @@ export type PageModule = {               // contract every page must fulfil
 	'/login':		() => import('./pages/login').then(m => m.default),
 	'/register':	() => import('./pages/register').then(m => m.default),
 	'/profile':		() => import('./pages/profile').then(m => m.default),
+	'/users':		() => import('./pages/UsersPage').then(m => m.default),
   };
 
   export class Router {
@@ -27,6 +33,11 @@ export type PageModule = {               // contract every page must fulfil
 	  this.outlet.innerHTML = '';
 	  page.render(this.outlet);
 	  this.current = page;
+
+	// testing here to get users on the screen from database
+	if (typeof page.afterRender === 'function') {
+		await page.afterRender(this.outlet)
+	}
 	}
 
 	linkHandler = (e: MouseEvent) => {

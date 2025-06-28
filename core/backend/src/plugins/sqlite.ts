@@ -1,20 +1,21 @@
 import fp from 'fastify-plugin'
-import fastifySqlite from 'fastify-sqlite'
+import { fpSqlitePlugin } from 'fastify-sqlite-typed'   // typed plugin[1]
 
-export default fp(async (app) => {
-  await app.register(fastifySqlite, {
-    dbFile: './data/pong.db',
-    promiseApi: true  // This enables the sqlite wrapper with Promise API
+export default fp(async (database) => {
+  // 1-line registration
+  await database.register(fpSqlitePlugin, {
+    dbFilename: './src/data/pong.db'
+    // any extra options from the README may go here
   })
 
-  // Create users table on startup
-  await app.sqlite.run(`
+  // boot-time migration
+  await database.db.run(`
     CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      email TEXT UNIQUE NOT NULL,
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      email        TEXT UNIQUE NOT NULL,
       display_name TEXT UNIQUE NOT NULL,
-      password TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      password     TEXT NOT NULL,
+      created_at   DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `)
 })
