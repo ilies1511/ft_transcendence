@@ -121,23 +121,71 @@ const template = /*html*/ `
 </div>
 `;
 
-const ProfilePage: PageModule = {
-	render (root) { root.innerHTML = template },
+// const ProfilePage: PageModule = {
+// 	render (root) { root.innerHTML = template },
 
-	async afterRender (root) {
-	  const user = await currentUser()             // GET /api/me  (cookie)
-	//   if (!user) {                                 // 401 → not logged-in
-	// 	router.go('/login')
-	// 	return
-	//   }
+// 	async afterRender (root) {
+// 	  const user = await currentUser()             // GET /api/me  (cookie)
+// 	//   if (!user) {                                 // 401 → not logged-in
+// 	// 	router.go('/login')
+// 	// 	return
+// 	//   }
 
-	  /* fill the placeholders */
-	  root.querySelector<HTMLHeadingElement>('#profileName') !
+// 	  /* fill the placeholders */
+// 	  root.querySelector<HTMLHeadingElement>('#profileName') !
+// 	  .textContent = user.name
+// 	root.querySelector<HTMLParagraphElement>('#profileHandle') !
+// 	  .textContent = '@' + user.name.toLowerCase().replace(/\s+/g, '_')
+// 	root.querySelector<HTMLImageElement>('#profileAvatar') !
+// 	  .src = `/avatars/${user.avatar}`   // Now safe!
+// 	}
+//   }
+
+async function renderProfile(root: HTMLElement, user: { id: number, name: string, avatar: string }) {
+	root.innerHTML = template
+	root.querySelector<HTMLHeadingElement>('#profileName') !
 	  .textContent = user.name
 	root.querySelector<HTMLParagraphElement>('#profileHandle') !
 	  .textContent = '@' + user.name.toLowerCase().replace(/\s+/g, '_')
 	root.querySelector<HTMLImageElement>('#profileAvatar') !
-	  .src = `/avatars/${user.avatar}`   // Now safe!
+	  .src = `/avatars/${user.avatar}`
+  }
+
+  const ProfilePage: PageModule & { renderWithParams?: Function } = {
+	render(root) {
+	  root.innerHTML = `<p>Loading profile...</p>`
+	},
+
+	// Called for /profile/:id
+	async renderWithParams(root: HTMLElement, params: { id?: string }) {
+	  root.innerHTML = `<p>Loading profile...</p>`
+	  if (params.id) {
+		const res = await fetch(`/api/users/${params.id}`)
+		if (!res.ok) {
+		  root.innerHTML = `<p>User not found</p>`
+		  return
+		}
+		const user = await res.json()
+		await renderProfile(root, user)
+	  } else {
+		// fallback to current user if no id param
+		const user = await currentUser()
+		if (!user) {
+		  router.go('/login')
+		  return
+		}
+		await renderProfile(root, user)
+	  }
+	},
+
+	// Called for /profile (current user)
+	async afterRender(root: HTMLElement) {
+	  const user = await currentUser()
+	  if (!user) {
+		router.go('/login')
+		return
+	  }
+	  await renderProfile(root, user)
 	}
   }
 
