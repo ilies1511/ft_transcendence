@@ -9,13 +9,13 @@ const template = /*html*/ `
   <!-- avatar + name -->
   <header class="flex flex-col items-center gap-4">
     <img id="profileAvatar"
-         src="https://i.pravatar.cc/128?img=45"
+         src="#s"
          alt="avatar"
          class="h-32 w-32 rounded-full object-cover">
 
     <div class="text-center">
       <div class="flex items-center justify-center gap-2">
-        <h1 id="profileName"  class="text-2xl font-bold text-white"></h1>
+        <h1 id="profileName" class="text-2xl font-bold text-white"></h1>
         <span id="profileStatus" class="h-3 w-3 rounded-full bg-[#0bda8e]"></span>
       </div>
       <p id="profileHandle" class="text-[#b99da6]"></p>
@@ -133,11 +133,11 @@ const ProfilePage: PageModule = {
 
 	  /* fill the placeholders */
 	  root.querySelector<HTMLHeadingElement>('#profileName') !
-		  .textContent = user.name
-	  root.querySelector<HTMLParagraphElement>('#profileHandle') !
-		  .textContent = '@' + user.name.toLowerCase().replace(/\s+/g, '_')
-	//   root.querySelector<HTMLImageElement>('#profileAvatar') !
-	// 	  .src = `https://i.pravatar.cc/128?u=${user.id}`
+	  .textContent = user.name
+	root.querySelector<HTMLParagraphElement>('#profileHandle') !
+	  .textContent = '@' + user.name.toLowerCase().replace(/\s+/g, '_')
+	root.querySelector<HTMLImageElement>('#profileAvatar') !
+	  .src = `/avatars/${user.avatar}`   // Now safe!
 	}
   }
 

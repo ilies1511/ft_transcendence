@@ -29,7 +29,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const here = fileURLToPath(import.meta.url)         // ESM-safe “__dirname”
-const DB_DIR  = join(here, '..', 'data')
+const DB_DIR  = join(here, '../', 'data')
 const DB_FILE = join(DB_DIR, 'pong.db')
 
 // 1-liner: create folder if missing
@@ -45,6 +45,7 @@ export default fp(async (app) => {
       email TEXT UNIQUE NOT NULL,
       display_name TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
+	  avatar TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `)

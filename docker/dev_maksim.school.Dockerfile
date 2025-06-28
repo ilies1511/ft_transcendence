@@ -28,8 +28,8 @@ RUN chown -R $UID:$GID /usr/local /opt /home/$USERNAME
 
 USER $USERNAME
 ENV HOME=/home/$USERNAME
-WORKDIR /home/$USERNAME/app
+WORKDIR /home/$USERNAME/app/core
 CMD ["bash"]
-# CMD ["bash", "-c", "cd core && exec bash"]
+
 
 

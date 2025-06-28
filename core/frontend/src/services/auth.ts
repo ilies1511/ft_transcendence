@@ -15,10 +15,16 @@ export async function submitLogin (email: string, password: string) {
 	}
   }
 
-  export async function currentUser () {
+//   export async function currentUser () {
+// 	const res = await fetch('/api/me', { credentials: 'include' })
+// 	if (!res.ok) return null
+// 	return res.json() as Promise<{ id: number; name: string }>
+//   }
+
+export async function currentUser() {
 	const res = await fetch('/api/me', { credentials: 'include' })
 	if (!res.ok) return null
-	return res.json() as Promise<{ id: number; name: string }>
+	return res.json() as Promise<{ id: number; name: string; avatar: string }>
   }
 
   export async function logout () {

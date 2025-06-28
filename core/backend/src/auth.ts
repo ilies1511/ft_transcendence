@@ -34,6 +34,7 @@
 // src/auth.ts
 import bcrypt from 'bcryptjs'
 import type { FastifyInstance } from 'fastify'
+import { DEFAULT_AVATARS } from './constants/avatars.js'
 
 const COST   = 12  // bcrypt cost factor (2^12 ≈ 400 ms on laptop)
 
@@ -59,10 +60,12 @@ export default async function authRoutes (app: FastifyInstance) {
 
     const hash = await bcrypt.hash(password, COST)          // ← salt + hash
 
+	const avatar = DEFAULT_AVATARS[Math.floor(Math.random() * DEFAULT_AVATARS.length)]
+
     try {
       const { lastID } = await app.db.run(
-        'INSERT INTO users (email, password, display_name) VALUES (?, ?, ?)',
-        [email, hash, displayName]                          // store hash, not plain text
+        'INSERT INTO users (email, password, display_name, avatar) VALUES (?, ?, ?, ?)',
+        [email, hash, displayName, avatar]                          // store hash, not plain text
       )
       reply.code(201).send({ userId: lastID })
     } catch (err: any) {
@@ -111,7 +114,25 @@ export default async function authRoutes (app: FastifyInstance) {
 //   app.get('/me', { preHandler: app.auth }, async (req) => {
 //     return { user: req.user }      // set by request.jwtVerify()
 //   })
+
+// app.get('/me', { preHandler: app.auth }, async (req) => {
+// 	return req.user               // not wrapped
+//   })
+
+
+
 app.get('/me', { preHandler: app.auth }, async (req) => {
-	return req.user               // not wrapped
+	const user = await app.db.get(
+	  'SELECT id, display_name as name, avatar FROM users WHERE id = ?',
+	  [(req.user as any).id]
+	)
+	return user
   })
+
+
+
+
+
 }
+
+

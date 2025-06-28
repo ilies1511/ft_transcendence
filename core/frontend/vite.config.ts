@@ -46,7 +46,8 @@ export default defineConfig({
       '/game': {
         target: 'ws://localhost:3000',
         ws: true
-      }
+      },
+	  '/avatars': 'http://localhost:3000',
     }
   }
 })

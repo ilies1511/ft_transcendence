@@ -9,6 +9,10 @@ import authRoutes from './auth.js'
 import usersRoute from './routes/users.js'
 import authJwtPlugin from './plugins/auth-jwt.js'
 
+import staticPlugin from '@fastify/static'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
 // const fastify = Fastify({ logger: true })
 const fastify = Fastify({
 	logger: { level: 'warn' }   // or 'error' / 'fatal'
@@ -20,6 +24,16 @@ await fastify.register(sqlitePlugin)            // ← new typed DB
 await fastify.register(authJwtPlugin)          // ← must come first
 await fastify.register(authRoutes, { prefix: '/api' })
 await fastify.register(usersRoute, { prefix: '/api' })
+
+
+// might to redo, kinda wierd thing is happening. Its for servig avatars files for users.
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+fastify.register(staticPlugin, {
+	root: path.join(__dirname, '../public/avatars'),
+	prefix: '/avatars/'
+})
 
 // WebSocket echo endpoint
 fastify.get('/ws', { websocket: true }, (socket: WebSocket, req) => {

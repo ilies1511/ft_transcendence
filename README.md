@@ -16,3 +16,9 @@ Login page.
 https://github.com/yoav0gal/fastify-sqlite-typed
 
 SQLITE + TS.
+
+
+
+TODO:
+	Readonly avatars inside core/backend/public/avatars
+	Avatar size: 400x400 forced.
