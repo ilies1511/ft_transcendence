@@ -3,6 +3,7 @@
 .config
 node_modules/
 dist/
+*.pdf
 
 .gitkeep
 
