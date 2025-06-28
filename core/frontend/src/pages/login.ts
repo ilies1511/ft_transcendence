@@ -59,7 +59,7 @@
 
 
 import type { PageModule } from '../router'
-import { submitLogin }     from '../services/auth'   // helper below
+import { submitLogin } from '../services/auth'   // helper below
 import { router } from '../main'  // whatever exports your Router
 
 const LoginPage: PageModule = {
