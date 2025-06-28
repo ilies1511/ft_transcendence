@@ -1,18 +1,23 @@
 import Fastify from 'fastify'
 import websocket from '@fastify/websocket'
 import type { WebSocket } from '@fastify/websocket' // <-- use 'import type'
-import {GameServer} from './game/game_server.ts';
+// import {GameServer} from './game/game_server.ts';
 // import sqlitePlugin from './plugins/sqlite.ts'
 // import authRoutes from './auth.ts'
 import sqlitePlugin from './plugins/sqlite.js'
-import authRoutes   from './auth.js'
+import authRoutes from './auth.js'
 import usersRoute from './routes/users.js'
+import authJwtPlugin from './plugins/auth-jwt.js'
 
-const fastify = Fastify({ logger: true })
+// const fastify = Fastify({ logger: true })
+const fastify = Fastify({
+	logger: { level: 'warn' }   // or 'error' / 'fatal'
+})
 
 // Register the websocket plugin BEFORE routes
 await fastify.register(websocket)
 await fastify.register(sqlitePlugin)            // ← new typed DB
+await fastify.register(authJwtPlugin)          // ← must come first
 await fastify.register(authRoutes, { prefix: '/api' })
 await fastify.register(usersRoute, { prefix: '/api' })
 
@@ -30,7 +35,7 @@ fastify.get('/api/hello', async (request, reply) => {
 })
 
 
-const game_server = new GameServer(fastify);
+// const game_server = new GameServer(fastify);
 
 // Start the server
 

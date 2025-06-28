@@ -23,11 +23,13 @@ RUN useradd  -u $UID -g $GID -m $USERNAME
 RUN echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USERNAME
 RUN chown -R $UID:$GID /usr/local /opt /home/$USERNAME
 
-
+# RUN mkdir -p /app/core/backend/src/data && \
+#     touch /app/core/backend/src/data/pong.db
 
 USER $USERNAME
 ENV HOME=/home/$USERNAME
 WORKDIR /home/$USERNAME/app
 CMD ["bash"]
+# CMD ["bash", "-c", "cd core && exec bash"]
 
 

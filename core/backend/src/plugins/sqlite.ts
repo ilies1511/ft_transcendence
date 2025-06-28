@@ -1,21 +1,51 @@
+// import fp from 'fastify-plugin'
+// import { fpSqlitePlugin } from 'fastify-sqlite-typed'   // typed plugin[1]
+
+// export default fp(async (database) => {
+//   // 1-line registration
+//   await database.register(fpSqlitePlugin, {
+//     dbFilename: './src/data/pong.db'
+//     // any extra options from the README may go here
+//   })
+
+//   // boot-time migration
+//   await database.db.run(`
+//     CREATE TABLE IF NOT EXISTS users (
+//       id           INTEGER PRIMARY KEY AUTOINCREMENT,
+//       email        TEXT UNIQUE NOT NULL,
+//       display_name TEXT UNIQUE NOT NULL,
+//       password     TEXT NOT NULL,
+//       created_at   DATETIME DEFAULT CURRENT_TIMESTAMP
+//     );
+//   `)
+// })
+
+
+// src/plugins/sqlite.ts
 import fp from 'fastify-plugin'
-import { fpSqlitePlugin } from 'fastify-sqlite-typed'   // typed plugin[1]
+import { fpSqlitePlugin } from 'fastify-sqlite-typed'
+import { mkdirSync } from 'node:fs'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-export default fp(async (database) => {
-  // 1-line registration
-  await database.register(fpSqlitePlugin, {
-    dbFilename: './src/data/pong.db'
-    // any extra options from the README may go here
-  })
+const here = fileURLToPath(import.meta.url)         // ESM-safe “__dirname”
+const DB_DIR  = join(here, '..', 'data')
+const DB_FILE = join(DB_DIR, 'pong.db')
 
-  // boot-time migration
-  await database.db.run(`
+// 1-liner: create folder if missing
+mkdirSync(DB_DIR, { recursive: true })
+
+// Fastify plugin
+export default fp(async (app) => {
+  await app.register(fpSqlitePlugin, { dbFilename: DB_FILE })
+
+  await app.db.run(`
     CREATE TABLE IF NOT EXISTS users (
-      id           INTEGER PRIMARY KEY AUTOINCREMENT,
-      email        TEXT UNIQUE NOT NULL,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT UNIQUE NOT NULL,
       display_name TEXT UNIQUE NOT NULL,
-      password     TEXT NOT NULL,
-      created_at   DATETIME DEFAULT CURRENT_TIMESTAMP
+      password TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `)
 })

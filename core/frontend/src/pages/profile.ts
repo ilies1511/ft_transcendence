@@ -1,26 +1,25 @@
 // client/pages/Profile.ts
 import type { PageModule } from '../router';
+import { currentUser } from '../services/auth'
+import { router } from '../main'
 
 const template = /*html*/ `
 <div class="w-full max-w-6xl mx-auto p-6 space-y-6">
 
   <!-- avatar + name -->
   <header class="flex flex-col items-center gap-4">
-    <img
-      src="https://i.pravatar.cc/128?img=45"
-      alt="Sophia Carter"
-      class="h-32 w-32 rounded-full object-cover">
+    <img id="profileAvatar"
+         src="https://i.pravatar.cc/128?img=45"
+         alt="avatar"
+         class="h-32 w-32 rounded-full object-cover">
 
-	<div class="text-center">
-	   <!-- name + online-status -->
-	   <div class="flex items-center justify-center gap-2">
-	     <h1 class="text-2xl font-bold text-white">Sophia Carter</h1>
-	     <!-- green = online · red = offline -->
-	     <span id="profileStatus" class="h-3 w-3 rounded-full bg-[#0bda8e]"></span>
-	   </div>
-
-	   <p class="text-[#b99da6]">@sophia_carter</p>
-	 </div>
+    <div class="text-center">
+      <div class="flex items-center justify-center gap-2">
+        <h1 id="profileName"  class="text-2xl font-bold text-white"></h1>
+        <span id="profileStatus" class="h-3 w-3 rounded-full bg-[#0bda8e]"></span>
+      </div>
+      <p id="profileHandle" class="text-[#b99da6]"></p>
+    </div>
   </header>
 
   <!-- stats -->
@@ -123,9 +122,23 @@ const template = /*html*/ `
 `;
 
 const ProfilePage: PageModule = {
-  render(root: HTMLElement) {
-    root.innerHTML = template;
+	render (root) { root.innerHTML = template },
+
+	async afterRender (root) {
+	  const user = await currentUser()             // GET /api/me  (cookie)
+	//   if (!user) {                                 // 401 → not logged-in
+	// 	router.go('/login')
+	// 	return
+	//   }
+
+	  /* fill the placeholders */
+	  root.querySelector<HTMLHeadingElement>('#profileName') !
+		  .textContent = user.name
+	  root.querySelector<HTMLParagraphElement>('#profileHandle') !
+		  .textContent = '@' + user.name.toLowerCase().replace(/\s+/g, '_')
+	//   root.querySelector<HTMLImageElement>('#profileAvatar') !
+	// 	  .src = `https://i.pravatar.cc/128?u=${user.id}`
+	}
   }
-};
 
 export default ProfilePage;

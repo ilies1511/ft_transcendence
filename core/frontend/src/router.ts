@@ -9,43 +9,50 @@ export type PageModule = {               // contract every page must fulfil
 	afterRender?(root: HTMLElement): void   // ← optional hook
   };
 
-  type Loader = () => Promise<PageModule>;
+  type Loader = () => Promise<PageModule>
 
   const routes: Record<string, Loader> = {
-	'/':			() => import('./pages/home').then(m => m.default),
-	'/about':		() => import('./pages/about').then(m => m.default),
-	'/login':		() => import('./pages/login').then(m => m.default),
-	'/register':	() => import('./pages/register').then(m => m.default),
-	'/profile':		() => import('./pages/profile').then(m => m.default),
-	'/users':		() => import('./pages/UsersPage').then(m => m.default),
-  };
+	'/':         () => import('./pages/home').then(m => m.default),
+	'/about':    () => import('./pages/about').then(m => m.default),
+	'/login':    () => import('./pages/login').then(m => m.default),
+	'/register': () => import('./pages/register').then(m => m.default),
+	'/profile':  () => import('./pages/profile').then(m => m.default),
+	'/users':    () => import('./pages/UsersPage').then(m => m.default)
+  }
 
   export class Router {
-	private current: PageModule | null = null;
+	private current: PageModule | null = null
+
 	constructor(private outlet: HTMLElement) {
-	  window.addEventListener('popstate', () => this.go(location.pathname));
+	  // browser Back / Forward → just render, do NOT push a new history entry
+	  window.addEventListener('popstate', () => this.go(location.pathname, false))
 	}
 
-	async go(path: string) {
-	  const load = routes[path] ?? routes['/'];         // fallback to home
-	  const page = await load();
-	  this.current?.destroy?.();
-	  this.outlet.innerHTML = '';
-	  page.render(this.outlet);
-	  this.current = page;
+	// pushHistory defaults to true so programmatic calls update the URL
+	async go(path: string, pushHistory = true) {
+	  if (pushHistory && path !== location.pathname) {
+		history.pushState(null, '', path)          // keeps the address bar in sync
+	  }
 
-	// testing here to get users on the screen from database
-	if (typeof page.afterRender === 'function') {
+	  const load = routes[path] ?? routes['/']     // fallback to home
+	  const page = await load()
+
+	  this.current?.destroy?.()
+	  this.outlet.innerHTML = ''
+	  page.render(this.outlet)
+	  this.current = page
+
+	  if (typeof page.afterRender === 'function') {
 		await page.afterRender(this.outlet)
-	}
+	  }
 	}
 
+	// global click delegation for <a data-route>
 	linkHandler = (e: MouseEvent) => {
-	  const a = (e.target as HTMLElement).closest('[data-route]') as HTMLAnchorElement | null;
-	  if (!a) return;
-	  e.preventDefault();
-	  const href = a.getAttribute('href')!;
-	  history.pushState(null, '', href);
-	  this.go(href);
-	};
+	  const a = (e.target as HTMLElement).closest('[data-route]') as
+				HTMLAnchorElement | null
+	  if (!a) return
+	  e.preventDefault()
+	  this.go(a.getAttribute('href')!)             // URL + view both update
+	}
   }
