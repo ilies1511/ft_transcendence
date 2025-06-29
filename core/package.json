@@ -10,12 +10,14 @@
 	"scripts": {
 		"backend": "npm --workspace backend run dev",
 		"frontend": "npm --workspace frontend run dev",
-		"dev": "concurrently -k \"npm run backend\" \"npm run frontend\""
+		"dev": "concurrently -k \"npm run backend\" \"npm run frontend\"",
+		"tree": "tree -I 'node_modules'"
 	},
 	"author": "",
 	"license": "ISC",
 	"description": "",
 	"devDependencies": {
-		"concurrently": "^9.2.0"
+		"concurrently": "^9.2.0",
+		"tree-node-cli": "^1.6.0"
 	}
 }
