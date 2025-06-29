@@ -8,10 +8,11 @@ export default async function usersRoute(app: FastifyInstance) {
       id: number;
       email: string;
 	  avatar: string;
-      display_name: string;
+      username: string;
+	  nickname: string;
       created_at: string;
     }>(
-      'SELECT id, email, display_name, avatar, created_at FROM users ORDER BY id ASC'
+      'SELECT id, email, username, nickname, avatar, created_at FROM users ORDER BY id ASC'
     );
     reply.send(rows);
   });
@@ -20,7 +21,7 @@ export default async function usersRoute(app: FastifyInstance) {
   app.get<{ Params: { id: string } }>('/users/:id', async (req, reply) => {
     const { id } = req.params;
     const user = await app.db.get(
-      'SELECT id, display_name as name, avatar FROM users WHERE id = ?',
+      'SELECT id, username, nickname, avatar FROM users WHERE id = ?',
       [id]
     );
     if (!user) {

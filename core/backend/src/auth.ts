@@ -12,17 +12,17 @@ export default async function authRoutes (app: FastifyInstance) {
     schema: {
       body: {
         type: 'object',
-        required: ['email', 'password', 'displayName'],
+        required: ['email', 'password', 'username'],
         properties: {
           email:       { type: 'string', format: 'email' },
           password:    { type: 'string', minLength: 1 },
-          displayName: { type: 'string', minLength: 1 }
+          username: { type: 'string', minLength: 1 }
         }
       }
     }
   }, async (req, reply) => {
-    const { email, password, displayName } = req.body as {
-      email: string; password: string; displayName: string
+    const { email, password, username } = req.body as {
+      email: string; password: string; username: string
     }
 
     const hash = await bcrypt.hash(password, COST)          // ← salt + hash
@@ -31,8 +31,8 @@ export default async function authRoutes (app: FastifyInstance) {
 
     try {
       const { lastID } = await app.db.run(
-        'INSERT INTO users (email, password, display_name, avatar) VALUES (?, ?, ?, ?)',
-        [email, hash, displayName, avatar]                          // store hash, not plain text
+        'INSERT INTO users (email, password, username, nickname, avatar) VALUES (?, ?, ?, ?, ?)',
+        [email, hash, username, username, avatar]                          // store hash, not plain text
       )
       reply.code(201).send({ userId: lastID })
     } catch (err: any) {
@@ -49,7 +49,7 @@ export default async function authRoutes (app: FastifyInstance) {
     const { email, password } = req.body as { email: string; password: string }
 
     const user = await app.db.get(
-      'SELECT id, password, display_name FROM users WHERE email = ?',
+      'SELECT id, password, username FROM users WHERE email = ?',
       [email]
     )
 
@@ -57,7 +57,7 @@ export default async function authRoutes (app: FastifyInstance) {
       return reply.code(401).send({ error: 'invalid credentials' })
     }
 
-    const token = await reply.jwtSign({ id: user.id, name: user.display_name })
+    const token = await reply.jwtSign({ id: user.id, name: user.username })
 
     reply.setCookie('token', token, {
       path:     '/',
@@ -88,9 +88,17 @@ export default async function authRoutes (app: FastifyInstance) {
 
 
 
+// app.get('/me', { preHandler: app.auth }, async (req) => {
+// 	const user = await app.db.get(
+// 	  'SELECT id, username as name, avatar FROM users WHERE id = ?',
+// 	  [(req.user as any).id]
+// 	)
+// 	return user
+// })
+
 app.get('/me', { preHandler: app.auth }, async (req) => {
 	const user = await app.db.get(
-	  'SELECT id, display_name as name, avatar FROM users WHERE id = ?',
+	  'SELECT id, username, nickname, avatar FROM users WHERE id = ?',
 	  [(req.user as any).id]
 	)
 	return user

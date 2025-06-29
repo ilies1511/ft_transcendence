@@ -9,7 +9,7 @@ const RegisterPage: PageModule = {
         <h2 class="text-center text-white text-2xl font-bold">Create your account</h2>
 
         <label class="block">
-          <input name="displayName"
+          <input name="username"
                  type="text"
                  placeholder="Username"
                  autocomplete="username"
@@ -83,7 +83,7 @@ const RegisterPage: PageModule = {
           body   : JSON.stringify({
             email:        data.email.trim(),
             password:     data.password,
-            displayName:  data.displayName.trim()
+            username:  data.username.trim()
           })
         })
 

@@ -40,7 +40,7 @@ const UsersPage: PageModule = {
 			  <img src="/avatars/${u.avatar}" alt="avatar"
 				   class="h-6 w-6 rounded-full object-cover" />
 			  <a href="/profile/${u.id}" data-route class="hover:underline">
-				${u.display_name}
+				${u.username}
 			  </a>
 			</span>
 
