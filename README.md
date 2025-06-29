@@ -22,10 +22,9 @@ SQLITE + TS.
 TODO:
 	[x]Readonly avatars inside core/backend/public/avatars
 	[]Ability to update avatar/username/password. Avatar max size: 400x400 forced.
-	[]Ability to delete your account. (prob not mandatory, might skip)
+	[]Ability to DELETE your account. (prob not mandatory, might skip)
 	[]Friendlist. Think about the friendlis design for backend system. Already have frontend concept. When you invite somebody to a be friends, it should give a pop up or notification. Also, how the database should look like. Is it a new database or we improve the current user database?
 	[]Friendchat.
 
-TODO: 
 
 
