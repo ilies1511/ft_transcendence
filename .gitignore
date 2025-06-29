@@ -32,4 +32,5 @@ dist-ssr
 *.sw?
 
 /core/backend/src/data/pong.db
+/core/backend/src/plugins/data/pong.db
 *.db
