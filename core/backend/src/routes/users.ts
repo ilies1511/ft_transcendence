@@ -1,5 +1,6 @@
 // backend/src/routes/users.ts
 import type { FastifyInstance } from 'fastify';
+import bcrypt from 'bcryptjs';
 
 export default async function usersRoute(app: FastifyInstance) {
   // List all users
@@ -29,4 +30,55 @@ export default async function usersRoute(app: FastifyInstance) {
     }
     reply.send(user);
   });
+
+  app.patch<{ Params: { id: string }, Body: { username?: string, nickname?: string, email?: string, password?: string } }>(
+    '/users/:id',
+    async (req, reply) => {
+      const { id } = req.params;
+      const { username, nickname, email, password } = req.body;
+
+      // TODO: Replace this with your real authentication check!
+      // Only allow the logged-in user to update their own info
+      // For now, just assume it's allowed.
+
+      // Uniqueness checks
+      if (email) {
+        const exists = await app.db.get('SELECT id FROM users WHERE email = ? AND id != ?', [email, id]);
+        if (exists) return reply.code(409).send({ error: 'Email already in use' });
+      }
+      if (username) {
+        const exists = await app.db.get('SELECT id FROM users WHERE username = ? AND id != ?', [username, id]);
+        if (exists) return reply.code(409).send({ error: 'Display name already in use' });
+      }
+
+      // Build update fields
+      const fields = [];
+      const values = [];
+      if (username) {
+        fields.push('username = ?');
+        values.push(username);
+      }
+	  if (nickname) {
+        fields.push('nickname = ?');
+        values.push(nickname);
+      }
+      if (email) {
+        fields.push('email = ?');
+        values.push(email);
+      }
+      if (password) {
+        const hashed = await bcrypt.hash(password, 10);
+        fields.push('password = ?');
+        values.push(hashed);
+      }
+      if (fields.length === 0) {
+        return reply.code(400).send({ error: 'No fields to update' });
+      }
+      values.push(id);
+
+      await app.db.run(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, values);
+      reply.send({ success: true });
+    }
+  );
+
 }

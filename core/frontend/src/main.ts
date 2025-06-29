@@ -32,7 +32,7 @@ async function refreshHeader () {
 	  span.innerHTML = `
 		<img src="/avatars/${user.avatar}" alt="avatar"
 			 style="display:inline-block;vertical-align:middle;width:24px;height:24px;border-radius:50%;object-fit:cover;margin-right:6px;" />
-		${user.name} · <button id="logout" class="underline">Log out</button>
+		${user.nickname} · <button id="logout" class="underline">Log out</button>
 	  `
 	  span.querySelector<HTMLButtonElement>('#logout')!
 		  .addEventListener('click', async () => {

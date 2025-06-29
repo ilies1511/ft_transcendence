@@ -21,7 +21,8 @@ export type PageModule = {               // contract every page must fulfil
 	'/register': () => import('./pages/register').then(m => m.default),
 	// '/profile':  () => import('./pages/profile').then(m => m.default),
 	'/users':    () => import('./pages/UsersPage').then(m => m.default),
-	'/profile/:id': () => import('./pages/profile').then(m => m.default) // just a test for now 1144
+	'/profile/:id': () => import('./pages/profile').then(m => m.default), // just a test for now 1144
+	'/settings/:id': () => import('./pages/settings').then(m => m.default),
   }
 
   // Helper to match dynamic routes (e.g., /profile/123)  //just a test for now 1144
@@ -31,7 +32,13 @@ function matchDynamicRoute(path: string): { route: string, params: Record<string
 	if (profileMatch) {
 	  return { route: '/profile/:id', params: { id: profileMatch[1] } };
 	}
-	// Add more dynamic routes here if needed
+
+	const settingsMatch = path.match(/^\/settings\/(\d+)$/);
+	if (settingsMatch) {
+		return { route: '/settings/:id', params: { id: settingsMatch[1] } };
+	}
+  // Add more dynamic routes here if needed
+
 	return null;
   }
 
@@ -130,6 +137,16 @@ export class Router {
 		  return this.go('/login', pushHistory)
 		}
 	}
+
+	if (path === '/settings') {
+		const user = await currentUser();
+		if (user) {
+			return this.go(`/settings/${user.id}`, pushHistory);
+		} else {
+			return this.go('/login', pushHistory);
+		}
+	}
+	
 
 	}
 

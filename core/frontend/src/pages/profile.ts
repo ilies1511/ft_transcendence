@@ -141,12 +141,12 @@ const template = /*html*/ `
 // 	}
 //   }
 
-async function renderProfile(root: HTMLElement, user: { id: number, name: string, avatar: string }) {
+async function renderProfile(root: HTMLElement, user: { id: number, username: string, nickname: string, avatar: string }) {
 	root.innerHTML = template
 	root.querySelector<HTMLHeadingElement>('#profileName') !
-	  .textContent = user.name
+	  .textContent = user.nickname
 	root.querySelector<HTMLParagraphElement>('#profileHandle') !
-	  .textContent = '@' + user.name.toLowerCase().replace(/\s+/g, '_')
+	  .textContent = '@' + user.username.toLowerCase().replace(/\s+/g, '_')
 	root.querySelector<HTMLImageElement>('#profileAvatar') !
 	  .src = `/avatars/${user.avatar}`
   }
