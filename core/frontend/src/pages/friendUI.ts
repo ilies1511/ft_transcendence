@@ -1,4 +1,4 @@
-// client/friendUI.ts
+// frontend/src/pages/friendUI.ts
 export function initFriendUI() {
 	const root = document.getElementById('friend-ui-root')!;
 	root.innerHTML = template;

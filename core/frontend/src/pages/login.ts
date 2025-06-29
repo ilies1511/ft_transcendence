@@ -1,4 +1,4 @@
-// // client/pages/Login.ts
+
 // import type { PageModule } from '../router';
 
 // const LoginPage: PageModule = {
@@ -57,7 +57,7 @@
 // export default LoginPage;
 
 
-
+// frontend/src/pages/login.ts
 import type { PageModule } from '../router'
 import { submitLogin } from '../services/auth'   // helper below
 import { router } from '../main'  // whatever exports your Router

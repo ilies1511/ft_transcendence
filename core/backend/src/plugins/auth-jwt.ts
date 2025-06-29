@@ -1,3 +1,4 @@
+// backend/src/plugins/auth-jwt.ts
 import fp from 'fastify-plugin'
 import cookie  from '@fastify/cookie'
 import jwt     from '@fastify/jwt'

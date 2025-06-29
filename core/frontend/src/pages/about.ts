@@ -1,4 +1,4 @@
-// client/pages/about.ts
+// frontend/src/pages/about.ts
 import type { PageModule } from '../router';
 
 const AboutPage: PageModule = {

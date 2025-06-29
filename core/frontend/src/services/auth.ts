@@ -1,4 +1,4 @@
-// client/src/services/auth.ts
+// frontend/src/services/auth.ts
 
 import { router } from '../main'
 
@@ -13,13 +13,7 @@ export async function submitLogin (email: string, password: string) {
 	  const { error } = await res.json().catch(() => ({}))
 	  throw new Error(error ?? 'login failed')
 	}
-  }
-
-//   export async function currentUser () {
-// 	const res = await fetch('/api/me', { credentials: 'include' })
-// 	if (!res.ok) return null
-// 	return res.json() as Promise<{ id: number; name: string }>
-//   }
+}
 
 export async function currentUser() {
 	const res = await fetch('/api/me', { credentials: 'include' })

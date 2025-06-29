@@ -1,4 +1,4 @@
-// client/pages/Profile.ts
+// frontend/src/pages/profile.ts
 import type { PageModule } from '../router';
 import { currentUser } from '../services/auth'
 import { router } from '../main'

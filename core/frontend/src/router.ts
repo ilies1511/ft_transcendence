@@ -1,4 +1,6 @@
 // client/router.ts
+import { currentUser } from './services/auth'
+
 export type PageModule = {               // contract every page must fulfil
 	render(root: HTMLElement): void;
 	// optional clean-up.
@@ -17,7 +19,7 @@ export type PageModule = {               // contract every page must fulfil
 	'/about':    () => import('./pages/about').then(m => m.default),
 	'/login':    () => import('./pages/login').then(m => m.default),
 	'/register': () => import('./pages/register').then(m => m.default),
-	'/profile':  () => import('./pages/profile').then(m => m.default),
+	// '/profile':  () => import('./pages/profile').then(m => m.default),
 	'/users':    () => import('./pages/UsersPage').then(m => m.default),
 	'/profile/:id': () => import('./pages/profile').then(m => m.default) // just a test for now 1144
   }
@@ -77,10 +79,12 @@ export class Router {
 	  window.addEventListener('popstate', () => this.go(location.pathname, false));
 	}
 
-	async go(path: string, pushHistory = true) {
+	async go(path: string, pushHistory = true): Promise<void> {
 	  if (pushHistory && path !== location.pathname) {
 		history.pushState(null, '', path);
 	  }
+
+
 
 	  let load = routes[path];
 	  let params: Record<string, string> = {};
@@ -103,17 +107,30 @@ export class Router {
 	  this.outlet.innerHTML = '';
 
 	  // If the page supports renderWithParams and we have params, use it
+	  let usedParams = false;
 	  if (page.renderWithParams && Object.keys(params).length > 0) {
 		await page.renderWithParams(this.outlet, params);
+		usedParams = true;
 	  } else {
 		page.render(this.outlet);
 	  }
 
 	  this.current = page;
 
-	  if (typeof page.afterRender === 'function') {
+	  if (!usedParams && typeof page.afterRender === 'function') {
 		await page.afterRender(this.outlet);
 	  }
+
+	  // for profile and redirections
+	if (path === '/profile') {
+		const user = await currentUser()
+		if (user) {
+		  return this.go(`/profile/${user.id}`, pushHistory)
+		} else {
+		  return this.go('/login', pushHistory)
+		}
+	}
+
 	}
 
 	// global click delegation for <a data-route>

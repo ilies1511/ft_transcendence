@@ -20,5 +20,9 @@ SQLITE + TS.
 
 
 TODO:
-	Readonly avatars inside core/backend/public/avatars
-	Avatar size: 400x400 forced.
+	[x]Readonly avatars inside core/backend/public/avatars
+	[]Avatar max size: 400x400 forced.
+	[]Ability to update avatar/username/password
+	[]
+
+

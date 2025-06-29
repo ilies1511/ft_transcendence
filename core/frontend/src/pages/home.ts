@@ -1,4 +1,4 @@
-// client/pages/home.ts
+// frontend/src/pages/home.ts
 import type { PageModule } from '../router';
 
 const HomePage: PageModule = {

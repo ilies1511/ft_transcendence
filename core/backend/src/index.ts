@@ -1,3 +1,4 @@
+// backend/src/index.ts
 import Fastify from 'fastify'
 import websocket from '@fastify/websocket'
 import type { WebSocket } from '@fastify/websocket' // <-- use 'import type'

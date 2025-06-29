@@ -1,3 +1,4 @@
+// backend/src/types/fastify-auth.d.ts
 import 'fastify'
 import type { FastifyRequest, FastifyReply } from 'fastify'
 

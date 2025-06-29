@@ -1,3 +1,4 @@
+// frontend/src/pages/UsersPage.ts
 import type { PageModule } from '../router';
 
 const UsersPage: PageModule = {
@@ -26,27 +27,33 @@ const UsersPage: PageModule = {
       if (users && users.length) {
         empty.remove();
 
-        list.innerHTML = users
-          .map((u: any) => `
-            <li
-              class="bg-[#2b171e] rounded-xl
-                     p-5 sm:px-6 sm:py-5
-                     text-lg text-white
-                     flex flex-col sm:flex-row sm:items-center
-                     justify-between gap-5">
+		list.innerHTML = users
+		.map((u: any) => `
+		  <li
+			class="bg-[#2b171e] rounded-xl
+				   p-5 sm:px-6 sm:py-5
+				   text-lg text-white
+				   flex flex-col sm:flex-row sm:items-center
+				   justify-between gap-5">
 
-              <span class="font-medium truncate">
-                ${u.display_name}
-              </span>
+			<span class="font-medium truncate flex items-center gap-2">
+			  <img src="/avatars/${u.avatar}" alt="avatar"
+				   class="h-6 w-6 rounded-full object-cover" />
+			  <a href="/profile/${u.id}" data-route class="hover:underline">
+				${u.display_name}
+			  </a>
+			</span>
 
-              <span
-                class="text-[#ca91a3] break-all
-                       sm:text-right sm:flex-shrink-0">
-                ${u.email}
-              </span>
-            </li>
-          `)
-          .join('');
+			<span
+			  class="text-[#ca91a3] break-all
+					 sm:text-right sm:flex-shrink-0">
+			  ${u.email}
+			</span>
+		  </li>
+		`)
+		.join('');
+
+
       } else {
         empty.textContent = 'No users currently';
       }

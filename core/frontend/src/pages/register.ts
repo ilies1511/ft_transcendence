@@ -1,4 +1,4 @@
-// client/pages/Register.ts
+// frontend/src/pages/register.ts
 import type { PageModule } from '../router'
 
 const RegisterPage: PageModule = {

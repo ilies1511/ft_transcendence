@@ -21,7 +21,7 @@
 // })
 
 
-// src/plugins/sqlite.ts
+// backend/src/plugins/sqlite.ts
 import fp from 'fastify-plugin'
 import { fpSqlitePlugin } from 'fastify-sqlite-typed'
 import { mkdirSync } from 'node:fs'
