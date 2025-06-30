@@ -27,3 +27,8 @@ curl -i -X DELETE http://localhost:3000/api/users/1
 curl -i -X DELETE http://localhost:3000/api/users/999
 # → HTTP/1.1 404 Not Found
 #    {"error":"User not found"}
+
+
+
+#SwaggerUI:
+http://localhost:3000/documentation

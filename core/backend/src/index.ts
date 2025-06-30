@@ -4,6 +4,7 @@ import { fpSqlitePlugin } from 'fastify-sqlite-typed'
 import {GameServer} from './game/game_server.ts';
 import { wsRoute } from './routes/game.ts';
 import { userRoutes } from './routes/users.ts';
+import { runMigrations } from './db/db_init.ts';
 //Mit namespace
 import * as testRoutes from './routes/test_route.ts'
 
@@ -17,15 +18,16 @@ async function main() {
 		dbFilename: './data/alo.db',     // DB-Datei
 		// driverSettings: { /* optional: verbose, cache, trace */ }
 	  })
-	await fastify.db.exec(`
-		CREATE TABLE IF NOT EXISTS users (
-		  id          INTEGER PRIMARY KEY AUTOINCREMENT,
-		  username    TEXT    NOT NULL UNIQUE,
-		  password    TEXT    NOT NULL,        -- hier speichern wir den Hash
-		  email       TEXT    UNIQUE,
-		  created_at  INTEGER NOT NULL         -- Timestamp als Zahl
-		);
-	  `)
+	// await fastify.db.exec(`
+	// 	CREATE TABLE IF NOT EXISTS users (
+	// 	  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+	// 	  username    TEXT    NOT NULL UNIQUE,
+	// 	  password    TEXT    NOT NULL,        -- hier speichern wir den Hash
+	// 	  email       TEXT    UNIQUE,
+	// 	  created_at  INTEGER NOT NULL         -- Timestamp als Zahl
+	// 	);
+	//   `)
+	await runMigrations(fastify);
 
 	  await fastify.register(import('@fastify/swagger'), {
 		openapi: {
