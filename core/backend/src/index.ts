@@ -9,6 +9,7 @@ import sqlitePlugin from './plugins/sqlite.js'
 import authRoutes from './auth.js'
 import usersRoute from './routes/users.js'
 import authJwtPlugin from './plugins/auth-jwt.js'
+import multipart from '@fastify/multipart' // for uploading images/avatars
 
 import staticPlugin from '@fastify/static'
 import path from 'node:path'
@@ -20,11 +21,18 @@ const fastify = Fastify({
 })
 
 // Register the websocket plugin BEFORE routes
+
 await fastify.register(websocket)
 await fastify.register(sqlitePlugin)            // ← new typed DB
 await fastify.register(authJwtPlugin)          // ← must come first
+
+await fastify.register(multipart, {
+	limits: { fileSize: 1 * 1024 * 1024 } // 1MB
+})
+
 await fastify.register(authRoutes, { prefix: '/api' })
 await fastify.register(usersRoute, { prefix: '/api' })
+
 
 
 // might to redo, kinda wierd thing is happening. Its for servig avatars files for users.

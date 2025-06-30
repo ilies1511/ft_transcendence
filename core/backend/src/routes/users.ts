@@ -1,6 +1,14 @@
 // backend/src/routes/users.ts
 import type { FastifyInstance } from 'fastify';
 import bcrypt from 'bcryptjs';
+import { join } from 'node:path'
+import { createWriteStream, unlink, existsSync } from 'node:fs';
+// for file upload
+import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export default async function usersRoute(app: FastifyInstance) {
   // List all users
@@ -80,5 +88,52 @@ export default async function usersRoute(app: FastifyInstance) {
       reply.send({ success: true });
     }
   );
+
+  app.post<{ Params: { id: string } }>('/users/:id/avatar', async (req, reply) => {
+	const { id } = req.params
+
+	// TODO: Check authentication: Only allow the logged-in user to update their own avatar
+
+	// 1. Parse the file
+	const data = await req.file()
+	if (!data) return reply.code(400).send({ error: 'No file uploaded' })
+
+	// TODO remove after testing
+	console.log('Uploaded iamge:', data.mimetype, 'filename:', data.filename);
+
+
+	// 2. Validate file type and size
+	if (!['image/png', 'image/jpeg'].includes(data.mimetype)) {
+	  return reply.code(400).send({ error: 'Only PNG/JPEG allowed' })
+	}
+	if (data.file.truncated) {
+	  return reply.code(400).send({ error: 'File too large' })
+	}
+
+	// 3. Generate unique filename
+	const ext = data.filename.split('.').pop()
+	const filename = `user_${id}_${Date.now()}.${ext}`
+	const savePath = join(__dirname, '../../public/avatars', filename)
+
+	// 4. Save file
+	await new Promise((resolve, reject) => {
+		const ws = createWriteStream(savePath);
+		data.file.pipe(ws);
+		data.file.on('end', resolve);
+		data.file.on('error', reject);
+	  });
+
+	// 5. Delete old avatar if not default
+	const user = await app.db.get('SELECT avatar FROM users WHERE id = ?', [id])
+	if (user && user.avatar && !user.avatar.startsWith('default_')) {
+	  const oldPath = join(__dirname, '../../public/avatars', user.avatar)
+	  if (existsSync(oldPath)) unlink(oldPath, () => {})
+	}
+
+	// 6. Update DB
+	await app.db.run('UPDATE users SET avatar = ? WHERE id = ?', [filename, id])
+
+	reply.send({ avatar: filename })
+  });
 
 }

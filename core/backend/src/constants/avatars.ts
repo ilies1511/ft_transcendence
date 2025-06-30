@@ -6,4 +6,5 @@ export const DEFAULT_AVATARS = [
 	'default_04.png',
 	'default_05.png',
 	'default_06.png',
+	'default_07.png',
 ]
