@@ -8,9 +8,8 @@ WORKDIR /app
 # RUN cd core/frontend && npm i
 # RUN cd core/backend && npm i
 
-RUN apk add --no-cache make
-
-RUN apk update && apk add bash
+RUN apk update && apk add bash \
+	--no-cache make
 
 RUN echo 'alias dev="npm run dev"' >> /etc/bash/bashrc
 

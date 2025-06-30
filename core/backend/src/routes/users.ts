@@ -6,6 +6,17 @@ import { type UserRow } from '../db/types.ts'
 export const userRoutes: FastifyPluginAsync = async fastify => {
   fastify.post<{ Body: { username: string; password: string; email?: string } }>(
     '/api/users',
+	{ schema: {
+		body: {
+			type: 'object',
+			required: ['username', 'password'],
+			properties: {
+				username: { type: 'string' },
+				password: { type: 'string' },
+				email: { type: 'string' }
+			}
+		}
+	}},
     async (request, reply) => {
       const { username, password, email } = request.body
       const now = Date.now()
@@ -28,6 +39,30 @@ export const userRoutes: FastifyPluginAsync = async fastify => {
       }
     }
   )
+//   fastify.post<{ Params: { username: string; password: string; email?: string } }>(
+//     '/api/users',
+//     async (request, reply) => {
+//       const { username, password, email } = request.params
+//       const now = Date.now()
+
+//       const hash = await bcrypt.hash(password, 10)
+
+//       try {
+//         const info = await fastify.db.run(
+//           `INSERT INTO users (username, password, email, created_at)
+//            VALUES (?, ?, ?, ?)`,
+//           username,
+//           hash,
+//           email ?? null,
+//           now
+//         )
+//         return reply.code(201).send({ id: info.lastID })
+//       } catch (err: any) {
+//         // z.B. Unique-Constraint
+//         return reply.code(409).send({ error: 'Username or email already exists' })
+//       }
+//     }
+//   )
 
   fastify.post<{ Body: { username: string; password: string } }>(
     '/api/login',
@@ -113,6 +148,34 @@ export const userRoutes: FastifyPluginAsync = async fastify => {
       const user = await fastify.db.get<UserRow>(
         'SELECT id, username, email, created_at FROM users WHERE id = ?',
         id
+      )
+      if (!user) {
+        return reply.code(404).send({ error: 'User not found' })
+      }
+      return user
+    }
+  )
+  fastify.get<{ Params: { username: string } }>(
+    '/api/users/username/:username',
+    async (request, reply) => {
+      const { username } = request.params
+      const user = await fastify.db.get<UserRow>(
+        'SELECT username, username, email, created_at FROM users WHERE username = ?',
+        username
+      )
+      if (!user) {
+        return reply.code(404).send({ error: 'User not found' })
+      }
+      return user
+    }
+  )
+  fastify.get<{ Params: { email: string } }>(
+    '/api/users/email/:email',
+    async (request, reply) => {
+      const { email } = request.params
+      const user = await fastify.db.get<UserRow>(
+        'SELECT email, username, email, created_at FROM users WHERE email = ?',
+        email
       )
       if (!user) {
         return reply.code(404).send({ error: 'User not found' })
