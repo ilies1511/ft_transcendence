@@ -20,14 +20,14 @@ const fastify = Fastify({
 	logger: { level: 'warn' }   // or 'error' / 'fatal'
 })
 
-// Register the websocket plugin BEFORE routes
 
 await fastify.register(websocket)
-await fastify.register(sqlitePlugin)            // ← new typed DB
-await fastify.register(authJwtPlugin)          // ← must come first
+await fastify.register(sqlitePlugin)
+await fastify.register(authJwtPlugin)
 
 await fastify.register(multipart, {
-	limits: { fileSize: 1 * 1024 * 1024 } // 1MB
+	limits: { fileSize: 1 * 1024 * 1024 }
+	// 1MB TODO: Not sure if this the case, need to retest
 })
 
 await fastify.register(authRoutes, { prefix: '/api' })
@@ -46,15 +46,15 @@ fastify.register(staticPlugin, {
 
 // WebSocket echo endpoint
 fastify.get('/ws', { websocket: true }, (socket: WebSocket, req) => {
-  socket.on('message', (message: Buffer) => {
-    // Echo the received message back to the client
-    socket.send('[BACK-END PART] Server received: ' + message.toString())
-  })
+	socket.on('message', (message: Buffer) => {
+		// Echo the received message back to the client
+		socket.send('[BACK-END PART] Server received: ' + message.toString())
+	})
 })
 
 // HTTP API endpoint
 fastify.get('/api/hello', async (request, reply) => {
-  return { hello: 'world' }
+	return { hello: 'world' }
 })
 
 

@@ -1,7 +1,7 @@
 // client/router.ts
 import { currentUser } from './services/auth'
 
-export type PageModule = {               // contract every page must fulfil
+export type PageModule = { // contract every page must fulfil
 	render(root: HTMLElement): void;
 	// optional clean-up.
 	// Still need to implement it.
@@ -15,13 +15,13 @@ export type PageModule = {               // contract every page must fulfil
   type Loader = () => Promise<PageModule>
 
   const routes: Record<string, Loader> = {
-	'/':         () => import('./pages/home').then(m => m.default),
-	'/about':    () => import('./pages/about').then(m => m.default),
-	'/login':    () => import('./pages/login').then(m => m.default),
+	'/': () => import('./pages/home').then(m => m.default),
+	'/about': () => import('./pages/about').then(m => m.default),
+	'/login': () => import('./pages/login').then(m => m.default),
 	'/register': () => import('./pages/register').then(m => m.default),
 	// '/profile':  () => import('./pages/profile').then(m => m.default),
-	'/users':    () => import('./pages/UsersPage').then(m => m.default),
-	'/profile/:id': () => import('./pages/profile').then(m => m.default), // just a test for now 1144
+	'/users': () => import('./pages/UsersPage').then(m => m.default),
+	'/profile/:id': () => import('./pages/profile').then(m => m.default),
 	'/settings/:id': () => import('./pages/settings').then(m => m.default),
   }
 
@@ -41,43 +41,6 @@ function matchDynamicRoute(path: string): { route: string, params: Record<string
 
 	return null;
   }
-
-//   export class Router {
-// 	private current: PageModule | null = null
-
-// 	constructor(private outlet: HTMLElement) {
-// 	  // browser Back / Forward → just render, do NOT push a new history entry
-// 	  window.addEventListener('popstate', () => this.go(location.pathname, false))
-// 	}
-
-// 	// pushHistory defaults to true so programmatic calls update the URL
-// 	async go(path: string, pushHistory = true) {
-// 	  if (pushHistory && path !== location.pathname) {
-// 		history.pushState(null, '', path)          // keeps the address bar in sync
-// 	  }
-
-// 	  const load = routes[path] ?? routes['/']     // fallback to home
-// 	  const page = await load()
-
-// 	  this.current?.destroy?.()
-// 	  this.outlet.innerHTML = ''
-// 	  page.render(this.outlet)
-// 	  this.current = page
-
-// 	  if (typeof page.afterRender === 'function') {
-// 		await page.afterRender(this.outlet)
-// 	  }
-// 	}
-
-// 	// global click delegation for <a data-route>
-// 	linkHandler = (e: MouseEvent) => {
-// 	  const a = (e.target as HTMLElement).closest('[data-route]') as
-// 				HTMLAnchorElement | null
-// 	  if (!a) return
-// 	  e.preventDefault()
-// 	  this.go(a.getAttribute('href')!)             // URL + view both update
-// 	}
-//   }
 
 export class Router {
 	private current: PageModule | null = null;
@@ -146,7 +109,7 @@ export class Router {
 			return this.go('/login', pushHistory);
 		}
 	}
-	
+
 
 	}
 
