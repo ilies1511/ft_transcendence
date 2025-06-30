@@ -48,7 +48,7 @@ export default async function usersRoute(app: FastifyInstance) {
       }
       if (username) {
         const exists = await app.db.get('SELECT id FROM users WHERE username = ? AND id != ?', [username, id]);
-        if (exists) return reply.code(409).send({ error: 'Display name already in use' });
+        if (exists) return reply.code(409).send({ error: 'Username already in use' });
       }
 
       // Build update fields

@@ -37,7 +37,7 @@ export default async function authRoutes (app: FastifyInstance) {
       reply.code(201).send({ userId: lastID })
     } catch (err: any) {
       if (err.code === 'SQLITE_CONSTRAINT') {
-        return reply.code(409).send({ error: 'email or display name taken' })
+        return reply.code(409).send({ error: 'email or username taken' })
       }
       throw err
     }
