@@ -1,7 +1,7 @@
 import Fastify from 'fastify'
 import websocket from '@fastify/websocket'
 import { fpSqlitePlugin } from 'fastify-sqlite-typed'
-import {GameServer} from './game/game_server.ts';
+import { GameServer } from './game/game_server.ts';
 import { wsRoute } from './routes/game.ts';
 import { userRoutes } from './routes/users.ts';
 import { runMigrations } from './db/db_init.ts';
@@ -17,7 +17,7 @@ async function main() {
 	await fastify.register(fpSqlitePlugin, {
 		dbFilename: './data/alo.db',     // DB-Datei
 		// driverSettings: { /* optional: verbose, cache, trace */ }
-	  })
+	})
 	// await fastify.db.exec(`
 	// 	CREATE TABLE IF NOT EXISTS users (
 	// 	  id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -29,55 +29,55 @@ async function main() {
 	//   `)
 	await runMigrations(fastify);
 
-	  await fastify.register(import('@fastify/swagger'), {
+	await fastify.register(import('@fastify/swagger'), {
 		openapi: {
-		  openapi: '3.0.0',
-		  info: {
-			title: 'Test swagger',
-			description: 'Testing the Fastify swagger API',
-			version: '0.1.0'
-		  },
-		  servers: [
-			{
-			  url: 'http://localhost:3000',
-			  description: 'Development server'
+			openapi: '3.0.0',
+			info: {
+				title: 'Test swagger',
+				description: 'Testing the Fastify swagger API',
+				version: '0.1.0'
+			},
+			servers: [
+				{
+					url: 'http://localhost:3000',
+					description: 'Development server'
+				}
+			],
+			tags: [
+				{ name: 'user', description: 'User related end-points' },
+				{ name: 'code', description: 'Code related end-points' }
+			],
+			//   components: {
+			// 	securitySchemes: {
+			// 	  apiKey: {
+			// 		type: 'apiKey',
+			// 		name: 'apiKey',
+			// 		in: 'header'
+			// 	  }
+			// 	}
+			//   },
+			externalDocs: {
+				url: 'https://swagger.io',
+				description: 'Find more info here'
 			}
-		  ],
-		  tags: [
-			{ name: 'user', description: 'User related end-points' },
-			{ name: 'code', description: 'Code related end-points' }
-		  ],
-		//   components: {
-		// 	securitySchemes: {
-		// 	  apiKey: {
-		// 		type: 'apiKey',
-		// 		name: 'apiKey',
-		// 		in: 'header'
-		// 	  }
-		// 	}
-		//   },
-		  externalDocs: {
-			url: 'https://swagger.io',
-			description: 'Find more info here'
-		  }
 		}
-	  })
+	})
 
-	  await fastify.register(import('@fastify/swagger-ui'), {
+	await fastify.register(import('@fastify/swagger-ui'), {
 		routePrefix: '/documentation',
 		uiConfig: {
-		  docExpansion: 'full',
-		  deepLinking: false
+			docExpansion: 'full',
+			deepLinking: false
 		},
 		uiHooks: {
-		  onRequest: function (request, reply, next) { next() },
-		  preHandler: function (request, reply, next) { next() }
+			onRequest: function (request, reply, next) { next() },
+			preHandler: function (request, reply, next) { next() }
 		},
 		staticCSP: true,
 		transformStaticCSP: (header) => header,
 		transformSpecification: (swaggerObject, request, reply) => { return swaggerObject },
 		transformSpecificationClone: true
-	  })
+	})
 
 	// 3) Routen & Game-Server
 	await fastify.register(wsRoute);

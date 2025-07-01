@@ -4,12 +4,12 @@ import { Interface } from 'readline'
 import type { UserRow } from '../db/types.ts'
 
 export interface NewUser {
-	username: string
-	password: string
-	email?: string
+	username:	string
+	password:	string
+	email?:		string
 }
 
-//POST
+//POST -- BEGIN
 export async function createUser(
 	fastify: FastifyInstance,
 	{ username, password, email }: NewUser): Promise<number> {
@@ -31,7 +31,7 @@ export async function createUser(
 		throw new Error('UsernameOrEmailCollision')
 	}
 }
-
+//POST -- END
 
 export interface UpdateUserData {
 	username?: string
@@ -39,7 +39,7 @@ export interface UpdateUserData {
 	email?: string
 }
 
-//PUT
+//PUT -- BEGIN
 export async function updateUser(
 	fastify: FastifyInstance,
 	id: number,
@@ -75,12 +75,12 @@ export async function updateUser(
 	}
 	return info.changes > 0;
 }
+//PUT -- END
 
 //DELETE
 export async function deleteUserById(
 	fastify: FastifyInstance,
-	id: number): Promise<boolean>
-{
+	id: number): Promise<boolean> {
 	const result = await fastify.db.run(
 		'DELETE FROM users WHERE id = ?',
 		id
@@ -93,14 +93,31 @@ export async function deleteUserById(
 
 //GET
 export async function getUserById(
-		fastify:FastifyInstance,
-		id:number):Promise<UserRow | null>
-{
+	fastify: FastifyInstance,
+	id: number): Promise<UserRow | null> {
 	const user = await fastify.db.get<UserRow>(
-		"SELECT id, username, email, created_at FROM users WHERE id = ?", id);
+		"SELECT id, username, email, live, created_at FROM users WHERE id = ?", id);
 
 	if (!user) {
 		return (null);
 	}
 	return (user);
 }
+
+//PATCH -- BEGIN
+export async function setUserLive(
+	fastify: FastifyInstance,
+	id: number,
+	live: boolean
+): Promise<boolean> {
+	const info = await fastify.db.run(
+		'UPDATE users SET live = ? WHERE id = ?',
+		live ? 1 : 0,
+		id
+	)
+	if (info.changes === undefined) {
+		return (false);
+	}
+	return (info.changes > 0)
+}
+//PATCH -- END

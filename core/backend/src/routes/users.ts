@@ -194,6 +194,7 @@ import { info } from "console";
 import { updateUser, type UpdateUserData } from "../functions/user.ts";
 import { deleteUserById } from "../functions/user.ts";
 import { getUserById } from "../functions/user.ts";
+import { setUserLive } from "../functions/user.ts";
 
 export const userRoutes: FastifyPluginAsync = async (fastify) => {
 	//
@@ -255,7 +256,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 	// READ ALL
 	//
 	fastify.get<{
-		Reply: Array<Pick<UserRow, "id" | "username" | "email" | "created_at">>;
+		Reply: Array<Pick<UserRow, "id" | "username" | "email" | "live" | "created_at">>;
 	}>(
 		"/api/users",
 		{
@@ -269,6 +270,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 								id: { type: "integer" },
 								username: { type: "string" },
 								email: { type: ["string", "null"] },
+								live: { type: "integer" },
 								created_at: { type: "integer" },
 							},
 						},
@@ -278,7 +280,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 		},
 		async () => {
 			return fastify.db.all(
-				"SELECT id, username, email, created_at FROM users"
+				"SELECT id, username, live, email, created_at FROM users"
 			);
 		}
 	);
@@ -289,7 +291,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 	fastify.get<{
 		Params: { id: number };
 		Reply:
-		| Pick<UserRow, "id" | "username" | "email" | "created_at">
+		| Pick<UserRow, "id" | "username" | "email" | "live"| "created_at">
 		| { error: string };
 	}>(
 		"/api/users/:id",
@@ -307,6 +309,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 							id: { type: "integer" },
 							username: { type: "string" },
 							email: { type: ["string", "null"] },
+							live: { type: "integer" },
 							created_at: { type: "integer" },
 						},
 					},
@@ -331,7 +334,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 	);
 
 	//
-	// UPDATE (by ID)
+	// PUT (by ID) -- BEGIN
 	//
 	fastify.put<{
 		Params: { id: number };
@@ -471,4 +474,29 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 			return reply.code(200).send({ message: 'User deleted successfully' });
 		}
 	);
+
+	//PUT --END
+
+	//PATCH -- BEGIN
+	fastify.patch<{
+		Params: { id: number }
+		Body: { live: boolean }
+	}>(
+		'/api/users/:id/live',
+		{
+			schema: {
+				body: {
+					type: 'object',
+					required: ['live'],
+					properties: { live: { type: 'boolean' } }
+				}
+			}
+		},
+		async (request, reply) => {
+			const ok = await setUserLive(fastify, request.params.id, request.body.live)
+			if (!ok) return reply.code(404).send({ error: 'User not found' })
+			return { message: 'Live status updated' }
+		}
+	)
+	//PATCH -- BEGIN
 };
