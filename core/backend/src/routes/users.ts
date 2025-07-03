@@ -1,205 +1,24 @@
-// // src/routes/users.ts
-// import type { FastifyPluginAsync } from 'fastify'
-// import bcrypt from 'bcrypt'
-// import { type UserRow } from '../db/types.ts'
-
-// export const userRoutes: FastifyPluginAsync = async fastify => {
-//   fastify.post<{ Body: { username: string; password: string; email?: string } }>(
-//     '/api/users',
-// 	{ schema: {
-// 		body: {
-// 			type: 'object',
-// 			required: ['username', 'password'],
-// 			properties: {
-// 				username: { type: 'string' },
-// 				password: { type: 'string' },
-// 				email: { type: 'string' }
-// 			}
-// 		}
-// 	}},
-//     async (request, reply) => {
-//       const { username, password, email } = request.body
-//       const now = Date.now()
-
-//       const hash = await bcrypt.hash(password, 10)
-
-//       try {
-//         const info = await fastify.db.run(
-//           `INSERT INTO users (username, password, email, created_at)
-//            VALUES (?, ?, ?, ?)`,
-//           username,
-//           hash,
-//           email ?? null,
-//           now
-//         )
-//         return reply.code(201).send({ id: info.lastID })
-//       } catch (err: any) {
-//         // z.B. Unique-Constraint
-//         return reply.code(409).send({ error: 'Username or email already exists' })
-//       }
-//     }
-//   )
-// //   fastify.post<{ Params: { username: string; password: string; email?: string } }>(
-// //     '/api/users',
-// //     async (request, reply) => {
-// //       const { username, password, email } = request.params
-// //       const now = Date.now()
-
-// //       const hash = await bcrypt.hash(password, 10)
-
-// //       try {
-// //         const info = await fastify.db.run(
-// //           `INSERT INTO users (username, password, email, created_at)
-// //            VALUES (?, ?, ?, ?)`,
-// //           username,
-// //           hash,
-// //           email ?? null,
-// //           now
-// //         )
-// //         return reply.code(201).send({ id: info.lastID })
-// //       } catch (err: any) {
-// //         // z.B. Unique-Constraint
-// //         return reply.code(409).send({ error: 'Username or email already exists' })
-// //       }
-// //     }
-// //   )
-
-//   fastify.post<{ Body: { username: string; password: string } }>(
-//     '/api/login',
-//     async (request, reply) => {
-//       const { username, password } = request.body
-
-//       const user = await fastify.db.get<UserRow>(
-//         `SELECT * FROM users WHERE username = ?`,
-//         username
-//       )
-//       if (!user) {
-//         return reply.code(404).send({ error: 'User not found' })
-//       }
-
-//       const ok = await bcrypt.compare(password, user.password)
-//       if (!ok) {
-//         return reply.code(401).send({ error: 'Invalid credentials' })
-//       }
-
-//       const { password: _, ...safe } = user
-//       return { user: safe }
-//     }
-//   )
-
-//   fastify.delete<{ Params: { id: string } }>(
-//     '/api/users/id/:id',
-// 	async (request, reply) => {
-// 		const {id} = request.params;
-// 		const user = await fastify.db.run('DELETE FROM users WHERE id = ?', id)
-
-// 		if (user.changes === 0) {
-// 			// kein Datensatz gelöscht → 404
-// 			return (reply.code(404).send({ error: 'User not found' }));
-// 		}
-
-// 		return reply
-// 		.code(200)
-// 		.send({ message: 'User succesfully deleted' })
-// 		// return reply.code(204).send({message: "successfully deleted  user profile"});
-// 	}
-// 	)
-
-//  // DELETE by username
-//  fastify.delete<{ Params: { username: string } }>(
-//     '/api/users/username/:username',
-//     async (request, reply) => {
-//       const { username } = request.params
-//       const result = await fastify.db.run(
-//         'DELETE FROM users WHERE username = ?',
-//         username
-//       )
-
-//       if (result.changes === 0) {
-//         return reply.code(404).send({ error: 'User not found' })
-//       }
-
-//       return reply.code(200)
-// 	  			.send({ message: 'User succesfully deleted' })
-//     }
-//   )
-
-//  fastify.delete<{ Params: { email: string } }>(
-//     '/api/users/email/:email',
-//     async (request, reply) => {
-//       const { email } = request.params
-//       const result = await fastify.db.run(
-//         'DELETE FROM users WHERE email = ?',
-//         email
-//       )
-
-//       if (result.changes === 0) {
-//         return reply.code(404).send({ error: 'User not found' })
-//       }
-
-//       return reply.code(200).send({ message: 'User succesfully deleted' })
-//     }
-//   )
-
-//   fastify.get<{ Params: { id: string } }>(
-//     '/api/users/id/:id',
-//     async (request, reply) => {
-//       const { id } = request.params
-//       const user = await fastify.db.get<UserRow>(
-//         'SELECT id, username, email, created_at FROM users WHERE id = ?',
-//         id
-//       )
-//       if (!user) {
-//         return reply.code(404).send({ error: 'User not found' })
-//       }
-//       return user
-//     }
-//   )
-//   fastify.get<{ Params: { username: string } }>(
-//     '/api/users/username/:username',
-//     async (request, reply) => {
-//       const { username } = request.params
-//       const user = await fastify.db.get<UserRow>(
-//         'SELECT username, username, email, created_at FROM users WHERE username = ?',
-//         username
-//       )
-//       if (!user) {
-//         return reply.code(404).send({ error: 'User not found' })
-//       }
-//       return user
-//     }
-//   )
-//   fastify.get<{ Params: { email: string } }>(
-//     '/api/users/email/:email',
-//     async (request, reply) => {
-//       const { email } = request.params
-//       const user = await fastify.db.get<UserRow>(
-//         'SELECT email, username, email, created_at FROM users WHERE email = ?',
-//         email
-//       )
-//       if (!user) {
-//         return reply.code(404).send({ error: 'User not found' })
-//       }
-//       return user
-//     }
-//   )
-// }
-
 // src/routes/users.ts
 import type { FastifyPluginAsync } from "fastify";
 import bcrypt from "bcrypt";
 import { type UserRow } from "../db/types.js";
+import { type UserWithFriends } from "../db/types.js";
+import { type FriendRequestRow } from "../db/types.js";
 import { createUser } from "../functions/user.ts";
 import { info } from "console";
 import { updateUser, type UpdateUserData } from "../functions/user.ts";
 import { deleteUserById } from "../functions/user.ts";
 import { getUserById } from "../functions/user.ts";
 import { setUserLive } from "../functions/user.ts";
+import { findUserWithFriends } from "../functions/user.ts";
+// import { addFriendByUsername } from "../functions/user.ts";
+import { sendFriendRequest } from "../functions/friends.ts";
+import { listIncomingRequests } from "../functions/friends.ts";
+import { acceptFriendRequest } from "../functions/friends.ts";
+import { rejectFriendRequest } from "../functions/friends.ts";
 
 export const userRoutes: FastifyPluginAsync = async (fastify) => {
-	//
-	// CREATE
-	//
+	// POST -- BEGIN
 	fastify.post<{
 		Body: { username: string; password: string; email?: string };
 		Reply: { id: number | undefined } | { error: string };
@@ -252,9 +71,78 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 		}
 	);
 
-	//
-	// READ ALL
-	//
+	// fastify.post<{
+	// 	Params: { id: number }
+	// 	Body: { username: string }
+	// 	Reply: { friendId: number } | { error: string }
+	// }>(
+	// 	'/api/users/:id/friends',
+	// 	{
+	// 		schema: {
+	// 			params: {
+	// 				type: 'object',
+	// 				required: ['id'],
+	// 				properties: { id: { type: 'integer' } }
+	// 			},
+	// 			body: {
+	// 				type: 'object',
+	// 				required: ['username'],
+	// 				properties: {
+	// 					username: { type: 'string' }
+	// 				}
+	// 			},
+	// 			response: {
+	// 				201: {
+	// 					type: 'object',
+	// 					properties: { friendId: { type: 'integer' } }
+	// 				},
+	// 				400: {
+	// 					type: 'object',
+	// 					properties: { error: { type: 'string' } }
+	// 				},
+	// 				404: {
+	// 					type: 'object',
+	// 					properties: { error: { type: 'string' } }
+	// 				},
+	// 				409: {
+	// 					type: 'object',
+	// 					properties: { error: { type: 'string' } }
+	// 				}
+	// 			}
+	// 		}
+	// 	},
+	// 	async (request, reply) => {
+	// 		const userId = request.params.id
+	// 		const friendUsername = request.body.username
+	// 		try {
+	// 			const friendId = await addFriendByUsername(
+	// 				fastify,
+	// 				userId,
+	// 				friendUsername
+	// 			)
+	// 			return reply.code(201).send({ friendId })
+	// 		} catch (err: any) {
+	// 			switch (err.message) {
+	// 				case 'UserNotFound':
+	// 					return reply.code(404).send({ error: 'User not found' })
+	// 				case 'FriendNotFound':
+	// 					return reply.code(404).send({ error: 'Friend username not found' })
+	// 				case 'CannotFriendYourself':
+	// 					return reply.code(400).send({ error: 'Cannot add yourself as friend' })
+	// 				case 'AlreadyFriends':
+	// 					return reply.code(409).send({ error: 'Already friends' })
+	// 				default:
+	// 					return reply.code(500).send({ error: 'Could not add friend' })
+	// 			}
+	// 		}
+	// 	}
+	// )
+
+	//POST -- END
+
+	// GET -- BEGIN
+
+	//All
 	fastify.get<{
 		Reply: Array<Pick<UserRow, "id" | "username" | "email" | "live" | "created_at">>;
 	}>(
@@ -291,7 +179,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 	fastify.get<{
 		Params: { id: number };
 		Reply:
-		| Pick<UserRow, "id" | "username" | "email" | "live"| "created_at">
+		| Pick<UserRow, "id" | "username" | "email" | "live" | "created_at">
 		| { error: string };
 	}>(
 		"/api/users/:id",
@@ -333,9 +221,52 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 		}
 	);
 
-	//
-	// PUT (by ID) -- BEGIN
-	//
+	fastify.get<{
+		Params: { id: number }
+		Reply: UserWithFriends | { error: string }
+	}>(
+		'/api/users/:id/friends',
+		{
+			schema: {
+				params: {
+					type: "object",
+					required: ["id"],
+					properties: { id: { type: "integer" } },
+				},
+				response: {
+					200: {
+						type: 'object',
+						properties: {
+							id: { type: 'integer' },
+							username: { type: 'string' },
+							email: { type: ['string', 'null'] },
+							live: { type: 'integer' },
+							created_at: { type: 'integer' },
+							friends: {
+								type: 'array',
+								items: { type: 'integer' }
+							}
+						}
+					},
+					404: {
+						type: "object",
+						properties: { error: { type: "string" } },
+					}
+				}
+			}
+		},
+		async (request, reply) => {
+			const result = await findUserWithFriends(fastify, request.params.id)
+			if (!result) {
+				return reply.code(404).send({ error: 'User not found' })
+			}
+			return result
+		}
+	)
+	// GET -- END
+
+	// PUT -- BEGIN
+	// PUT (by ID)
 	fastify.put<{
 		Params: { id: number };
 		Body: { username?: string; password?: string; email?: string };
@@ -499,4 +430,115 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 		}
 	)
 	//PATCH -- BEGIN
+
+	fastify.post<{
+		Params: { id: number }
+		Body: { username: string }
+		Reply: { requestId: number } | { error: string }
+	}>(
+		'/api/users/:id/requests',
+		{
+			schema: {
+				params: { type: 'object', required: ['id'], properties: { id: { type: 'integer' } } },
+				body: { type: 'object', required: ['username'], properties: { username: { type: 'string' } } },
+				response: {
+					201: { type: 'object', properties: { requestId: { type: 'integer' } } },
+					400: { type: 'object', properties: { error: { type: 'string' } } },
+					404: { type: 'object', properties: { error: { type: 'string' } } },
+					409: { type: 'object', properties: { error: { type: 'string' } } }
+				}
+			}
+		},
+		async (req, reply) => {
+			try {
+				const fr = await sendFriendRequest(fastify, req.params.id, req.body.username)
+				return reply.code(201).send({ requestId: fr.id })
+			} catch (err: any) {
+				if (err.message === 'RecipientNotFound') return reply.code(404).send({ error: 'User not found' })
+				if (err.message === 'CannotRequestYourself') return reply.code(400).send({ error: "Can't friend yourself" })
+				if (err.message.includes('UNIQUE')) return reply.code(409).send({ error: 'Request already sent' })
+				return reply.code(500).send({ error: 'Could not send request' })
+			}
+		}
+	)
+
+	// b) Incoming requests listen
+	fastify.get<{
+		Params: { id: number }
+		Reply: FriendRequestRow[]
+	}>(
+		'/api/users/:id/requests',
+		{
+			schema: {
+				params: { type: 'object', required: ['id'], properties: { id: { type: 'integer' } } },
+				response: {
+					200: {
+						type: 'array',
+						items: {
+							type: 'object',
+							properties: {
+								id: { type: 'integer' },
+								requester_id: { type: 'integer' },
+								recipient_id: { type: 'integer' },
+								status: { type: 'string' },
+								created_at: { type: 'integer' },
+								responded_at: { type: ['integer', 'null'] }
+							}
+						}
+					}
+				}
+			}
+		},
+		async (req) => listIncomingRequests(fastify, req.params.id)
+	)
+
+	// c) Anfrage annehmen
+	fastify.post<{
+		Params: { requestId: number }
+		Reply: { message: string } | { error: string }
+	}>(
+		'/api/requests/:requestId/accept',
+		{
+			schema: {
+				params: { type: 'object', required: ['requestId'], properties: { requestId: { type: 'integer' } } },
+				response: {
+					200: { type: 'object', properties: { message: { type: 'string' } } },
+					404: { type: 'object', properties: { error: { type: 'string' } } }
+				}
+			}
+		},
+		async (req, reply) => {
+			try {
+				await acceptFriendRequest(fastify, req.params.requestId)
+				return { message: 'Friend request accepted' }
+			} catch (err: any) {
+				return reply.code(404).send({ error: err.message })
+			}
+		}
+	)
+
+	// d) Anfrage ablehnen
+	fastify.post<{
+		Params: { requestId: number }
+		Reply: { message: string } | { error: string }
+	}>(
+		'/api/requests/:requestId/reject',
+		{
+			schema: {
+				params: { type: 'object', required: ['requestId'], properties: { requestId: { type: 'integer' } } },
+				response: {
+					200: { type: 'object', properties: { message: { type: 'string' } } },
+					404: { type: 'object', properties: { error: { type: 'string' } } }
+				}
+			}
+		},
+		async (req, reply) => {
+			try {
+				await rejectFriendRequest(fastify, req.params.requestId)
+				return { message: 'Friend request rejected' }
+			} catch (err: any) {
+				return reply.code(404).send({ error: err.message })
+			}
+		}
+	)
 };

@@ -2,11 +2,12 @@ import type { FastifyInstance } from 'fastify'
 import bcrypt from 'bcrypt'
 import { Interface } from 'readline'
 import type { UserRow } from '../db/types.ts'
+import type { UserWithFriends } from '../db/types.ts'
 
 export interface NewUser {
-	username:	string
-	password:	string
-	email?:		string
+	username: string
+	password: string
+	email?: string
 }
 
 //POST -- BEGIN
@@ -91,7 +92,7 @@ export async function deleteUserById(
 	return (result.changes > 0);
 }
 
-//GET
+//GET -- BEGIN
 export async function getUserById(
 	fastify: FastifyInstance,
 	id: number): Promise<UserRow | null> {
@@ -103,6 +104,36 @@ export async function getUserById(
 	}
 	return (user);
 }
+
+export async function findUserWithFriends(
+	fastify: FastifyInstance,
+	id: number
+): Promise<UserWithFriends | null> {
+	// 1) Basis-User
+	const row = await fastify.db.get<UserRow>(
+		`SELECT id, username, email, live, created_at
+		 FROM users WHERE id = ?`,
+		id
+	)
+	if (!row) return null
+
+	const friends: { friend_id: number }[] = await fastify.db.all(
+		'SELECT friend_id FROM friendships WHERE user_id = ?',
+		id
+	)
+
+	// 3) Response-Objekt zusammenbauen
+	return {
+		id: row.id,
+		username: row.username,
+		email: row.email,
+		live: row.live,
+		created_at: row.created_at,
+		friends: friends.map(f => f.friend_id)
+	}
+}
+
+//GET -- END
 
 //PATCH -- BEGIN
 export async function setUserLive(
@@ -121,3 +152,51 @@ export async function setUserLive(
 	return (info.changes > 0)
 }
 //PATCH -- END
+
+
+//MISC
+// export async function addFriendByUsername(
+// 	fastify: FastifyInstance,
+// 	userId: number,
+// 	friendUsername: string
+// ): Promise<number> {
+// 	// 1) Existenz von userId prüfen
+// 	const user = await fastify.db.get<UserRow>(
+// 		'SELECT id FROM users WHERE id = ?',
+// 		userId
+// 	)
+// 	if (!user) {
+// 		throw new Error('UserNotFound')
+// 	}
+
+// 	// 2) Existenz des Freundes per username prüfen
+// 	const friend = await fastify.db.get<UserRow>(
+// 		'SELECT id FROM users WHERE username = ?',
+// 		friendUsername
+// 	)
+// 	if (!friend) {
+// 		throw new Error('FriendNotFound')
+// 	}
+
+// 	// 3) Self-Friend vermeiden
+// 	if (friend.id === userId) {
+// 		throw new Error('CannotFriendYourself')
+// 	}
+
+// 	// 4) Insert in friendships
+// 	try {
+// 		await fastify.db.run(
+// 			`INSERT INTO friendships (user_id, friend_id)
+// 		 VALUES (?, ?)`,
+// 			userId,
+// 			friend.id
+// 		)
+// 		return friend.id
+// 	} catch (err: any) {
+// 		// z.B. Unique-Constraint verletzt (schon befreundet)
+// 		if (err.message.includes('UNIQUE') || err.code === 'SQLITE_CONSTRAINT_PRIMARYKEY') {
+// 			throw new Error('AlreadyFriends')
+// 		}
+// 		throw err
+// 	}
+// }
