@@ -163,6 +163,9 @@ export class Game {
 			msg.payload.key = "s";
 		} else if (event.key === "d") {
 			msg.payload.key = "d";
+		} else if (event.key === "r") {
+			msg.payload.key = "r";
+			msg.payload.type = "reset";
 		} else {
 			return ;
 		}

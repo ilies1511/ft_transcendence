@@ -6,15 +6,16 @@ import * as ft_math from '../math.ts';
 let i: number = 0;
 
 export class ServerBall extends SharedBall {
-	private init_pos: SharedBall;
+	public init_pos: SharedBall;
 
 	constructor(obj_id?: number, dispose?: boolean) {
 		super(obj_id, dispose);
-		this.init_pos = super.clone();
+		this.init_pos = this.clone();
 	}
 
 	// when ball is bugged
 	public reset() {
+		console.log("resetting ball from: ", this);
 		this.pos = this.init_pos.pos.clone();
 		this.speed = this.init_pos.speed.clone();
 		this.effects = this.init_pos.effects.slice();
@@ -27,6 +28,7 @@ export class ServerBall extends SharedBall {
 		}
 		this.last_collision_obj_id = this.init_pos.last_collision_obj_id.slice();
 		this.cur_collision_obj_id = this.init_pos.cur_collision_obj_id.slice();
+		console.log("to: ", this);
 	}
 
 	public reflect(walls: ServerWall[], hit_points: ServerVec2[]) {

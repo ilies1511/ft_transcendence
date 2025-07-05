@@ -55,6 +55,7 @@ export class Map {
 			ball.speed = speed;
 			ball.effects = effects;
 			ball.pos = pos;
+			ball.init_pos = ball.clone();
 			this.balls.push(ball);
 		});
 	}

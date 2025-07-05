@@ -88,7 +88,7 @@ gui.addControl(text);
 				}
 			} else {
 				const ball: BABYLON.Mesh = BABYLON.MeshBuilder.CreateSphere(
-					`sphere_${b.obj_id}`, {diameter: 1}, this);
+					`sphere_${b.obj_id}`, {diameter: 0.5}, this);
 				ball.position.x = b.pos.x;
 				ball.position.y = b.pos.y;
 				this._meshes.set(b.obj_id, ball);

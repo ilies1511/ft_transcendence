@@ -116,6 +116,17 @@ export class Game {
 		//this.start_loop();
 	}
 
+	//for debugging callable by the client
+	//todo
+	private _reset() {
+		for (const ball of this.balls) {
+			ball.reset();
+		}
+		for (const wall of this.walls) {
+			// wall.reset();//does not exist
+		}
+	}
+
 	private serialize_game_state(): ArrayBuffer {
 		const state = new GameState(this);
 		//logGameState(state);
@@ -264,35 +275,42 @@ export class Game {
 		this.running = false;
 	}
 
+	public _update_movement(input: ClientToServerInput, client: ServerClient) {
+		switch (input.payload.key) {
+			case ("w"):
+				client.up = input.payload.type == "down";
+				break ;
+			case ("s"):
+				client.down = input.payload.type == "down";
+				break ;
+			case ("a"):
+				client.left = input.payload.type == "down";
+				break ;
+			case ("d"):
+				client.right = input.payload.type == "down";
+				break ;
+			default:
+				break ;
+		}
+	}
+
 	public process_input(input: ClientToServerInput, client: ServerClient) {
 		console.log('got input');
 		if (input.player_id != client.global_id) {
 			throw("Game.process_input: got id missmatch");
 		}
-		for (client of this.clients) {
-			if (client.global_id == input.player_id) {
-				switch (input.payload.key) {
-					case ("w"):
-						client.up = input.payload.type == "down";
-						break ;
-					case ("s"):
-						client.down = input.payload.type == "down";
-						break ;
-					case ("a"):
-						client.left = input.payload.type == "down";
-						break ;
-					case ("d"):
-						client.right = input.payload.type == "down";
-						break ;
-					default:
-						//todo
-						console.log("got invalid input?");
-						break ;
-				}
+		switch (input.payload.type) {
+			case ("up"):
+			case ("down"):
+				this._update_movement(input, client);
 				break ;
-			}
-		}
-
+			case ("reset"):
+				//for faster debugging: should reset the game
+				this._reset();
+				break ;
+			default:
+				console.log("Error: Game server: unknown input type!");
+		};
 	}
 };
 

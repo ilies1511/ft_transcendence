@@ -39,7 +39,7 @@ export type ClientToServerInput = {
 	game_id: number;
 	payload: {
 		key: string,
-		type: "up" | "down",
+		type: "up" | "down" | "reset",
 	}
 };
 
