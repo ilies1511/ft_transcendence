@@ -51,16 +51,6 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 			const { username, password, email } = request.body;
 			const hash = await bcrypt.hash(password, 10);
 			try {
-				//siehe src/functions/user.ts
-				// const info = await fastify.db.run(
-				// 	`INSERT INTO users (username, password, email, created_at)
-				// 	VALUES (?, ?, ?, ?)`,
-				// 	username,
-				// 	hash,
-				// 	email ?? null,
-				// 	Date.now()
-				// );
-				// return reply.code(201).send({ id : info.lastID });
 				const id = await createUser(fastify, request.body);
 				return reply.code(201).send({ id });
 			} catch {
@@ -70,74 +60,6 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 			}
 		}
 	);
-
-	// fastify.post<{
-	// 	Params: { id: number }
-	// 	Body: { username: string }
-	// 	Reply: { friendId: number } | { error: string }
-	// }>(
-	// 	'/api/users/:id/friends',
-	// 	{
-	// 		schema: {
-	// 			params: {
-	// 				type: 'object',
-	// 				required: ['id'],
-	// 				properties: { id: { type: 'integer' } }
-	// 			},
-	// 			body: {
-	// 				type: 'object',
-	// 				required: ['username'],
-	// 				properties: {
-	// 					username: { type: 'string' }
-	// 				}
-	// 			},
-	// 			response: {
-	// 				201: {
-	// 					type: 'object',
-	// 					properties: { friendId: { type: 'integer' } }
-	// 				},
-	// 				400: {
-	// 					type: 'object',
-	// 					properties: { error: { type: 'string' } }
-	// 				},
-	// 				404: {
-	// 					type: 'object',
-	// 					properties: { error: { type: 'string' } }
-	// 				},
-	// 				409: {
-	// 					type: 'object',
-	// 					properties: { error: { type: 'string' } }
-	// 				}
-	// 			}
-	// 		}
-	// 	},
-	// 	async (request, reply) => {
-	// 		const userId = request.params.id
-	// 		const friendUsername = request.body.username
-	// 		try {
-	// 			const friendId = await addFriendByUsername(
-	// 				fastify,
-	// 				userId,
-	// 				friendUsername
-	// 			)
-	// 			return reply.code(201).send({ friendId })
-	// 		} catch (err: any) {
-	// 			switch (err.message) {
-	// 				case 'UserNotFound':
-	// 					return reply.code(404).send({ error: 'User not found' })
-	// 				case 'FriendNotFound':
-	// 					return reply.code(404).send({ error: 'Friend username not found' })
-	// 				case 'CannotFriendYourself':
-	// 					return reply.code(400).send({ error: 'Cannot add yourself as friend' })
-	// 				case 'AlreadyFriends':
-	// 					return reply.code(409).send({ error: 'Already friends' })
-	// 				default:
-	// 					return reply.code(500).send({ error: 'Could not add friend' })
-	// 			}
-	// 		}
-	// 	}
-	// )
-
 	//POST -- END
 
 	// GET -- BEGIN
@@ -305,40 +227,6 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 				},
 			},
 		},
-		// async (request, reply) => {
-		// 	const { id } = request.params;
-		// 	const { username, password, email } = request.body;
-		// 	const updates: string[] = [];
-		// 	const values: unknown[] = [];
-
-		// 	if (username) {
-		// 		updates.push("username = ?");
-		// 		values.push(username);
-		// 	}
-		// 	if (email) {
-		// 		updates.push("email = ?");
-		// 		values.push(email);
-		// 	}
-		// 	if (password) {
-		// 		updates.push("password = ?");
-		// 		values.push(await bcrypt.hash(password, 10));
-		// 	}
-
-		// 	if (updates.length === 0) {
-		// 		return reply.code(400).send({ error: "No fields to update" });
-		// 	}
-
-		// 	values.push(id);
-		// 	const info = await fastify.db.run(
-		// 		`UPDATE users SET ${updates.join(", ")} WHERE id = ?`,
-		// 		...values
-		// 	);
-
-		// 	if (info.changes === 0) {
-		// 		return reply.code(404).send({ error: "User not found" });
-		// 	}
-		// 	return reply.code(200).send({ message: "User updated successfully" });
-		// }
 		async (request, reply) => {
 			const id = request.params.id
 			const data = request.body as UpdateUserData
@@ -385,16 +273,6 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 				},
 			},
 		},
-		// async (request, reply) => {
-		// 	const result = await fastify.db.run(
-		// 		"DELETE FROM users WHERE id = ?",
-		// 		request.params.id
-		// 	);
-		// 	if (result.changes === 0) {
-		// 		return reply.code(404).send({ error: "User not found" });
-		// 	}
-		// 	return reply.code(200).send({ message: "User deleted successfully" });
-		// }
 		async (request, reply) => {
 			const { id } = request.params
 			const deleted = await deleteUserById(fastify, id)
@@ -542,3 +420,72 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 		}
 	)
 };
+
+//Stash -- BEGIN
+
+	// fastify.post<{
+	// 	Params: { id: number }
+	// 	Body: { username: string }
+	// 	Reply: { friendId: number } | { error: string }
+	// }>(
+	// 	'/api/users/:id/friends',
+	// 	{
+	// 		schema: {
+	// 			params: {
+	// 				type: 'object',
+	// 				required: ['id'],
+	// 				properties: { id: { type: 'integer' } }
+	// 			},
+	// 			body: {
+	// 				type: 'object',
+	// 				required: ['username'],
+	// 				properties: {
+	// 					username: { type: 'string' }
+	// 				}
+	// 			},
+	// 			response: {
+	// 				201: {
+	// 					type: 'object',
+	// 					properties: { friendId: { type: 'integer' } }
+	// 				},
+	// 				400: {
+	// 					type: 'object',
+	// 					properties: { error: { type: 'string' } }
+	// 				},
+	// 				404: {
+	// 					type: 'object',
+	// 					properties: { error: { type: 'string' } }
+	// 				},
+	// 				409: {
+	// 					type: 'object',
+	// 					properties: { error: { type: 'string' } }
+	// 				}
+	// 			}
+	// 		}
+	// 	},
+	// 	async (request, reply) => {
+	// 		const userId = request.params.id
+	// 		const friendUsername = request.body.username
+	// 		try {
+	// 			const friendId = await addFriendByUsername(
+	// 				fastify,
+	// 				userId,
+	// 				friendUsername
+	// 			)
+	// 			return reply.code(201).send({ friendId })
+	// 		} catch (err: any) {
+	// 			switch (err.message) {
+	// 				case 'UserNotFound':
+	// 					return reply.code(404).send({ error: 'User not found' })
+	// 				case 'FriendNotFound':
+	// 					return reply.code(404).send({ error: 'Friend username not found' })
+	// 				case 'CannotFriendYourself':
+	// 					return reply.code(400).send({ error: 'Cannot add yourself as friend' })
+	// 				case 'AlreadyFriends':
+	// 					return reply.code(409).send({ error: 'Already friends' })
+	// 				default:
+	// 					return reply.code(500).send({ error: 'Could not add friend' })
+	// 			}
+	// 		}
+	// 	}
+	// )
