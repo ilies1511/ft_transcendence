@@ -36,7 +36,7 @@ export default async function authRoutes (app: FastifyInstance) {
 		reply.code(201).send({ userId: lastID })
 		} catch (err: any) {
 		if (err.code === 'SQLITE_CONSTRAINT') {
-			return reply.code(409).send({ error: 'email or username taken' })
+			return reply.code(409).send({ error: 'That e-mail address or username is already taken!' })
 		}
 		throw err
 		}
@@ -48,12 +48,12 @@ export default async function authRoutes (app: FastifyInstance) {
 		const { email, password } = req.body as { email: string; password: string }
 
 		const user = await app.db.get(
-		'SELECT id, password, username FROM users WHERE email = ?',
+			'SELECT id, password, username FROM users WHERE email = ?',
 		[email]
 		)
 
 		if (!user || !(await bcrypt.compare(password, user.password))) {
-		return reply.code(401).send({ error: 'invalid credentials' })
+			return reply.code(401).send({ error: 'invalid credentials' })
 		}
 
 		const token = await reply.jwtSign({ id: user.id, name: user.username })

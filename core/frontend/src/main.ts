@@ -45,5 +45,6 @@ async function refreshHeader () {
 }
 
 
-refreshHeader()                               // initial run
+refreshHeader() // initial run
 document.addEventListener('auth-change', refreshHeader)
+document.addEventListener('settings-update', refreshHeader)

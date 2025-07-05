@@ -19,10 +19,13 @@ export type PageModule = { // contract every page must fulfil
 	'/about': () => import('./pages/about').then(m => m.default),
 	'/login': () => import('./pages/login').then(m => m.default),
 	'/register': () => import('./pages/register').then(m => m.default),
+	'/modes': () => import('./pages/GameModes').then(m => m.default),
+	'/test': () => import('./pages/test').then(m => m.default),
 	// '/profile':  () => import('./pages/profile').then(m => m.default),
 	'/users': () => import('./pages/UsersPage').then(m => m.default),
 	'/profile/:id': () => import('./pages/profile').then(m => m.default),
 	'/settings/:id': () => import('./pages/settings').then(m => m.default),
+
   }
 
   // Helper to match dynamic routes (e.g., /profile/123)  //just a test for now 1144
