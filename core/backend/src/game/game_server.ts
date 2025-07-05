@@ -105,12 +105,12 @@ export class Game {
 		this.balls = map.balls;
 		this.clients = map.clients;
 
-		const ball: ServerBall = new ServerBall();
-		ball.speed.x = -1;
-		ball.speed.y = -3;
-		ball.pos.x = 0;
-		ball.obj_id = this._next_obj_id++;
-		this.balls.push(ball);
+		//const ball: ServerBall = new ServerBall();
+		//ball.speed.x = -1;
+		//ball.speed.y = -3;
+		//ball.pos.x = 0;
+		//ball.obj_id = this._next_obj_id++;
+		//this.balls.push(ball);
 		//console.log(this.walls);
 		console.log(this.balls);
 		//this.start_loop();
@@ -136,8 +136,10 @@ export class Game {
 	}
 
 	private update_balls(delta_time: number) {
+		const input_d_time: number = delta_time;
 		for (const ball of this.balls) {
-			//console.log(ball);
+			delta_time = input_d_time;
+			console.log(ball);
 			while (delta_time > EPSILON) {
 				//console.log("delta time: ", delta_time);
 				const intersecs: ft_math.intersection_point[] = [];

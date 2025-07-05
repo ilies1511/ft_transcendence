@@ -39,13 +39,13 @@
 	},
 	"balls": {
 		"1": {
-			"point": [0.2, 0],
+			"point": [1, 0],
 			"speed": [3, 0],
 			"effects": []
 		},
 		"2": {
-			"point": [-0.2, 0],
-			"speed": [-3, 0],
+			"point": [-1, 1],
+			"speed": [-3, 1],
 			"effects": []
 		}
 	}
