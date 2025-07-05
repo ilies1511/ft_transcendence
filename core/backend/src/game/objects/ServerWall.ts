@@ -18,6 +18,10 @@ export class ServerWall extends SharedWall {
 	}
 
 	public rotate(angle: number, delta_time: number) {
+		if (angle == 0) {
+			this.angular_vel = 0;
+			return ;
+		}
 		const theta = angle * delta_time;
 
 		// grab the old normal

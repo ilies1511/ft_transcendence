@@ -62,12 +62,9 @@ export class ServerBall extends SharedBall {
 	public intersec(wall: ServerWall, delta_time: number):
 		ft_math.intersection_point | undefined
 	{
-		if (this.last_collision_obj_id.includes(wall.obj_id)) {
+		if (wall.angular_vel == 0 && this.last_collision_obj_id.includes(wall.obj_id)) {
 			return undefined;
 		}
-		//if (wall.angular_vel) {
-		//	return undefined;
-		//}
 		const ball_direct: ServerVec2 = this.speed.clone();
 		ball_direct.unit();
 		if (Math.abs(ft_math.dot(ball_direct, wall.normal)) < 1e-12) {
@@ -88,8 +85,8 @@ export class ServerBall extends SharedBall {
 		const center_diff = new ServerVec2(this.pos.x - wall.center.x, this.pos.y - wall.center.y);
 		const signed_dist: number = ft_math.dot(center_diff, wall.normal);
 
-		if (signed_dist * dist_rate >= 0) {
-			//return (undefined); // ball flying away from the wall
+		if (wall.angular_vel == 0 && signed_dist * dist_rate >= 0) {
+			return (undefined); // ball flying away from the wall
 		}
 
 		//let impact_time: number;
@@ -104,9 +101,10 @@ export class ServerBall extends SharedBall {
 		if (impact_time < 0) {
 			return (undefined);
 		}
-		if (impact_time < ft_math.EPSILON) {
-			impact_time = ft_math.EPSILON;
-		}
+		//let's test if not doing this can cause runtime issues
+		//if (impact_time < ft_math.EPSILON) {
+		//	impact_time = ft_math.EPSILON;
+		//}
 		if (impact_time > delta_time - ft_math.EPSILON) {
 			return (undefined);
 		}

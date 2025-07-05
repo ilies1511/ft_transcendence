@@ -55,10 +55,15 @@ export class ServerClient extends SharedClient {
 			}
 		}
 		if (this.left && this.right) {
+			this.paddle.rotate(0, delta_time);
 		} else if (this.left) {
 			this.paddle.rotate(Math.PI / 2, delta_time);
+			console.log("left");
 		} else if (this.right) {
+			console.log("right");
 			this.paddle.rotate(Math.PI / -2, delta_time);
+		} else {
+			this.paddle.rotate(0, delta_time);
 		}
 	}
 };

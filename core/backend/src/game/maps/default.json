@@ -1,5 +1,5 @@
 {
-	"paddle_length": 2,
+	"paddle_length": 6,
 	"base_length": 10,
 	"players": {
 		"1": {

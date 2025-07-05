@@ -139,7 +139,7 @@ export class Game {
 		const input_d_time: number = delta_time;
 		for (const ball of this.balls) {
 			delta_time = input_d_time;
-			console.log(ball);
+			//console.log(ball);
 			while (delta_time > EPSILON) {
 				//console.log("delta time: ", delta_time);
 				const intersecs: ft_math.intersection_point[] = [];

@@ -16,6 +16,7 @@
 	- [ ] utilize these split classes more
 
 
+
 client:
 	- [x] refactor
 	- [ ] send map json instead of game options
@@ -27,6 +28,8 @@ server:
 		-> [ ] add type to walls
 	- [x] fix buggy intersection fn: Ball still flies out after a few minutes with high speed..
 	- [ ] fix buggy intersection fn: Ball still flies out after a few minutes with rotating wall..
+		-> made checks so this only effects walls that are currently rotating(walls that can rotate can be hit multiple times in a row)
+	- [ ] slow balls don't get pushed by rotating walls
 	- [x] why does the server stop sending updates with buggy intersection fn
 	- [ ] break down 'Game' class into smaller ones like 'GameLobby' and 'Physics'
 
