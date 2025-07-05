@@ -10,7 +10,7 @@ export class SharedBall {
 	public effects: Effects[];
 	public lifetime: number;
 	public dispose: boolean;
-	public radius: number = 1;
+	public radius: number = 0.5;//hotfix: idk the actual radius is 1 but this seems to fix the calculations
 	public last_collision_obj_id: number[] = [];
 	public cur_collision_obj_id: number[] = [];
 
