@@ -5,6 +5,8 @@ import { GameServer } from './game/game_server.ts';
 import { wsRoute } from './routes/game.ts';
 import { userRoutes } from './routes/users.ts';
 import { runMigrations } from './db/db_init.ts';
+import authRoutes from './routes/auth.ts';
+import authJwt from './functions/auth-jwt.ts';
 //Mit namespace
 import * as testRoutes from './routes/test_route.ts'
 
@@ -71,11 +73,13 @@ async function main() {
 	})
 
 	// 3) Routen & Game-Server
+	await fastify.register(authJwt);
 	await fastify.register(wsRoute);
 	// await fastify.register(testRoutes.helloRoute);
 	// await fastify.register(testRoutes.randomRoute);
 	// await fastify.register(testRoutes.test);
 	await fastify.register(userRoutes);
+	await fastify.register(authRoutes);
 
 	const game_server = new GameServer(fastify);
 

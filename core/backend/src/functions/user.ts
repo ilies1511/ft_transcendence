@@ -20,12 +20,13 @@ export async function createUser(
 	//Insert Part
 	try {
 		const info = await fastify.db.run(
-			`INSERT INTO users (username, password, email, created_at)
-			VALUES (?, ?, ?, ?)`,
+			`INSERT INTO users (username, password, email, created_at, live)
+			VALUES (?, ?, ?, ?, ?)`,
 			username,
 			hash,
 			email ?? null,
-			Date.now()
+			Date.now(),
+			false
 		)
 		return info.lastID!
 	} catch (e: any) {
