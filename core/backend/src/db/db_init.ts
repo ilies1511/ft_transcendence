@@ -49,3 +49,5 @@ export async function runMigrations(fastify: FastifyInstance): Promise<void> {
 		);`
 	)
 }
+
+// // https://www.octans-solutions.fr/en/articles/sqlite-typescript
