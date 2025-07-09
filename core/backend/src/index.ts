@@ -17,7 +17,7 @@ async function main() {
 
 	// 2) SQLite-Typed Plugin
 	await fastify.register(fpSqlitePlugin, {
-		dbFilename: './data/nick.db',     // DB-Datei
+		dbFilename: './data/merge.db',     // DB-Datei
 		// driverSettings: { /* optional: verbose, cache, trace */ }
 	})
 	await runMigrations(fastify);

@@ -114,17 +114,17 @@ export default async function authRoutes(app: FastifyInstance) {
 		}
 	)
 	// logout
-	app.post('/logout', async (_req, reply) => {
+	app.post('/api/logout', async (_req, reply) => {
 		reply.clearCookie('token', { path: '/' })
 		reply.send({ ok: true })
 	})
 
-	// // TODO: When logging out, getting console log error: GET http://localhost:5173/api/me 401 (Unauthorized)
-	// app.get('/me', { preHandler: app.auth }, async (req) => {
-	// 	const user = await app.db.get(
-	// 		'SELECT id, username, nickname, avatar FROM users WHERE id = ?',
-	// 		[(req.user as any).id]
-	// 	)
-	// 	return user
-	// })
+	// TODO: When logging out, getting console log error: GET http://localhost:5173/api/me 401 (Unauthorized)
+	app.get('/api/me', { preHandler: app.auth }, async (req) => {
+		const user = await app.db.get(
+			'SELECT id, username, nickname, avatar FROM users WHERE id = ?',
+			[(req.user as any).id]
+		)
+		return user
+	})
 }

@@ -29,10 +29,8 @@ export default defineConfig({
     }
   },
   server: {
-    // host: "0.0.0.0",
-	host: true,
+    host: "0.0.0.0",
     port: 5173,
-	// allowedHosts: ['2-i-4.42heilbronn.de', ],
     proxy: {
       '/api': {
 			target: 'http://localhost:3000',
@@ -46,8 +44,7 @@ export default defineConfig({
       '/game': {
         target: 'ws://localhost:3000',
         ws: true
-      },
-	  '/avatars': 'http://localhost:3000',
+      }
     }
   }
 })

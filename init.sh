@@ -17,15 +17,16 @@ done
 if $none_exist; then
   echo "Kein node_modules-Ordner gefunden. Führe make run aus."
   make run2
-  exit 0
+#   exit 0
 fi
 
 # 2) Wenn irgendein Ordner fehlt oder leer ist → make remodule
 for d in $DIRS; do
   if [ ! -d "$d" ] || [ -z "$(ls -A "$d" 2>/dev/null)" ]; then
     echo "Ordner '$d' fehlt oder ist leer. Führe make remodule aus."
-    make remodule
-    exit 0
+	npm i
+    # make remodule
+    # exit 0
   fi
 done
 

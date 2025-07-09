@@ -1,6 +1,5 @@
 import { ClientVec2 } from './ClientVec2.ts'
-// import { SharedClient } from '../game_shared/objects/SharedClient.ts';
-import { SharedClient } from '../../../../game_shared/objects/SharedClient.ts';
+import { SharedClient } from '../game_shared/objects/SharedClient.ts';
 import { ClientWall } from './ClientWall.ts';
 
 export class ClientClient extends SharedClient {
