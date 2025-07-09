@@ -2,7 +2,7 @@
 import bcrypt from 'bcrypt'
 // import { fastify, type FastifyInstance } from 'fastify'
 import type { FastifyInstance } from 'fastify'
-// import { DEFAULT_AVATARS } from './constants/avatars.js'
+import { DEFAULT_AVATARS } from '../constants/avatars.ts'
 // backend/src/auth.ts
 
 const COST = 12  // bcrypt cost factor (2^12 ≈ 400 ms on laptop)
@@ -28,13 +28,20 @@ export default async function authRoutes(app: FastifyInstance) {
 
 		const hash = await bcrypt.hash(password, COST) // ← salt + hash
 
-		// const avatar = DEFAULT_AVATARS[Math.floor(Math.random() * DEFAULT_AVATARS.length)]
-
+		const avatar = DEFAULT_AVATARS[Math.floor(Math.random() * DEFAULT_AVATARS.length)]
+		// const avatar = '../../public/default_01.png';
 		try {
+			// const { lastID } = await app.db.run(
+			// 	'INSERT INTO users (email, password, username, live, avatar) VALUES (?, ?, ?, ?, ?)',
+			// 	// 'INSERT INTO users (email, password, username, nickname, avatar) VALUES (?, ?, ?, ?, ?)',
+			// 	[email, hash, username, false, avatar] // password stored as hash
+			// )
 			const { lastID } = await app.db.run(
-				'INSERT INTO users (email, password, username, live) VALUES (?, ?, ?, ?)',
+				// 'INSERT INTO users (email, password, username, live) VALUES (?, ?, ?, ?)',
 				// 'INSERT INTO users (email, password, username, nickname, avatar) VALUES (?, ?, ?, ?, ?)',
-				[email, hash, username, false] // password stored as hash
+				'INSERT INTO users (email, password, username, avatar, live) VALUES (?, ?, ?, ?, ?)',
+				[email, hash, username, avatar, false] // password stored as hash
+				// [email, hash, username, false, avatar] // password stored as hash
 			)
 			reply.code(201).send({ userId: lastID })
 		} catch (err: any) {
@@ -112,12 +119,12 @@ export default async function authRoutes(app: FastifyInstance) {
 		reply.send({ ok: true })
 	})
 
-	// TODO: When logging out, getting console log error: GET http://localhost:5173/api/me 401 (Unauthorized)
-	app.get('/me', { preHandler: app.auth }, async (req) => {
-		const user = await app.db.get(
-			'SELECT id, username, nickname, avatar FROM users WHERE id = ?',
-			[(req.user as any).id]
-		)
-		return user
-	})
+	// // TODO: When logging out, getting console log error: GET http://localhost:5173/api/me 401 (Unauthorized)
+	// app.get('/me', { preHandler: app.auth }, async (req) => {
+	// 	const user = await app.db.get(
+	// 		'SELECT id, username, nickname, avatar FROM users WHERE id = ?',
+	// 		[(req.user as any).id]
+	// 	)
+	// 	return user
+	// })
 }

@@ -1,21 +1,11 @@
 // src/routes/users.ts
 import type { FastifyPluginAsync } from "fastify";
 import bcrypt from "bcrypt";
-import { type UserRow } from "../db/types.js";
-import { type UserWithFriends } from "../db/types.js";
-import { type FriendRequestRow } from "../db/types.js";
-import { createUser } from "../functions/user.ts";
+import { type UserWithFriends, type FriendRequestRow, type UserRow  } from "../db/types.js";
 import { info } from "console";
-import { updateUser, type UpdateUserData } from "../functions/user.ts";
-import { deleteUserById } from "../functions/user.ts";
-import { getUserById } from "../functions/user.ts";
-import { setUserLive } from "../functions/user.ts";
+import { createUser, updateUser, type UpdateUserData, getUserById, setUserLive, deleteUserById} from "../functions/user.ts";
 import { findUserWithFriends } from "../functions/user.ts";
-// import { addFriendByUsername } from "../functions/user.ts";
-import { sendFriendRequest } from "../functions/friends.ts";
-import { listIncomingRequests } from "../functions/friends.ts";
-import { acceptFriendRequest } from "../functions/friends.ts";
-import { rejectFriendRequest } from "../functions/friends.ts";
+import { sendFriendRequest, listIncomingRequests, acceptFriendRequest, rejectFriendRequest } from "../functions/friends.ts";
 
 export const userRoutes: FastifyPluginAsync = async (fastify) => {
 	// POST -- BEGIN
@@ -30,8 +20,8 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 					type: "object",
 					required: ["username", "password"],
 					properties: {
-						username: { type: "string" },
-						password: { type: "string" },
+						username: { type: "string", minLength: 1},
+						password: { type: "string", minLength: 1},
 						email: { type: "string", nullable: true },
 					},
 				},
@@ -66,7 +56,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 
 	//All
 	fastify.get<{
-		Reply: Array<Pick<UserRow, "id" | "username" | "email" | "live" | "created_at">>;
+		Reply: Array<Pick<UserRow, "id" | "username" | "email" | "live" | "avatar" | "created_at">>;
 	}>(
 		"/api/users",
 		{
@@ -81,6 +71,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 								username: { type: "string" },
 								email: { type: ["string", "null"] },
 								live: { type: "integer" },
+								avatar: { type: "string" },
 								created_at: { type: "integer" },
 							},
 						},
@@ -90,7 +81,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 		},
 		async () => {
 			return fastify.db.all(
-				"SELECT id, username, live, email, created_at FROM users"
+				"SELECT id, username, live, email, avatar, created_at FROM users"
 			);
 		}
 	);
@@ -101,7 +92,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 	fastify.get<{
 		Params: { id: number };
 		Reply:
-		| Pick<UserRow, "id" | "username" | "email" | "live" | "created_at">
+		| Pick<UserRow, "id" | "username" | "email" | "live" | "avatar" | "created_at">
 		| { error: string };
 	}>(
 		"/api/users/:id",
@@ -120,6 +111,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 							username: { type: "string" },
 							email: { type: ["string", "null"] },
 							live: { type: "integer" },
+							avatar: { type: "string" },
 							created_at: { type: "integer" },
 						},
 					},
@@ -164,6 +156,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 							email: { type: ['string', 'null'] },
 							live: { type: 'integer' },
 							created_at: { type: 'integer' },
+							avatar: { type: "string" },
 							friends: {
 								type: 'array',
 								items: { type: 'integer' }

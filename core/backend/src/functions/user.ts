@@ -1,9 +1,10 @@
 import type { FastifyInstance } from 'fastify'
 import bcrypt from 'bcrypt'
 import { Interface } from 'readline'
-import type { UserRow } from '../db/types.ts'
-import type { UserWithFriends } from '../db/types.ts'
-
+import type { UserRow, UserWithFriends } from '../db/types.ts'
+// import { DEFAULT_AVATARS } from '../constants/avatars.ts'
+// import { DEFAULT_AVATARS } from '../../constants/avatars.ts'
+import { DEFAULT_AVATARS } from '../constants/avatars.ts'
 export interface NewUser {
 	username: string
 	password: string
@@ -16,17 +17,21 @@ export async function createUser(
 	{ username, password, email }: NewUser): Promise<number> {
 	// Passwort hashen
 	const hash = await bcrypt.hash(password, 10)
+	const avatar = DEFAULT_AVATARS[Math.floor(Math.random() * DEFAULT_AVATARS.length)]
 
 	//Insert Part
 	try {
 		const info = await fastify.db.run(
-			`INSERT INTO users (username, password, email, created_at, live)
-			VALUES (?, ?, ?, ?, ?)`,
+			`INSERT INTO users (username, password, email, live, avatar, created_at)
+			VALUES (?, ?, ?, ?, ?, ?)`,
+			// `INSERT INTO users (username, password, email, live, created_at)
+			// VALUES (?, ?, ?, ?, ?)`,
 			username,
 			hash,
 			email ?? null,
-			Date.now(),
-			false
+			false,
+			avatar,
+			Date.now()
 		)
 		return info.lastID!
 	} catch (e: any) {
@@ -39,6 +44,7 @@ export interface UpdateUserData {
 	username?: string
 	password?: string
 	email?: string
+	// avatar: string
 }
 
 //PUT -- BEGIN
@@ -98,7 +104,7 @@ export async function getUserById(
 	fastify: FastifyInstance,
 	id: number): Promise<UserRow | null> {
 	const user = await fastify.db.get<UserRow>(
-		"SELECT id, username, email, live, created_at FROM users WHERE id = ?", id);
+		"SELECT id, username, email, live, avatar, created_at FROM users WHERE id = ?", id);
 
 	if (!user) {
 		return (null);
@@ -112,7 +118,7 @@ export async function findUserWithFriends(
 ): Promise<UserWithFriends | null> {
 	// 1) Basis-User
 	const row = await fastify.db.get<UserRow>(
-		`SELECT id, username, email, live, created_at
+		`SELECT id, username, email, live, avatar, created_at
 		 FROM users WHERE id = ?`,
 		id
 	)
@@ -130,6 +136,7 @@ export async function findUserWithFriends(
 		email: row.email,
 		live: row.live,
 		created_at: row.created_at,
+		avatar: row.avatar,
 		friends: friends.map(f => f.friend_id)
 	}
 }

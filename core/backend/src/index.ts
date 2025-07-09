@@ -17,7 +17,7 @@ async function main() {
 
 	// 2) SQLite-Typed Plugin
 	await fastify.register(fpSqlitePlugin, {
-		dbFilename: './data/alo.db',     // DB-Datei
+		dbFilename: './data/avatar.db',     // DB-Datei
 		// driverSettings: { /* optional: verbose, cache, trace */ }
 	})
 	await runMigrations(fastify);

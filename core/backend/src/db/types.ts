@@ -1,12 +1,12 @@
 // src/db/types.ts
 export interface UserRow {
 	// nickname:	string
-	// avatar:		string
 	id: number
 	username: string
 	password: string  // just Hash
 	email: string | null
 	live: number // 0 = offline, 1 = online
+	avatar: string
 	created_at: number
 }
 
