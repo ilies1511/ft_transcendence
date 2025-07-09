@@ -7,9 +7,9 @@ export async function runMigrations(fastify: FastifyInstance): Promise<void> {
 	await fastify.db.exec(`
 		ALTER TABLE users
 		ADD COLUMN live INTEGER NOT NULL DEFAULT 0;
-		ADD COLUMN avatar TEXT NOT NULL;
+		ADD COLUMN avatar TEXT NOT NULL '' ;
 		`).catch(() => {
-	})
+	// })
 	// User-table
 	// await fastify.db.exec(`
 	// 	CREATE TABLE IF NOT EXISTS users (
@@ -33,7 +33,7 @@ export async function runMigrations(fastify: FastifyInstance): Promise<void> {
 		created_at  INTEGER NOT NULL       -- Timestamp als Zahl
 	);
 	`)
-
+	// created_at DATETIME DEFAULT CURRENT_TIMESTAMP (Thats how it should look like.)
 	// more tables:
 	// await fastify.db.exec(`CREATE TABLE IF NOT EXISTS games ( … );`)
 

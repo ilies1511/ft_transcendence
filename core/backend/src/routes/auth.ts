@@ -9,7 +9,7 @@ const COST = 12  // bcrypt cost factor (2^12 ≈ 400 ms on laptop)
 
 export default async function authRoutes(app: FastifyInstance) {
 
-	app.post('/register', {
+	app.post('/api/register', {
 		schema: {
 			body: {
 				type: 'object',
@@ -31,17 +31,9 @@ export default async function authRoutes(app: FastifyInstance) {
 		const avatar = DEFAULT_AVATARS[Math.floor(Math.random() * DEFAULT_AVATARS.length)]
 		// const avatar = '../../public/default_01.png';
 		try {
-			// const { lastID } = await app.db.run(
-			// 	'INSERT INTO users (email, password, username, live, avatar) VALUES (?, ?, ?, ?, ?)',
-			// 	// 'INSERT INTO users (email, password, username, nickname, avatar) VALUES (?, ?, ?, ?, ?)',
-			// 	[email, hash, username, false, avatar] // password stored as hash
-			// )
 			const { lastID } = await app.db.run(
-				// 'INSERT INTO users (email, password, username, live) VALUES (?, ?, ?, ?)',
-				// 'INSERT INTO users (email, password, username, nickname, avatar) VALUES (?, ?, ?, ?, ?)',
-				'INSERT INTO users (email, password, username, avatar, live) VALUES (?, ?, ?, ?, ?)',
-				[email, hash, username, avatar, false] // password stored as hash
-				// [email, hash, username, false, avatar] // password stored as hash
+				'INSERT INTO users (email, password, username, nickname, avatar, live, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+				[email, hash, username, username, avatar, false, Date.now()] // password stored as hash
 			)
 			reply.code(201).send({ userId: lastID })
 		} catch (err: any) {
@@ -55,7 +47,7 @@ export default async function authRoutes(app: FastifyInstance) {
 		Body: { email: string; password: string }
 		Reply: { ok: true } | { error: string }
 	}>(
-		'/login',
+		'/api/login',
 		{
 			schema: {
 				description: 'Loggt einen Benutzer ein und liefert ein HTTP-Only Cookie',

@@ -1,16 +1,18 @@
 {
-  "name": "core",
-  "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "backend": "npm --prefix backend run dev",
-    "frontend": "npm --prefix frontend run dev",
-    "dev": "concurrently -k \"npm run backend\" \"npm run frontend\""
-  },
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "devDependencies": {
-    "concurrently": "^9.2.0"
-  }
+	"name": "core",
+	"version": "1.0.0",
+	"main": "index.js",
+	"scripts": {
+		"backend": "npm --prefix backend run dev",
+		"frontend": "npm --prefix frontend run dev",
+		"dev": "concurrently -k \"npm run backend\" \"npm run frontend\"",
+		"tree": "tree -I 'node_modules'"
+	},
+	"author": "",
+	"license": "ISC",
+	"description": "",
+	"devDependencies": {
+		"concurrently": "^9.2.0",
+		"tree-node-cli": "^1.6.0"
+	}
 }
