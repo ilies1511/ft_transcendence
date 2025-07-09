@@ -56,7 +56,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 
 	//All
 	fastify.get<{
-		Reply: Array<Pick<UserRow, "id" | "username" | "email" | "live" | "avatar" | "created_at">>;
+		Reply: Array<Pick<UserRow, "id" | "username" | "nickname" | "email" | "live" | "avatar" | "created_at">>;
 	}>(
 		"/api/users",
 		{
@@ -69,6 +69,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 							properties: {
 								id: { type: "integer" },
 								username: { type: "string" },
+								nickname: { type: "string" },
 								email: { type: ["string", "null"] },
 								live: { type: "integer" },
 								avatar: { type: "string" },
@@ -81,7 +82,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 		},
 		async () => {
 			return fastify.db.all(
-				"SELECT id, username, live, email, avatar, created_at FROM users"
+				"SELECT id, username, nickname, live, email, avatar, created_at FROM users"
 			);
 		}
 	);
@@ -92,7 +93,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 	fastify.get<{
 		Params: { id: number };
 		Reply:
-		| Pick<UserRow, "id" | "username" | "email" | "live" | "avatar" | "created_at">
+		| Pick<UserRow, "id" | "username" | "nickname" | "email" | "live" | "avatar" | "created_at">
 		| { error: string };
 	}>(
 		"/api/users/:id",
@@ -109,6 +110,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 						properties: {
 							id: { type: "integer" },
 							username: { type: "string" },
+							nickname: { type: "string" },
 							email: { type: ["string", "null"] },
 							live: { type: "integer" },
 							avatar: { type: "string" },
@@ -153,6 +155,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 						properties: {
 							id: { type: 'integer' },
 							username: { type: 'string' },
+							nickname: { type: 'string' },
 							email: { type: ['string', 'null'] },
 							live: { type: 'integer' },
 							created_at: { type: 'integer' },

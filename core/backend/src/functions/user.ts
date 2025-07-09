@@ -22,10 +22,11 @@ export async function createUser(
 	//Insert Part
 	try {
 		const info = await fastify.db.run(
-			`INSERT INTO users (username, password, email, live, avatar, created_at)
-			VALUES (?, ?, ?, ?, ?, ?)`,
+			`INSERT INTO users (username, nickname, password, email, live, avatar, created_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?)`,
 			// `INSERT INTO users (username, password, email, live, created_at)
 			// VALUES (?, ?, ?, ?, ?)`,
+			username,
 			username,
 			hash,
 			email ?? null,
@@ -104,7 +105,7 @@ export async function getUserById(
 	fastify: FastifyInstance,
 	id: number): Promise<UserRow | null> {
 	const user = await fastify.db.get<UserRow>(
-		"SELECT id, username, email, live, avatar, created_at FROM users WHERE id = ?", id);
+		"SELECT id, username, nickname, email, live, avatar, created_at FROM users WHERE id = ?", id);
 
 	if (!user) {
 		return (null);
@@ -118,7 +119,7 @@ export async function findUserWithFriends(
 ): Promise<UserWithFriends | null> {
 	// 1) Basis-User
 	const row = await fastify.db.get<UserRow>(
-		`SELECT id, username, email, live, avatar, created_at
+		`SELECT id, username, nickname, email, live, avatar, created_at
 		 FROM users WHERE id = ?`,
 		id
 	)
@@ -133,6 +134,7 @@ export async function findUserWithFriends(
 	return {
 		id: row.id,
 		username: row.username,
+		nickname: row.nickname,
 		email: row.email,
 		live: row.live,
 		created_at: row.created_at,

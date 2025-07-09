@@ -3,6 +3,7 @@ export interface UserRow {
 	// nickname:	string
 	id: number
 	username: string
+	nickname: string
 	password: string  // just Hash
 	email: string | null
 	live: number // 0 = offline, 1 = online

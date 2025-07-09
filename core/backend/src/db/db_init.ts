@@ -25,6 +25,7 @@ export async function runMigrations(fastify: FastifyInstance): Promise<void> {
 		CREATE TABLE IF NOT EXISTS users (
 		id          INTEGER PRIMARY KEY AUTOINCREMENT,
 		username    TEXT    NOT NULL UNIQUE,
+		nickname    TEXT    NOT NULL,
 		password    TEXT    NOT NULL,      -- hier speichern wir den Hash
 		email       TEXT    UNIQUE,
 		live        INTEGER NOT NULL DEFAULT 0,  -- 0 = offline, 1 = online
