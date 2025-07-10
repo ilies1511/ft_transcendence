@@ -32,8 +32,8 @@ export default async function authRoutes(app: FastifyInstance) {
 		// const avatar = '../../public/default_01.png';
 		try {
 			const { lastID } = await app.db.run(
-				'INSERT INTO users (email, password, username, nickname, avatar, live, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-				[email, hash, username, username, avatar, false, Date.now()] // password stored as hash
+				'INSERT INTO users (email, password, username, nickname, avatar, live) VALUES (?, ?, ?, ?, ?, ?)',
+				[email, hash, username, username, avatar, false] // password stored as hash
 			)
 			reply.code(201).send({ userId: lastID })
 		} catch (err: any) {
