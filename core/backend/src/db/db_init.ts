@@ -10,17 +10,6 @@ export async function runMigrations(fastify: FastifyInstance): Promise<void> {
 		ADD COLUMN avatar TEXT NOT NULL '' ;
 		`).catch(() => {
 	})
-	// User-table
-	// await fastify.db.exec(`
-	// 	CREATE TABLE IF NOT EXISTS users (
-	// 	id          INTEGER PRIMARY KEY AUTOINCREMENT,
-	// 	username    TEXT    NOT NULL UNIQUE,
-	// 	password    TEXT    NOT NULL,      -- hier speichern wir den Hash
-	// 	email       TEXT    UNIQUE,
-	// 	live        INTEGER NOT NULL DEFAULT 0,  -- 0 = offline, 1 = online
-	// 	created_at  INTEGER NOT NULL       -- Timestamp als Zahl
-	// );
-	// `)
 	await fastify.db.exec(`
 		CREATE TABLE IF NOT EXISTS users (
 		id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -30,21 +19,9 @@ export async function runMigrations(fastify: FastifyInstance): Promise<void> {
 		email       TEXT    UNIQUE,
 		live        INTEGER NOT NULL DEFAULT 0,  -- 0 = offline, 1 = online
 		avatar      TEXT NOT NULL,
-		created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+		created_at  INTEGER NOT NULL DEFAULT (strftime('%s','now'))
 	);
 	`)
-	// await fastify.db.exec(`
-	// 	CREATE TABLE IF NOT EXISTS users (
-	// 	id          INTEGER PRIMARY KEY AUTOINCREMENT,
-	// 	username    TEXT    NOT NULL UNIQUE,
-	// 	nickname    TEXT    NOT NULL,
-	// 	password    TEXT    NOT NULL,      -- hier speichern wir den Hash
-	// 	email       TEXT    UNIQUE,
-	// 	live        INTEGER NOT NULL DEFAULT 0,  -- 0 = offline, 1 = online
-	// 	avatar      TEXT NOT NULL,
-	// 	created_at  INTEGER NOT NULL       -- Timestamp als Zahl
-	// );
-	// `)
 
 	// created_at DATETIME DEFAULT CURRENT_TIMESTAMP (Thats how it should look like.)
 	// more tables:
