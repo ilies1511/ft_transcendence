@@ -415,4 +415,22 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 			}
 		}
 	)
+	// TODO:
+	// JUST FOR TESTING PURPOSES. TO UPDATE THE NICKNAME FROM TEH USER SETTINGS PAGE
+	// UPDATE/REMOVE ON PRODUCTION
+	fastify.patch<{ Params: { id: string }, Body: { nickname: string } }>(
+		'/api/users/:id/nickname',
+		async (req, reply) => {
+			const { id } = req.params;
+			const { nickname } = req.body;
+
+			if (!nickname) {
+				return reply.code(400).send({ error: 'Nickname is required' });
+			}
+
+			await fastify.db.run('UPDATE users SET nickname = ? WHERE id = ?', [nickname, id]);
+			reply.send({ success: true });
+		}
+	)
+
 };

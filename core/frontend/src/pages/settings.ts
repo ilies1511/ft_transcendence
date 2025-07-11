@@ -25,66 +25,51 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 		const user = await res.json()
 
 		root.innerHTML = /*html*/`
-			<div class="min-h-screen w-full flex flex-col items-center justify-center bg-[#221116] space-y-12">
+		<div class="min-h-screen w-full flex flex-col items-center justify-center bg-[#221116] space-y-12">
 
-				<!-- Avatar upload section -->
-				<section class="w-full max-w-[400px] p-8 shadow-md rounded-[25px] bg-[#2b171e] flex flex-col items-center space-y-4">
-					<h2 class="text-center text-white text-xl font-bold mb-2">Change your avatar</h2>
+			<!-- Avatar upload section -->
+			<section class="w-full max-w-[400px] p-8 shadow-md rounded-[25px] bg-[#2b171e] flex flex-col items-center space-y-4">
+				<h2 class="text-center text-white text-xl font-bold mb-2">Change your avatar</h2>
 
-					<div id="avatar-wrapper" class="relative group h-20 w-20 rounded-full overflow-hidden cursor-pointer">
-						<img id="avatar-preview"	src="/avatars/${user.avatar}"	alt="avatar"
-							 class="absolute inset-0 h-full w-full object-cover" />
-						<div class="absolute inset-0 bg-black/0 group-hover:bg-black/50 flex items-center justify-center
-									text-white text-xs font-semibold tracking-wide transition-colors duration-150 select-none">
-							<span class="opacity-0 group-hover:opacity-100">Choose file</span>
-						</div>
-						<input id="avatar-input" type="file" accept="image/png,image/jpeg" class="hidden" />
+				<div id="avatar-wrapper" class="relative group h-20 w-20 rounded-full overflow-hidden cursor-pointer">
+					<img id="avatar-preview" src="/avatars/${user.avatar}" alt="avatar"
+						 class="absolute inset-0 h-full w-full object-cover" />
+					<div class="absolute inset-0 bg-black/0 group-hover:bg-black/50 flex items-center justify-center
+								text-white text-xs font-semibold tracking-wide transition-colors duration-150 select-none">
+						<span class="opacity-0 group-hover:opacity-100">Choose file</span>
 					</div>
+					<input id="avatar-input" type="file" accept="image/png,image/jpeg" class="hidden" />
+				</div>
 
-					<button id="avatar-upload-btn"
-							class="w-full h-10 rounded-xl bg-[#f22667] text-white font-bold tracking-wide
-								   hover:bg-[#d41d59] active:bg-[#b31648]"
-							type="button" disabled>
-						Upload Avatar
-					</button>
+				<button id="avatar-upload-btn"
+						class="w-full h-10 rounded-xl bg-[#f22667] text-white font-bold tracking-wide
+							   hover:bg-[#d41d59] active:bg-[#b31648]"
+						type="button" disabled>
+					Upload Avatar
+				</button>
 
-					<span id="avatar-upload-msg" class="form-msg"></span>
-				</section>
+				<span id="avatar-upload-msg" class="form-msg"></span>
+			</section>
 
-				<!-- Main settings form -->
-				<form id="settings-form" class="w-full max-w-[400px] p-8 space-y-6 shadow-md rounded-[25px] bg-[#2b171e]">
-					<h2 class="text-center text-white text-2xl font-bold">Update your settings</h2>
+			<!-- Nickname update form -->
+			<form id="settings-form" class="w-full max-w-[400px] p-8 space-y-6 shadow-md rounded-[25px] bg-[#2b171e]">
+				<h2 class="text-center text-white text-2xl font-bold">Update your nickname</h2>
 
-					<label class="block">
-						<input name="display_name" type="text" placeholder="Username" value="${user.name ?? ''}"
-							   autocomplete="username"
-							   class="w-full h-12 rounded-xl bg-[#48232f] p-4 text-white placeholder:text-[#ca91a3] focus:outline-none" />
-					</label>
+				<label class="block">
+					<input name="nickname" type="text" placeholder="Nickname (public)" value="${user.nickname ?? ''}"
+						   class="w-full h-12 rounded-xl bg-[#48232f] p-4 text-white placeholder:text-[#ca91a3] focus:outline-none" />
+				</label>
 
-					<label class="block">
-						<input name="nickname" type="text" placeholder="Nickname (public)" value="${user.nickname ?? ''}"
-							   class="w-full h-12 rounded-xl bg-[#48232f] p-4 text-white placeholder:text-[#ca91a3] focus:outline-none" />
-					</label>
+				<button class="w-full h-10 rounded-xl bg-[#f22667] text-white font-bold tracking-wide
+							   hover:bg-[#d41d59] active:bg-[#b31648]" type="submit">
+					Update Nickname
+				</button>
 
-					<label class="block">
-						<input name="email" type="email" placeholder="E-mail" value="${user.email ?? ''}" autocomplete="email"
-							   class="w-full h-12 rounded-xl bg-[#48232f] p-4 text-white placeholder:text-[#ca91a3] focus:outline-none" />
-					</label>
+				<p id="msg" class="form-msg"></p>
+			</form>
+		</div>
+	`
 
-					<label class="block">
-						<input name="password" type="password" placeholder="New password" autocomplete="new-password"
-							   class="w-full h-12 rounded-xl bg-[#48232f] p-4 text-white placeholder:text-[#ca91a3] focus:outline-none" />
-					</label>
-
-					<button class="w-full h-10 rounded-xl bg-[#f22667] text-white font-bold tracking-wide
-								   hover:bg-[#d41d59] active:bg-[#b31648]" type="submit">
-						Update
-					</button>
-
-					<p id="msg" class="form-msg"></p>
-				</form>
-			</div>
-		`
 
 		const wrapper		= root.querySelector('#avatar-wrapper') as HTMLDivElement
 		const avatarInput	= root.querySelector('#avatar-input') as HTMLInputElement
@@ -149,6 +134,19 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 
 		const settingsForm = root.querySelector<HTMLFormElement>('#settings-form')!
 		const errorMsg = root.querySelector<HTMLParagraphElement>('#msg')!
+		const nicknameInput = settingsForm.querySelector<HTMLInputElement>('input[name="nickname"]')!
+		const submitBtn = settingsForm.querySelector<HTMLButtonElement>('button[type="submit"]')!
+
+		// Function to toggle button state based on input
+		const updateButtonState = () => {
+			submitBtn.disabled = nicknameInput.value.trim() === ''
+		}
+
+		// Initial check
+		updateButtonState()
+
+		// Listen for changes
+		nicknameInput.addEventListener('input', updateButtonState)
 
 		settingsForm.onsubmit = async e => {
 			e.preventDefault()
@@ -157,14 +155,19 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 			const data = Object.fromEntries(new FormData(settingsForm))
 			Object.keys(data).forEach(k => { if (!data[k]) delete data[k] })
 
+			if (!data.nickname) {
+				showMsg(errorMsg, 'Nickname is required')
+				return
+			}
+
 			try {
-				const r = await fetch(`/api/users/${me.id}`, {
+				const r = await fetch(`/api/users/${me.id}/nickname`, {
 					method : 'PATCH',
 					headers: { 'Content-Type': 'application/json' },
-					body   : JSON.stringify(data)
+					body : JSON.stringify(data)
 				})
 				if (r.ok) {
-					showMsg(errorMsg, 'Settings updated!', true)
+					showMsg(errorMsg, 'Nickname updated!', true)
 					document.dispatchEvent(new Event('settings-update'))
 				} else {
 					const { error } = await r.json()
