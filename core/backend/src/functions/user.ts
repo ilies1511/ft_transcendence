@@ -161,4 +161,14 @@ export async function setUserLive(
 	}
 	return (info.changes > 0)
 }
+
+export async function updateUserAvatar(
+	fastify: FastifyInstance,
+	id: number,
+	avatar: string
+): Promise<boolean> {
+	const info = await fastify.db.run(
+		`UPDATE users SET avatar = ? WHERE id = ?`, avatar, id)
+	return info.changes !== undefined && info.changes > 0
+}
 //PATCH -- END

@@ -9,9 +9,15 @@ import authRoutes from './routes/auth.ts';
 import authJwt from './functions/auth-jwt.ts';
 //Mit namespace
 import * as testRoutes from './routes/test_route.ts'
+import multipart from '@fastify/multipart'
 
 async function main() {
+
 	const fastify = Fastify({ logger: true })
+
+	await fastify.register(multipart, {
+		limits: { fileSize: 1_000_000 }, // z.B. max. 1 MB
+	})
 
 	await fastify.register(websocket);
 

@@ -1,11 +1,23 @@
 // src/routes/users.ts
 import type { FastifyPluginAsync } from "fastify";
 import bcrypt from "bcrypt";
-import { type UserWithFriends, type FriendRequestRow, type UserRow  } from "../db/types.js";
-import { info } from "console";
-import { createUser, updateUser, type UpdateUserData, getUserById, setUserLive, deleteUserById} from "../functions/user.ts";
+import { type UserWithFriends, type FriendRequestRow, type UserRow } from "../db/types.js";
+import { error, info } from "console";
+import { createUser, updateUser, type UpdateUserData, getUserById, setUserLive, deleteUserById, updateUserAvatar } from "../functions/user.ts";
 import { findUserWithFriends } from "../functions/user.ts";
-import { sendFriendRequest, listIncomingRequests, acceptFriendRequest, rejectFriendRequest } from "../functions/friends.ts";
+import {
+	sendFriendRequest, listIncomingRequests, acceptFriendRequest,
+	rejectFriendRequest
+} from "../functions/friends.ts";
+import { promises as fs } from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import { pipeline } from 'stream/promises'
+import { createWriteStream } from 'fs'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+// const PUBLIC_DIR = path.resolve(__dirname, '../../../frontend/public')
 
 export const userRoutes: FastifyPluginAsync = async (fastify) => {
 	// POST -- BEGIN
@@ -20,8 +32,8 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 					type: "object",
 					required: ["username", "password"],
 					properties: {
-						username: { type: "string", minLength: 1},
-						password: { type: "string", minLength: 1},
+						username: { type: "string", minLength: 1 },
+						password: { type: "string", minLength: 1 },
 						email: { type: "string", nullable: true },
 					},
 				},
@@ -432,5 +444,50 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 			reply.send({ success: true });
 		}
 	)
+	fastify.post<{
+		Params: { id: number }
+	}>(
+		'/api/users/:id/avatar',
+		{
+			schema: {
+				params: {
+					type: 'object',
+					required: ['id'],
+					properties: { id: { type: 'integer' } }
+				},
+				response: {
+					200: {
+						type: 'object',
+						properties: { avatarUrl: { type: 'string' } }
+					},
+					400: { type: 'object', properties: { error: { type: 'string' } } },
+					404: { type: 'object', properties: { error: { type: 'string' } } }
+				}
+			}
+		},
+		async (request, reply) => {
+			const userId = request.params.id
 
+			const data = await request.file({ limits: { fieldNameSize: 100 } })
+			if (!data) {
+				return reply.code(400).send({ error: 'No file uploaded' })
+			}
+			if (!data.filename.toLowerCase().endsWith('.png')) {
+				return reply.code(400).send({ error: 'Only .png allowed' })
+			}
+			const filename = "NewUploadedAvatar.png";
+			const destPath = path.join(
+				__dirname,
+				'../../../frontend/public/',
+				filename
+			)
+			await pipeline(data.file, createWriteStream(destPath));
+			const avatar = `../../${filename}`
+			const ok = await updateUserAvatar(fastify, userId, avatar)
+			if (!ok) {
+				return reply.code(404).send({ error: 'User not found' })
+			}
+			return reply.code(200).send({ avatar })
+		}
+	)
 };
