@@ -20,6 +20,23 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 					required: ["id"],
 					properties: { id: { type: "integer" } },
 				},
+				// response: {
+				// 	200: {
+				// 		type: 'object',
+				// 		properties: {
+				// 			id: { type: 'integer' },
+				// 			username: { type: 'string' },
+				// 			nickname: { type: 'string' },
+				// 			email: { type: ['string', 'null'] },
+				// 			live: { type: 'integer' },
+				// 			created_at: { type: 'integer' },
+				// 			avatar: { type: "string" },
+				// 			friends: {
+				// 				type: 'array',
+				// 				items: { type: 'integer' }
+				// 			}
+				// 		}
+				// 	},
 				response: {
 					200: {
 						type: 'object',
@@ -29,13 +46,23 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 							nickname: { type: 'string' },
 							email: { type: ['string', 'null'] },
 							live: { type: 'integer' },
+							avatar: { type: 'string' },
 							created_at: { type: 'integer' },
-							avatar: { type: "string" },
 							friends: {
 								type: 'array',
-								items: { type: 'integer' }
+								items: {
+									type: 'object',
+									properties: {
+										id: { type: 'integer' },
+										username: { type: 'string' },
+										live: { type: 'integer' },
+										avatar: { type: 'string' }
+									},
+									required: ['id', 'username', 'live', 'avatar']
+								}
 							}
-						}
+						},
+						required: ['id', 'username', 'nickname', 'email', 'live', 'avatar', 'created_at', 'friends']
 					},
 					404: {
 						type: "object",

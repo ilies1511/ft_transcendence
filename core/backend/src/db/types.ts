@@ -28,8 +28,17 @@ export interface FriendRequestRow {
 // 	created_at: number
 // 	friends: number[]  // zusätzlich: Liste von Freundes-IDs
 // }
+
+export interface FriendInfo {
+	id: number
+	username: string
+	live: number
+	avatar: string
+}
+
 export interface UserWithFriends extends Omit<UserRow, 'password'> {
-	friends: number[]
+	// friends: number[]
+	friends: FriendInfo[]
 }
 
 /*

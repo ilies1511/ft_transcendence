@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import bcrypt from 'bcrypt'
 import { Interface } from 'readline'
-import type { UserRow, UserWithFriends } from '../db/types.ts'
+import type { UserRow, UserWithFriends, FriendInfo} from '../db/types.ts'
 // import { DEFAULT_AVATARS } from '../constants/avatars.ts'
 // import { DEFAULT_AVATARS } from '../../constants/avatars.ts'
 import { DEFAULT_AVATARS } from '../constants/avatars.ts'
@@ -125,12 +125,26 @@ export async function findUserWithFriends(
 	)
 	if (!row) return null
 
-	const friends: { friend_id: number }[] = await fastify.db.all(
-		'SELECT friend_id FROM friendships WHERE user_id = ?',
-		id
-	)
+	// const friends: { friend_id: number }[] = await fastify.db.all(
+	// 	'SELECT friend_id FROM friendships WHERE user_id = ?',
+	// 	id
+	// )
 
-	// 3) Response-Objekt zusammenbauen
+	// const friends = await fastify.db.all<FriendInfo>(
+	// 	`SELECT u.id, u.username, u.live, u.avatar
+	// 	   FROM users u
+	// 	   JOIN friendships f ON u.id = f.friend_id
+	// 	  WHERE f.user_id = ?`,
+	// 	id
+	// )
+	const friends = await fastify.db.all<FriendInfo[]>(
+		`SELECT u.id,
+				u.username,
+				u.live,
+				u.avatar
+			FROM users AS u
+		INNER JOIN friendships AS f ON u.id = f.friend_id WHERE f.user_id = ?`,
+		id);
 	return {
 		id: row.id,
 		username: row.username,
@@ -139,7 +153,8 @@ export async function findUserWithFriends(
 		live: row.live,
 		created_at: row.created_at,
 		avatar: row.avatar,
-		friends: friends.map(f => f.friend_id)
+		friends
+		// friends: friends.map(f => f.friend_id)
 	}
 }
 
