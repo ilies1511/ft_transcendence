@@ -8,13 +8,17 @@ import { friendRoutes } from './routes/friends.ts';
 import { runMigrations } from './db/db_init.ts';
 import authRoutes from './routes/auth.ts';
 import authJwt from './functions/auth-jwt.ts';
+import friendsInviteNotificationRoute from './routes/friends_invitation.ts';
+
 //Mit namespace
 import * as testRoutes from './routes/test_route.ts'
 import multipart from '@fastify/multipart'
 
+
 async function main() {
 
 	const fastify = Fastify({ logger: true })
+	// const fastify = Fastify({logger: { level: 'debug' }})
 
 	await fastify.register(multipart, {
 		limits: { fileSize: 1_000_000 }, // z.B. max. 1 MB
@@ -88,6 +92,9 @@ async function main() {
 	await fastify.register(userRoutes);
 	await fastify.register(authRoutes);
 	await fastify.register(friendRoutes);
+
+	// to live ping/notify (via ws) a user, that we got friend request
+	await fastify.register(friendsInviteNotificationRoute);
 
 	const game_server = new GameServer(fastify);
 

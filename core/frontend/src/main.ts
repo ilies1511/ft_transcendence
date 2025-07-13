@@ -3,7 +3,7 @@ import './style.css';
 import { Router } from './router.ts';
 import { initFriendUI } from './pages/friendUI.ts';
 import { currentUser, logout } from './services/auth'
-
+import { friendRequestToast } from './ui/toast';
 
 const root = document.querySelector<HTMLElement>('#app')!;
 export const router = new Router(root);
@@ -17,6 +17,20 @@ document.addEventListener('click', router.linkHandler);
 // first paint
 router.go(location.pathname);
 
+// friends invite websocket
+const friendsWs = new WebSocket('ws://localhost:5173/friends');
+
+// close ws on refresh/close website browser window
+window.addEventListener('beforeunload', () => friendsWs.close());
+
+friendsWs.onmessage = evt => {
+	try {
+		const data = JSON.parse(evt.data);
+		if (data.type === 'new_friend_request') {
+			friendRequestToast(data.requestId, data.from);
+		}
+	} catch {/* ignore non-JSON */}
+};
 
 // <avatar> <username> <logout button> TODO: need to move this to seperate page/ instance.
 // Will need to add dropdown menu. On that menu there will be moved log out button.
