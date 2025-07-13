@@ -11,8 +11,11 @@ import type {
 import { FireProceduralTexture } from '@babylonjs/procedural-textures/fire';
 
 
+// import { Effects, GameState }
+// 	from '../game_shared/serialization.ts';
+
 import { Effects, GameState }
-	from '../game_shared/serialization.ts';
+	from '../../../../game_shared/serialization.ts';
 
 import { ClientVec2 } from '../objects/ClientVec2.ts';
 import { ClientWall } from '../objects/ClientWall.ts';

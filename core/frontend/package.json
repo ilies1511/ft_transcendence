@@ -1,27 +1,26 @@
 {
-  "name": "frontend",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite --host",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
-  },
-  "devDependencies": {
-    "ts-node": "^10.9.2",
-    "typescript": "~5.8.3",
-    "vite": "^6.3.5"
-  },
-  "dependencies": {
-	"@tailwindcss/vite": "^4.1.8",
-	"tailwindcss": "^4.1.8",
-	"@babylonjs/core": "^8.11.0",
-	"@babylonjs/gui": "^8.12.1",
-	"@babylonjs/materials": "^8.11.0",
-	"@babylonjs/post-processes": "^8.11.0",
-	"@babylonjs/procedural-textures": "^8.11.0",
-	"babylonjs": "^8.11.0"
-  }
+	"name": "frontend",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "vite --host",
+		"build": "tsc && vite build",
+		"preview": "vite preview"
+	},
+	"devDependencies": {
+		"ts-node": "^10.9.2",
+		"typescript": "~5.8.3",
+		"vite": "^6.3.5"
+	},
+	"dependencies": {
+		"@babylonjs/core": "^8.11.0",
+		"@babylonjs/gui": "^8.12.1",
+		"@babylonjs/materials": "^8.11.0",
+		"@babylonjs/post-processes": "^8.11.0",
+		"@babylonjs/procedural-textures": "^8.11.0",
+		"@tailwindcss/vite": "^4.1.8",
+		"babylonjs": "^8.11.0",
+		"tailwindcss": "^4.1.8"
+	}
 }
-
