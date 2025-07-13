@@ -2,7 +2,7 @@ import Fastify from 'fastify'
 import websocket from '@fastify/websocket'
 import { fpSqlitePlugin } from 'fastify-sqlite-typed'
 import { GameServer } from './game/game_server.ts';
-import { wsRoute } from './routes/game.ts';
+import { wsRoute } from './routes/websocket.ts';
 import { userRoutes } from './routes/users.ts';
 import { friendRoutes } from './routes/friends.ts';
 import { runMigrations } from './db/db_init.ts';
