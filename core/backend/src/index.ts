@@ -4,6 +4,7 @@ import { fpSqlitePlugin } from 'fastify-sqlite-typed'
 import { GameServer } from './game/game_server.ts';
 import { wsRoute } from './routes/game.ts';
 import { userRoutes } from './routes/users.ts';
+import { friendRoutes } from './routes/friends.ts';
 import { runMigrations } from './db/db_init.ts';
 import authRoutes from './routes/auth.ts';
 import authJwt from './functions/auth-jwt.ts';
@@ -86,6 +87,7 @@ async function main() {
 	// await fastify.register(testRoutes.test);
 	await fastify.register(userRoutes);
 	await fastify.register(authRoutes);
+	await fastify.register(friendRoutes);
 
 	const game_server = new GameServer(fastify);
 
