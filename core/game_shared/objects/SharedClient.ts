@@ -6,6 +6,7 @@ export class SharedClient {
 	public obj_id: number;
 	public paddle: SharedWall;
 	public base: SharedWall;
+	public score: number;//todo: needs to be serialized 
 
 	constructor(
 		paddle: SharedWall,

@@ -178,8 +178,7 @@ export class Game {
 					const ball_movement: ServerVec2 = ball.speed.clone()
 					ball_movement.scale(delta_time);
 					ball.pos.add(ball_movement);
-					delta_time = 0;
-					continue ;
+					break ;
 				}
 				//console.log("interec count: ", intersecs.length);
 				//console.log(intersecs);
@@ -194,10 +193,13 @@ export class Game {
 					hit_walls.push(intersc.wall);
 					hit_points.push(intersc.p);
 				}
-
 				delta_time -= first_intersec.time;
 				delta_time -= EPSILON; /* idk why but without this the ball flys through walls */
 				ball.pos = first_intersec.p;
+				if (first_intersec.wall.effects.indexOf(Effects.BASE) != -1) {
+					//todo: point score
+					continue ;
+				}
 				const offset: ServerVec2 = first_intersec.wall.normal.clone();
 				offset.scale(0.01);
 				if (ft_math.dot(ball.speed, first_intersec.wall.normal) < 0) {
@@ -242,7 +244,7 @@ export class Game {
 
 	private update_paddles(delta_time: number) {
 		for (const client of this.clients) {
-			client.update(delta_time);
+			client.update(this.balls, delta_time);
 		}
 	}
 
@@ -251,6 +253,10 @@ export class Game {
 		this.update_paddles(delta_time);
 		this.update_balls(delta_time);
 		this.update_walls(delta_time);
+		this.finish_frame(delta_time);
+	}
+
+	private finish_frame(delta_time: number) {
 		this.broadcast_game_state();
 	}
 

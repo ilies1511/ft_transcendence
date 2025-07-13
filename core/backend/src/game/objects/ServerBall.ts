@@ -7,6 +7,8 @@ let i: number = 0;
 
 export class ServerBall extends SharedBall {
 	public init_pos: SharedBall;
+	public last_collision_obj_id: number[] = [];
+	public cur_collision_obj_id: number[] = [];
 
 	constructor(obj_id?: number, dispose?: boolean) {
 		super(obj_id, dispose);

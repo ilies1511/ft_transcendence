@@ -1,5 +1,6 @@
 
 [ ]: first serilization tests
+[ ]: serilize player scores
 
 [ ]: weird keyinput behaivior(sometimes dosnt work,
 		after refreshing might work, then after refreshing it might also break)

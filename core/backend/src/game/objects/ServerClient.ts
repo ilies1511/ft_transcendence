@@ -34,33 +34,37 @@ export class ServerClient extends SharedClient {
 		this.socket = socket;
 	}
 
-	public update(delta_time: number) {
+	// todo: check for ball collisions and
+	// potentally push them by altering their position and speed
+	public update(balls: ServerBall[], delta_time: number) {
 		const direct: ServerVec2 = this.paddle.get_direct();
+		const new_paddle_pos: ServerVec2 = this.paddle.center.clone();
 		if (this.up) {
-			const new_paddle_pos: ServerVec2 = this.paddle.center.clone();
 			new_paddle_pos.add(direct.scale(0.08));
-			//if (new_paddle_pos.clone().sub(this.origin).len() < this.paddle.length)
-			{
-				this.paddle.center = new_paddle_pos;
-				this.paddle.update();
-			}
 		}
 		if (this.down) {
-			const new_paddle_pos: ServerVec2 = this.paddle.center.clone();
 			new_paddle_pos.add(direct.scale(-0.08));
-			//if (new_paddle_pos.clone().sub(this.origin).len() < this.paddle.length)
-			{
-				this.paddle.center = new_paddle_pos;
-				this.paddle.update();
-			}
 		}
+		if (this.up || this.down) {
+			let p1: vec2, p2:vec2 = this.paddle.get_endpoints();
+			const p1_old = p1;
+			const p2_old = p2;
+			this.paddle.center = new_paddle_pos;
+			this.paddle.update();
+			p1, p2 = this.paddle.get_endpoints();
+			const p1_new = p1;
+			const p2_new = p2;
+			for (const ball of balls) {
+
+			}
+
+		}
+
 		if (this.left && this.right) {
 			this.paddle.rotate(0, delta_time);
 		} else if (this.left) {
 			this.paddle.rotate(Math.PI / 2, delta_time);
-			console.log("left");
 		} else if (this.right) {
-			console.log("right");
 			this.paddle.rotate(Math.PI / -2, delta_time);
 		} else {
 			this.paddle.rotate(0, delta_time);
