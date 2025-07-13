@@ -3,7 +3,7 @@ import type { FastifyInstance } from 'fastify'
 // import websocket from '@fastify/websocket'
 import type { WebSocket } from '@fastify/websocket' // <-- use 'import type'
 import cookie from 'cookie'            // npm install cookie
-import { findUserWithFriends, setUserLive } from '../functions/user.js'
+import { findUserWithFriends, setUserLive } from '../functions/user.ts'
 import { error } from 'console'
 
 interface ExtendedWebSocket extends WebSocket {
@@ -70,7 +70,7 @@ export const wsRoute = async function (app: FastifyInstance) {
 					console.log(friend);
 					console.log(extSocket.userId);
 					console.log(c.userId);
-					if ((friend !== extSocket.userId && friend === c.userId)) {
+					if ((friend.id !== extSocket.userId && friend.id === c.userId)) {
 						console.log("ALoo2");
 						c.send(JSON.stringify({
 							type: 'friend_status_update',
