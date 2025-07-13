@@ -7,11 +7,15 @@ import { userRoutes } from './routes/users.ts';
 import { runMigrations } from './db/db_init.ts';
 import authRoutes from './routes/auth.ts';
 import authJwt from './functions/auth-jwt.ts';
+import friendsInviteNotificationRoute from './routes/friends_invitation.ts';
+
 //Mit namespace
 import * as testRoutes from './routes/test_route.ts'
 
+
 async function main() {
 	const fastify = Fastify({ logger: true })
+	// const fastify = Fastify({logger: { level: 'debug' }})
 
 	await fastify.register(websocket);
 
@@ -80,6 +84,9 @@ async function main() {
 	// await fastify.register(testRoutes.test);
 	await fastify.register(userRoutes);
 	await fastify.register(authRoutes);
+
+	// to live ping/notify (via ws) a user, that we got friend request
+	await fastify.register(friendsInviteNotificationRoute);
 
 	const game_server = new GameServer(fastify);
 

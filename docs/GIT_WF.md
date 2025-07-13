@@ -28,11 +28,11 @@ Beispiel:
 
 ## You have worked on your branch and now want to merge it into the master branch
 
-1. git checkout master
-2. git pull origin master
+1. git checkout main
+2. git pull origin main
 3. git merge feature-branch
     1. if merge conflicts appear, solve with concerned member
-4. git push origin master
+4. git push origin main
 
 
 ## Context: (mostly after you merged your branch with master, you do the following) —> Get your Branch up to date (after peers added feature)

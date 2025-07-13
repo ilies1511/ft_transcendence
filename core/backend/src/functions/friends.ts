@@ -36,7 +36,7 @@ export async function listIncomingRequests(
 ): Promise<FriendRequestRow[]> {
 	const rows = await fastify.db.all<FriendRequestRow[]>(
 		`SELECT * FROM friend_requests
-		WHERE recipient_id = ? AND status = 'pending'
+		WHERE recipient_id = ?
 		ORDER BY created_at DESC`,
 		userId
 	)
