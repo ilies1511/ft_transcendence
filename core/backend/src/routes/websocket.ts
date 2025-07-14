@@ -5,29 +5,9 @@ import type { WebSocket } from '@fastify/websocket' // <-- use 'import type'
 import cookie from 'cookie'            // npm install cookie
 import { findUserWithFriends, setUserLive } from '../functions/user.ts'
 import { error } from 'console'
-
-async function notifyFriendStatus(
-	fastify: FastifyInstance,
-	userSockets: Map<number, Set<ExtendedWebSocket>>,
-	userId: number,
-	online: boolean
-) {
-	const myFriends = await findUserWithFriends(fastify, userId)
-	if (!myFriends)
-		return
-	for (const friendId of myFriends.friends.map(f => f.id)) {
-		const sockets = userSockets.get(friendId)
-		if (!sockets)
-			continue ;
-		for (const sock of sockets) {
-			sock.send(JSON.stringify({
-				type: 'friend_status_update',
-				friendId: userId,
-				online
-			}))
-		}
-	}
-}
+import { notifyFriendStatus } from '../functions/wsHandler/connectHandler.ts'
+import type { ExtendedWebSocket} from '../types/wsTypes.ts'
+import { handleWsMessage } from '../functions/wsHandler/messageHandler.ts'
 
 /*
 	FOr Live Chat, where every user can send msgs to other users and not only friends
