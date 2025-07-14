@@ -23,7 +23,7 @@ import { BaseScene } from './base.ts';
 
 let color_idx = 0;
 
-const colors = [
+const rnd_colors = [
 	BABYLON.Color3.Red(),
 	BABYLON.Color3.Green(),
 	BABYLON.Color3.Blue(),
@@ -36,10 +36,10 @@ const colors = [
 	BABYLON.Color3.FromHexString("#FFD700"), // gold
 ];
 
-function rnd_mat(scene: BABYLON.Scene): BABYLON.StandardMaterial {
+function rnd_col() {
 	let color: BABYLON.Color3;
-	if (color_idx < colors.length) {
-		color = colors[color_idx];
+	if (color_idx < rnd_colors.length) {
+		color = rnd_colors[color_idx];
 	} else {
 		color = new BABYLON.Color3(
 			Math.random(),
@@ -48,11 +48,33 @@ function rnd_mat(scene: BABYLON.Scene): BABYLON.StandardMaterial {
 		);
 	}
 	color_idx++;
-
-	const mat = new BABYLON.StandardMaterial(`mat_${color_idx}`, scene);
-	mat.diffuseColor = color;
-	return mat;
+	return color;
 }
+
+class PlayerColors {
+	private scene: BABYLON.Scene;
+	public major: BABYLON.StandardMaterial;
+	public minor: BABYLON.StandardMaterial;
+
+	constructor(scene: BABYLON.Scene,
+		major_color?: BABYLON.Color3,
+		minor_color?: BABYLON.Color3,
+		name?: string)
+	{
+		this.scene = scene;
+		if (name == undefined) {
+			name = "undefined_color_scheme";
+		}
+		this.major = new BABYLON.StandardMaterial(`${name}_major`, this.scene);
+		if (major_color) {
+			this.major.diffuseColor = major_color;
+		}
+		this.minor = new BABYLON.StandardMaterial(`${name}_minor`, this.scene);
+		if (minor_color) {
+			this.minor.diffuseColor = minor_color;
+		}
+	}
+};
 
 export class GameScene extends BaseScene {
 	private _camera: BABYLON.ArcRotateCamera;
@@ -62,6 +84,7 @@ export class GameScene extends BaseScene {
 	private _meshes: Map<number, BABYLON.Mesh> = new Map<number, BABYLON.Mesh>;
 	private _score_text: GUI.TextBlock;
 
+	private _color_schemes: Map<number, PlayerColors> = new Map<number, PlayerColors>;
 
 	constructor(engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
 		super(engine, canvas);
@@ -173,7 +196,6 @@ export class GameScene extends BaseScene {
 				wall.position.z = 0;
 				const default_normal: ClientVec2 = new ClientVec2(0, 1);
 				default_normal.unit();
-				//todo: rotation
 				const normal: ClientVec2 = w.normal;
 				normal.unit();
 				const dot: number = default_normal.x * normal.x
@@ -187,8 +209,13 @@ export class GameScene extends BaseScene {
 
 	}
 
-	private _apply_player_materials(clients: ClientClient[]) {
+	private _init_color_schemes(clients: ClientClient[]) {
 		clients.forEach((c: ClientClient) => {
+			if (this._color_schemes.has(c.obj_id)) {
+				return ;
+			}
+			this._color_schemes.set(c.obj_id, new PlayerColors(this, rnd_col(), rnd_col(), `player_${c.obj_id}`));
+			const color_scheme: PlayerColors = this._color_schemes.get(c.obj_id);
 			if (this._meshes.has(c.paddle.obj_id) == undefined
 				|| this._meshes.has(c.base.obj_id) == undefined)
 			{
@@ -196,13 +223,9 @@ export class GameScene extends BaseScene {
 				process.exit(1);
 			}
 			const paddle_mesh: BABYLON.Mesh = this._meshes.get(c.paddle.obj_id);
-			if (paddle_mesh.material == undefined) {
-				paddle_mesh.material = rnd_mat(this);
-			}
+			paddle_mesh.material = color_scheme.major;
 			const base_mesh: BABYLON.Mesh = this._meshes.get(c.base.obj_id);
-			if (base_mesh.material == undefined) {
-				base_mesh.material = rnd_mat(this);
-			}
+			base_mesh.material = color_scheme.minor;
 		});
 	}
 
@@ -210,12 +233,11 @@ export class GameScene extends BaseScene {
 		//console.log(game_state);
 		this._update_balls(game_state.balls);
 		this._update_walls(game_state.walls);
-		this._apply_player_materials(game_state.clients);
+		this._init_color_schemes(game_state.clients);
 
 		const score_text: string[] = [];
 		game_state.clients.forEach((c: ClientClient) => {
 			const color: BABYLON.Color3 = this._meshes.get(c.paddle.obj_id).material.diffuseColor;
-
 			score_text.push(`${c.ingame_id ?? "Player"}: ${c.score ?? 0}`);
 		});
 		this._score_text.text = score_text.join('\n');
