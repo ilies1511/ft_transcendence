@@ -1,5 +1,5 @@
 // import type { fastify, FastifyPluginAsync } from 'fastify'
-import type { FastifyInstance } from 'fastify'
+import { fastify, type FastifyInstance } from 'fastify'
 // import websocket from '@fastify/websocket'
 import type { WebSocket } from '@fastify/websocket' // <-- use 'import type'
 import cookie from 'cookie'            // npm install cookie
@@ -8,6 +8,7 @@ import { error } from 'console'
 import { notifyFriendStatus } from '../functions/wsHandler/connectHandler.ts'
 import type { ExtendedWebSocket} from '../types/wsTypes.ts'
 import { handleWsMessage } from '../functions/wsHandler/messageHandler.ts'
+import { handleClose } from '../functions/wsHandler/closeHandler.ts'
 
 /*
 	FOr Live Chat, where every user can send msgs to other users and not only friends
@@ -105,40 +106,41 @@ export const wsRoute = async function (app: FastifyInstance) {
 
 		// BEGIN -- CLose Hanlder
 		extSocket.on('close', async () => {
-			await setUserLive(app, extSocket.userId!, false)
-			const set = userSockets.get(extSocket.userId!)
-			if (set) {
-				set.delete(extSocket)
-				if (set.size === 0) userSockets.delete(extSocket.userId!)
-			}
-			const friends = await findUserWithFriends(app, extSocket.userId!)
-			console.log(friends);
-			if (!friends) {
-				// throw error(friends);
-				throw new Error(`findUserWithFriends returned null for user ${extSocket.userId}`)
-			}
-			console.log("ALoo0");
-			for (const client of app.websocketServer.clients) {
-				const c = client as ExtendedWebSocket;
-				if (c.readyState !== WebSocket.OPEN || c.userId === undefined) {
-					continue;
-				}
+			// await setUserLive(app, extSocket.userId!, false)
+			// const set = userSockets.get(extSocket.userId!)
+			// if (set) {
+			// 	set.delete(extSocket)
+			// 	if (set.size === 0) userSockets.delete(extSocket.userId!)
+			// }
+			// const friends = await findUserWithFriends(app, extSocket.userId!)
+			// console.log(friends);
+			// if (!friends) {
+			// 	// throw error(friends);
+			// 	throw new Error(`findUserWithFriends returned null for user ${extSocket.userId}`)
+			// }
+			// console.log("ALoo0");
+			// for (const client of app.websocketServer.clients) {
+			// 	const c = client as ExtendedWebSocket;
+			// 	if (c.readyState !== WebSocket.OPEN || c.userId === undefined) {
+			// 		continue;
+			// 	}
 
-				console.log("ALoo1");
-				for (const friend of friends.friends) {
-					console.log(friend);
-					console.log(extSocket.userId);
-					console.log(c.userId);
-					if ((friend.id !== extSocket.userId && friend.id === c.userId)) {
-						console.log("ALoo2");
-						c.send(JSON.stringify({
-							type: 'friend_status_update',
-							friendId: extSocket.userId,
-							online: false
-						}));
-					}
-				}
-			}
+			// 	console.log("ALoo1");
+			// 	for (const friend of friends.friends) {
+			// 		console.log(friend);
+			// 		console.log(extSocket.userId);
+			// 		console.log(c.userId);
+			// 		if ((friend.id !== extSocket.userId && friend.id === c.userId)) {
+			// 			console.log("ALoo2");
+			// 			c.send(JSON.stringify({
+			// 				type: 'friend_status_update',
+			// 				friendId: extSocket.userId,
+			// 				online: false
+			// 			}));
+			// 		}
+			// 	}
+			// }
+			handleClose(app, userSockets, extSocket);
 		})
 		// END -- CLose Hanlder
 	})
