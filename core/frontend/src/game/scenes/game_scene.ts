@@ -6,7 +6,6 @@ import type {
 	GameOptions
 } from '../game_shared/message_types.ts';
 
-//import { GridMaterial } from '@babylonjs/materials/Grid';
 import { FireProceduralTexture } from '@babylonjs/procedural-textures/fire';
 import * as GUI from '@babylonjs/gui';
 
@@ -22,6 +21,38 @@ import { ClientClient } from '../objects/ClientClient.ts';
 
 import { BaseScene } from './base.ts';
 
+let color_idx = 0;
+
+const colors = [
+	BABYLON.Color3.Red(),
+	BABYLON.Color3.Green(),
+	BABYLON.Color3.Blue(),
+	BABYLON.Color3.Yellow(),
+	BABYLON.Color3.Purple(),
+	BABYLON.Color3.Teal(),
+	BABYLON.Color3.FromHexString("#FF69B4"), // hot pink
+	BABYLON.Color3.FromHexString("#FFA500"), // orange
+	BABYLON.Color3.FromHexString("#00CED1"), // turquoise
+	BABYLON.Color3.FromHexString("#FFD700"), // gold
+];
+
+function rnd_mat(scene: BABYLON.Scene): BABYLON.StandardMaterial {
+	let color: BABYLON.Color3;
+	if (color_idx < colors.length) {
+		color = colors[color_idx];
+	} else {
+		color = new BABYLON.Color3(
+			Math.random(),
+			Math.random(),
+			Math.random()
+		);
+	}
+	color_idx++;
+
+	const mat = new BABYLON.StandardMaterial(`mat_${color_idx}`, scene);
+	mat.diffuseColor = color;
+	return mat;
+}
 
 export class GameScene extends BaseScene {
 	private _camera: BABYLON.ArcRotateCamera;
@@ -75,9 +106,8 @@ export class GameScene extends BaseScene {
 	loop(): void {
 	}
 
-	update(game_state: GameState): void {
-		//console.log(game_state);
-		game_state.balls.forEach((b: ClientBall) => {
+	private _update_balls(balls: ClientBall[]) {
+		balls.forEach((b: ClientBall) => {
 			if (this._meshes.has(b.obj_id)) {
 				const cur: BABYLON.Mesh = this._meshes.get(b.obj_id);
 				if (!b.dispose) {
@@ -96,16 +126,10 @@ export class GameScene extends BaseScene {
 				this._meshes.set(b.obj_id, ball);
 			}
 		});
+	}
 
-		const score_text: string[] = [];
-		game_state.clients.forEach((c: ClientClient) => {
-			c.ingame_id;
-			c.score;
-			score_text.push(`${c.ingame_id ?? "Player"}: ${c.score ?? 0}`);
-		});
-		this._score_text.text = score_text.join('\n');
-
-		game_state.walls.forEach((w: ClientWall) => {
+	private _update_walls(walls: ClientWall[]) {
+		walls.forEach((w: ClientWall) => {
 			if (this._meshes.has(w.obj_id)) {
 				const wall: BABYLON.Mesh = this._meshes.get(w.obj_id);
 				wall.position.x = w.center.x;
@@ -143,6 +167,7 @@ export class GameScene extends BaseScene {
 					},
 					this
 				);
+
 				wall.position.x = w.center.x;
 				wall.position.y = w.center.y;
 				wall.position.z = 0;
@@ -159,7 +184,40 @@ export class GameScene extends BaseScene {
 				this._meshes.set(w.obj_id, wall);
 			}
 		});
-		game_state.clients.forEach((c: ClientClient) => {
+
+	}
+
+	private _apply_player_materials(clients: ClientClient[]) {
+		clients.forEach((c: ClientClient) => {
+			if (this._meshes.has(c.paddle.obj_id) == undefined
+				|| this._meshes.has(c.base.obj_id) == undefined)
+			{
+				console.log("game error: paddle or base not in meshes");
+				process.exit(1);
+			}
+			const paddle_mesh: BABYLON.Mesh = this._meshes.get(c.paddle.obj_id);
+			if (paddle_mesh.material == undefined) {
+				paddle_mesh.material = rnd_mat(this);
+			}
+			const base_mesh: BABYLON.Mesh = this._meshes.get(c.base.obj_id);
+			if (base_mesh.material == undefined) {
+				base_mesh.material = rnd_mat(this);
+			}
 		});
+	}
+
+	update(game_state: GameState): void {
+		//console.log(game_state);
+		this._update_balls(game_state.balls);
+		this._update_walls(game_state.walls);
+		this._apply_player_materials(game_state.clients);
+
+		const score_text: string[] = [];
+		game_state.clients.forEach((c: ClientClient) => {
+			const color: BABYLON.Color3 = this._meshes.get(c.paddle.obj_id).material.diffuseColor;
+
+			score_text.push(`${c.ingame_id ?? "Player"}: ${c.score ?? 0}`);
+		});
+		this._score_text.text = score_text.join('\n');
 	}
 };
