@@ -64,25 +64,36 @@ export const wsRoute = async function (app: FastifyInstance) {
 			catch {
 				return extSocket.send(JSON.stringify({ type: 'error', error: 'Invalid JSON' }))
 			}
-			if (msg.type === 'direct_message') {
-				const targets = userSockets.get(msg.to as number)
-				if (!targets || targets.size === 0) {
+
+			switch (msg.type) {
+				// if (msg.type === 'direct_message') {
+				case 'direct_message': {
+					const targets = userSockets.get(msg.to as number)
+					if (!targets || targets.size === 0) {
+						return extSocket.send(JSON.stringify({
+							type: 'error',
+							error: 'User not connected'
+						}))
+					}
+					for (const tsock of targets) {
+						tsock.send(JSON.stringify({
+							type: 'direct_message',
+							from: extSocket.userId,
+							content: msg.content,
+							ts: Date.now()
+						}))
+					}
+					return;
+				}
+				// case 'ping': {
+				// 	return extSocket.send(JSON.stringify({ type: 'pong' }))
+				// }
+				default: {
 					return extSocket.send(JSON.stringify({
 						type: 'error',
-						error: 'User not connected'
+						error: `Unknown message type ${msg.type}`
 					}))
 				}
-				for (const tsock of targets) {
-					tsock.send(JSON.stringify({
-						type: 'direct_message',
-						from: extSocket.userId,
-						content: msg.content,
-						ts: Date.now()
-					}))
-				}
-			}
-			else {
-				extSocket.send('[BACK-END PART] Server received: ' + raw.toString())
 			}
 		})
 		// END -- Message Handler
