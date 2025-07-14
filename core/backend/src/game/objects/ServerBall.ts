@@ -13,11 +13,15 @@ export class ServerBall extends SharedBall {
 	constructor(obj_id?: number, dispose?: boolean) {
 		super(obj_id, dispose);
 		this.init_pos = this.clone();
+		this.cur_collision_obj_id = [];
+		this.last_collision_obj_id = [];
 	}
 
 	// when ball is bugged
 	public reset() {
 		console.log("resetting ball from: ", this);
+		this.cur_collision_obj_id = [];
+		this.last_collision_obj_id = [];
 		this.pos = this.init_pos.pos.clone();
 		this.speed = this.init_pos.speed.clone();
 		this.effects = this.init_pos.effects.slice();
@@ -89,9 +93,9 @@ export class ServerBall extends SharedBall {
 		const center_diff = new ServerVec2(this.pos.x - wall.center.x, this.pos.y - wall.center.y);
 		const signed_dist: number = ft_math.dot(center_diff, wall.normal);
 
-		if (wall.angular_vel == 0 && signed_dist * dist_rate >= 0) {
-			return (undefined); // ball flying away from the wall
-		}
+		//if (wall.angular_vel == 0 && signed_dist * dist_rate >= 0) {
+		//	return (undefined); // ball flying away from the wall
+		//}
 
 		//let impact_time: number;
 		//if (signed_dist != 0) {
@@ -109,7 +113,7 @@ export class ServerBall extends SharedBall {
 		//if (impact_time < ft_math.EPSILON) {
 		//	impact_time = ft_math.EPSILON;
 		//}
-		if (impact_time > delta_time - ft_math.EPSILON) {
+		if (impact_time > delta_time) {
 			return (undefined);
 		}
 

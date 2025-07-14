@@ -1,5 +1,5 @@
 {
-	"paddle_length": 6,
+	"paddle_length": 1,
 	"base_length": 10,
 	"players": {
 		"1": {
@@ -14,25 +14,13 @@
 	"walls": {
 		"1": {
 			"center": [0, 5],
-			"normal": [1, 1],
+			"normal": [0, 1],
 			"length": 20,
 			"effects": []
 		},
 		"2": {
 			"center": [0, -5],
-			"normal": [0.3, 1],
-			"length": 20,
-			"effects": []
-		},
-		"3": {
-			"center": [-5, 0],
-			"normal": [1, 0],
-			"length": 20,
-			"effects": []
-		},
-		"4": {
-			"center": [5, 0],
-			"normal": [-1, 0],
+			"normal": [0, 1],
 			"length": 20,
 			"effects": []
 		}
@@ -44,7 +32,7 @@
 			"effects": []
 		},
 		"2": {
-			"point": [-1, 1],
+			"point": [1, 0],
 			"speed": [-3, 1],
 			"effects": []
 		}

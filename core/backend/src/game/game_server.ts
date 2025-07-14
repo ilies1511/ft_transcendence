@@ -111,8 +111,8 @@ export class Game {
 		//ball.pos.x = 0;
 		//ball.obj_id = this._next_obj_id++;
 		//this.balls.push(ball);
-		//console.log(this.walls);
-		console.log(this.balls);
+		console.log(this.walls);
+		//console.log(this.balls);
 		//this.start_loop();
 	}
 
@@ -154,6 +154,7 @@ export class Game {
 			while (delta_time > EPSILON) {
 				//console.log("delta time: ", delta_time);
 				const intersecs: ft_math.intersection_point[] = [];
+				
 				for (const wall of this.walls) {
 					//console.log(wall);
 					const intersection: ft_math.intersection_point | undefined =
@@ -197,8 +198,16 @@ export class Game {
 				delta_time -= EPSILON; /* idk why but without this the ball flys through walls */
 				ball.pos = first_intersec.p;
 				if (first_intersec.wall.effects.indexOf(Effects.BASE) != -1) {
-					//todo: point score
-					continue ;
+					console.log("hit base");
+					ball.reset();
+					const goaled_client = this.clients.find(c => c.base === first_intersec.wall);
+					if (goaled_client == undefined) {
+						console.log("Game: error: base that was scored at could not be matched to a client");
+						process.exit(1);
+					}
+					goaled_client.score--;
+					console.log("client ", goaled_client.global_id, " points: ", goaled_client.score);
+					break ;
 				}
 				const offset: ServerVec2 = first_intersec.wall.normal.clone();
 				offset.scale(0.01);
