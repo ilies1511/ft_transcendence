@@ -30,7 +30,7 @@ Beispiel:
 
 1. git checkout main
 2. git pull origin main
-3. git merge feature-branch
+3. git merge --no-ff feature-branch
     1. if merge conflicts appear, solve with concerned member
 4. git push origin main
 
