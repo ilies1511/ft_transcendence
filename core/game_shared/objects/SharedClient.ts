@@ -1,6 +1,7 @@
 import { SharedVec2 } from './SharedVec2.ts';
 import { SharedWall } from './SharedWall.ts';
 
+//todo: should include the display name
 export class SharedClient {
 	public ingame_id: number;
 	public obj_id: number;
@@ -31,7 +32,9 @@ export class SharedClient {
 		const totalSize = 2 // obj_id
 			+ 4 // ingame_id
 			+ paddleBuf.byteLength
-			+ baseBuf.byteLength;
+			+ baseBuf.byteLength
+			+ 2 //score
+		;
 
 		const buffer = new ArrayBuffer(totalSize);
 		const view   = new DataView(buffer);
@@ -51,7 +54,11 @@ export class SharedClient {
 
 		// base
 		new Uint8Array(buffer, offset).set(new Uint8Array(baseBuf));
-		// offset += baseBuf.byteLength;
+		offset += baseBuf.byteLength;
+
+		//score
+		view.setInt16(offset, this.score, true);
+		//offset += 2;
 
 		return buffer;
 	}
@@ -82,7 +89,12 @@ export class SharedClient {
 				SharedWall.deserialize(array, offset);
 		offset = offAfterBase;
 
+		//score
+		const score = view.getInt16(offset, true);
+		offset += 2;
+
 		const client = new SharedClient(paddle, base, ingame_id, obj_id);
+		client.score = score;
 		return { client, offset };
 	}
 };

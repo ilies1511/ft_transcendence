@@ -29,6 +29,7 @@ export class GameScene extends BaseScene {
 	private _ground: BABYLON.Mesh;
 
 	private _meshes: Map<number, BABYLON.Mesh> = new Map<number, BABYLON.Mesh>;
+	private _score_text: GUI.TextBlock;
 
 
 	constructor(engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
@@ -61,15 +62,14 @@ export class GameScene extends BaseScene {
 		);
 		this._ground.rotate(BABYLON.Axis.X, -Math.PI / 2, BABYLON.Space.LOCAL);
 
-
-const gui = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this);
-const text = new GUI.TextBlock();
-text.text = "Hello!";
-text.color = "white";
-text.fontSize = 32;
-		text.top = -380;
-gui.addControl(text);
-
+		const gui = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this);
+		
+		this._score_text = new GUI.TextBlock();
+		this._score_text.text = "Scores loading...";
+		this._score_text.color = "white";
+		this._score_text.fontSize = 28;
+		this._score_text.top = -320;
+		gui.addControl(this._score_text);
 	}
 
 	loop(): void {
@@ -97,8 +97,13 @@ gui.addControl(text);
 			}
 		});
 
+		const score_text: string[] = [];
 		game_state.clients.forEach((c: ClientClient) => {
+			c.ingame_id;
+			c.score;
+			score_text.push(`${c.ingame_id ?? "Player"}: ${c.score ?? 0}`);
 		});
+		this._score_text.text = score_text.join('\n');
 
 		game_state.walls.forEach((w: ClientWall) => {
 			if (this._meshes.has(w.obj_id)) {
