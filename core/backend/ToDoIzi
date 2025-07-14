@@ -1,0 +1,31 @@
+# TODO
+## Major module: Live Chat:
+### In this module, you need to create a chat feature for users
+[x] The user should be able to send direct messages to other users.
+
+[] The user should be able to block other users, preventing them from seeing any
+further messages from the blocked account.
+
+[] The user should be able to invite other users to play a Pong game through the
+chat interface. --> FABI
+
+[] The tournament system should be able to notify users about the next game. --> FABI
+
+[-] The user should be able to access other players’ profiles through the chat
+interface. --> Already given through Endpoints
+
+## Major module: Implement remote authentication.
+### In this major module, the goal is to implement the following authentication system:
+#### Google Sign-in . Key features and objectives include:
+[] Integrate the authentication system, allowing users to securely sign in.
+
+[] Obtain the necessary credentials and permissions from the authority to enable
+secure login.
+
+[] Implement user-friendly login and authorization flows that adhere to best prac-
+tices and security standards.
+
+[] Ensure the secure exchange of authentication tokens and user information
+between the web application and the authentication provider.
+This major module aims to provide a remote user authentication, offering users a
+secure and convenient way to access the web application
