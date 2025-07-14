@@ -6,6 +6,8 @@ import type {
 	GameOptions
 } from '../game_shared/message_types.ts';
 
+import { ScorePanel } from './score_lines.ts';
+
 import { FireProceduralTexture } from '@babylonjs/procedural-textures/fire';
 import * as GUI from '@babylonjs/gui';
 
@@ -82,9 +84,11 @@ export class GameScene extends BaseScene {
 	private _ground: BABYLON.Mesh;
 
 	private _meshes: Map<number, BABYLON.Mesh> = new Map<number, BABYLON.Mesh>;
-	private _score_text: GUI.TextBlock;
+	//private _score_text: GUI.TextBlock;
 
 	private _color_schemes: Map<number, PlayerColors> = new Map<number, PlayerColors>;
+
+	private _score_panel: ScorePanel;
 
 	constructor(engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
 		super(engine, canvas);
@@ -117,13 +121,7 @@ export class GameScene extends BaseScene {
 		this._ground.rotate(BABYLON.Axis.X, -Math.PI / 2, BABYLON.Space.LOCAL);
 
 		const gui = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this);
-		
-		this._score_text = new GUI.TextBlock();
-		this._score_text.text = "Scores loading...";
-		this._score_text.color = "white";
-		this._score_text.fontSize = 28;
-		this._score_text.top = -320;
-		gui.addControl(this._score_text);
+		this._score_panel = new ScorePanel(gui);
 	}
 
 	loop(): void {
@@ -235,11 +233,10 @@ export class GameScene extends BaseScene {
 		this._update_walls(game_state.walls);
 		this._init_color_schemes(game_state.clients);
 
-		const score_text: string[] = [];
 		game_state.clients.forEach((c: ClientClient) => {
-			const color: BABYLON.Color3 = this._meshes.get(c.paddle.obj_id).material.diffuseColor;
-			score_text.push(`${c.ingame_id ?? "Player"}: ${c.score ?? 0}`);
+			const color: BABYLON.Color3 = this._color_schemes.get(c.obj_id).major.diffuseColor;
+			this._score_panel.update_score(c.obj_id, c.score, color, undefined);
 		});
-		this._score_text.text = score_text.join('\n');
+
 	}
 };
