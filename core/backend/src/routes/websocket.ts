@@ -6,6 +6,11 @@ import cookie from 'cookie'            // npm install cookie
 import { findUserWithFriends, setUserLive } from '../functions/user.ts'
 import { error } from 'console'
 
+/*
+	FOr Live Chat, where every user can send msgs to other users and not only friends
+*/
+const userSockets = new Map<number, Set<ExtendedWebSocket>>()
+
 interface ExtendedWebSocket extends WebSocket {
 	userId?: number
 	isAlive?: boolean
@@ -39,14 +44,50 @@ export const wsRoute = async function (app: FastifyInstance) {
 			throw error
 		}
 		await setUserLive(app, extSocket.userId, true)
-		// echo message handler
-		extSocket.on('message', (msg: Buffer) => {
-			extSocket.send(
-				`[BACK-END PART] Server received: ${msg.toString()}`
-			)
-		})
 
-		// Clean-up & Broadcast at Closure
+		//// Old msg Handler
+		// echo message handler
+		// extSocket.on('message', (msg: Buffer) => {
+		// 	extSocket.send(
+		// 		`[BACK-END PART] Server received: ${msg.toString()}`
+		// 	)
+		// })
+		{
+			const set = userSockets.get(extSocket.userId) ?? new Set()
+			set.add(extSocket)
+			userSockets.set(extSocket.userId, set)
+		}
+		// BEGIN -- Message Handler
+		extSocket.on('message', async raw => {
+			let msg: any
+			try { msg = JSON.parse(raw.toString()) }
+			catch {
+				return extSocket.send(JSON.stringify({ type: 'error', error: 'Invalid JSON' }))
+			}
+			if (msg.type === 'direct_message') {
+				const targets = userSockets.get(msg.to as number)
+				if (!targets || targets.size === 0) {
+					return extSocket.send(JSON.stringify({
+						type: 'error',
+						error: 'User not connected'
+					}))
+				}
+				for (const tsock of targets) {
+					tsock.send(JSON.stringify({
+						type: 'direct_message',
+						from: extSocket.userId,
+						content: msg.content,
+						ts: Date.now()
+					}))
+				}
+			}
+			else {
+				extSocket.send('[BACK-END PART] Server received: ' + raw.toString())
+			}
+		})
+		// END -- Message Handler
+
+		// BEGIN -- CLose Hanlder
 		extSocket.on('close', async () => {
 			await setUserLive(app, extSocket.userId!, false)
 			const set = userSockets.get(extSocket.userId!)
