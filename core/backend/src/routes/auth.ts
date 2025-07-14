@@ -4,6 +4,10 @@ import bcrypt from 'bcrypt'
 import type { FastifyInstance } from 'fastify'
 import { DEFAULT_AVATARS } from '../constants/avatars.ts'
 // backend/src/auth.ts
+import { setUserLive } from '../functions/user.ts'
+import { userRoutes } from './users.ts'
+import type { FastifyReply, FastifyRequest } from 'fastify';
+import { error } from 'console'
 
 const COST = 12  // bcrypt cost factor (2^12 ≈ 400 ms on laptop)
 
@@ -101,16 +105,33 @@ export default async function authRoutes(app: FastifyInstance) {
 				sameSite: 'lax',
 				secure: false // in prod auf true setzen, wenn HTTPS aktiv
 			})
-
+			setUserLive(app, user.id, true);
 			return reply.send({ ok: true })
 		}
 	)
 	// logout
-	app.post('/api/logout', async (_req, reply) => {
-		reply.clearCookie('token', { path: '/' })
-		reply.send({ ok: true })
-	})
+	// app.post('/api/logout', async (req, reply) => {
 
+	// 	console.log("Request LogOut: " + req);
+	// 	const userId = (req.user as { id: number }).id;
+	// 	// const temp_id =  parseInt(_req.body.id, 10);
+	// 	setUserLive(app, userId, false);
+	// 	reply.clearCookie('token', { path: '/' })
+	// 	reply.send({ ok: true })
+	// })
+	app.post('/api/logout', async (request: FastifyRequest, reply: FastifyReply) => {
+		const token = request.cookies.token;
+		if (token === undefined)
+			throw (error);
+		try {
+			const payload = await app.jwt.verify<{ id: number }>(token);
+			await setUserLive(app, payload.id, false);
+		} catch (err) {
+			//AUth missing --> do nothing
+		}
+		reply.clearCookie('token', { path: '/' });
+		return reply.send({ ok: true });
+	});
 	// TODO: When logging out, getting console log error: GET http://localhost:5173/api/me 401 (Unauthorized)
 	app.get('/api/me', { preHandler: app.auth }, async (req) => {
 		const user = await app.db.get(
