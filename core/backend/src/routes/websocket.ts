@@ -1,9 +1,9 @@
 // import type { fastify, FastifyPluginAsync } from 'fastify'
-import { fastify, type FastifyInstance } from 'fastify'
+import { type FastifyInstance } from 'fastify'
 // import websocket from '@fastify/websocket'
 import type { WebSocket } from '@fastify/websocket' // <-- use 'import type'
 import cookie from 'cookie'            // npm install cookie
-import { findUserWithFriends, setUserLive } from '../functions/user.ts'
+import { setUserLive } from '../functions/user.ts'
 import { error } from 'console'
 import { notifyFriendStatus } from '../functions/wsHandler/connectHandler.ts'
 import type { ExtendedWebSocket} from '../types/wsTypes.ts'
@@ -63,83 +63,12 @@ export const wsRoute = async function (app: FastifyInstance) {
 
 		// BEGIN -- Message Handler
 		extSocket.on('message', raw => {
-		// extSocket.on('message', async raw => {
-			// let msg: any
-			// try { msg = JSON.parse(raw.toString()) }
-			// catch {
-			// 	return extSocket.send(JSON.stringify({ type: 'error', error: 'Invalid JSON' }))
-			// }
-
-			// switch (msg.type) {
-			// 	// if (msg.type === 'direct_message') {
-			// 	case 'direct_message': {
-			// 		const targets = userSockets.get(msg.to as number)
-			// 		if (!targets || targets.size === 0) {
-			// 			return extSocket.send(JSON.stringify({
-			// 				type: 'error',
-			// 				error: 'User not connected'
-			// 			}))
-			// 		}
-			// 		for (const tsock of targets) {
-			// 			tsock.send(JSON.stringify({
-			// 				type: 'direct_message',
-			// 				from: extSocket.userId,
-			// 				content: msg.content,
-			// 				ts: Date.now()
-			// 			}))
-			// 		}
-			// 		return;
-			// 	}
-			// 	// case 'ping': {
-			// 	// 	return extSocket.send(JSON.stringify({ type: 'pong' }))
-			// 	// }
-			// 	default: {
-			// 		return extSocket.send(JSON.stringify({
-			// 			type: 'error',
-			// 			error: `Unknown message type ${msg.type}`
-			// 		}))
-			// 	}
-			// }
 			handleWsMessage(app, userSockets, extSocket, raw);
 		})
 		// END -- Message Handler
 
 		// BEGIN -- CLose Hanlder
 		extSocket.on('close', async () => {
-			// await setUserLive(app, extSocket.userId!, false)
-			// const set = userSockets.get(extSocket.userId!)
-			// if (set) {
-			// 	set.delete(extSocket)
-			// 	if (set.size === 0) userSockets.delete(extSocket.userId!)
-			// }
-			// const friends = await findUserWithFriends(app, extSocket.userId!)
-			// console.log(friends);
-			// if (!friends) {
-			// 	// throw error(friends);
-			// 	throw new Error(`findUserWithFriends returned null for user ${extSocket.userId}`)
-			// }
-			// console.log("ALoo0");
-			// for (const client of app.websocketServer.clients) {
-			// 	const c = client as ExtendedWebSocket;
-			// 	if (c.readyState !== WebSocket.OPEN || c.userId === undefined) {
-			// 		continue;
-			// 	}
-
-			// 	console.log("ALoo1");
-			// 	for (const friend of friends.friends) {
-			// 		console.log(friend);
-			// 		console.log(extSocket.userId);
-			// 		console.log(c.userId);
-			// 		if ((friend.id !== extSocket.userId && friend.id === c.userId)) {
-			// 			console.log("ALoo2");
-			// 			c.send(JSON.stringify({
-			// 				type: 'friend_status_update',
-			// 				friendId: extSocket.userId,
-			// 				online: false
-			// 			}));
-			// 		}
-			// 	}
-			// }
 			handleClose(app, userSockets, extSocket);
 		})
 		// END -- CLose Hanlder
