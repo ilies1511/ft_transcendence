@@ -12,12 +12,8 @@ import { handleWsMessage } from '../functions/wsHandler/messageHandler.ts'
 /*
 	FOr Live Chat, where every user can send msgs to other users and not only friends
 */
-const userSockets = new Map<number, Set<ExtendedWebSocket>>()
 
-interface ExtendedWebSocket extends WebSocket {
-	userId?: number
-	isAlive?: boolean
-}
+const userSockets = new Map<number, Set<ExtendedWebSocket>>()
 
 export const wsRoute = async function (app: FastifyInstance) {
 	app.get('/ws', { websocket: true }, async (socket: WebSocket, req) => {
@@ -63,44 +59,47 @@ export const wsRoute = async function (app: FastifyInstance) {
 			userSockets.set(extSocket.userId, set)
 		}
 		await notifyFriendStatus(app, userSockets, extSocket.userId, true);
-		// BEGIN -- Message Handler
-		extSocket.on('message', async raw => {
-			let msg: any
-			try { msg = JSON.parse(raw.toString()) }
-			catch {
-				return extSocket.send(JSON.stringify({ type: 'error', error: 'Invalid JSON' }))
-			}
 
-			switch (msg.type) {
-				// if (msg.type === 'direct_message') {
-				case 'direct_message': {
-					const targets = userSockets.get(msg.to as number)
-					if (!targets || targets.size === 0) {
-						return extSocket.send(JSON.stringify({
-							type: 'error',
-							error: 'User not connected'
-						}))
-					}
-					for (const tsock of targets) {
-						tsock.send(JSON.stringify({
-							type: 'direct_message',
-							from: extSocket.userId,
-							content: msg.content,
-							ts: Date.now()
-						}))
-					}
-					return;
-				}
-				// case 'ping': {
-				// 	return extSocket.send(JSON.stringify({ type: 'pong' }))
-				// }
-				default: {
-					return extSocket.send(JSON.stringify({
-						type: 'error',
-						error: `Unknown message type ${msg.type}`
-					}))
-				}
-			}
+		// BEGIN -- Message Handler
+		extSocket.on('message', raw => {
+		// extSocket.on('message', async raw => {
+			// let msg: any
+			// try { msg = JSON.parse(raw.toString()) }
+			// catch {
+			// 	return extSocket.send(JSON.stringify({ type: 'error', error: 'Invalid JSON' }))
+			// }
+
+			// switch (msg.type) {
+			// 	// if (msg.type === 'direct_message') {
+			// 	case 'direct_message': {
+			// 		const targets = userSockets.get(msg.to as number)
+			// 		if (!targets || targets.size === 0) {
+			// 			return extSocket.send(JSON.stringify({
+			// 				type: 'error',
+			// 				error: 'User not connected'
+			// 			}))
+			// 		}
+			// 		for (const tsock of targets) {
+			// 			tsock.send(JSON.stringify({
+			// 				type: 'direct_message',
+			// 				from: extSocket.userId,
+			// 				content: msg.content,
+			// 				ts: Date.now()
+			// 			}))
+			// 		}
+			// 		return;
+			// 	}
+			// 	// case 'ping': {
+			// 	// 	return extSocket.send(JSON.stringify({ type: 'pong' }))
+			// 	// }
+			// 	default: {
+			// 		return extSocket.send(JSON.stringify({
+			// 			type: 'error',
+			// 			error: `Unknown message type ${msg.type}`
+			// 		}))
+			// 	}
+			// }
+			handleWsMessage(app, userSockets, extSocket, raw);
 		})
 		// END -- Message Handler
 
