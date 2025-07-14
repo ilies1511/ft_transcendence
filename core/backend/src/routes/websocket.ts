@@ -48,15 +48,17 @@ export const wsRoute = async function (app: FastifyInstance) {
 
 		// Clean-up & Broadcast at Closure
 		extSocket.on('close', async () => {
-			// User als offline markieren
 			await setUserLive(app, extSocket.userId!, false)
-
-			// Freunde laden
+			const set = userSockets.get(extSocket.userId!)
+			if (set) {
+				set.delete(extSocket)
+				if (set.size === 0) userSockets.delete(extSocket.userId!)
+			}
 			const friends = await findUserWithFriends(app, extSocket.userId!)
-
 			console.log(friends);
 			if (!friends) {
-				throw error(friends);
+				// throw error(friends);
+				throw new Error(`findUserWithFriends returned null for user ${extSocket.userId}`)
 			}
 			console.log("ALoo0");
 			for (const client of app.websocketServer.clients) {
@@ -81,5 +83,6 @@ export const wsRoute = async function (app: FastifyInstance) {
 				}
 			}
 		})
+		// END -- CLose Hanlder
 	})
 }
