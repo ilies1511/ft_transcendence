@@ -6,6 +6,29 @@ import cookie from 'cookie'            // npm install cookie
 import { findUserWithFriends, setUserLive } from '../functions/user.ts'
 import { error } from 'console'
 
+async function notifyFriendStatus(
+	fastify: FastifyInstance,
+	userSockets: Map<number, Set<ExtendedWebSocket>>,
+	userId: number,
+	online: boolean
+) {
+	const myFriends = await findUserWithFriends(fastify, userId)
+	if (!myFriends)
+		return
+	for (const friendId of myFriends.friends.map(f => f.id)) {
+		const sockets = userSockets.get(friendId)
+		if (!sockets)
+			continue ;
+		for (const sock of sockets) {
+			sock.send(JSON.stringify({
+				type: 'friend_status_update',
+				friendId: userId,
+				online
+			}))
+		}
+	}
+}
+
 /*
 	FOr Live Chat, where every user can send msgs to other users and not only friends
 */
@@ -43,7 +66,9 @@ export const wsRoute = async function (app: FastifyInstance) {
 		if (extSocket.userId === undefined) {
 			throw error
 		}
+
 		await setUserLive(app, extSocket.userId, true)
+		await notifyFriendStatus(app, userSockets, extSocket.userId, true)
 
 		//// Old msg Handler
 		// echo message handler
@@ -57,6 +82,7 @@ export const wsRoute = async function (app: FastifyInstance) {
 			set.add(extSocket)
 			userSockets.set(extSocket.userId, set)
 		}
+		await notifyFriendStatus(app, userSockets, extSocket.userId, true);
 		// BEGIN -- Message Handler
 		extSocket.on('message', async raw => {
 			let msg: any
