@@ -11,6 +11,7 @@ import authJwt from './functions/auth-jwt.ts';
 //Mit namespace
 import * as testRoutes from './routes/test_route.ts'
 import multipart from '@fastify/multipart'
+import { matchRoutes } from './routes/match.js';
 
 async function main() {
 
@@ -82,12 +83,14 @@ async function main() {
 	// 3) Routen & Game-Server
 	await fastify.register(authJwt);
 	await fastify.register(wsRoute);
-	// await fastify.register(testRoutes.helloRoute);
-	// await fastify.register(testRoutes.randomRoute);
-	// await fastify.register(testRoutes.test);
 	await fastify.register(userRoutes);
 	await fastify.register(authRoutes);
 	await fastify.register(friendRoutes);
+	/*
+		curl -i http://localhost:3000/api/users/1/matches
+		curl -i http://localhost:3000/api/users/1/stats
+	 */
+	await fastify.register(matchRoutes);
 
 	const game_server = new GameServer(fastify);
 
