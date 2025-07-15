@@ -51,27 +51,54 @@ const LoginPage: PageModule = {
 		root.innerHTML = template
 	},
 
-	async afterRender(root) {
-		const form = root.querySelector<HTMLFormElement>('#login-form')!
-		const msg  = root.querySelector<HTMLParagraphElement>('#msg')!
-		const baseMsg = 'text-center text-sm font-semibold'
+	// async afterRender(root) {
+	// 	const form = root.querySelector<HTMLFormElement>('#login-form')!
+	// 	const msg  = root.querySelector<HTMLParagraphElement>('#msg')!
+	// 	const baseMsg = 'text-center text-sm font-semibold'
 
-		form.addEventListener('submit', async e => {
-			e.preventDefault()
-			const { email, password } = Object.fromEntries(new FormData(form)) as {
-				email: string; password: string
-			}
+	// 	form.addEventListener('submit', async e => {
+	// 		e.preventDefault()
+	// 		const { email, password } = Object.fromEntries(new FormData(form)) as {
+	// 			email: string; password: string
+	// 		}
 
-			try {
-				await submitLogin(email, password) // seting cookie
-				await router.go('/profile') // redirect to profile after login
-				document.dispatchEvent(new Event('auth-change'))
-			} catch (err: any) {
-				msg.className = `${baseMsg} text-red-500`
-				msg.textContent = err.message ?? 'Login failed'
-			}
-		})
-	}
+	// 		try {
+	// 			await submitLogin(email, password) // seting cookie
+	// 			await router.go('/profile') // redirect to profile after login
+	// 			document.dispatchEvent(new Event('auth-change'))
+	// 		} catch (err: any) {
+	// 			msg.className = `${baseMsg} text-red-500`
+	// 			msg.textContent = err.message ?? 'Login failed'
+	// 		}
+	// 	})
+	// }
+	 async afterRender(root) {
+    const form = root.querySelector<HTMLFormElement>('#login-form')!;
+    const msg  = root.querySelector<HTMLParagraphElement>('#msg')!;
+    const baseMsg = 'text-center text-sm font-semibold';
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+
+      const { email, password } = Object.fromEntries(new FormData(form)) as {
+        email: string; password: string;
+      };
+
+      try {
+        // 1 ‑ network call: sets the JWT cookie
+        await submitLogin(email, password);
+
+        // 2 ‑ let the entire SPA know the user is now authenticated
+        document.dispatchEvent(new Event('auth-change'));
+
+        // 3 ‑ navigate to the protected area
+        router.go('/profile');
+      } catch (err: any) {
+        msg.className = `${baseMsg} text-red-500`;
+        msg.textContent = err.message ?? 'Login failed';
+      }
+    });
+  }
 }
 
 export default LoginPage

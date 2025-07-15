@@ -1,3 +1,4 @@
+// backend/src/routes/friends_invitation.ts
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify';
 import type { WebSocket } from '@fastify/websocket';
 import chalk from 'chalk'; // add color to print statement to server console
