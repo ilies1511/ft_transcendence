@@ -73,6 +73,18 @@ export async function runMigrations(fastify: FastifyInstance): Promise<void> {
 		);
 	`);
 	// END -- Match History and User Statistics
+
+	// BEGIN -- Blocked Users
+	await fastify.db.exec(`
+		CREATE TABLE IF NOT EXISTS user_blocks(
+			blocker_id INTEGER NOT NULL,
+			blocked_id INTEGER NOT NULL,
+			PRIMARY KEY(blocker_id, blocked_id),
+			FOREIGN KEY(blocker_id) REFERENCES users(id) ON DELETE CASCADE,
+			FOREIGN KEY(blocked_id) REFERENCES users(id) ON DELETE CASCADE
+			);
+	`);
+	// END -- Blocked Users
 }
 
 // // https://www.octans-solutions.fr/en/articles/sqlite-typescript

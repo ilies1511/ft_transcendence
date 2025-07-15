@@ -4,6 +4,7 @@ import { fpSqlitePlugin } from 'fastify-sqlite-typed'
 import { GameServer } from './game/game_server.ts';
 import { wsRoute } from './routes/websocket.ts';
 import { userRoutes } from './routes/users.ts';
+import { blockRoutes } from './routes/block.ts';
 import { friendRoutes } from './routes/friends.ts';
 import { runMigrations } from './db/db_init.ts';
 import authRoutes from './routes/auth.ts';
@@ -95,7 +96,7 @@ async function main() {
 		curl -i http://localhost:3000/api/users/1/stats
 	 */
 	await fastify.register(matchRoutes);
-
+	await fastify.register(blockRoutes);
 	// to live ping/notify (via ws) a user, that we got friend request
 	await fastify.register(friendsInviteNotificationRoute);
 

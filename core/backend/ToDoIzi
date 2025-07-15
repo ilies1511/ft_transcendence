@@ -3,7 +3,7 @@
 ### In this module, you need to create a chat feature for users
 [x] The user should be able to send direct messages to other users.
 
-[] The user should be able to block other users, preventing them from seeing any
+[x] The user should be able to block other users, preventing them from seeing any
 further messages from the blocked account.
 
 [] The user should be able to invite other users to play a Pong game through the

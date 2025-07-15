@@ -1,5 +1,6 @@
 import type { ExtendedWebSocket, Message} from '../../types/wsTypes.ts';
 import { type FastifyInstance } from 'fastify'
+import { isBlocked } from '../block.ts';
 
 export async function handleWsMessage(
 	fastify: FastifyInstance,
@@ -17,6 +18,19 @@ export async function handleWsMessage(
 	switch (msg.type) {
 
 		case 'direct_message': {
+			const toId = msg.to as number
+			if (await isBlocked(fastify, toId, extSocket.userId!)) {
+				return extSocket.send(JSON.stringify({
+					type: 'error',
+					error: 'Your messages are blocked by this user'
+				}))
+			}
+			if (await isBlocked(fastify, extSocket.userId!, toId)) {
+				return extSocket.send(JSON.stringify({
+					type: 'error',
+					error: 'You have blocked this user'
+				}))
+			}
 			const targets = userSockets.get(msg.to)
 			if (!targets?.size) {
 				return extSocket.send(JSON.stringify({
