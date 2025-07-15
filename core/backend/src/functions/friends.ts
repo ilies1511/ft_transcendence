@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify'
-import type { FriendRequestRow } from '../db/types.js'
+import type { FriendRequestRow } from '../types/userTypes.ts'
 
 
 export async function sendFriendRequest(

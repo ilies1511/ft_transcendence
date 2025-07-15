@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from "fastify";
-import { type UserWithFriends, type FriendRequestRow, type UserRow } from "../db/types.js";
+import { type UserWithFriends, type FriendRequestRow, type UserRow } from "../types/userTypes.ts";
 import { findUserWithFriends } from "../functions/user.ts";
 import {
 	sendFriendRequest, listIncomingRequests, acceptFriendRequest,

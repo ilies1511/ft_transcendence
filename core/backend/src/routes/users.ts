@@ -1,7 +1,7 @@
 // src/routes/users.ts
 import type { FastifyPluginAsync } from "fastify";
 import bcrypt from "bcrypt";
-import { type UserWithFriends, type FriendRequestRow, type UserRow } from "../db/types.js";
+import { type UserWithFriends, type FriendRequestRow, type UserRow } from "../types/userTypes.ts";
 import { error, info } from "console";
 import {
 	createUser, updateUser,

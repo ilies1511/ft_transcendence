@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify'
-import type { UserMatch, UserStats, MatchRow } from '../db/types.js'
+import type { UserMatch, UserStats, MatchRow } from '../types/userTypes.ts'
 
 type HistoryRow = {
 	match_id: number;

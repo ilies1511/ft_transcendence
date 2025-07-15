@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { getMatchHistory, getUserStats, createMatchMeta, completeMatch } from '../functions/match.ts'
-import { type UserStats } from '../db/types.ts'
+import { type UserStats } from '../types/userTypes.ts'
 import { type NewMatch } from '../functions/match.ts'
 
 export const matchRoutes: FastifyPluginAsync = async fastify => {
