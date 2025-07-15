@@ -36,7 +36,7 @@ export async function getMatchHistory(
 			created_at: r.created_at
 		},
 		score: r.score,
-		result: r.result as 'win' | 'loss'
+		result: r.result as 'win' | 'loss' | 'draw'
 	}))
 }
 
@@ -45,12 +45,13 @@ export async function getUserStats(
 	userId: number
 ): Promise<UserStats> {
 	const agg = await fastify.db.get<{
-		total: number; wins: number; losses: number
+		total: number; wins: number; losses: number; draws: number
 	}>(
 		`SELECT
 		COUNT(*)					AS total,
 		SUM(CASE WHEN result='win'  THEN 1 ELSE 0 END) AS wins,
-		SUM(CASE WHEN result='loss' THEN 1 ELSE 0 END) AS losses
+		SUM(CASE WHEN result='loss' THEN 1 ELSE 0 END) AS losses,
+		SUM(CASE WHEN result='draw' THEN 1 ELSE 0 END) AS draws
 		FROM match_participants
 		WHERE user_id = ?`,
 		userId
@@ -61,13 +62,15 @@ export async function getUserStats(
 		games: number
 		wins: number
 		losses: number
+		draws: number
 	}
 	const byMode = await fastify.db.all<ModeAggRow[]>(
 		`SELECT
 		m.mode                         AS mode,
 		COUNT(*)                       AS games,
 		SUM(CASE WHEN p.result='win'  THEN 1 ELSE 0 END) AS wins,
-		SUM(CASE WHEN p.result='loss' THEN 1 ELSE 0 END) AS losses
+		SUM(CASE WHEN p.result='loss' THEN 1 ELSE 0 END) AS losses,
+		SUM(CASE WHEN p.result='draw' THEN 1 ELSE 0 END) AS draws
 		FROM matches AS m
 		JOIN match_participants AS p
 		ON m.id = p.match_id
@@ -79,17 +82,20 @@ export async function getUserStats(
 	const total = agg?.total ?? 0
 	const wins = agg?.wins ?? 0
 	const losses = agg?.losses ?? 0
+	const draws = agg?.draws ?? 0
 
 	return {
 		totalGames: total,
 		wins,
 		losses,
+		draws,
 		winRate: total > 0 ? wins / total : 0,
 		byMode: byMode.map(m => ({
 			mode: m.mode,
 			games: m.games,
 			wins: m.wins,
 			losses: m.losses,
+			draws: m.draws,
 			winRate: m.games > 0 ? m.wins / m.games : 0
 		}))
 	}
@@ -101,7 +107,7 @@ export interface NewMatch {
 	participants: Array<{
 		user_id: number;
 		score: number;
-		result: 'win' | 'loss';
+		result: 'win' | 'loss' | 'draw';
 	}>;
 }
 

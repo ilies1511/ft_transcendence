@@ -53,25 +53,27 @@ export interface ParticipantRow {
 	match_id: number;
 	user_id: number;
 	score: number;
-	result: 'win' | 'loss';
+	result: 'win' | 'loss' | 'draw';
 }
 
 export interface UserMatch {
 	match: MatchRow;
 	score: number;
-	result: 'win' | 'loss';
+	result: 'win' | 'loss' | 'draw';
 }
 
 export interface UserStats {
 	totalGames: number;
 	wins: number;
 	losses: number;
+	draws: number;
 	winRate: number;
 	byMode: Array<{
 		mode: number;
 		games: number;
 		wins: number;
 		losses: number;
+		draws: number;
 		winRate: number;
 	}>;
 }

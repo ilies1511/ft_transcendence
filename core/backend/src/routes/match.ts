@@ -26,7 +26,7 @@ export const matchRoutes: FastifyPluginAsync = async fastify => {
 		Reply: Array<{
 			match: { id: number; mode: number; duration: number; created_at: number }
 			score: number
-			result: 'win' | 'loss'
+			result: 'win' | 'loss' | 'draw'
 		}>
 	}>(
 		'/api/users/:id/matches',
@@ -127,10 +127,20 @@ export const matchRoutes: FastifyPluginAsync = async fastify => {
 			{"user_id":2,"score":3,"result":"loss"}
 		]
 		}'
+
+		curl -i -X POST http://localhost:3000/api/matches/:matchID/complete \
+		-H "Content-Type: application/json" \
+		-d '{
+		"duration": 90,
+		"participants": [
+			{"user_id":1,"score":0,"result":"draw"},
+			{"user_id":2,"score":0,"result":"draw"}
+		]
+		}'
 	 */
 	fastify.post<{
 		Params: { matchId: number }
-		Body: { duration: number; participants: Array<{ user_id: number; score: number; result: 'win' | 'loss' }> }
+		Body: { duration: number; participants: Array<{ user_id: number; score: number; result: 'win' | 'loss' | 'draw' }> }
 	}>(
 		'/api/matches/:matchId/complete',
 		async (req, reply) => {
