@@ -48,30 +48,32 @@ const template = /*html*/ `
 
 const LoginPage: PageModule = {
 	render(root) {
-		root.innerHTML = template
+		root.innerHTML = template;
 	},
 
 	async afterRender(root) {
-		const form = root.querySelector<HTMLFormElement>('#login-form')!
-		const msg  = root.querySelector<HTMLParagraphElement>('#msg')!
-		const baseMsg = 'text-center text-sm font-semibold'
+		const form	= root.querySelector<HTMLFormElement>('#login-form')!;
+		const msg	= root.querySelector<HTMLParagraphElement>('#msg')!;
+		const baseMsg	= 'text-center text-sm font-semibold';
 
 		form.addEventListener('submit', async e => {
-			e.preventDefault()
+			e.preventDefault();
+
 			const { email, password } = Object.fromEntries(new FormData(form)) as {
-				email: string; password: string
-			}
+				email: string;
+				password: string;
+			};
 
 			try {
-				await submitLogin(email, password) // seting cookie
-				await router.go('/profile') // redirect to profile after login
-				document.dispatchEvent(new Event('auth-change'))
+				await submitLogin(email, password); // set cookies
+				document.dispatchEvent(new Event('auth-change')); // for ws
+				router.go('/profile');
 			} catch (err: any) {
-				msg.className = `${baseMsg} text-red-500`
-				msg.textContent = err.message ?? 'Login failed'
+				msg.className	= `${baseMsg} text-red-500`;
+				msg.textContent	= err.message ?? 'Login failed';
 			}
-		})
+		});
 	}
-}
+};
 
-export default LoginPage
+export default LoginPage;
