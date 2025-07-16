@@ -3,7 +3,6 @@ import './style.css';
 import { Router } from './router.ts';
 import { initFriendUI } from './pages/friendUI.ts';
 import { currentUser, logout } from './services/auth'
-// import { friendRequestToast } from './ui/toast';
 import { initFriendsWs, closeFriendsWs } from './websocket.ts';
 
 const root = document.querySelector<HTMLElement>('#app')!;
@@ -18,25 +17,10 @@ document.addEventListener('click', router.linkHandler);
 // first paint
 router.go(location.pathname);
 
-// // friends invite websocket
-// const friendsWs = new WebSocket('ws://localhost:5173/friends');
-
-// // close ws on refresh/close website browser window
-// window.addEventListener('beforeunload', () => friendsWs.close());
-
-// friendsWs.onmessage = evt => {
-// 	try {
-// 		const data = JSON.parse(evt.data);
-// 		if (data.type === 'new_friend_request') {
-// 			friendRequestToast(data.requestId, data.from);
-// 		}
-// 	} catch {/* ignore non-JSON */}
-// };
-
 document.addEventListener('auth-change', async () => {
 	const user = await currentUser();
-	if (user) initFriendsWs();      // user just logged in
-	else closeFriendsWs();     // user just logged out
+	if (user) initFriendsWs(); // user just logged in
+	else closeFriendsWs(); // user just logged out
 });
 
 // <avatar> <username> <logout button> TODO: need to move this to seperate page/ instance.
@@ -67,5 +51,5 @@ async function refreshHeader () {
 
 
 refreshHeader() // initial run
-document.addEventListener('auth-change', refreshHeader)
+document.addEventListener('auth-change', refreshHeader) // TODO: Test if actually needed
 document.addEventListener('settings-update', refreshHeader)

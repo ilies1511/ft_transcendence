@@ -4,10 +4,11 @@ import { friendRequestToast } from './ui/toast';
 let friendsWs: WebSocket | null = null;
 
 export function initFriendsWs() {
-	if (friendsWs?.readyState === WebSocket.OPEN) return; // already up
+	if (friendsWs?.readyState === WebSocket.OPEN)
+		return; // already up
 
-	friendsWs?.close();	// close stale
-	friendsWs = new WebSocket('ws://localhost:3000/friends');	// same origin
+	friendsWs?.close();	// close just in case
+	friendsWs = new WebSocket('ws://localhost:3000/friends');
 
 	friendsWs.onmessage = evt => {
 		try {
