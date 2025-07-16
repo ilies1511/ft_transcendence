@@ -2,19 +2,25 @@ import Fastify from 'fastify'
 import websocket from '@fastify/websocket'
 import { fpSqlitePlugin } from 'fastify-sqlite-typed'
 import { GameServer } from './game/game_server.ts';
-import { wsRoute } from './routes/game.ts';
+import { wsRoute } from './routes/websocket.ts';
 import { userRoutes } from './routes/users.ts';
+import { blockRoutes } from './routes/block.ts';
 import { friendRoutes } from './routes/friends.ts';
 import { runMigrations } from './db/db_init.ts';
 import authRoutes from './routes/auth.ts';
 import authJwt from './functions/auth-jwt.ts';
+import friendsInviteNotificationRoute from './routes/friends_invitation.ts';
+
 //Mit namespace
 import * as testRoutes from './routes/test_route.ts'
 import multipart from '@fastify/multipart'
+import { matchRoutes } from './routes/match.js';
+
 
 async function main() {
 
 	const fastify = Fastify({ logger: true })
+	// const fastify = Fastify({logger: { level: 'debug' }})
 
 	await fastify.register(multipart, {
 		limits: { fileSize: 1_000_000 }, // z.B. max. 1 MB
@@ -82,12 +88,17 @@ async function main() {
 	// 3) Routen & Game-Server
 	await fastify.register(authJwt);
 	await fastify.register(wsRoute);
-	// await fastify.register(testRoutes.helloRoute);
-	// await fastify.register(testRoutes.randomRoute);
-	// await fastify.register(testRoutes.test);
 	await fastify.register(userRoutes);
 	await fastify.register(authRoutes);
 	await fastify.register(friendRoutes);
+	/*
+		curl -i http://localhost:3000/api/users/1/matches
+		curl -i http://localhost:3000/api/users/1/stats
+	 */
+	await fastify.register(matchRoutes);
+	await fastify.register(blockRoutes);
+	// to live ping/notify (via ws) a user, that we got friend request
+	await fastify.register(friendsInviteNotificationRoute);
 
 	const game_server = new GameServer(fastify);
 

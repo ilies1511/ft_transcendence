@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from "fastify";
-import { type UserWithFriends, type FriendRequestRow, type UserRow } from "../db/types.js";
+import { type UserWithFriends, type FriendRequestRow, type UserRow } from "../types/userTypes.ts";
 import { findUserWithFriends } from "../functions/user.ts";
 import {
 	sendFriendRequest, listIncomingRequests, acceptFriendRequest,
@@ -103,6 +103,27 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 		async (req, reply) => {
 			try {
 				const fr = await sendFriendRequest(fastify, req.params.id, req.body.username)
+				// [START] SEND A FRIEND NOTIFICATION VIA WS INSTANTLY
+				if (fr) {
+					const sender = await fastify.db.get<{ username: string }>(
+						'SELECT username FROM users WHERE id = ?', req.params.id);
+
+					const recipient = await fastify.db.get<{ id: number }>(
+						'SELECT id FROM users WHERE username = ?', req.body.username);
+
+					if (recipient && sender) {
+						fastify.websocketServer.clients.forEach((client: any) => {
+							if (client.userId === recipient.id && client.wsPath === '/friends') {
+								client.send(JSON.stringify({
+									type: 'new_friend_request',
+									requestId: fr.id,
+									from: sender.username
+								}));
+							}
+						});
+					}
+				}
+				// [END] SEND A FRIEND NOTIFICATION VIA WS INSTANTLY
 				return reply.code(201).send({ requestId: fr.id })
 			} catch (err: any) {
 				if (err.message === 'RecipientNotFound') return reply.code(404).send({ error: 'User not found' })

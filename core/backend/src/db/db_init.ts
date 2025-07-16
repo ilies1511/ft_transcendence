@@ -51,6 +51,40 @@ export async function runMigrations(fastify: FastifyInstance): Promise<void> {
 		FOREIGN KEY(friend_id) REFERENCES users(id)
 		);`
 	)
+
+	// BEGIN -- Match History and User Statistics
+	await fastify.db.exec(`
+		CREATE TABLE IF NOT EXISTS matches (
+			id          INTEGER PRIMARY KEY AUTOINCREMENT,
+			mode        INTEGER NOT NULL,
+			duration    INTEGER NOT NULL,
+			created_at  INTEGER NOT NULL DEFAULT (strftime('%s','now'))
+		);
+	`);
+	await fastify.db.exec(`
+		CREATE TABLE IF NOT EXISTS match_participants (
+			match_id   INTEGER NOT NULL,
+			user_id    INTEGER NOT NULL,
+			score      INTEGER NOT NULL,
+			result     TEXT    NOT NULL,
+			PRIMARY KEY (match_id, user_id),
+			FOREIGN KEY (match_id) REFERENCES matches(id) ON DELETE CASCADE,
+			FOREIGN KEY (user_id)  REFERENCES users(id)   ON DELETE CASCADE
+		);
+	`);
+	// END -- Match History and User Statistics
+
+	// BEGIN -- Blocked Users
+	await fastify.db.exec(`
+		CREATE TABLE IF NOT EXISTS user_blocks(
+			blocker_id INTEGER NOT NULL,
+			blocked_id INTEGER NOT NULL,
+			PRIMARY KEY(blocker_id, blocked_id),
+			FOREIGN KEY(blocker_id) REFERENCES users(id) ON DELETE CASCADE,
+			FOREIGN KEY(blocked_id) REFERENCES users(id) ON DELETE CASCADE
+			);
+	`);
+	// END -- Blocked Users
 }
 
 // // https://www.octans-solutions.fr/en/articles/sqlite-typescript

@@ -41,6 +41,44 @@ export interface UserWithFriends extends Omit<UserRow, 'password'> {
 	friends: FriendInfo[]
 }
 
+// BEGIN -- Match History and User Statistics
+export interface MatchRow {
+	id: number;
+	mode: number;
+	duration: number;
+	created_at: number;
+}
+
+export interface ParticipantRow {
+	match_id: number;
+	user_id: number;
+	score: number;
+	result: 'win' | 'loss' | 'draw';
+}
+
+export interface UserMatch {
+	match: MatchRow;
+	score: number;
+	result: 'win' | 'loss' | 'draw';
+}
+
+export interface UserStats {
+	totalGames: number;
+	wins: number;
+	losses: number;
+	draws: number;
+	winRate: number;
+	byMode: Array<{
+		mode: number;
+		games: number;
+		wins: number;
+		losses: number;
+		draws: number;
+		winRate: number;
+	}>;
+}
+// END -- Match History and User Statistics
+
 /*
 	TODO: Websocket for Live status of friend + Live chat (store in tmp array
 		and not db)
@@ -50,13 +88,13 @@ export interface UserWithFriends extends Omit<UserRow, 'password'> {
 	Websocket checkt diese Daten in regelmaessigen Abstaenden
 */
 
-export interface Game {
-	id: [number, number];
-	result: string;
-	scores: [number, number];
-	password: string
-	email: string | null
-	start: number
-	end: number
-}
+// export interface Game {
+// 	id: [number, number];
+// 	result: string;
+// 	scores: [number, number];
+// 	password: string
+// 	email: string | null
+// 	start: number
+// 	end: number
+// }
 

@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import bcrypt from 'bcrypt'
 import { Interface } from 'readline'
-import type { UserRow, UserWithFriends, FriendInfo} from '../db/types.ts'
+import type { UserRow, UserWithFriends, FriendInfo} from '../types/userTypes.ts'
 // import { DEFAULT_AVATARS } from '../constants/avatars.ts'
 // import { DEFAULT_AVATARS } from '../../constants/avatars.ts'
 import { DEFAULT_AVATARS } from '../constants/avatars.ts'

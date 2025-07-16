@@ -25,6 +25,7 @@ export type PageModule = { // contract every page must fulfil
 	'/users': () => import('./pages/UsersPage').then(m => m.default),
 	'/profile/:id': () => import('./pages/profile').then(m => m.default),
 	'/settings/:id': () => import('./pages/settings').then(m => m.default),
+	'/friendlist': () => import('./pages/friendlist').then(m => m.default),
 
   }
 
