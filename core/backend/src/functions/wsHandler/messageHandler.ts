@@ -59,3 +59,12 @@ export async function handleWsMessage(
 		}
 	}
 }
+
+/*
+	TEST in Postman:
+{
+	"type":    "direct_message",
+	"to":      2,
+	"content": "Aloooooo"
+}
+*/
