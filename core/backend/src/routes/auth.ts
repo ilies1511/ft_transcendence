@@ -1,12 +1,11 @@
 // backend/src/auth.ts
 import bcrypt from 'bcrypt'
 // import { fastify, type FastifyInstance } from 'fastify'
-import type { FastifyInstance } from 'fastify'
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { DEFAULT_AVATARS } from '../constants/avatars.ts'
 // backend/src/auth.ts
 import { setUserLive } from '../functions/user.ts'
 import { userRoutes } from './users.ts'
-import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { error } from 'console'
 
 const COST = 12  // bcrypt cost factor (2^12 ≈ 400 ms on laptop)
