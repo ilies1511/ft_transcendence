@@ -1,7 +1,8 @@
 import Fastify from 'fastify'
 import websocket from '@fastify/websocket'
 import { fpSqlitePlugin } from 'fastify-sqlite-typed'
-import { GameServer } from './game/game_server.ts';
+//import { GameServer } from './game/game_server.ts';
+import { GameServer } from './game/new/GameServer.ts';
 import { wsRoute } from './routes/websocket.ts';
 import { userRoutes } from './routes/users.ts';
 import { blockRoutes } from './routes/block.ts';

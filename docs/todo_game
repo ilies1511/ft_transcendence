@@ -1,4 +1,21 @@
 
+
+refactor game backend:
+
+API endpoints:
+	- /enter_matchmaking -> takes the player id and map name; returns match id
+	- /create_lobby ->  like enter_matchmaking but also takes a password; returns match id
+	- /create_tournament -> input playercount, map, password; returns tournament id
+	- /reconnect -> input user id; returns potential tournament and match id the user is currently taking part in
+
+
+websocket endpoints:
+	- /game/{game_id} -> opens websocket to connect to a game(lobby), might need password on first connection
+	- tournament/{tournament_id} -> opens websocket to trournament, first connection needs password verification
+
+
+
+
 [ ]: first serilization tests
 [ ]: serilize player scores
 

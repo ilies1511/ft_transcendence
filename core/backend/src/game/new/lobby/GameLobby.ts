@@ -3,6 +3,7 @@ import { GameEngine } from './engine/GameEngine.ts';
 export class GameLobby {
 	public finished: boolean = false;
 	public engine?: GameEngine = undefined;
+	public id: number;
 
 	// set by constructor incase of invalid constructor args
 	public error?: string = undefined;
@@ -12,8 +13,10 @@ export class GameLobby {
 	private _password?: string;
 
 
-	constructor(map_name: string, ai_count: number, password?: string) {
+	constructor(id: number, map_name: string, ai_count: number, password?: string) {
+		console.log("game: GameLobby constructor");
 		this._password = password;
+		this.id = id;
 	}
 
 
@@ -26,6 +29,7 @@ export class GameLobby {
 			return (false);
 		}
 		//todo: actual logic
+		console.log("Game: User", user_id, " joing lobby ", this.id);
 		return (true);
 	}
 

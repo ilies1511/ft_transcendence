@@ -1,0 +1,285 @@
+import Fastify from 'fastify';
+//import websocketPlugin, { SocketStream } from '@fastify/websocket'
+import type { fastifyWebsocket } from '@fastify/websocket';
+import websocketPlugin from '@fastify/websocket';
+import type { FastifyInstance, FastifyRequest } from 'fastify';
+//import websocketPlugin, { SocketStream } from '@fastify/websocket'
+//import type { ClientToServerMessage } from '../../game_shared/message_types';
+import type { WebSocket } from '@fastify/websocket';
+import type { ClientToServerMessage } from './game_shared/message_types.ts';
+import { eq_options } from './game_shared/message_types.ts';
+import type {
+	GameOptions,
+	GameStartInfo,
+	ServerToClientJson,
+	ServerToClientMessage,
+	ClientToServerInput,
+} from './game_shared/message_types.ts';
+
+import { Map } from './maps/Map.ts';
+
+//import type { GameOptions, GameStartInfo, ServerToClientJson, ServerToClientMessage } from '../../game_shared/message_types';
+
+import { Effects, GameState }
+	from './game_shared/serialization.ts';
+
+import { ServerVec2 } from './objects/ServerVec2.ts';
+import { ServerWall } from './objects/ServerWall.ts';
+import { ServerBall } from './objects/ServerBall.ts';
+import { ServerClient } from './objects/ServerClient.ts';
+
+import * as ft_math from './math.ts';
+
+const EPSILON: number = 1e-6;
+
+let i: number = 0;
+
+//todo: split this into smaller classes
+export class GameEngine {
+	private _next_obj_id: number = 1;//has to start at 1
+	private _interval: NodeJS.Timeout | null = null;
+	public frame_time: number = 1000 / 60;
+	running: boolean = false;
+	public connected_client_count: number = 0;
+	public clients: ServerClient[] = [];
+	public balls: ServerBall[] = [];
+	public walls: ServerWall[] = [];
+
+	constructor(map_name: string) {
+		this.update = this.update.bind(this);
+
+		this.running = false;
+		const map: Map = new Map(map_name);
+		this._next_obj_id = map.next_obj_id;
+
+		this.walls = map.walls;
+		for (const client of map.clients) {
+			this.walls.push(client.base);
+			this.walls.push(client.paddle);
+		}
+		this.balls = map.balls;
+		this.clients = map.clients;
+
+		//const ball: ServerBall = new ServerBall();
+		//ball.speed.x = -1;
+		//ball.speed.y = -3;
+		//ball.pos.x = 0;
+		//ball.obj_id = this._next_obj_id++;
+		//this.balls.push(ball);
+		console.log(this.walls);
+		//console.log(this.balls);
+		//this.start_loop();
+	}
+
+	//for debugging callable by the client
+	//todo
+	private _reset() {
+		for (const ball of this.balls) {
+			ball.reset();
+		}
+		for (const wall of this.walls) {
+			// wall.reset();//does not exist
+		}
+	}
+
+	private serialize_game_state(): ArrayBuffer {
+		const state = new GameState(this);
+		//logGameState(state);
+		//console.log(state);
+		return state.serialize();
+	}
+
+	private broadcast_game_state() {
+		const buffer = this.serialize_game_state();
+		for (const client of this.clients) {
+			if (client.global_id == 0) {
+				continue ;
+			}
+			if (client.socket.readyState === client.socket.OPEN) {
+				client.socket.send(buffer);
+			}
+		}
+	}
+
+	private update_balls(delta_time: number) {
+		const input_d_time: number = delta_time;
+		for (const ball of this.balls) {
+			delta_time = input_d_time;
+			//console.log(ball);
+			while (delta_time > EPSILON) {
+				//console.log("delta time: ", delta_time);
+				const intersecs: ft_math.intersection_point[] = [];
+				
+				for (const wall of this.walls) {
+					//console.log(wall);
+					const intersection: ft_math.intersection_point | undefined =
+						ball.intersec(wall, delta_time);
+					if (intersection === undefined) {
+						continue ;
+					}
+					if (intersecs.length == 0) {
+						intersecs.push(intersection);
+						continue ;
+					}
+					const diff: number = intersection.time - intersecs[0].time;
+					if (Math.abs(diff) < EPSILON) {
+						intersecs.push(intersection);
+					} else if (diff < 0) {
+						intersecs.length = 0;
+						intersecs.push(intersection);
+					}
+				}
+
+				if (!intersecs.length) {
+					const ball_movement: ServerVec2 = ball.speed.clone()
+					ball_movement.scale(delta_time);
+					ball.pos.add(ball_movement);
+					break ;
+				}
+				//console.log("interec count: ", intersecs.length);
+				//console.log(intersecs);
+				let first_intersec: ft_math.intersection_point = intersecs[0];
+				const hit_walls: ServerWall[] = [];
+				const hit_points: ServerVec2[] = [];
+				for (const intersc of intersecs) {
+					if (intersc.time < first_intersec.time) {
+						first_intersec = intersc;
+					}
+					ball.cur_collision_obj_id.push(intersc.wall.obj_id);
+					hit_walls.push(intersc.wall);
+					hit_points.push(intersc.p);
+				}
+				delta_time -= first_intersec.time;
+				delta_time -= EPSILON; /* idk why but without this the ball flys through walls */
+				ball.pos = first_intersec.p;
+				if (first_intersec.wall.effects.indexOf(Effects.BASE) != -1) {
+					console.log("hit base");
+					ball.reset();
+					const goaled_client = this.clients.find(c => c.base === first_intersec.wall);
+					if (goaled_client == undefined) {
+						console.log("Game: error: base that was scored at could not be matched to a client");
+						process.exit(1);
+					}
+					goaled_client.score--;
+					console.log("client ", goaled_client.global_id, " points: ", goaled_client.score);
+					break ;
+				}
+				const offset: ServerVec2 = first_intersec.wall.normal.clone();
+				offset.scale(0.01);
+				if (ft_math.dot(ball.speed, first_intersec.wall.normal) < 0) {
+					ball.pos.add(offset);
+				} else {
+					ball.pos.sub(offset);
+				}
+				ball.reflect(hit_walls, hit_points);
+
+				ball.last_collision_obj_id = ball.cur_collision_obj_id;
+				ball.cur_collision_obj_id = [];
+				if (!ball.sane()) {
+					console.log("error: ball data corrupted: ", ball);
+					process.exit(1);
+				}
+			}
+		}
+	}
+
+	private rotate_wall(wall: ServerWall, angle: number, delta_time: number) {
+		const theta = angle * delta_time;
+
+		// grab the old normal
+		const n = wall.normal;
+
+		// compute the rotated components
+		const cos = Math.cos(theta);
+		const sin = Math.sin(theta);
+		const newX = n.x * cos - n.y * sin;
+		const newY = n.x * sin + n.y * cos;
+
+		wall.normal.x = newX;
+		wall.normal.y = newY;
+		wall.normal.unit();
+		wall.update();
+		wall.angular_vel = angle;
+	}
+
+	private update_walls(delta_time: number) {
+		//this.walls[4].rotate(Math.PI / 2, delta_time);
+	}
+
+	private update_paddles(delta_time: number) {
+		for (const client of this.clients) {
+			client.update(this.balls, delta_time);
+		}
+	}
+
+	private update(delta_time: number) {
+		//console.log("update");
+		this.update_paddles(delta_time);
+		this.update_balls(delta_time);
+		this.update_walls(delta_time);
+		this.finish_frame(delta_time);
+	}
+
+	private finish_frame(delta_time: number) {
+		this.broadcast_game_state();
+	}
+
+	public start_loop() {
+		if (this._interval)
+			return;
+		this.running = true;
+		this._interval= setInterval(() => {
+			try {
+				this.update(this.frame_time / 1000);
+			} catch (e) {
+				console.error("game update error:", e);
+			}
+		}, this.frame_time);
+	}
+
+	public stop_loop() {
+		if (this._interval) {
+			clearInterval(this._interval);
+			this._interval = null;
+		}
+		this.running = false;
+	}
+
+	public _update_movement(input: ClientToServerInput, client: ServerClient) {
+		switch (input.payload.key) {
+			case ("w"):
+				client.up = input.payload.type == "down";
+				break ;
+			case ("s"):
+				client.down = input.payload.type == "down";
+				break ;
+			case ("a"):
+				client.left = input.payload.type == "down";
+				break ;
+			case ("d"):
+				client.right = input.payload.type == "down";
+				break ;
+			default:
+				break ;
+		}
+	}
+
+	public process_input(input: ClientToServerInput, client: ServerClient) {
+		console.log('got input');
+		if (input.player_id != client.global_id) {
+			throw("Game.process_input: got id missmatch");
+		}
+		switch (input.payload.type) {
+			case ("up"):
+			case ("down"):
+				this._update_movement(input, client);
+				break ;
+			case ("reset"):
+				//for faster debugging: should reset the game
+				this._reset();
+				break ;
+			default:
+				console.log("Error: Game server: unknown input type!");
+		};
+	}
+};

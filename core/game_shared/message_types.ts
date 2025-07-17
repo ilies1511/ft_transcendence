@@ -1,4 +1,16 @@
 //todo: enable map selection
+
+export interface EnterMatchmakingReq {
+	user_id: number;
+	map_name: string;
+	ai_count: number;
+};
+
+export interface EnterMatchmakingResp {
+	error: string;
+	match_id: number;
+};
+
 export type GameOptions = {
 	player_count: number;
 	timer: number;

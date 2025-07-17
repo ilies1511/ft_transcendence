@@ -6,7 +6,8 @@ import type {
 	ServerToClientJson,
 	GameStartInfo,
 	ClientToServerMessage,
-	GameOptions
+	GameOptions,
+	EnterMatchmakingReq,
 } from './game_shared/message_types.ts';
 
 //import { GridMaterial } from '@babylonjs/materials/Grid.ts';
@@ -55,11 +56,33 @@ export class Game {
 
 	public options: GameOptions;
 
+	public async enter_matchmaking(req: EnterMatchmakingReq) {
+		const response = await fetch('/api/enter_matchmaking', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(req)
+		});
+		const data = await response.json();
+		console.log("data: ", data);
+	}
+
 	constructor(
 		id: number, //some number that is unique for each client, ideally bound to the account
 		container: HTMLElement,
 		options: GameOptions,
 	) {
+		const req: EnterMatchmakingReq = {
+			user_id: 1,
+			map_name: "default",
+			ai_count: 0,
+		};
+		this.enter_matchmaking(req);
+
+
+
+
 		this._process_msg = this._process_msg.bind(this);
 		this._rcv_msg = this._rcv_msg.bind(this);
 		this._key_up_handler = this._key_up_handler.bind(this);
