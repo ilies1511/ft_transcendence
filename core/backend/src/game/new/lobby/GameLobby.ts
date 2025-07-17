@@ -9,6 +9,12 @@ type GameConnection = {
 	ws?: WebSocket,
 };
 
+
+//todo:
+//leave()
+//connect()//first websocket connection
+//reconnect()
+//disconnect()
 export class GameLobby {
 	public finished: boolean = false;
 	public engine?: GameEngine = undefined;
@@ -41,10 +47,14 @@ export class GameLobby {
 	}
 
 	private _start_game() {
+		console.log("starting game..");
 	}
 
 	// returns false if player can not join
 	public join(user_id: number, map_name: string, password?: string): boolean {
+		if (this._map_name != map_name) {
+			return (false);
+		}
 		if (this._ai_count + this._connections.length >= this._map_file.clients.length) {
 			return (false);
 		}

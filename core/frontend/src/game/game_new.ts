@@ -8,6 +8,7 @@ import type {
 	ClientToServerMessage,
 	GameOptions,
 	EnterMatchmakingReq,
+	EnterMatchmakingResp,
 } from './game_shared/message_types.ts';
 
 //import { GridMaterial } from '@babylonjs/materials/Grid.ts';
@@ -55,8 +56,19 @@ export class Game {
 	private _id: number;
 
 	public options: GameOptions;
+	public game_id: number;
 
-	public async enter_matchmaking(req: EnterMatchmakingReq) {
+	public static async enter_matchmaking(
+		user_id: number,
+		map_name: string,
+		ai_count: number)
+		: EnterMatchmakingResp
+	{
+		const req: EnterMatchmakingReq = {
+			user_id: user_id,
+			map_name: map_name,
+			ai_count: ai_count,
+		};
 		const response = await fetch('/api/enter_matchmaking', {
 			method: 'POST',
 			headers: {
@@ -64,25 +76,18 @@ export class Game {
 			},
 			body: JSON.stringify(req)
 		});
-		const data = await response.json();
+		const data: EnterMatchmakingResp = await response.json();
 		console.log("data: ", data);
+		return (data);
 	}
 
 	constructor(
 		id: number, //some number that is unique for each client, ideally bound to the account
 		container: HTMLElement,
 		options: GameOptions,
+		game_id: number,
 	) {
-		const req: EnterMatchmakingReq = {
-			user_id: 1,
-			map_name: "default",
-			ai_count: 0,
-		};
-		this.enter_matchmaking(req);
-
-
-
-
+		this.game_id = game_id;
 		this._process_msg = this._process_msg.bind(this);
 		this._rcv_msg = this._rcv_msg.bind(this);
 		this._key_up_handler = this._key_up_handler.bind(this);
@@ -113,7 +118,10 @@ export class Game {
 
 	private _open_socket() {
 		try {
-			this._socket = new WebSocket('ws://localhost:5173/game')
+			console.log("game id: ", this.game_id);
+			const route: string = `ws://localhost:5173/game/${this.game_id}`;
+			console.log("rout: ", route);
+			this._socket = new WebSocket(route)
 
 			this._socket.binaryType = "arraybuffer";
 

@@ -62,7 +62,7 @@ export class GameServer {
 
 
 		this._rcv_game_msg = this._rcv_game_msg.bind(this);
-		this._fastify.get('/game:game_id', { websocket: true }, (socket: WebSocket, req: FastifyRequest) => {
+		this._fastify.get('/game/:game_id', { websocket: true }, (socket: WebSocket, req: FastifyRequest) => {
 			const { game_id } = req.params as { game_id: string };
 			socket.on('message', (raw) => {
 				this._rcv_game_msg(game_id, raw.toString(), socket);
@@ -70,7 +70,7 @@ export class GameServer {
 		});
 
 		this._rcv_tournament_msg = this._rcv_tournament_msg.bind(this);
-		this._fastify.get('/tournament:game_id', { websocket: true }, (socket: WebSocket, req: FastifyRequest) => {
+		this._fastify.get('/tournament/:tournament_id', { websocket: true }, (socket: WebSocket, req: FastifyRequest) => {
 			const { tournament_id } = req.params as { tournament_id: string };
 			socket.on('message', (raw) => {
 				this._rcv_tournament_msg(tournament_id, raw.toString(), socket);
@@ -104,7 +104,10 @@ export class GameServer {
 				return (response);
 			}
 			try {
-				lobby.join(user_id, map_name);
+				if (!lobby.join(user_id, map_name)) {
+					response.error = "Could not join newly created game, game the settings weird?";
+					return (response);
+				}
 				response.game_id = lobby_id;
 				return (response);
 			} catch (error) {
@@ -120,9 +123,11 @@ export class GameServer {
 	}
 
 	private _rcv_game_msg(game_id_str: string, message: string, ws: WebSocket) {
+		console.log("game: got game msg: ", message);
 	}
 
 	private _rcv_tournament_msg(tournament_id_str: string, message: string, ws: WebSocket) {
+		console.log("game: got tournament msg: ", message);
 	}
 
 	//returns the lobby id or and error string
@@ -134,7 +139,7 @@ export class GameServer {
 	{
 		const lobby_id: number = 0;
 		//todo: actually create lobby in db and use real id
-		//lobby_id = await create looby in db();
+		//const lobby_id: number = await create looby in db();
 		const lobby: GameLobby = new GameLobby(lobby_id, map_name, ai_count, password);
 		this._lobbies.set(lobby_id, lobby);
 		return (lobby_id);
