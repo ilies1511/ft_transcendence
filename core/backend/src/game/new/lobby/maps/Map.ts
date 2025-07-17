@@ -1,12 +1,12 @@
-import { ServerVec2 } from '../objects/ServerVec2.ts';
-import { ServerWall } from '../objects/ServerWall.ts';
-import { ServerBall } from '../objects/ServerBall.ts';
-import { ServerClient } from '../objects/ServerClient.ts';
-import { Effects } from '../game_shared/serialization.ts';
+import { ServerVec2 } from '../../../objects/ServerVec2.ts';
+import { ServerWall } from '../../../objects/ServerWall.ts';
+import { ServerBall } from '../../../objects/ServerBall.ts';
+import { ServerClient } from '../../../objects/ServerClient.ts';
+import { Effects } from '../../../game_shared/serialization.ts';
 
 import default_map from './default.json';
 
-export class Map {
+export class MapFile {
 	public walls: ServerWall[] = [];
 	public balls: ServerBall[] = [];
 	public clients: ServerClient[] = [];
