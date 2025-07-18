@@ -21,6 +21,8 @@ import type {
 	CreateTournamentResp,
 	ReconnectReq,
 	ReconnectResp,
+	ServerError,
+	ClientToMatch,
 } from '../game_shared/message_types.ts';
 
 
@@ -233,11 +235,36 @@ export class GameServer {
 		return (response);
 	}
 
-
 	private _rcv_game_msg(game_id_str: string, message: string, ws: WebSocket) {
 		console.log("game: got game msg: ", message);
+		try {
+			const game_id: number = parseInt(game_id_str);
+			const lobby: GameLobby | undefined = this._lobbies.get(game_id);
+			if (lobby == undefined) {
+				console.log("game: lobby with key ", game_id, " was not found");
+				WebsocketConnection.static_send_error(ws, 'Not Found');
+				ws.close();
+				return ;
+			}
+			let data: ClientToMatch;
+			try {
+				data = JSON.parse(message) as ClientToMatch;
+			} catch (e) {
+				WebsocketConnection.static_send_error(ws, 'Invalid Request');
+				ws.close();
+				return ;
+			}
+			lobby.recv(ws, data);
+			return ;
+		} catch (e) {
+			console.log("error: ", e);
+			WebsocketConnection.static_send_error(ws, 'Not Found');
+			ws.close();
+			return ;
+		}
 	}
 
+	//todo
 	private _rcv_tournament_msg(tournament_id_str: string, message: string, ws: WebSocket) {
 		console.log("game: got tournament msg: ", message);
 	}
