@@ -4,6 +4,8 @@ import websocketPlugin from '@fastify/websocket';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { WebSocket } from '@fastify/websocket';
 import { GameLobby } from './lobby/GameLobby.ts';
+import { Tournament } from './Tournament.ts';
+import { WebsocketConnection } from './WebsocketConnection.ts';
 
 import type {
 	GameOptions,
@@ -80,8 +82,9 @@ const reconnect_schema = {
 };
 
 export class GameServer {
-	protected _lobbies: Map<number, GameLobby> = new Map<number, GameLobby>;
-	protected _fastify: FastifyInstance;
+	private _lobbies: Map<number, GameLobby> = new Map<number, GameLobby>;
+	private _tournaments: Map<number, Tournament> = new Map<number, Tournament>;
+	private _fastify: FastifyInstance;
 
 
 	constructor(fastify: FastifyInstance) {

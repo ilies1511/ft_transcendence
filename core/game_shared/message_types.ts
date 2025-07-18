@@ -7,7 +7,7 @@ export interface EnterMatchmakingReq {
 };
 
 export interface EnterMatchmakingResp {
-	error: string;
+	error: ServerError;
 	match_id: number;
 };
 
@@ -18,7 +18,7 @@ export interface CreateLobbyReq {
 };
 
 export interface CreateLobbyResp {
-	error: string;
+	error: ServerError;
 	match_id: number;
 };
 
@@ -27,7 +27,7 @@ export interface CreateTournamentReq {
 };
 
 export interface CreateTournamentResp {
-	error: string;
+	error: ServerError;
 	tournament_id: number;
 };
 
@@ -70,9 +70,17 @@ export type GameLobbyUpdate = {
 	target_player_count: number,
 };
 
+export type ServerError =
+	'Invalid Request'
+	| 'Invalid Password'
+	| 'Internal Error'
+	| 'Not Found'
+;
+
 export type ServerToClientError = {
 	type: 'error',
-	msg: string,
+	msg: ServerError
+	,
 };
 
 //	| GameLobbyUpdate
@@ -83,30 +91,31 @@ export type ServerToClientJson =
 
 export type ServerToClientMessage = ServerToClientJson | ArrayBuffer;
 
-export type ClientToServerInput = {
+export type ClientToGameInput = {
 	type: 'send_input';
-	player_id: number;
-	game_id: number;
 	payload: {
 		key: string,
 		type: "up" | "down" | "reset",
 	}
 };
 
+export type ClientToMatch = {
+	target: "match",
+	player_id: number,
+	game_id: number,
+	data:
+		ClientToGameInput,
+};
+
+export type ClientToTournament = {
+	target: "tournament",
+	player_id: number,
+	tournament_id: number,
+};
+
 //todo: leave game option
 export type ClientToServerMessage =
-	| {
-		type: 'search_game';
-		player_id: number;
-		payload: {
-			options: GameOptions;
-		}
-	}
-	| {
-		type: 'reconnect';
-		player_id: number;
-		payload: {
-		}
-	}
-	| ClientToServerInput;
+	ClientToTournament
+	| ClientToMatch
+;
 

@@ -4,6 +4,13 @@ import type { fastifyWebsocket } from '@fastify/websocket';
 import websocketPlugin from '@fastify/websocket';
 import type { WebSocket } from '@fastify/websocket';
 
+import type {
+	ServerToClientError,
+	ServerToClientMessage,
+	ServerError,
+    ClientToMatch,
+} from '../../game_shared/message_types.ts';
+
 type GameConnection = {
 	id: number,
 	ws?: WebSocket,
@@ -84,5 +91,10 @@ export class GameLobby {
 	}
 
 	public cleanup() {
+	}
+
+	//todo:
+	public recv(ws: WebSocket, msg: ClientToMatch): boolean {
+		return (false);
 	}
 };
