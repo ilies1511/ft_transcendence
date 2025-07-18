@@ -11,6 +11,35 @@ export interface EnterMatchmakingResp {
 	match_id: number;
 };
 
+export interface CreateLobbyReq {
+	map_name: string;
+	ai_count: number;
+	password: string;
+};
+
+export interface CreateLobbyResp {
+	error: string;
+	match_id: number;
+};
+
+//todo
+export interface CreateTournamentReq {
+};
+
+export interface CreateTournamentResp {
+	error: string;
+	tournament_id: number;
+};
+
+export interface ReconnectReq {
+	client_id: number;
+};
+
+export interface ReconnectResp {
+	match_id: number;
+	tournament_id: number;
+};
+
 export type GameOptions = {
 	player_count: number;
 	timer: number;
