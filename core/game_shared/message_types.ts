@@ -64,13 +64,22 @@ export type GameStartInfo =
 		options: GameOptions
 };
 
+export type GameLobbyUpdate = {
+	type: 'game_lobby_update',
+	player_count: number,
+	target_player_count: number,
+};
+
+export type ServerToClientError = {
+	type: 'error',
+	msg: string,
+};
+
+//	| GameLobbyUpdate
+//	| GameStartInfo
 export type ServerToClientJson =
-	| {
-		type: 'game_lobby_update',
-		player_count: number,
-		target_player_count: number,
-	}
-	| GameStartInfo;
+	ServerToClientError
+;
 
 export type ServerToClientMessage = ServerToClientJson | ArrayBuffer;
 
