@@ -8,6 +8,8 @@ export interface UserRow {
 	email: string | null
 	live: number // 0 = offline, 1 = online
 	avatar: string
+	twofa_secret?: string;
+	twofa_enabled: 0|1;
 	created_at: number
 }
 
