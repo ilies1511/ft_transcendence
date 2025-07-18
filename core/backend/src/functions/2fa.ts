@@ -54,3 +54,35 @@ export async function verify2FA(
 	)
 	return true;
 }
+
+// BEGIN -- '/api/login/2fa'
+export function verify2FaToken(
+	user: Pick<UserRow, 'twofa_enabled' | 'twofa_secret'>,
+	token: string
+): boolean {
+	if (!user.twofa_enabled || !user.twofa_secret) {
+		throw new Error('2FA_NOT_SETUP')
+	}
+	return speakeasy.totp.verify({
+		secret: user.twofa_secret,
+		encoding: 'base32',
+		token,
+		window: 1
+	})
+}
+
+export async function validateCredentials(
+	fastify: FastifyInstance,
+	email: string,
+	password: string
+): Promise<UserRow | null> {
+	const user = await fastify.db.get<UserRow>(
+		`SELECT id, password, twofa_secret, twofa_enabled FROM users
+		WHERE email = ?`,
+		email
+	)
+	if (!user) return null
+	const ok = await bcrypt.compare(password, user.password)
+	return ok ? user : null
+}
+// END -- '/api/login/2fa'
