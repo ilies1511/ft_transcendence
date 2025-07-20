@@ -31,7 +31,7 @@ if (container) {
 	} else {
 		container.innerHTML = '';
 
-		const resp: EnterMatchmakingResp = await GameApi.enter_matchmaking(1, "default", 0);
+		const resp: EnterMatchmakingResp = await GameApi.enter_matchmaking(userId, "default", 0);
 		if (resp.error != "") {
 			//should never happen ideally
 			console.log(resp.error);

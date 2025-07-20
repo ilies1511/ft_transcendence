@@ -171,12 +171,13 @@ export class GameServer {
 			const lobby: GameLobby | undefined = this._lobbies.get(lobby_id);
 			if (lobby === undefined) {
 				console.log("lobby not in this._lobbies eventhough it was just created");
-				response.error = "internal error";
+				response.error = "Internal Error";
 				return (response);
 			}
 			try {
 				if (!lobby.join(user_id, map_name)) {
-					response.error = "Could not join newly created game, game the settings weird?";
+					console.log("Could not join newly created game, game the settings weird?");
+					response.error = "Internal Error";
 					return (response);
 				}
 				response.match_id = lobby_id;
@@ -227,11 +228,23 @@ export class GameServer {
 	private async _reconnect_api(request: FastifyRequest<{Body: ReconnectReq}>)
 		: Promise<ReconnectResp>
 	{
+
+		const { client_id } = request.body;
 		const response: ReconnectResp = {
 			match_id: -1,
 			match_has_password: false,
 			tournament_id: -1,
 		};
+
+		for (const [id, lobby] of this._lobbies) {
+			if (lobby.can_reconnect(client_id)) {
+				response.match_id = id;
+				if (lobby.password != '') {
+					response.match_has_password = true;
+				}
+				return (response);
+			}
+		}
 
 		return (response);
 	}
@@ -271,7 +284,7 @@ export class GameServer {
 	}
 
 	//returns the lobby id or and error string
-	protected async _create_lobby(
+	private async _create_lobby(
 		map_name: string,
 		ai_count: number,
 		password?: string

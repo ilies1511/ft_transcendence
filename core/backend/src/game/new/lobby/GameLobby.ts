@@ -27,15 +27,12 @@ export class GameLobby {
 	public engine?: GameEngine = undefined;
 	public id: number;
 
-
 	// set by constructor incase of invalid constructor args
 	public error?: string = undefined;
 
-
-
 	private _map_name: string;
 	private _map_file: MapFile;
-	private _password?: string;
+	public password: string = '';
 	private _ai_count: number;
 
 	private _connections: GameConnection[] = [];
@@ -43,7 +40,9 @@ export class GameLobby {
 
 	constructor(id: number, map_name: string, ai_count: number, password?: string) {
 		console.log("game: GameLobby constructor");
-		this._password = password;
+		if (password !== undefined) {
+			this.password = password;
+		}
 		this.id = id;
 		this._map_name = map_name;
 		this._ai_count = ai_count;
@@ -51,6 +50,18 @@ export class GameLobby {
 		if (this._ai_count < 0 || this._ai_count >= this._map_file.clients.length) {
 			throw ("invalid ai count");
 		}
+	}
+
+	public can_reconnect(client_id: number): boolean {
+		console.log("connections in can_reconnect: ", this._connections);
+		for (const connection of this._connections) {
+			if (connection.id == client_id) {
+				return (true);
+			} else {
+				console.log("client_id: ", client_id, "; connection.id: ", connection.id);
+			}
+		}
+		return (false);
 	}
 
 	private _start_game() {
@@ -65,10 +76,10 @@ export class GameLobby {
 		if (this._ai_count + this._connections.length >= this._map_file.clients.length) {
 			return (false);
 		}
-		if (this._password !== undefined && password === undefined
-			|| this._password === undefined && password !== undefined
-			|| this._password !== undefined && this._password != password
-		) {
+		if (password == undefined) {
+			password = '';
+		}
+		if (this.password != password) {
 			return (false);
 		}
 		console.log("Game: User", user_id, " joing lobby ", this.id);
