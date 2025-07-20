@@ -8,6 +8,7 @@ import type {
 	GameStartInfo,
 	ClientToMatch,
 	ClientToGame,
+	ServerError,
 	GameOptions,
 	EnterMatchmakingReq,
 	EnterMatchmakingResp,
@@ -120,9 +121,12 @@ export class Game {
 			this._socket.onmessage = (
 				event: MessageEvent<LobbyToClient>) => this._rcv_msg(event);
 			this._socket.addEventListener("close", () => {
-				console.log("GAME: Disconnected, attempting reconnect..");
+				console.log("GAME: Disconnected");
 				if (!this.finished) {
+					console.log("GAME: Attempting reconnect..");
 					this._open_socket();
+				} else {
+					//todo: stop babylonjs and cleanup everything
 				}
 			});
 		} catch (e) {
@@ -194,6 +198,26 @@ export class Game {
 		window.addEventListener("keydown", this._key_down_handler);
 	}
 
+	private _process_server_error(error: ServerError) {
+		console.log("Game: Got error from server: ", error);
+		switch (error) {
+			case ('Invalid Request'):
+				break ;
+			case ('Invalid Password'):
+				break ;
+			case ('Internal Error'):
+				break ;
+			case ('Not Found'):
+				this.finished = true;
+				break ;
+			case (''):
+				break ;
+			default:
+				throw ('Game: Got not implemented server error');
+		}
+	}
+
+
 	private _process_msg() {
 		//console.log("_process_msg");
 		if (this._last_server_msg == null) {
@@ -215,7 +239,7 @@ export class Game {
 					// todo: have a user UI for the lobby screen while waiting for players
 					break ;
 				case ('error'):
-					console.log("Game: Got error from server: ", json.msg);
+					this._process_server_error(json.msg);
 					break ;
 				default:
 					throw ("Got not implemented msg type from server: ", msg);
