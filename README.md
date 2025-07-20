@@ -11,3 +11,6 @@ Fastify, Vite, and TypeScript Setup
 - [ ] Different languages
 - [ ] 2FA
 - [ ] Logging in with Google account
+
+
+// can be something in friends

@@ -37,7 +37,7 @@ export async function handleClose(
 				c.send(JSON.stringify({
 					type: 'friend_status_update',
 					friendId: extSocket.userId,
-					online: false
+					online: 0
 				}));
 			}
 		}
