@@ -29,4 +29,16 @@ export async function notifyFriendStatus(
 			}))
 		}
 	}
+
+	// for user checking his own profile
+	const mySockets = userSockets.get(userId)
+	if (!mySockets)
+		return
+	for (const sock of mySockets) {
+		sock.send(JSON.stringify({
+			type: 'friend_status_update',
+			friendId: userId,
+			online
+		}))
+	}
 }

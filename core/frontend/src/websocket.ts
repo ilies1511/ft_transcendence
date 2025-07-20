@@ -1,5 +1,6 @@
 // frontend/src/websocket.ts
 import { friendRequestToast } from './ui/toast';
+import { currentUser } from './services/auth'
 
 let friendsWs: WebSocket | null = null;
 
@@ -8,7 +9,10 @@ export function initFriendsWs() {
 		return; // already up
 
 	friendsWs?.close();	// close just in case
-	friendsWs = new WebSocket('ws://localhost:3000/friends');
+	const url = location.protocol === 'https:'
+			? `wss://${location.host}/friends`
+			: `ws://${location.hostname}:3000/friends`
+	friendsWs = new WebSocket(url)
 
 	friendsWs.onmessage = evt => {
 		try {
@@ -18,6 +22,13 @@ export function initFriendsWs() {
 			}
 		} catch {/* ignore */ }
 	};
+	//auto-reconnect if the socket dies while still logged in
+	friendsWs.onclose = () => {
+		setTimeout(async () => {
+			const me = await currentUser()
+			if (me) initFriendsWs()
+		}, 2000)
+	}
 }
 
 export function closeFriendsWs() {
