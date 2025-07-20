@@ -229,6 +229,7 @@ export class GameServer {
 	{
 		const response: ReconnectResp = {
 			match_id: -1,
+			match_has_password: false,
 			tournament_id: -1,
 		};
 

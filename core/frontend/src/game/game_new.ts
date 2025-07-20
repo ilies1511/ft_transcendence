@@ -5,7 +5,7 @@ import type {
 	ServerToClientMessage,
 	ServerToClientJson,
 	GameStartInfo,
-	ClientToServerMessage,
+	ClientToMatch,
 	GameOptions,
 	EnterMatchmakingReq,
 	EnterMatchmakingResp,
@@ -50,20 +50,23 @@ export class Game {
 
 	private _start_info: GameStartInfo | undefined = undefined;
 
-	private _last_server_msg: MessageEvent<ServerToClientMessage> | null = null;
+	private _last_server_msg: ServerToClientMessage | null = null;
 
 	private _socket: WebSocket;
 	private _id: number;
 
-	public options: GameOptions;
 	public game_id: number;
+	public password: string = '';
 
 	constructor(
 		id: number, //some number that is unique for each client, ideally bound to the account
 		container: HTMLElement,
-		options: GameOptions,
 		game_id: number,
+		password?: string,
 	) {
+		if (password !== undefined) {
+			this.password = password;
+		}
 		this.game_id = game_id;
 		this._process_msg = this._process_msg.bind(this);
 		this._rcv_msg = this._rcv_msg.bind(this);
@@ -73,7 +76,6 @@ export class Game {
 
 		console.log("GAME: game constructor");
 		this._id = id;
-		this.options = options;
 
 		this._open_socket();
 
@@ -97,18 +99,16 @@ export class Game {
 		try {
 			console.log("game id: ", this.game_id);
 			const route: string = `ws://localhost:5173/game/${this.game_id}`;
-			console.log("rout: ", route);
 			this._socket = new WebSocket(route)
-
 			this._socket.binaryType = "arraybuffer";
 
 			this._socket.addEventListener("open", (event) => {
 				console.log("GAME: Connected to server");
-				const msg: ClientToServerMessage = {
-					type: 'search_game',
-					player_id: this._id,
-					payload: {
-						options: this.options
+				const msg: ClientToMatch = {
+					client_id: this._id,
+					data: {
+						type: 'connect',
+						password: this.password,
 					}
 				};
 				console.log("sending: ", JSON.stringify(msg));
@@ -118,6 +118,7 @@ export class Game {
 			this._socket.onmessage = (
 				event: MessageEvent<ServerToClientMessage>) => this._rcv_msg(event);
 			this._socket.addEventListener("close", () => {
+				//todo
 				console.log("GAME: Disconnected");
 			});
 		} catch (e) {
@@ -194,31 +195,31 @@ export class Game {
 	private _process_msg() {
 		//console.log("_process_msg");
 		if (this._last_server_msg == null) {
-			console.log("GAME: no message to process");
+			//console.log("GAME: no message to process");
 			return ;
 		}
-		const msg: ServerToClientMessage = this._last_server_msg;
-		if (msg instanceof ArrayBuffer) {
-			/* msg is a game state update */
-			//console.log("GAME: got ArrayBuffer");
-			this._active_scene = this._game_scene;
-			this._game_scene.update(GameState.deserialize(msg));
-		} else if (typeof msg === 'string') {
-			console.log("GAME: got string: ", msg);
-			const json: ServerToClientJson = JSON.parse(msg);
-			console.log("GAME: got ServerToClientMessage object: ", json);
-			switch (json.type) {
-				case ('game_lobby_update'):
-					// todo: have a user UI for the lobby screen while waiting for players
-					break ;
-				case ('starting_game'):
-					this._start_info = json as GameStartInfo;
-					this._start_game();
-					break ;
-			}
-		} else {
-			console.log("GAME: Error: unknown message type recieved: ", typeof msg);
-		}
+		//const msg: ServerToClientMessage = this._last_server_msg;
+		//if (msg instanceof ArrayBuffer) {
+		//	/* msg is a game state update */
+		//	//console.log("GAME: got ArrayBuffer");
+		//	this._active_scene = this._game_scene;
+		//	this._game_scene.update(GameState.deserialize(msg));
+		//} else if (typeof msg === 'string') {
+		//	console.log("GAME: got string: ", msg);
+		//	const json: ServerToClientJson = JSON.parse(msg);
+		//	console.log("GAME: got ServerToClientMessage object: ", json);
+		//	switch (json.type) {
+		//		case ('game_lobby_update'):
+		//			// todo: have a user UI for the lobby screen while waiting for players
+		//			break ;
+		//		case ('starting_game'):
+		//			this._start_info = json as GameStartInfo;
+		//			this._start_game();
+		//			break ;
+		//	}
+		//} else {
+		//	console.log("GAME: Error: unknown message type recieved: ", typeof msg);
+		//}
 		this._last_server_msg = null;
 	}
 

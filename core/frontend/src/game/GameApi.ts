@@ -10,7 +10,7 @@ import type {
 } from './game_shared/message_types.ts';
 
 
-class GameApi {
+export class GameApi {
 	private constructor() {}
 
 	public static async enter_matchmaking(

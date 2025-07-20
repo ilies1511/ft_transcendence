@@ -37,6 +37,7 @@ export interface ReconnectReq {
 
 export interface ReconnectResp {
 	match_id: number;
+	match_has_password: boolean;
 	tournament_id: number;
 };
 
@@ -75,6 +76,7 @@ export type ServerError =
 	| 'Invalid Password'
 	| 'Internal Error'
 	| 'Not Found'
+	| ''
 ;
 
 export type ServerToClientError = {
@@ -100,17 +102,13 @@ export type ClientToGameInput = {
 };
 
 export type ClientToMatch = {
-	target: "match",
-	player_id: number,
-	game_id: number,
+	client_id: number,
 	data:
 		ClientToGameInput,
 };
 
 export type ClientToTournament = {
-	target: "tournament",
-	player_id: number,
-	tournament_id: number,
+	client_id: number,
 };
 
 //todo: leave game option

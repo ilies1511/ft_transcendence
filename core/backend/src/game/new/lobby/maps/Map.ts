@@ -19,7 +19,7 @@ export class MapFile {
 		} else {
 			throw new Error("Unknown map name");
 		}
-		console.log(map_data);
+		//console.log(map_data);
 		const paddle_len: number = map_data.paddle_length;
 		const base_len: number = map_data.base_length;
 
