@@ -3,8 +3,8 @@ Fastify, Vite, and TypeScript Setup
 
 
 # TODOES AND IDEAS:
-- [ ] /friends. fix when the browser is refresh, the connection disappears
-- [ ] live status, check if its working correctly on SPA.
+- [x] /friends. fix when the browser is refresh, the connection disappears
+- [x] live status, check if its working correctly on SPA.
 - [ ] '/api/users/:id/stats' -> Global stats + nested stats by mode.
 - [ ] '/api/users/:id/matches' -> match information by user id.
 - [ ] Live Chat -
