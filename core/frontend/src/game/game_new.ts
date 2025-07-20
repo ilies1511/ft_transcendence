@@ -8,6 +8,8 @@ import type {
 	GameStartInfo,
 	ClientToMatch,
 	ClientToGame,
+	ClientToMatchLeave,
+	ClientTo,
 	ServerError,
 	GameOptions,
 	EnterMatchmakingReq,
@@ -61,6 +63,7 @@ export class Game {
 
 	public game_id: number;
 	public password: string = '';
+	public container: HTMLElement;
 
 	constructor(
 		id: number, //some number that is unique for each client, ideally bound to the account
@@ -68,6 +71,7 @@ export class Game {
 		game_id: number,
 		password?: string,
 	) {
+		this.container = container;
 		if (password !== undefined) {
 			this.password = password;
 		}
@@ -98,6 +102,40 @@ export class Game {
 			this._process_msg();
 			this._active_scene.render();
 		});
+	}
+
+	public leave() {
+		if (this.finished) {
+			this._cleanup();
+			return ;
+		}
+		this.finished = true;
+		if (this._socket.readyState !== WebSocket.OPEN) {
+			this._open_socket();
+		}
+		if (this._socket.readyState == WebSocket.OPEN) {
+			const msg: ClientToMatchLeave = {
+				client_id: this._id,
+				type: 'leave',
+				password: this.password,
+			};
+			try {
+				this._socket.send(JSON.stringify(msg));
+			} catch {}
+		}
+		this._cleanup();
+	}
+
+	public disconnect() {
+		this._cleanup();
+	}
+
+	private _cleanup() {
+		this._engine.stopRenderLoop();
+		this._socket.close();
+		this._game_scene.cleanup();
+		this._engine.dispose();
+		this.container.removeChild(this._canvas);
 	}
 
 	private _open_socket() {

@@ -113,6 +113,12 @@ export type ClietToMatchConnect = {
 	password: string;
 };
 
+export type ClientToMatchLeave = {
+	client_id: number,
+	type: 'leave';
+	password: string;
+};
+
 export type ClientToMatch =
 	ClientToGame
 	| ClietToMatchConnect

@@ -44,5 +44,8 @@ export abstract class BaseScene extends BABYLON.Scene {
 	}
 
 	abstract loop(): void;
+	public cleanup() {
+		//todo: remove event listener
+	}
 };
 

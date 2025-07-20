@@ -144,6 +144,14 @@ export class GameLobby {
 		} else {
 			connection.sock.ws.close();
 			connection.sock = new WebsocketConnection(ws);
+			if (this.engine) {
+				for (const client of this.engine.clients) {
+					if (client.global_id = connection.id) {
+						client.socket = connection.sock.ws;
+						break ;
+					}
+				}
+			}
 		}
 		connection.sock.send(this._last_broadcast);
 		console.log("Game: client ", connection.id, " reconnected to lobby, ", this.id);

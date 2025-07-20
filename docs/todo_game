@@ -17,6 +17,11 @@ websocket endpoints:
 [ ]: backend: engine migration
 [ ]: frontend: adjust websocket communication
 
+[ ]: frontend: cleanup
+[ ]: backend: cleanup
+
+[ ]: backend: handle clients that leave the game(during game dosnt matter, but pre game start)
+[ ]: backend: in the lobby pre game not connected clients need to be timed out so others can join
 
 
 [ ]: first serilization tests
