@@ -76,6 +76,14 @@ export class GameLobby {
 
 	private _start_game() {
 		console.log("starting game..");
+		this.engine = new GameEngine(this._map_name);
+		let i = 0;
+		while (i < this._connections.length) {
+			this.engine.clients[i].set_socket(this._connections[i].sock.ws);
+			this.engine.clients[i].global_id = this._connections[i].id;
+			i++;
+		}
+		this.engine.start_loop();
 	}
 
 	// returns false if player can not join
@@ -99,9 +107,7 @@ export class GameLobby {
 			sock: undefined,
 		};
 		this._connections.push(connection);
-		if (this._ai_count + this._connections.length == this._map_file.clients.length) {
-			this._start_game();
-		}
+
 		return (true);
 	}
 
@@ -159,6 +165,9 @@ export class GameLobby {
 				console.log("Game: client ", client_id, " connected to lobby ", this.id);
 				this.loaded_player_count++;
 				this._update_lobby();
+				if (this._ai_count + this.loaded_player_count == this._map_file.clients.length) {
+					this._start_game();
+				}
 				return ;
 			}
 		}

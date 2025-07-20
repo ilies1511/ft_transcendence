@@ -214,6 +214,9 @@ export class Game {
 				case ('game_lobby_update'):
 					// todo: have a user UI for the lobby screen while waiting for players
 					break ;
+				case ('error'):
+					console.log("Game: Got error from server: ", json.msg);
+					break ;
 				default:
 					throw ("Got not implemented msg type from server: ", msg);
 			}

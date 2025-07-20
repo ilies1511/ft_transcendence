@@ -7,6 +7,7 @@ import { GameLobby } from './lobby/GameLobby.ts';
 import { Tournament } from './Tournament.ts';
 import { WebsocketConnection } from './WebsocketConnection.ts';
 
+
 import type {
 	GameOptions,
 	GameStartInfo,

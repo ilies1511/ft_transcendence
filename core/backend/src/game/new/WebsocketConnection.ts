@@ -46,6 +46,7 @@ export class WebsocketConnection {
 		}
 		try {
 			ws.send(data);
+			console.log("Game: send: ", data);
 			return ;
 		} catch (error) {
 			console.log("tryed to send\n", data, "but got this error:\n", error);

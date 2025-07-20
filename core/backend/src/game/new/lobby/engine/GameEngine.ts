@@ -95,7 +95,7 @@ export class GameEngine {
 			if (client.global_id == 0) {
 				continue ;
 			}
-			if (client.socket.readyState === client.socket.OPEN) {
+			if (client.socket && client.socket.readyState === client.socket.OPEN) {
 				client.socket.send(buffer);
 			}
 		}
@@ -153,7 +153,7 @@ export class GameEngine {
 				delta_time -= EPSILON; /* idk why but without this the ball flys through walls */
 				ball.pos = first_intersec.p;
 				if (first_intersec.wall.effects.indexOf(Effects.BASE) != -1) {
-					console.log("hit base");
+					//console.log("hit base");
 					ball.reset();
 					const goaled_client = this.clients.find(c => c.base === first_intersec.wall);
 					if (goaled_client == undefined) {
