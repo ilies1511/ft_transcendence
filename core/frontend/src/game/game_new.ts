@@ -58,29 +58,6 @@ export class Game {
 	public options: GameOptions;
 	public game_id: number;
 
-	public static async enter_matchmaking(
-		user_id: number,
-		map_name: string,
-		ai_count: number)
-		: EnterMatchmakingResp
-	{
-		const req: EnterMatchmakingReq = {
-			user_id: user_id,
-			map_name: map_name,
-			ai_count: ai_count,
-		};
-		const response = await fetch('/api/enter_matchmaking', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(req)
-		});
-		const data: EnterMatchmakingResp = await response.json();
-		console.log("data: ", data);
-		return (data);
-	}
-
 	constructor(
 		id: number, //some number that is unique for each client, ideally bound to the account
 		container: HTMLElement,

@@ -14,6 +14,9 @@ websocket endpoints:
 	- tournament/{tournament_id} -> opens websocket to trournament, first connection needs password verification
 
 
+[ ]: backend: engine migration
+[ ]: frontend: adjust websocket communication
+
 
 
 [ ]: first serilization tests
