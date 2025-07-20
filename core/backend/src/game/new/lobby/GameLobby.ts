@@ -3,24 +3,25 @@ import { MapFile } from './maps/Map.ts';
 import type { fastifyWebsocket } from '@fastify/websocket';
 import websocketPlugin from '@fastify/websocket';
 import type { WebSocket } from '@fastify/websocket';
+import { WebsocketConnection } from '../WebsocketConnection.ts';
 
 import type {
 	ServerToClientError,
-	ServerToClientMessage,
+	LobbyToClient,
+	GameLobbyUpdate,
 	ServerError,
-    ClientToMatch,
+	ClientToMatch,
+	ClientToGame,
 } from '../../game_shared/message_types.ts';
 
 type GameConnection = {
 	id: number,
-	ws?: WebSocket,
+	sock?: WebsocketConnection,
 };
 
 
 //todo:
 //leave()
-//connect()//first websocket connection
-//reconnect()
 //disconnect()
 export class GameLobby {
 	public finished: boolean = false;
@@ -37,6 +38,7 @@ export class GameLobby {
 
 	private _connections: GameConnection[] = [];
 
+	private _last_broadcast: LobbyToClient;
 
 	constructor(id: number, map_name: string, ai_count: number, password?: string) {
 		console.log("game: GameLobby constructor");
@@ -50,6 +52,13 @@ export class GameLobby {
 		if (this._ai_count < 0 || this._ai_count >= this._map_file.clients.length) {
 			throw ("invalid ai count");
 		}
+		const lobby_status: GameLobbyUpdate = {
+			type: 'game_lobby_update',
+			player_count: 0,
+			loaded_player_count: 0,
+			target_player_count: this._map_file.clients.length,
+		};
+		this._last_broadcast = lobby_status;
 	}
 
 	public can_reconnect(client_id: number): boolean {
@@ -69,6 +78,7 @@ export class GameLobby {
 	}
 
 	// returns false if player can not join
+	// this does not setup the connection, without this the client tring to connect will be denied
 	public join(user_id: number, map_name: string, password?: string): boolean {
 		if (this._map_name != map_name) {
 			return (false);
@@ -85,7 +95,7 @@ export class GameLobby {
 		console.log("Game: User", user_id, " joing lobby ", this.id);
 		const connection: GameConnection = {
 			id: user_id,
-			ws: undefined,
+			sock: undefined,
 		};
 		this._connections.push(connection);
 		if (this._ai_count + this._connections.length == this._map_file.clients.length) {
@@ -104,9 +114,48 @@ export class GameLobby {
 	public cleanup() {
 	}
 
+	private _reconnect(ws: WebSocket, connection: GameConnection) {
+		if (connection.sock == undefined) {
+			console.log("Game: Error: Attempting reconnect when there was no connection before");
+			throw ("Internal Error");
+		} else if (connection.sock.ws === ws) {
+		} else {
+			connection.sock.ws.close();
+			connection.sock = new WebsocketConnection(ws);
+		}
+		connection.sock.send(this._last_broadcast);
+		console.log("Game: clinet ", connection.id, " reconnected to lobby, ", this.id);
+	}
+
+	private _connect(client_id: number, ws: WebSocket, password: string) {
+		if (password != this.password) {
+			WebsocketConnection.static_send_error(ws, 'Invalid Password');
+			ws.close();
+			return ;
+		}
+		for (const connection of this._connections) {
+			if (client_id == connection.id && connection.sock !== undefined) {
+				this._reconnect(ws, connection);
+				return ;
+			} else if (client_id == connection.id) {
+				connection.sock = new WebsocketConnection(ws);
+				connection.sock.send(this._last_broadcast);
+				console.log("Game: clinet ", client_id, " connected to lobby ", this.id);
+				return ;
+			}
+		}
+		console.log("Game: Error: Client ", client_id, " failed to connect to lobby ", this.id);
+	}
+
 	//todo:
 	public recv(ws: WebSocket, msg: ClientToMatch): boolean {
-		msg.client_id
+		switch (msg.data.type) {
+			case ('send_input'):
+				break ;
+			case ('connect'):
+				this._connect(msg.client_id, ws, msg.data.password);
+				break ;
+		}
 		return (false);
 	}
 };

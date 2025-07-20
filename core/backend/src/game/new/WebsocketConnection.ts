@@ -16,12 +16,12 @@ import type {
 
 
 export class WebsocketConnection {
-	private _ws: WebSocket;
+	public ws: WebSocket;
 	public invalid_socket: boolean;
 
 	constructor(ws: WebSocket) {
-		this._ws = ws;
-		this.invalid_socket = this._ws.readyState !== WebSocket.OPEN;
+		this.ws = ws;
+		this.invalid_socket = this.ws.readyState !== WebSocket.OPEN;
 	}
 
 	static static_send(ws: WebSocket, msg: ServerToClientMessage) {
@@ -54,12 +54,12 @@ export class WebsocketConnection {
 		}
 	}
 
-	private _send(msg: ServerToClientMessage) {
+	public send(msg: ServerToClientMessage) {
 		if (this.invalid_socket) {
 			console.log("tryed to send\n", msg, "\nthrough socket marked as invalid");
 			return ;
 		}
-		if (this._ws.readyState !== WebSocket.OPEN) {
+		if (this.ws.readyState !== WebSocket.OPEN) {
 			this.invalid_socket = true;
 			console.log("tryed to send\n", msg, "\nthrough socket was not open");
 			return ;
@@ -80,12 +80,12 @@ export class WebsocketConnection {
 			}
 		}
 		try {
-			this._ws.send(data);
+			this.ws.send(data);
 			return ;
 		} catch (error) {
 			console.log("tryed to send\n", data, "but got this error:\n", error);
 			this.invalid_socket = true;
-			this._ws.close();
+			this.ws.close();
 			return ;
 		}
 	}
@@ -95,7 +95,7 @@ export class WebsocketConnection {
 			type: 'error',
 			msg: error,
 		};
-		this._send(error_msg);
+		this.send(error_msg);
 	}
 
 	static static_send_error(ws:WebSocket, error: ServerError) {

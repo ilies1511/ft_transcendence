@@ -87,11 +87,13 @@ export type ServerToClientError = {
 
 //	| GameLobbyUpdate
 //	| GameStartInfo
-export type ServerToClientJson =
+export type LobbyToClientJson =
 	ServerToClientError
 ;
 
-export type ServerToClientMessage = ServerToClientJson | ArrayBuffer;
+export type LobbyToClient = LobbyToClientJson | ArrayBuffer;
+
+export type ServerToClientMessage = LobbyToClient;
 
 export type ClientToGameInput = {
 	type: 'send_input';
@@ -101,10 +103,19 @@ export type ClientToGameInput = {
 	}
 };
 
+export type ClientToGame = ClientToGameInput;
+
+export type ClietToMatchConnect = {
+	type: 'connect';
+	password: string;
+};
+
 export type ClientToMatch = {
 	client_id: number,
 	data:
-		ClientToGameInput,
+		ClientToGame
+		| ClietToMatchConnect
+	,
 };
 
 export type ClientToTournament = {
