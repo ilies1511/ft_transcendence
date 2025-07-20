@@ -3,9 +3,11 @@ import * as BABYLON from '@babylonjs/core/Legacy/legacy';
 //import * as BABYLON from 'babylonjs';
 import type {
 	ServerToClientMessage,
-	ServerToClientJson,
+	LobbyToClient,
+	LobbyToClientJson,
 	GameStartInfo,
 	ClientToMatch,
+	ClientToGame,
 	GameOptions,
 	EnterMatchmakingReq,
 	EnterMatchmakingResp,
@@ -43,6 +45,7 @@ export class Game {
 	private _game_scene: GameScene;
 
 	private _active_scene: BaseScene;
+	public finished: boolean = false;
 
 
 	//private _sphere: BABYLON.Mesh;
@@ -50,7 +53,7 @@ export class Game {
 
 	private _start_info: GameStartInfo | undefined = undefined;
 
-	private _last_server_msg: ServerToClientMessage | null = null;
+	private _last_server_msg: LobbyToClient | null = null;
 
 	private _socket: WebSocket;
 	private _id: number;
@@ -77,6 +80,7 @@ export class Game {
 		console.log("GAME: game constructor");
 		this._id = id;
 
+		this._open_socket = this._open_socket.bind(this);
 		this._open_socket();
 
 		this._canvas = this._createCanvas();
@@ -106,20 +110,20 @@ export class Game {
 				console.log("GAME: Connected to server");
 				const msg: ClientToMatch = {
 					client_id: this._id,
-					data: {
-						type: 'connect',
-						password: this.password,
-					}
+					type: 'connect',
+					password: this.password,
 				};
 				console.log("sending: ", JSON.stringify(msg));
 				this._socket.send(JSON.stringify(msg));
 			});
 
 			this._socket.onmessage = (
-				event: MessageEvent<ServerToClientMessage>) => this._rcv_msg(event);
+				event: MessageEvent<LobbyToClient>) => this._rcv_msg(event);
 			this._socket.addEventListener("close", () => {
-				//todo
-				console.log("GAME: Disconnected");
+				console.log("GAME: Disconnected, attempting reconnect..");
+				if (!this.finished) {
+					this._open_socket();
+				}
 			});
 		} catch (e) {
 			console.log("GAME: error: ", e);
@@ -127,10 +131,9 @@ export class Game {
 	}
 
 	private _key_up_handler(event: KeyboardEvent) {
-		const msg: ClientToServerMessage = {
+		const msg: ClientToGame = {
+			client_id: this._id,
 			type: "send_input",
-			player_id: this._id,
-			game_id: this._start_info.game_id,
 			payload: {
 				key: "",
 				type: "up",
@@ -158,10 +161,9 @@ export class Game {
 	}
 
 	private _key_down_handler(event: KeyboardEvent) {
-		const msg: ClientToServerMessage = {
+		const msg: ClientToGame = {
 			type: "send_input",
-			player_id: this._id,
-			game_id: this._start_info.game_id,
+			client_id: this._id,
 			payload: {
 				key: "",
 				type: "down",
@@ -198,28 +200,26 @@ export class Game {
 			//console.log("GAME: no message to process");
 			return ;
 		}
-		//const msg: ServerToClientMessage = this._last_server_msg;
-		//if (msg instanceof ArrayBuffer) {
-		//	/* msg is a game state update */
-		//	//console.log("GAME: got ArrayBuffer");
-		//	this._active_scene = this._game_scene;
-		//	this._game_scene.update(GameState.deserialize(msg));
-		//} else if (typeof msg === 'string') {
-		//	console.log("GAME: got string: ", msg);
-		//	const json: ServerToClientJson = JSON.parse(msg);
-		//	console.log("GAME: got ServerToClientMessage object: ", json);
-		//	switch (json.type) {
-		//		case ('game_lobby_update'):
-		//			// todo: have a user UI for the lobby screen while waiting for players
-		//			break ;
-		//		case ('starting_game'):
-		//			this._start_info = json as GameStartInfo;
-		//			this._start_game();
-		//			break ;
-		//	}
-		//} else {
-		//	console.log("GAME: Error: unknown message type recieved: ", typeof msg);
-		//}
+		const msg: LobbyToClient = this._last_server_msg;
+		if (msg instanceof ArrayBuffer) {
+			/* msg is a game state update */
+			//console.log("GAME: got ArrayBuffer");
+			this._active_scene = this._game_scene;
+			this._game_scene.update(GameState.deserialize(msg));
+		} else if (typeof msg === 'string') {
+			console.log("GAME: got string: ", msg);
+			const json: LobbyToClientJson = JSON.parse(msg) as LobbyToClientJson;
+			console.log("GAME: got ServerToClientMessage object: ", json);
+			switch (json.type) {
+				case ('game_lobby_update'):
+					// todo: have a user UI for the lobby screen while waiting for players
+					break ;
+				default:
+					throw ("Got not implemented msg type from server: ", msg);
+			}
+		} else {
+			console.log("GAME: Error: unknown message type recieved: ", typeof msg);
+		}
 		this._last_server_msg = null;
 	}
 

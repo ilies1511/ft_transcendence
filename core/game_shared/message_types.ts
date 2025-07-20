@@ -68,6 +68,7 @@ export type GameStartInfo =
 export type GameLobbyUpdate = {
 	type: 'game_lobby_update',
 	player_count: number,
+	loaded_player_count: number,
 	target_player_count: number,
 };
 
@@ -81,14 +82,14 @@ export type ServerError =
 
 export type ServerToClientError = {
 	type: 'error',
-	msg: ServerError
-	,
+	msg: ServerError,
 };
 
 //	| GameLobbyUpdate
 //	| GameStartInfo
 export type LobbyToClientJson =
 	ServerToClientError
+	| GameLobbyUpdate
 ;
 
 export type LobbyToClient = LobbyToClientJson | ArrayBuffer;
@@ -96,6 +97,7 @@ export type LobbyToClient = LobbyToClientJson | ArrayBuffer;
 export type ServerToClientMessage = LobbyToClient;
 
 export type ClientToGameInput = {
+	client_id: number,
 	type: 'send_input';
 	payload: {
 		key: string,
@@ -106,17 +108,15 @@ export type ClientToGameInput = {
 export type ClientToGame = ClientToGameInput;
 
 export type ClietToMatchConnect = {
+	client_id: number,
 	type: 'connect';
 	password: string;
 };
 
-export type ClientToMatch = {
-	client_id: number,
-	data:
-		ClientToGame
-		| ClietToMatchConnect
-	,
-};
+export type ClientToMatch =
+	ClientToGame
+	| ClietToMatchConnect
+;
 
 export type ClientToTournament = {
 	client_id: number,

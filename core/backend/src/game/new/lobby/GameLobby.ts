@@ -37,6 +37,7 @@ export class GameLobby {
 	private _ai_count: number;
 
 	private _connections: GameConnection[] = [];
+	public loaded_player_count: number = 0;
 
 	private _last_broadcast: LobbyToClient;
 
@@ -114,6 +115,21 @@ export class GameLobby {
 	public cleanup() {
 	}
 
+	private _update_lobby() {
+		const update_msg: GameLobbyUpdate = {
+			type: 'game_lobby_update',
+			player_count: this._connections.length,
+			loaded_player_count: this.loaded_player_count,
+			target_player_count: this._map_file.clients.length,
+		};
+		this._last_broadcast = update_msg;
+		for (const connection of this._connections) {
+			if (connection.sock) {
+				connection.sock.send(this._last_broadcast);
+			}
+		}
+	}
+
 	private _reconnect(ws: WebSocket, connection: GameConnection) {
 		if (connection.sock == undefined) {
 			console.log("Game: Error: Attempting reconnect when there was no connection before");
@@ -124,7 +140,7 @@ export class GameLobby {
 			connection.sock = new WebsocketConnection(ws);
 		}
 		connection.sock.send(this._last_broadcast);
-		console.log("Game: clinet ", connection.id, " reconnected to lobby, ", this.id);
+		console.log("Game: client ", connection.id, " reconnected to lobby, ", this.id);
 	}
 
 	private _connect(client_id: number, ws: WebSocket, password: string) {
@@ -140,20 +156,22 @@ export class GameLobby {
 			} else if (client_id == connection.id) {
 				connection.sock = new WebsocketConnection(ws);
 				connection.sock.send(this._last_broadcast);
-				console.log("Game: clinet ", client_id, " connected to lobby ", this.id);
+				console.log("Game: client ", client_id, " connected to lobby ", this.id);
+				this.loaded_player_count++;
+				this._update_lobby();
 				return ;
 			}
 		}
-		console.log("Game: Error: Client ", client_id, " failed to connect to lobby ", this.id);
+		console.log("Game: Error: client ", client_id, " failed to connect to lobby ", this.id);
 	}
 
 	//todo:
 	public recv(ws: WebSocket, msg: ClientToMatch): boolean {
-		switch (msg.data.type) {
+		switch (msg.type) {
 			case ('send_input'):
 				break ;
 			case ('connect'):
-				this._connect(msg.client_id, ws, msg.data.password);
+				this._connect(msg.client_id, ws, msg.password);
 				break ;
 		}
 		return (false);
