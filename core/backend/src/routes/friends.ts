@@ -1,10 +1,9 @@
 import type { FastifyPluginAsync } from "fastify";
 import { type UserWithFriends, type FriendRequestRow, type UserRow } from "../types/userTypes.ts";
 import { findUserWithFriends } from "../functions/user.ts";
-import {
-	sendFriendRequest, listIncomingRequests, acceptFriendRequest,
-	rejectFriendRequest
-} from "../functions/friends.ts";
+import { sendFriendRequest, listIncomingRequests, acceptFriendRequest,
+	rejectFriendRequest, removeFriend } from "../functions/friends.ts";
+import * as helpers from "../functions/friends.ts";
 
 export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 	// GET -- BEGIN
@@ -15,28 +14,12 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 		'/api/users/:id/friends',
 		{
 			schema: {
+				tags: ['friends'],
 				params: {
 					type: "object",
 					required: ["id"],
 					properties: { id: { type: "integer" } },
 				},
-				// response: {
-				// 	200: {
-				// 		type: 'object',
-				// 		properties: {
-				// 			id: { type: 'integer' },
-				// 			username: { type: 'string' },
-				// 			nickname: { type: 'string' },
-				// 			email: { type: ['string', 'null'] },
-				// 			live: { type: 'integer' },
-				// 			created_at: { type: 'integer' },
-				// 			avatar: { type: "string" },
-				// 			friends: {
-				// 				type: 'array',
-				// 				items: { type: 'integer' }
-				// 			}
-				// 		}
-				// 	},
 				response: {
 					200: {
 						type: 'object',
@@ -90,6 +73,7 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 		'/api/users/:id/requests',
 		{
 			schema: {
+				tags: ['friends'],
 				params: { type: 'object', required: ['id'], properties: { id: { type: 'integer' } } },
 				body: { type: 'object', required: ['username'], properties: { username: { type: 'string' } } },
 				response: {
@@ -141,6 +125,7 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 		'/api/users/:id/requests',
 		{
 			schema: {
+				tags: ['friends'],
 				params: { type: 'object', required: ['id'], properties: { id: { type: 'integer' } } },
 				response: {
 					200: {
@@ -170,6 +155,7 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 		'/api/requests/:requestId/accept',
 		{
 			schema: {
+				tags: ['friends'],
 				params: { type: 'object', required: ['requestId'], properties: { requestId: { type: 'integer' } } },
 				response: {
 					200: { type: 'object', properties: { message: { type: 'string' } } },
@@ -194,6 +180,7 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 		'/api/requests/:requestId/reject',
 		{
 			schema: {
+				tags: ['friends'],
 				params: { type: 'object', required: ['requestId'], properties: { requestId: { type: 'integer' } } },
 				response: {
 					200: { type: 'object', properties: { message: { type: 'string' } } },
@@ -211,4 +198,49 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 		}
 	)
 	//POST -- BEGIN
+
+	//DELETE -- BEGIN
+	/* TEST:
+		curl -i -X DELETE http://localhost:3000/api/users/2/friends/5
+	 */
+	fastify.delete<{
+		Params: { id: number; friendId: number }
+		Reply: { message: string } | { error: string }
+	}>(
+		'/api/users/:id/friends/:friendId',
+		{
+			schema: {
+				tags: ['friends'],
+				params: {
+					type: 'object',
+					required: ['id', 'friendId'],
+					properties: {
+						id: { type: 'integer' },
+						friendId: { type: 'integer' }
+					}
+				},
+				response: {
+					200: {
+						type: 'object',
+						properties: { message: { type: 'string' } }
+					},
+					404: {
+						type: 'object',
+						properties: { error: { type: 'string' } }
+					}
+				}
+			}
+		},
+		async (req, reply) => {
+			const userId = req.params.id
+			const friendId = req.params.friendId
+
+			const ok = await removeFriend(fastify, userId, friendId)
+			if (!ok) {
+				return reply.code(404).send({ error: 'Friendship not found' })
+			}
+			return reply.code(200).send({ message: 'Friend removed' })
+		}
+	)
+	//DELETE -- END
 }

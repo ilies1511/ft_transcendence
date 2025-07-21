@@ -89,3 +89,21 @@ export async function rejectFriendRequest(
 	)
 	if (info.changes === 0) throw new Error('RequestNotFoundOrHandled')
 }
+
+export async function removeFriend(
+	fastify: FastifyInstance,
+	userId: number,
+	friendId: number
+): Promise<boolean>
+{
+	const direction1 = await fastify.db.run('DELETE FROM friendships WHERE \
+		user_id = ? AND friend_id = ?',
+		userId, friendId
+	);
+	const direction2 = await fastify.db.run('DELETE FROM friendships WHERE \
+		user_id = ? AND friend_id = ?',
+		friendId, userId
+	);
+	const deletedCount = (direction1.changes ?? 0) + (direction2.changes ?? 0)
+	return deletedCount > 0
+}
