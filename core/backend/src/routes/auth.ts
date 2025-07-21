@@ -48,6 +48,7 @@ export default async function authRoutes(app: FastifyInstance) {
 		}
 	})
 	app.post<{
+		// Body: { email: string; password: string; token: string }
 		Body: { email: string; password: string }
 		Reply: { ok: true } | { error: string } | { twofa_required: true }
 	}>(
@@ -62,6 +63,7 @@ export default async function authRoutes(app: FastifyInstance) {
 					properties: {
 						email: { type: 'string', format: 'email' },
 						password: { type: 'string', minLength: 1 }
+						// token: { type: 'string'}
 					}
 				},
 				response: {
@@ -99,6 +101,23 @@ export default async function authRoutes(app: FastifyInstance) {
 			}
 
 			if (user.twofa_enabled) {
+				// const { email, password, token } = req.body
+				// const user = await validateCredentials(app, email, password)
+				// if (!user) {
+				// 	return reply.code(401).send({ error: 'Invalid credentials' })
+				// }
+				// try {
+				// 	const ok = verify2FaToken(user, token)
+				// 	if (!ok) {
+				// 		return reply.code(401).send({ error: 'Invalid 2FA code' })
+				// 	}
+				// } catch (err: any) {
+				// 	if (err.message === '2FA_NOT_SETUP') {
+				// 		return reply.code(400).send({ error: '2FA not set up' })
+				// 	}
+				// 	app.log.error(err)
+				// 	return reply.code(500).send({ error: 'Internal Server Error' })
+				// }
 				return reply.send({ twofa_required: true })
 			}
 

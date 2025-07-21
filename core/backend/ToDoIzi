@@ -48,3 +48,9 @@ thorized access to user accounts and sensitive data.
 This major module aims to strengthen user account security by offering Two-Factor
 Authentication (2FA) and enhancing authentication and authorization through the
 use of JSON Web Tokens (JWT).
+
+
+## MISC
+- [] Input sanitization (front -and Backend)
+- [] add remove friend endpoint
+- [] add all scores per matchID endoint
