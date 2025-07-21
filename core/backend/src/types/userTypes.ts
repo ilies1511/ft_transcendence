@@ -9,7 +9,7 @@ export interface UserRow {
 	live: number // 0 = offline, 1 = online
 	avatar: string
 	twofa_secret?: string;
-	twofa_enabled: 0|1;
+	twofa_enabled: 0 | 1;
 	created_at: number
 }
 
@@ -50,6 +50,10 @@ export interface MatchRow {
 	duration: number;
 	created_at: number;
 }
+
+export type MatchParticipants = ParticipantRow & {
+	username: string;
+};
 
 export interface ParticipantRow {
 	match_id: number;
