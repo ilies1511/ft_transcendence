@@ -66,6 +66,8 @@ export class Game {
 	public password: string = '';
 	public container: HTMLElement;
 
+	private _looby_screen: boolean = true;
+
 	constructor(
 		id: number, //some number that is unique for each client, ideally bound to the account
 		container: HTMLElement,
@@ -92,17 +94,13 @@ export class Game {
 		container.appendChild(this._canvas);
 
 		this._engine = new BABYLON.Engine(this._canvas, true);
-
-
 		this._game_scene = new GameScene(this._engine, this._canvas);
 
 		this._active_scene = this._game_scene;
-
 		this._engine.runRenderLoop(() => {
 			this._process_msg();
 			this._active_scene.render();
 		});
-		this._start_game();
 	}
 
 	public leave() {
@@ -214,27 +212,32 @@ export class Game {
 				type: "down",
 			}
 		}
-		if (event.key.toLowerCase() === "w") {
-			msg.payload.key = "w";
-		} else if (event.key === "a") {
-			msg.payload.key = "a";
-		} else if (event.key === "s") {
-			msg.payload.key = "s";
-		} else if (event.key === "d") {
-			msg.payload.key = "d";
-		} else if (event.key === "r") {
-			msg.payload.key = "r";
-			msg.payload.type = "reset";
-		} else {
-			return ;
+		switch (event.code) {
+			case "KeyW":
+				msg.payload.key = "w";
+				break;
+			case "KeyA":
+				msg.payload.key = "a";
+				break;
+			case "KeyS":
+				msg.payload.key = "s";
+				break;
+			case "KeyD":
+				msg.payload.key = "d";
+				break;
+			case "KeyR":
+				msg.payload.key = "r";
+				msg.payload.type = "reset";
+				break;
+			default:
+				return ;
 		}
 		console.log("key down ", msg.payload.key);
 		this._socket.send(JSON.stringify(msg));
 	}
 
 	private _start_game() {
-		//console.log(this._start_info);
-		//todo: render some loading screen or smth like that
+		this._looby_screen = false;
 		window.addEventListener("keyup", this._key_up_handler);
 		window.addEventListener("keydown", this._key_down_handler);
 	}
@@ -267,9 +270,11 @@ export class Game {
 		}
 		const msg: LobbyToClient = this._last_server_msg;
 		if (msg instanceof ArrayBuffer) {
+			if (this._looby_screen) {
+				this._start_game();
+			}
 			/* msg is a game state update */
 			//console.log("GAME: got ArrayBuffer");
-			this._active_scene = this._game_scene;
 			this._game_scene.update(GameState.deserialize(msg));
 		} else if (typeof msg === 'string') {
 			console.log("GAME: got string: ", msg);
@@ -277,6 +282,10 @@ export class Game {
 			console.log("GAME: got ServerToClientMessage object: ", json);
 			switch (json.type) {
 				case ('game_lobby_update'):
+					if (!this._looby_screen) {
+						console.log("Game: Bug: Game lobby update recieved after lobby screen was deactivated");
+						return ;
+					}
 					// todo: have a user UI for the lobby screen while waiting for players
 					break ;
 				case ('error'):
@@ -330,4 +339,4 @@ export class Game {
 		document.body.appendChild(this._canvas);
 		return (this._canvas);
 	}
-}
+};
