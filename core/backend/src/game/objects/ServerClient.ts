@@ -14,6 +14,7 @@ export class ServerClient extends SharedClient {
 	public down: boolean = false;
 	public left: boolean = false;
 	public right: boolean = false;
+	public final_placement: number = -1;
 
 	constructor(
 		paddle: ServerWall,
@@ -28,6 +29,12 @@ export class ServerClient extends SharedClient {
 		this.paddle = paddle;
 		this.base = base;
 		this.global_id = 0;
+	}
+
+	public loose() {
+		console.log("Client ", this.global_id, " lost");
+		this.base.effects = this.base.effects.filter(e => e !== Effects.BASE);
+		console.log(this.base);
 	}
 
 	public set_socket(socket: WebSocket) {

@@ -37,8 +37,11 @@ export class ScorePanel {
 		this.lines = new Map<number, ScoreLine>();
 	}
 
+	public cleanup() {
+	}
+
 	public update_score(id: number, score: number, color: BABYLON.Color3, name?: string) {
-		console.log("Game: update score", id);
+		//console.log("Game: update score", id);
 		let line = this.lines.get(id);
 		if (!line) {
 			line = new ScoreLine(id, score, color, name);

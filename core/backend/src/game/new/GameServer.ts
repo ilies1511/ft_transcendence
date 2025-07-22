@@ -92,8 +92,10 @@ export class GameServer {
 
 	constructor(fastify: FastifyInstance) {
 		console.log("[GAME-BACK-END] constructor");
+
+		this._remove_lobby = this._remove_lobby.bind(this);
+
 		this._fastify = fastify;
-	
 
 		this._enter_matchmaking_api = this._enter_matchmaking_api.bind(this);
 		this._fastify.post<{Body: EnterMatchmakingReq}>(
@@ -251,7 +253,7 @@ export class GameServer {
 	}
 
 	private _rcv_game_msg(game_id_str: string, message: string, ws: WebSocket) {
-		console.log("game: got game msg: ", message);
+		//console.log("game: got game msg: ", message);
 		try {
 			const game_id: number = parseInt(game_id_str);
 			const lobby: GameLobby | undefined = this._lobbies.get(game_id);
@@ -284,17 +286,24 @@ export class GameServer {
 		console.log("game: got tournament msg: ", message);
 	}
 
+	private _remove_lobby(game_id: number): undefined {
+		console.log("removing lobby ", game_id, ": ");
+		this._lobbies.delete(game_id);
+		console.log("lobbies now", this._lobbies);
+	}
+
 	//returns the lobby id or and error string
+	private _next_lobby_id: number = 0; //placeholder
 	private async _create_lobby(
 		map_name: string,
 		ai_count: number,
 		password?: string
 	): Promise<number>
 	{
-		const lobby_id: number = 0;
+		const lobby_id: number = this._next_lobby_id++;
 		//todo: actually create lobby in db and use real id
 		//const lobby_id: number = await create looby in db();
-		const lobby: GameLobby = new GameLobby(lobby_id, map_name, ai_count, password);
+		const lobby: GameLobby = new GameLobby(this._remove_lobby, lobby_id, map_name, ai_count, password);
 		this._lobbies.set(lobby_id, lobby);
 		return (lobby_id);
 	}

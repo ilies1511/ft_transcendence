@@ -12,6 +12,7 @@ import type {
 	GameStartInfo,
 	LobbyToClientJson,
 	ServerToClientMessage,
+	GameToClientFinish,
 	ClientToGameInput,
 } from './../../../game_shared/message_types.ts';
 
@@ -44,12 +45,16 @@ export class GameEngine {
 	public clients: ServerClient[] = [];
 	public balls: ServerBall[] = [];
 	public walls: ServerWall[] = [];
+	private _alive_player_count: number;
+	private _finish_callback: () => undefined;
 
-	constructor(map_name: string) {
+	constructor(map_name: string, finish_callback: () => undefined) {
 		this.update = this.update.bind(this);
+		this._finish_callback = finish_callback;
 
 		this.running = false;
 		const map: MapFile = new MapFile(map_name);
+		this._alive_player_count = map.clients.length;
 		this._next_obj_id = map.next_obj_id;
 
 		this.walls = map.walls;
@@ -99,6 +104,38 @@ export class GameEngine {
 				client.socket.send(buffer);
 			}
 		}
+	}
+
+	private _finish_game() {
+		this.finished = true;
+		this.stop_loop();
+		const msg: GameToClientFinish = {
+			type: 'finish',
+			placements: [],
+		}
+		for (const client of this.clients) {
+			if (client.global_id == 0) {
+				continue ;
+			}
+			msg.placements.push({
+				id: client.global_id,
+				final_placement: client.final_placement,
+			});
+		}
+		for (const client of this.clients) {
+			if (client.global_id == 0) {
+				continue ;
+			}
+			if (client.socket && client.socket.readyState === client.socket.OPEN) {
+				console.log("sending: ", msg);
+				client.socket.send(JSON.stringify(msg));
+			}
+			if (client.socket) {
+				client.socket.close();
+				client.socket = undefined;
+			}
+		}
+		this._finish_callback();
 	}
 
 	private update_balls(delta_time: number) {
@@ -162,6 +199,15 @@ export class GameEngine {
 					}
 					goaled_client.score--;
 					console.log("client ", goaled_client.global_id, " points: ", goaled_client.score);
+					if (goaled_client.score == 0) {
+						goaled_client.loose();
+						goaled_client.final_placement = this._alive_player_count;
+						this._alive_player_count--;
+						//todo: later chage this to 1 so the game is over when 1 player is alive
+						if (this._alive_player_count == 0) {
+							this._finish_game();
+						}
+					}
 					break ;
 				}
 				const offset: ServerVec2 = first_intersec.wall.normal.clone();
@@ -221,6 +267,9 @@ export class GameEngine {
 	}
 
 	private finish_frame(delta_time: number) {
+		if (this.finished) {
+			return ;
+		}
 		this.broadcast_game_state();
 	}
 
@@ -264,8 +313,13 @@ export class GameEngine {
 		}
 	}
 
-	public process_input(input: ClientToGameInput, client: ServerClient) {
-		console.log('got input');
+	public process_input(input: ClientToGameInput) {
+		const client: ServerClient | undefined = this.clients.find(c => c.global_id == input.client_id);
+		if (client == undefined) {
+			console.log("Game: Error: Got game input from invalid id: ", input.client_id);
+			return ;
+		}
+		//console.log('got input');
 		if (input.client_id != client.global_id) {
 			throw("Game.process_input: got id missmatch");
 		}

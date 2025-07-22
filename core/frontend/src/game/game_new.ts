@@ -9,6 +9,7 @@ import type {
 	ClientToMatch,
 	ClientToGame,
 	ClientToMatchLeave,
+	GameToClientFinish,
 	ClientTo,
 	ServerError,
 	GameOptions,
@@ -81,7 +82,6 @@ export class Game {
 		this._key_up_handler = this._key_up_handler.bind(this);
 		this._key_down_handler = this._key_down_handler.bind(this);
 
-
 		console.log("GAME: game constructor");
 		this._id = id;
 
@@ -102,6 +102,7 @@ export class Game {
 			this._process_msg();
 			this._active_scene.render();
 		});
+		this._start_game();
 	}
 
 	public leave() {
@@ -140,6 +141,9 @@ export class Game {
 
 	private _open_socket() {
 		try {
+			if (this.finished) {
+				return ;
+			}
 			console.log("game id: ", this.game_id);
 			const route: string = `ws://localhost:5173/game/${this.game_id}`;
 			this._socket = new WebSocket(route)
@@ -164,7 +168,6 @@ export class Game {
 					console.log("GAME: Attempting reconnect..");
 					this._open_socket();
 				} else {
-					//todo: stop babylonjs and cleanup everything
 				}
 			});
 		} catch (e) {
@@ -279,6 +282,9 @@ export class Game {
 				case ('error'):
 					this._process_server_error(json.msg);
 					break ;
+				case ('finish'):
+					this._finish_game(json);
+					break ;
 				default:
 					throw ("Got not implemented msg type from server: ", msg);
 			}
@@ -286,6 +292,13 @@ export class Game {
 			console.log("GAME: Error: unknown message type recieved: ", typeof msg);
 		}
 		this._last_server_msg = null;
+	}
+
+	private _finish_game(msg: GameToClientFinish) {
+		console.log("Game: _finish_game()");
+		this.finished = true;
+		this.disconnect();
+		console.log(msg);
 	}
 
 	private _rcv_msg(event: MessageEvent<ServerToClientMessage>): undefined {

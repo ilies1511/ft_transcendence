@@ -11,6 +11,8 @@ export class MapFile {
 	public balls: ServerBall[] = [];
 	public clients: ServerClient[] = [];
 	public next_obj_id: number = 1;
+	public max_time: number; //seconds
+
 
 	constructor(map_name: string = 'default') {
 		let map_data: any;
@@ -19,6 +21,7 @@ export class MapFile {
 		} else {
 			throw new Error("Unknown map name");
 		}
+		this.max_time = map_data.max_time;
 		//console.log(map_data);
 		const paddle_len: number = map_data.paddle_length;
 		const base_len: number = map_data.base_length;
@@ -36,6 +39,7 @@ export class MapFile {
 				base_center, normal.clone(), base_len, base_effects, this.next_obj_id++, false);
 			const id: number = this.next_obj_id++;
 			const client: ServerClient = new ServerClient(paddle, base, id, id);
+			client.score = map_data.health;
 			this.clients.push(client);
 		});
 

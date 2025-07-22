@@ -12,6 +12,7 @@ import type {
 	ServerError,
 	ClientToMatch,
 	ClientToGame,
+	ClientToGameInput,
 } from '../../game_shared/message_types.ts';
 
 type GameConnection = {
@@ -41,8 +42,17 @@ export class GameLobby {
 
 	private _last_broadcast: LobbyToClient;
 
-	constructor(id: number, map_name: string, ai_count: number, password?: string) {
+	private _completion_callback: (id: number) => undefined;
+
+	constructor(
+		completion_callback: (id: number) => undefined,
+		id: number,
+		map_name: string,
+		ai_count: number,
+		password?: string
+	) {
 		console.log("game: GameLobby constructor");
+		this._completion_callback = completion_callback;
 		if (password !== undefined) {
 			this.password = password;
 		}
@@ -74,15 +84,21 @@ export class GameLobby {
 		return (false);
 	}
 
+	private _game_engine_finish_callback(): undefined {
+		this._completion_callback(this.id);
+	}
+
 	private _start_game() {
 		console.log("starting game..");
-		this.engine = new GameEngine(this._map_name);
+		this._game_engine_finish_callback = this._game_engine_finish_callback.bind(this);
+		this.engine = new GameEngine(this._map_name, this._game_engine_finish_callback);
 		let i = 0;
 		while (i < this._connections.length) {
 			this.engine.clients[i].set_socket(this._connections[i].sock.ws);
 			this.engine.clients[i].global_id = this._connections[i].id;
 			i++;
 		}
+
 		this.engine.start_loop();
 	}
 
@@ -186,6 +202,9 @@ export class GameLobby {
 	public recv(ws: WebSocket, msg: ClientToMatch): boolean {
 		switch (msg.type) {
 			case ('send_input'):
+				if (this.engine) {
+					this.engine.process_input(msg as ClientToGameInput);
+				}
 				break ;
 			case ('connect'):
 				this._connect(msg.client_id, ws, msg.password);

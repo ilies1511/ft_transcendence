@@ -19,7 +19,7 @@ export class ServerBall extends SharedBall {
 
 	// when ball is bugged
 	public reset() {
-		console.log("resetting ball from: ", this);
+		//console.log("resetting ball from: ", this);
 		this.cur_collision_obj_id = [];
 		this.last_collision_obj_id = [];
 		this.pos = this.init_pos.pos.clone();
@@ -34,7 +34,7 @@ export class ServerBall extends SharedBall {
 		}
 		this.last_collision_obj_id = this.init_pos.last_collision_obj_id.slice();
 		this.cur_collision_obj_id = this.init_pos.cur_collision_obj_id.slice();
-		console.log("to: ", this);
+		//console.log("to: ", this);
 	}
 
 	public reflect(walls: ServerWall[], hit_points: ServerVec2[]) {
@@ -97,7 +97,7 @@ export class ServerBall extends SharedBall {
 		//	return (undefined); // ball flying away from the wall
 		//}
 
-		//let impact_time: number;
+		//let impact_time: number;serverbale
 		//if (signed_dist != 0) {
 		//	impact_time = (signed_dist) / (-dist_rate);
 		//} else {

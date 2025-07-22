@@ -85,11 +85,20 @@ export type ServerToClientError = {
 	msg: ServerError,
 };
 
+export type GameToClientFinish = {
+	type: 'finish',
+	placements: {
+		id: number,
+		final_placement: number,
+	}[];
+};
+
 //	| GameLobbyUpdate
 //	| GameStartInfo
 export type LobbyToClientJson =
 	ServerToClientError
 	| GameLobbyUpdate
+	| GameToClientFinish
 ;
 
 export type LobbyToClient = LobbyToClientJson | ArrayBuffer;
