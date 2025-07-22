@@ -87,13 +87,41 @@ export async function validateCredentials(
 }
 // END -- '/api/login/2fa'
 
+
+export enum Disable2FAResponse {
+	UserNotFound	= 'User not found',
+	NotEnabled		= '2FA not enabled',
+	Success			= '2FA successfully disabled',
+}
+
 export async function disable2FA(
 	fastify: FastifyInstance,
 	userId: number
-	): Promise<void>
+	): Promise<Disable2FAResponse>
 {
+	const user = await fastify.db.get<{ twofa_enabled : number}>(
+		'SELECT twofa_enabled FROM users WHERE id = ?', userId);
+	if (!user) {
+		return Disable2FAResponse.UserNotFound;
+	}
+	if (user.twofa_enabled === 0) {
+		return Disable2FAResponse.NotEnabled
+	}
 	await fastify.db.run(
 		`UPDATE users SET twofa_enabled = 0, twofa_secret = NULL WHERE id = ?`,
 		userId
 	)
+	return Disable2FAResponse.Success
 }
+
+//// Old Version
+// export async function disable2FA(
+// 	fastify: FastifyInstance,
+// 	userId: number
+// 	): Promise<void>
+// {
+// 	await fastify.db.run(
+// 		`UPDATE users SET twofa_enabled = 0, twofa_secret = NULL WHERE id = ?`,
+// 		userId
+// 	)
+// }

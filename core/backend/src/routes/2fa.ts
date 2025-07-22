@@ -1,6 +1,6 @@
 import { type FastifyInstance, type FastifyRequest, type FastifyReply, type FastifyPluginAsync, fastify } from "fastify";
 import QRCode from 'qrcode'
-import { init2FA, verify2FA, disable2FA } from "../functions/2fa.ts";
+import { Disable2FAResponse, init2FA, verify2FA, disable2FA} from "../functions/2fa.ts";
 
 export const twoFaRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 	fastify.post(
@@ -115,11 +115,43 @@ export const twoFaRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) 
 		},
 		async (req, reply) => {
 			const userId = (req.user as any).id
-			await disable2FA(fastify, userId)
+			const res = await disable2FA(fastify, userId)
+			if (res === Disable2FAResponse.UserNotFound) {
+				return reply.code(404).send({ error: res})
+			}
+			if (res === Disable2FAResponse.NotEnabled) {
+				return reply.code(400).send({ error: res})
+			}
 			return reply.send({ success: true })
 		}
 	)
 }
+
+/*
+	// Old simple Version
+	fastify.post(
+		'/api/2fa/disable',
+		{
+			preHandler: [fastify.auth],
+			schema: {
+				tags: ['auth'],
+				description: 'Disable 2FA for current user',
+				response: {
+					200: {
+						type: 'object',
+						properties: { success: { type: 'boolean' } }
+					}
+				}
+			}
+		},
+		async (req, reply) => {
+			const userId = (req.user as any).id
+			await disable2FA(fastify, userId)
+			return reply.send({ success: true })
+		}
+	)
+*/
+
 
 /*
 	TEST FLOW:
