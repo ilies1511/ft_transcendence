@@ -124,7 +124,6 @@ export class GameScene extends BaseScene {
 		this._score_panel = new ScorePanel(gui);
 	}
 
-	//todo
 	public cleanup() {
 		super.cleanup();
 		this._meshes.clear();

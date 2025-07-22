@@ -1,6 +1,5 @@
 import * as BABYLON from '@babylonjs/core/Legacy/legacy';
 
-import { LobbyScene } from './scenes/LobbyScene.ts';
 
 //import * as BABYLON from 'babylonjs';
 import type {
@@ -12,37 +11,21 @@ import type {
 	ClientToGame,
 	ClientToMatchLeave,
 	GameToClientFinish,
-	ClientTo,
 	ServerError,
 	GameOptions,
 	EnterMatchmakingReq,
 	EnterMatchmakingResp,
 } from './game_shared/message_types.ts';
 
-//import { GridMaterial } from '@babylonjs/materials/Grid.ts';
-//import { FireProceduralTexture } from '@babylonjs/procedural-textures/fire';
-
-import * as GUI from '@babylonjs/gui';
-
-// import { Effects, GameState }
-// 	from '../game_shared/serialization.ts';
 
 import { Effects, GameState }
 	from '../../../game_shared/serialization.ts';
 
-import { ClientVec2 } from './objects/ClientVec2.ts';
-import { ClientWall } from './objects/ClientWall.ts';
-import { ClientBall } from './objects/ClientBall.ts';
-import { ClientClient } from './objects/ClientClient.ts';
-
 import { BaseScene } from './scenes/base.ts';
+import { LobbyScene } from './scenes/LobbyScene.ts';
 import { GameScene } from './scenes/game_scene.ts';
 
 
-
-const server_ip: string = "localhost";
-
-const game_port: string = "5173";
 
 export class Game {
 	private _canvas: HTMLCanvasElement;
@@ -57,8 +40,6 @@ export class Game {
 
 	//private _sphere: BABYLON.Mesh;
 
-
-	private _start_info: GameStartInfo | undefined = undefined;
 
 	private _last_server_msg: LobbyToClient | null = null;
 
@@ -137,6 +118,7 @@ export class Game {
 		this._engine.stopRenderLoop();
 		this._socket.close();
 		this._game_scene.cleanup();
+		this._lobby_scene.cleanup();
 		this._engine.dispose();
 		this.container.removeChild(this._canvas);
 	}
