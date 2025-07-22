@@ -1,6 +1,6 @@
 import { type FastifyInstance, type FastifyRequest, type FastifyReply, type FastifyPluginAsync, fastify } from "fastify";
 import QRCode from 'qrcode'
-import { init2FA, verify2FA } from "../functions/2fa.ts";
+import { init2FA, verify2FA, disable2FA } from "../functions/2fa.ts";
 
 export const twoFaRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 	fastify.post(
@@ -98,6 +98,27 @@ export const twoFaRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) 
 			}
 		}
 	)
+	fastify.post(
+		'/api/2fa/disable',
+		{
+			preHandler: [fastify.auth],
+			schema: {
+				tags: ['auth'],
+				description: 'Disable 2FA for current user',
+				response: {
+					200: {
+						type: 'object',
+						properties: { success: { type: 'boolean' } }
+					}
+				}
+			}
+		},
+		async (req, reply) => {
+			const userId = (req.user as any).id
+			await disable2FA(fastify, userId)
+			return reply.send({ success: true })
+		}
+	)
 }
 
 /*
@@ -134,4 +155,8 @@ export const twoFaRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) 
 		- if user tries now via '/api/login', he will be 'redirected' to
 			'/api/login/2fa' and asked to enter TOTP-Codes
 		- now login via '/api/login/2fa'
+
+	Disable 2FA:
+		curl -X POST http://localhost:3000/api/2fa/disable \
+		--cookie "token=<USER_JWT_TOKEN>"
  */

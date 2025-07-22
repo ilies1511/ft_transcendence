@@ -86,3 +86,14 @@ export async function validateCredentials(
 	return ok ? user : null
 }
 // END -- '/api/login/2fa'
+
+export async function disable2FA(
+	fastify: FastifyInstance,
+	userId: number
+	): Promise<void>
+{
+	await fastify.db.run(
+		`UPDATE users SET twofa_enabled = 0, twofa_secret = NULL WHERE id = ?`,
+		userId
+	)
+}
