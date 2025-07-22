@@ -1,3 +1,4 @@
+//frontend/src/services/auth.ts
 import { router } from '../main'
 
 export async function submitLogin (email: string, password: string) {
@@ -11,6 +12,8 @@ export async function submitLogin (email: string, password: string) {
 		const { error } = await res.json().catch(() => ({}))
 		throw new Error(error ?? 'login failed')
 	}
+
+	document.dispatchEvent(new Event('auth-change'))
 }
 
 /* strongly-typed shape coming from GET /api/me */
@@ -19,6 +22,7 @@ export interface AuthUser {
 	username: string
 	nickname: string
 	avatar: string
+	live: number
 }
 
 export async function currentUser (): Promise<AuthUser | null> {

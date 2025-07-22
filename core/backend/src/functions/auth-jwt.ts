@@ -3,12 +3,19 @@ import fp from 'fastify-plugin'
 import cookie from '@fastify/cookie'
 import jwt from '@fastify/jwt'
 import 'dotenv/config'                 // loads JWT_SECRET & COOKIE_SECRET from .env
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 
-export default fp(async (app) => {
+export default fp(async (app: FastifyInstance) => {
 	// parses & signs cookies
 	await app.register(cookie, {
 		secret: process.env.COOKIE_SECRET!,
 		parseOptions: {}
+		// parseOptions: {
+		// 	httpOnly: true,
+		// 	secure: process.env.NODE_ENV === 'production',
+		// 	sameSite: 'lax',
+		// 	path: '/'
+		// }
 	})
 
 	// adds reply.jwtSign   +   request.jwtVerify
@@ -18,11 +25,14 @@ export default fp(async (app) => {
 	})
 
 	// reusable guard for protected routes
-	app.decorate('auth', async (req, reply) => {
+	app.decorate('auth', async (req: FastifyRequest, reply: FastifyReply) => {
 		try {
 			await req.jwtVerify()
 		} catch {
 			reply.code(401).send({ error: 'login required' })
 		}
-	})
+	}),
+	{
+		dependencies: ['@fastify/cookie']
+	}
 })

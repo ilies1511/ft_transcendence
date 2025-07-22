@@ -1,36 +1,44 @@
 // frontend/src/main.ts
-import './style.css';
-import { Router } from './router.ts';
-import { initFriendUI } from './pages/friendUI.ts';
+import './style.css'
+import { Router } from './router.ts'
+import { initFriendUI } from './pages/friendUI.ts'
 import { currentUser, logout } from './services/auth'
-import { friendRequestToast } from './ui/toast';
+import { initFriendsWs, closeFriendsWs } from './websocket.ts'
+import { presence } from './services/presence'
+import { updateDot } from './utils/statusDot'
+import type { FriendStatusMsg } from './types/ws';
 
-const root = document.querySelector<HTMLElement>('#app')!;
-export const router = new Router(root);
+const root = document.querySelector<HTMLElement>('#app')!
+export const router = new Router(root)
 
-// this is for friend list
-initFriendUI();
+initFriendUI() // friend-list UI
+document.addEventListener('click', router.linkHandler) // link delegation
 
-// global delegation for all future <a data-route>
-document.addEventListener('click', router.linkHandler);
+/* fire auth-change once if a valid cookie already exists */
+;(async () => {
+	if (await currentUser())
+		document.dispatchEvent(new Event('auth-change'))
+})()
 
-// first paint
-router.go(location.pathname);
+router.go(location.pathname)
 
-// friends invite websocket
-const friendsWs = new WebSocket('ws://localhost:5173/friends');
+document.addEventListener('auth-change', async () => {
+	const user = await currentUser()
 
-// close ws on refresh/close website browser window
-window.addEventListener('beforeunload', () => friendsWs.close());
+	if (user) {
+		presence.start()
+		initFriendsWs()
+	} else {
+		presence.stop()
+		closeFriendsWs()
+	}
+})
 
-friendsWs.onmessage = evt => {
-	try {
-		const data = JSON.parse(evt.data);
-		if (data.type === 'new_friend_request') {
-			friendRequestToast(data.requestId, data.from);
-		}
-	} catch {/* ignore non-JSON */}
-};
+/* global handler for live-status updates */
+presence.addEventListener('friend-status', ev => {
+	const { friendId, online } = (ev as CustomEvent<FriendStatusMsg>).detail
+	updateDot(friendId, online) // live == true / false
+})
 
 // <avatar> <username> <logout button> TODO: need to move this to seperate page/ instance.
 // Will need to add dropdown menu. On that menu there will be moved log out button.
@@ -58,7 +66,6 @@ async function refreshHeader () {
 	}
 }
 
-
 refreshHeader() // initial run
-document.addEventListener('auth-change', refreshHeader)
+document.addEventListener('auth-change', refreshHeader) // TODO: Test if actually needed
 document.addEventListener('settings-update', refreshHeader)

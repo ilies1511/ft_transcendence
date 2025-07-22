@@ -1,12 +1,11 @@
 // backend/src/auth.ts
 import bcrypt from 'bcrypt'
 // import { fastify, type FastifyInstance } from 'fastify'
-import type { FastifyInstance } from 'fastify'
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { DEFAULT_AVATARS } from '../constants/avatars.ts'
 // backend/src/auth.ts
 import { setUserLive } from '../functions/user.ts'
 import { userRoutes } from './users.ts'
-import type { FastifyReply, FastifyRequest } from 'fastify';
 import { error } from 'console'
 
 const COST = 12  // bcrypt cost factor (2^12 ≈ 400 ms on laptop)
@@ -133,7 +132,7 @@ export default async function authRoutes(app: FastifyInstance) {
 		return reply.send({ ok: true });
 	});
 	// TODO: When logging out, getting console log error: GET http://localhost:5173/api/me 401 (Unauthorized)
-	app.get('/api/me', { preHandler: app.auth }, async (req) => {
+	app.get('/api/me', { preHandler: [app.auth] }, async (req: FastifyRequest) => {
 		const user = await app.db.get(
 			'SELECT id, username, nickname, avatar FROM users WHERE id = ?',
 			[(req.user as any).id]

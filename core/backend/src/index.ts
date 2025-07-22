@@ -1,106 +1,23 @@
 import Fastify from 'fastify'
-import websocket from '@fastify/websocket'
-import { fpSqlitePlugin } from 'fastify-sqlite-typed'
-//import { GameServer } from './game/game_server.ts';
 import { GameServer } from './game/new/GameServer.ts';
-import { wsRoute } from './routes/websocket.ts';
-import { userRoutes } from './routes/users.ts';
-import { blockRoutes } from './routes/block.ts';
-import { friendRoutes } from './routes/friends.ts';
-import { runMigrations } from './db/db_init.ts';
-import authRoutes from './routes/auth.ts';
-import authJwt from './functions/auth-jwt.ts';
-import friendsInviteNotificationRoute from './routes/friends_invitation.ts';
+import plugins from './plugins/index.ts';
+import routes from './routes/index.ts';
 
 //Mit namespace
 import * as testRoutes from './routes/test_route.ts'
-import multipart from '@fastify/multipart'
-import { matchRoutes } from './routes/match.js';
-
 
 async function main() {
 
 	const fastify = Fastify({ logger: true })
 	// const fastify = Fastify({logger: { level: 'debug' }})
 
-	await fastify.register(multipart, {
-		limits: { fileSize: 1_000_000 }, // z.B. max. 1 MB
-	})
-
-	await fastify.register(websocket);
-
-	// 2) SQLite-Typed Plugin
-	await fastify.register(fpSqlitePlugin, {
-		dbFilename: './data/post_merge.db',     // DB-Datei
-		// driverSettings: { /* optional: verbose, cache, trace */ }
-	})
-	await runMigrations(fastify);
-
-	await fastify.register(import('@fastify/swagger'), {
-		openapi: {
-			openapi: '3.0.0',
-			info: {
-				title: 'Test swagger',
-				description: 'Testing the Fastify swagger API',
-				version: '0.1.0'
-			},
-			servers: [
-				{
-					url: 'http://localhost:3000',
-					description: 'Development server'
-				}
-			],
-			tags: [
-				// { name: 'user', description: 'User related end-points' },
-				// { name: 'code', description: 'Code related end-points' }
-			],
-			//   components: {
-			// 	securitySchemes: {
-			// 	  apiKey: {
-			// 		type: 'apiKey',
-			// 		name: 'apiKey',
-			// 		in: 'header'
-			// 	  }
-			// 	}
-			//   },
-			externalDocs: {
-				url: 'https://swagger.io',
-				description: 'Find more info here'
-			}
-		}
-	})
-
-	await fastify.register(import('@fastify/swagger-ui'), {
-		routePrefix: '/documentation',
-		uiConfig: {
-			docExpansion: 'full',
-			deepLinking: false
-		},
-		uiHooks: {
-			onRequest: function (request, reply, next) { next() },
-			preHandler: function (request, reply, next) { next() }
-		},
-		staticCSP: true,
-		transformStaticCSP: (header) => header,
-		transformSpecification: (swaggerObject, request, reply) => { return swaggerObject },
-		transformSpecificationClone: true
-	})
-
-	// 3) Routen & Game-Server
-	await fastify.register(authJwt);
-	await fastify.register(wsRoute);
-	await fastify.register(userRoutes);
-	await fastify.register(authRoutes);
-	await fastify.register(friendRoutes);
+	await fastify.register(plugins);
+	await fastify.register(routes);
 	/*
 		curl -i http://localhost:3000/api/users/1/matches
 		curl -i http://localhost:3000/api/users/1/stats
 	 */
-	await fastify.register(matchRoutes);
-	await fastify.register(blockRoutes);
-	// to live ping/notify (via ws) a user, that we got friend request
-	await fastify.register(friendsInviteNotificationRoute);
-
+	// // to live ping/notify (via ws) a user, that we got friend request
 	const game_server = new GameServer(fastify);
 
 	await fastify.listen({ port: 3000, host: '0.0.0.0' })
@@ -112,4 +29,3 @@ main().catch(err => {
 	console.error(err)
 	process.exit(1)
 })
-

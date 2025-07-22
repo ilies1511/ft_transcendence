@@ -1,7 +1,11 @@
+// backend/src/routes/friends_invitation.ts
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify';
 import type { WebSocket } from '@fastify/websocket';
 import chalk from 'chalk'; // add color to print statement to server console
 import util  from 'util'; // for priting out to server console
+
+
+// -----------------------------------------------
 
 const friendsInviteNotificationRoute: FastifyPluginAsync = async (fastify) => {
 	fastify.get('/friends', { websocket: true }, async (socket: WebSocket, req: FastifyRequest) => {
@@ -24,7 +28,8 @@ const friendsInviteNotificationRoute: FastifyPluginAsync = async (fastify) => {
 			const rows = [...fastify.websocketServer.clients].map((c: any, i) => ({
 				idx : i + 1, // 1-based position
 				id : c.userId ?? '—', // user id
-				open : c.readyState === 1 // true ⇢ OPEN, false ⇢ CLOSING/CLOSED
+				open : c.readyState === 1, // true ⇢ OPEN, false ⇢ CLOSING/CLOSED
+				path : c.wsPath,
 			}));
 			console.log(
 				chalk.magenta.bold(
@@ -38,7 +43,6 @@ const friendsInviteNotificationRoute: FastifyPluginAsync = async (fastify) => {
 		};
 
 		printClientList_WS();
-
 		socket.on('close', printClientList_WS); // print after disconnect
 		socket.on('error', e => console.log('WS error', e));
 	});

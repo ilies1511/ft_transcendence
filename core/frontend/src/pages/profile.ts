@@ -1,7 +1,10 @@
 // frontend/src/pages/profile.ts
 import type { PageModule } from '../router';
+import type { ApiUser }       from '../types/api'
 import { currentUser } from '../services/auth'
 import { router } from '../main'
+import { updateDot } from '../utils/statusDot'
+import { isFriend } from '../utils/isFriend'
 
 const template = /*html*/ `
 	<div class="w-full max-w-6xl mx-auto p-6 space-y-6">
@@ -15,7 +18,7 @@ const template = /*html*/ `
 			<div class="text-center">
 			<div class="flex items-center justify-center gap-2">
 				<h1 id="profileName" class="text-2xl font-bold text-white"></h1>
-				<span id="profileStatus" class="h-3 w-3 rounded-full bg-[#0bda8e]"></span>
+				<span id="profileStatus" class="h-3 w-3 rounded-full hidden" data-user-id=""></span>
 			</div>
 			<p id="profileHandle" class="text-[#b99da6]"></p>
 			</div>
@@ -116,52 +119,62 @@ const template = /*html*/ `
 	</div>
 `;
 
-async function renderProfile(root: HTMLElement, user: { id: number, username: string, nickname: string, avatar: string }) {
+async function renderProfile(root: HTMLElement, user: ApiUser) {
 	root.innerHTML = template
-	root.querySelector<HTMLHeadingElement>('#profileName') !
-		.textContent = user.nickname
-	root.querySelector<HTMLParagraphElement>('#profileHandle') !
-		.textContent = '@' + user.username.toLowerCase().replace(/\s+/g, '_')
-	root.querySelector<HTMLImageElement>('#profileAvatar') !
-		.src = `/avatars/${user.avatar}`
+
+	root.querySelector<HTMLHeadingElement>('#profileName')!.textContent =
+		user.nickname
+	root.querySelector<HTMLParagraphElement>('#profileHandle')!.textContent =
+		'@' + user.username.toLowerCase().replace(/\s+/g, '_')
+
+	root.querySelector<HTMLImageElement>('#profileAvatar')!.src =
+		`/avatars/${user.avatar}`
+
+	const dot = root.querySelector<HTMLSpanElement>('#profileStatus')!
+	dot.dataset.userId = String(user.id)
+
+	const me = await currentUser()
+	const isMe = me?.id === user.id
+
+	if (isMe) {
+		updateDot(user.id, 1) // always green for yourself
+		dot.classList.remove('hidden')
+	} else if (await isFriend(user.id)) {
+		updateDot(user.id, user.live) // 0 or 1
+		dot.classList.remove('hidden')
+	} else {
+		dot.classList.add('hidden') // strangers see no dot
+	}
 }
 
 const ProfilePage: PageModule & { renderWithParams?: Function } = {
 	render(root) {
-		root.innerHTML = `<p>Loading profile...</p>`
+		root.innerHTML = '<p>Loading profile...</p>'
 	},
 
-	// Called for /profile/:id
-	async renderWithParams(root: HTMLElement, params: { id?: string }) {
-		root.innerHTML = `<p>Loading profile...</p>`
+	// /profile/:id
+	async renderWithParams(root, params) {
+		root.innerHTML = '<p>Loading profile...</p>'
+
 		if (params.id) {
 			const res = await fetch(`/api/users/${params.id}`)
-			if (!res.ok) {
-				root.innerHTML = `<p>User not found</p>`
-				return
-			}
-			const user = await res.json()
+			if (!res.ok) { root.innerHTML = '<p>User not found</p>'; return }
+
+			const user = await res.json() as ApiUser
 			await renderProfile(root, user)
 		} else {
-			// fallback to current user if no id param
-			const user = await currentUser()
-			if (!user) {
-			router.go('/login')
-				return
-			}
-			await renderProfile(root, user)
+			const me = await currentUser()
+			if (!me) { router.go('/login'); return }
+			await renderProfile(root, { ...me, live: 1 } as ApiUser)
 		}
 	},
 
-	// Called for /profile (current user)
-	async afterRender(root: HTMLElement) {
-		const user = await currentUser()
-		if (!user) {
-			router.go('/login')
-			return
-		}
-		await renderProfile(root, user)
+	// /profile (current user)
+	async afterRender(root) {
+		const me = await currentUser()
+		if (!me) { router.go('/login'); return }
+		await renderProfile(root, { ...me, live: 1 } as ApiUser)
 	}
 }
 
-export default ProfilePage;
+export default ProfilePage
