@@ -1,5 +1,7 @@
 import * as BABYLON from '@babylonjs/core/Legacy/legacy';
 
+import { LobbyScene } from './scenes/LobbyScene.ts';
+
 //import * as BABYLON from 'babylonjs';
 import type {
 	ServerToClientMessage,
@@ -46,6 +48,7 @@ export class Game {
 	private _canvas: HTMLCanvasElement;
 	private _engine: BABYLON.Engine;
 
+	private _lobby_scene: LobbyScene;
 	private _game_scene: GameScene;
 
 	private _active_scene: BaseScene;
@@ -66,7 +69,6 @@ export class Game {
 	public password: string = '';
 	public container: HTMLElement;
 
-	private _looby_screen: boolean = true;
 
 	constructor(
 		id: number, //some number that is unique for each client, ideally bound to the account
@@ -94,9 +96,11 @@ export class Game {
 		container.appendChild(this._canvas);
 
 		this._engine = new BABYLON.Engine(this._canvas, true);
+
+		this._lobby_scene = new LobbyScene(this._engine, this._canvas);
 		this._game_scene = new GameScene(this._engine, this._canvas);
 
-		this._active_scene = this._game_scene;
+		this._active_scene = this._lobby_scene;
 		this._engine.runRenderLoop(() => {
 			this._process_msg();
 			this._active_scene.render();
@@ -237,7 +241,7 @@ export class Game {
 	}
 
 	private _start_game() {
-		this._looby_screen = false;
+		this._active_scene = this._game_scene;
 		window.addEventListener("keyup", this._key_up_handler);
 		window.addEventListener("keydown", this._key_down_handler);
 	}
@@ -270,7 +274,7 @@ export class Game {
 		}
 		const msg: LobbyToClient = this._last_server_msg;
 		if (msg instanceof ArrayBuffer) {
-			if (this._looby_screen) {
+			if (this._active_scene !== this._game_scene) {
 				this._start_game();
 			}
 			/* msg is a game state update */
@@ -282,11 +286,10 @@ export class Game {
 			console.log("GAME: got ServerToClientMessage object: ", json);
 			switch (json.type) {
 				case ('game_lobby_update'):
-					if (!this._looby_screen) {
-						console.log("Game: Bug: Game lobby update recieved after lobby screen was deactivated");
-						return ;
+					if (this._active_scene !== this._lobby_scene) {
+						this._active_scene = this._lobby_scene;
 					}
-					// todo: have a user UI for the lobby screen while waiting for players
+					this._lobby_scene.update(json);
 					break ;
 				case ('error'):
 					this._process_server_error(json.msg);
