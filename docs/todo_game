@@ -13,9 +13,15 @@ websocket endpoints:
 	- /game/{game_id} -> opens websocket to connect to a game(lobby), might need password on first connection
 	- tournament/{tournament_id} -> opens websocket to trournament, first connection needs password verification
 
+[ ]: backend: game timer
 
-[ ]: backend: engine migration
-[ ]: frontend: adjust websocket communication
+[ ]: implement a way to have a lobby for 2 players on the same keyboard
+
+[ ]: tournament system
+
+
+[x]: backend: engine migration
+[x]: frontend: adjust websocket communication
 
 [ ]: frontend: cleanup
 [ ]: backend: cleanup
@@ -24,19 +30,18 @@ websocket endpoints:
 [ ]: backend: in the lobby pre game not connected clients need to be timed out so others can join
 
 
-[ ]: first serilization tests
-[ ]: serilize player scores
+[x]: serilize player scores
 
-[ ]: weird keyinput behaivior(sometimes dosnt work,
+[x]: weird keyinput behaivior(sometimes dosnt work,
 		after refreshing might work, then after refreshing it might also break)
 	-> also sometimes the ball position gets updated but the player paddle dosn'the
 		--> simmilar weird behaivior to key inputs
 
 [ ]: fix game_shared dir
 
-[ ]: game server: parse clients
+[x]: game server: parse clients
 
-[ ]: game server: handle clinet bases
+[x]: game server: handle clinet bases
 
 [x] - shared serilized classes refactor: split into classes Shared|Server|Client
 	- [ ] utilize these split classes more
@@ -45,31 +50,30 @@ websocket endpoints:
 
 client:
 	- [x] refactor
-	- [ ] send map json instead of game options
+	- [x] send map json instead of game options
 
 
 server:
-	- [ ] refactor
-	- [ ] player paddles should be walls
-		-> [ ] add type to walls
+	- [x] refactor
+	- [x] player paddles should be walls
+		-> [x] add type to walls
 	- [x] fix buggy intersection fn: Ball still flies out after a few minutes with high speed..
-	- [ ] fix buggy intersection fn: Ball still flies out after a few minutes with rotating wall..
+	- [x] fix buggy intersection fn: Ball still flies out after a few minutes with rotating wall..
 		-> made checks so this only effects walls that are currently rotating(walls that can rotate can be hit multiple times in a row)
 	- [ ] slow balls don't get pushed by rotating walls
 	- [x] why does the server stop sending updates with buggy intersection fn
-	- [ ] break down 'Game' class into smaller ones like 'GameLobby' and 'Physics'
+	- [x] break down 'Game' class into smaller ones like 'GameLobby' and 'Physics'
 
 server game lobby:
-	- [ ] game lobbys can he hidden from matchmaking and require some key to join
+	- [x] game lobbys can he hidden from matchmaking and require some key to join
 
 misc:
 	- [x] frontend: figure out proper way to handle js packages and ts compilation
 	- [x] backend: figure out proper way to handle js packages and ts compilation
 
 game options:
-	- [ ] client: have a frontend ui to select differnt game options (dummy checkboxes)
 	- [ ] client: on confirmation enter matchmaking
-	- [~] json map format: create a json map format to define maps
+	- [x] json map format: create a json map format to define maps
 
 matchmaking:
 	- [x] have a basic websocket connection where the client sets up a connection
@@ -96,21 +100,22 @@ sockets:
 		-- [x] create objects on frontend
 		-- [x] deactive objects on frontend
 		-- [x] update objects on frontend
-	- [ ] add score and time communication
+	- [x] add score communication
+	- [ ] add time communication
 	! [x] communicate button press/release from frontend to backend
-		-- [ ] client: include account bound unique client ID
-		-- [ ] server: map the client id to the correct object
+		-- [x] client: include account bound unique client ID
+		-- [x] server: map the client id to the correct object
 			--- (and set some state with timestamp?
-				-> [ ] think of how to handle server side position updates)
+				-> [x] think of how to handle server side position updates)
 
 game:
 	- [x] implement a ball that moves on each frame using babylon-js
 	- [x] implement a binary msg format for frame updates
 	- [x] server: send binary messages for frame updates
 	- [x] client: parse binary msg fn
-	- [ ] implement basic pong using babylon-js
+	- [x] implement basic pong using babylon-js
 	- [ ] make it possible for each client to be 1 or 2 players
-	- [ ] client: implement a recconect fn that can be called from the main menu
+	- [x] client: implement a recconect fn that can be called from the main menu
 	- [ ] client: implement ESC to leave the game (to be used to go back to main menu)
 
 game_mechanics:
@@ -122,14 +127,13 @@ game_mechanics:
 
 game state:
 	- [x] backend should be responsible for the balls position
-	- [ ] backend: each game should have a unique id
+	- [x] backend: each game should have a unique id
 	- [x] backend: manage multiple games at the same time
 	- [x] add sidewalls with ball interaction
-	- [ ] movable player paddles with ball interaction
-	- [ ] point scoring
-	- [ ] score board
-	- [ ] win conditon (timer/score)
-ball.pos.x == Infinity || isNaN(ball.pos.x)
+	- [x] movable player paddles with ball interaction
+	- [x] point scoring
+	- [x] score board
+	- [x] win conditon (timer[ ]/score[x])
 tournament:
 	- [ ] TBD
 
