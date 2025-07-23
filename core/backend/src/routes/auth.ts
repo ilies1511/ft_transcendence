@@ -41,8 +41,21 @@ export default async function authRoutes(app: FastifyInstance) {
 			)
 			reply.code(201).send({ userId: lastID })
 		} catch (err: any) {
+			// if (err.code === 'SQLITE_CONSTRAINT') {
+			// 	return reply.code(409).send({ error: 'That e-mail address or username is already taken!' })
+			console.error('INSERT-ERROR:', {
+				code: err.code, // 'SQLITE_CONSTRAINT'
+				errno: err.errno, // 19 or 1299 etc..
+				message: err.message, // 'SQLITE_CONSTRAINT_NOTNULL: NOT NULL constraint failed: users.twofa_secret'
+				stack: err.stack
+			});
 			if (err.code === 'SQLITE_CONSTRAINT') {
-				return reply.code(409).send({ error: 'That e-mail address or username is already taken!' })
+				if (err.message.includes('UNIQUE')) {
+					return reply.code(409).send({ error: 'That e-mail address or username is already taken!' });
+				}
+				if (err.message.includes('NOT NULL')) {
+					return reply.code(400).send({ error: 'A required field is missing: ' + err.message });
+				}
 			}
 			throw err
 		}

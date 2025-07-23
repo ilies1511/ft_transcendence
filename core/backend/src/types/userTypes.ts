@@ -13,11 +13,18 @@ export interface UserRow {
 	created_at: number
 }
 
+// export interface FriendRequestRow {
+// 	id: number
+// 	requester_id: number
+// 	recipient_id: number
+// 	status: 'pending' | 'accepted' | 'rejected'
+// 	created_at: number
+// 	responded_at: number | null
+// }
 export interface FriendRequestRow {
 	id: number
 	requester_id: number
 	recipient_id: number
-	status: 'pending' | 'accepted' | 'rejected'
 	created_at: number
 	responded_at: number | null
 }

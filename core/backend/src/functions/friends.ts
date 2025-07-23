@@ -1,28 +1,51 @@
 import type { FastifyInstance } from 'fastify'
 import type { FriendRequestRow } from '../types/userTypes.ts'
 
-
 export async function sendFriendRequest(
 	fastify: FastifyInstance,
 	requesterId: number,
 	recipientUsername: string
-): Promise<FriendRequestRow> {
-	// finde recipientId
+	): Promise<FriendRequestRow>
+{
 	const rec = await fastify.db.get<{ id: number }>(
 		'SELECT id FROM users WHERE username = ?',
 		recipientUsername
 	)
-	if (!rec) throw new Error('RecipientNotFound')
-	if (rec.id === requesterId) throw new Error('CannotRequestYourself')
+	if (!rec) {
+		throw new Error('RecipientNotFound')
+	}
+	if (rec.id === requesterId) {
+		throw new Error('CannotRequestYourself')
+	}
+
+	// // TODO: Check within friend_requests whether requester_id already send to recipient_id
+	const recipientId = rec.id;
+	const pending = await fastify.db.get<{ id: number }>(
+		`SELECT id FROM friend_requests WHERE requester_id = ?
+		AND recipient_id = ?`,
+		requesterId,
+		recipientId
+	)
+	if (pending) {
+		throw new Error('RequestAlreadyPending')
+	}
+
+	// //TODO: Should never be triggert but to be safe
+	const friendship = await fastify.db.get<{ user_id: number }>(
+		`SELECT 1 FROM friendships WHERE user_id = ? AND friend_id = ?`,
+		requesterId,
+		recipientId
+	)
+	if (friendship) {
+		throw new Error('AlreadyFriends')
+	}
 
 	// Insert
-	const now = Date.now()
 	const info = await fastify.db.run(
-		`INSERT INTO friend_requests (requester_id, recipient_id, created_at)
-		VALUES (?, ?, ?)`,
+		`INSERT INTO friend_requests (requester_id, recipient_id)
+		VALUES (?, ?)`,
 		requesterId,
-		rec.id,
-		now
+		rec.id
 	)
 	return fastify.db.get<FriendRequestRow>(
 		'SELECT * FROM friend_requests WHERE id = ?',
@@ -84,7 +107,7 @@ export async function acceptFriendRequest(
 		requestId
 	)
 	if (!req) throw new Error('RequestNotFound')
-	if (req.status !== 'pending') throw new Error('AlreadyHandled')
+	// if (req.status !== 'pending') throw new Error('AlreadyHandled')
 
 	// const now = Date.now()
 	// await fastify.db.run(
@@ -138,8 +161,7 @@ export async function removeFriend(
 	fastify: FastifyInstance,
 	userId: number,
 	friendId: number
-): Promise<boolean>
-{
+): Promise<boolean> {
 	const direction1 = await fastify.db.run('DELETE FROM friendships WHERE \
 		user_id = ? AND friend_id = ?',
 		userId, friendId

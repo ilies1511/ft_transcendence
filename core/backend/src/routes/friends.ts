@@ -112,8 +112,10 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 			} catch (err: any) {
 				if (err.message === 'RecipientNotFound') return reply.code(404).send({ error: 'User not found' })
 				if (err.message === 'CannotRequestYourself') return reply.code(400).send({ error: "Can't friend yourself" })
+				if (err.message === 'RequestAlreadyPending') return reply.code(400).send({ error: "Request already sent" })
+				if (err.message === 'AlreadyFriends') return reply.code(400).send({ error: "AlreadyFriends" })
 				if (err.message.includes('UNIQUE')) return reply.code(409).send({ error: 'Request already sent' })
-				return reply.code(500).send({ error: 'Could not send request' })
+				return reply.code(500).send({ error: 'Could not send request: ' + err.message })
 			}
 		}
 	)

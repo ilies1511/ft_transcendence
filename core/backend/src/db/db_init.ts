@@ -34,7 +34,7 @@ export async function runMigrations(fastify: FastifyInstance): Promise<void> {
 		email       TEXT    UNIQUE,
 		live        INTEGER NOT NULL DEFAULT 0,  -- 0 = offline, 1 = online
 		avatar      TEXT NOT NULL,
-		twofa_secret TEXT NOT NULL,
+		twofa_secret TEXT NOT NULL DEFAULT '0',
 		twofa_enabled INTEGER NOT NULL DEFAULT 0,
 		created_at  INTEGER NOT NULL DEFAULT (strftime('%s','now'))
 	);
@@ -44,12 +44,12 @@ export async function runMigrations(fastify: FastifyInstance): Promise<void> {
 	// more tables:
 	// await fastify.db.exec(`CREATE TABLE IF NOT EXISTS games ( … );`)
 
+	// vor created_at // status         TEXT    NOT NULL DEFAULT 'pending',  -- 'pending' now only option
 	await fastify.db.exec(`
 		CREATE TABLE IF NOT EXISTS friend_requests (
 		id             INTEGER PRIMARY KEY AUTOINCREMENT,
 		requester_id   INTEGER NOT NULL,
 		recipient_id   INTEGER NOT NULL,
-		status         TEXT    NOT NULL DEFAULT 'pending',  -- 'pending' now only option
 		created_at     INTEGER NOT NULL DEFAULT (strftime('%s','now')),
 		responded_at   INTEGER,
 
