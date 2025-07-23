@@ -49,15 +49,29 @@ export async function runMigrations(fastify: FastifyInstance): Promise<void> {
 		id             INTEGER PRIMARY KEY AUTOINCREMENT,
 		requester_id   INTEGER NOT NULL,
 		recipient_id   INTEGER NOT NULL,
-		status         TEXT    NOT NULL DEFAULT 'pending',  -- 'pending' | 'accepted' | 'rejected'
-		created_at     INTEGER NOT NULL,
+		status         TEXT    NOT NULL DEFAULT 'pending',  -- 'pending' now only option
+		created_at     INTEGER NOT NULL DEFAULT (strftime('%s','now')),
 		responded_at   INTEGER,
 
 		FOREIGN KEY(requester_id) REFERENCES users(id) ON DELETE CASCADE,
 		FOREIGN KEY(recipient_id) REFERENCES users(id) ON DELETE CASCADE,
 		UNIQUE(requester_id, recipient_id)            -- nur eine offene/ever-Anfrage pro Paar
 		);
-	  `)
+	`)
+	// await fastify.db.exec(`
+	// 	CREATE TABLE IF NOT EXISTS friend_requests (
+	// 	id             INTEGER PRIMARY KEY AUTOINCREMENT,
+	// 	requester_id   INTEGER NOT NULL,
+	// 	recipient_id   INTEGER NOT NULL,
+	// 	status         TEXT    NOT NULL DEFAULT 'pending',  -- 'pending' now only option
+	// 	created_at     INTEGER NOT NULL DEFAULT (strftime('%s','now')),
+	// 	responded_at   INTEGER,
+
+	// 	FOREIGN KEY(requester_id) REFERENCES users(id) ON DELETE CASCADE,
+	// 	FOREIGN KEY(recipient_id) REFERENCES users(id) ON DELETE CASCADE,
+	// 	UNIQUE(requester_id, recipient_id)            -- nur eine offene/ever-Anfrage pro Paar
+	// 	);
+	// `)
 
 	await fastify.db.exec(`
 		CREATE TABLE IF NOT EXISTS friendships(
