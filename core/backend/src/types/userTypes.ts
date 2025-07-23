@@ -38,7 +38,7 @@ export interface FriendInfo {
 	avatar: string
 }
 
-export interface UserWithFriends extends Omit<UserRow, 'password'> {
+export interface UserWithFriends extends Omit<UserRow, 'password' | 'twofa_secret'| 'twofa_enabled'> {
 	// friends: number[]
 	friends: FriendInfo[]
 }
