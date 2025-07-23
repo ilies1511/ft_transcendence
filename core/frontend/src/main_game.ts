@@ -10,6 +10,8 @@ import type {
 	EnterMatchmakingResp,
 	ReconnectResp,
 	ServerError,
+	CreateLobbyReq,
+	CreateLobbyResp,
 } from './game/game_shared/message_types.ts';
 
 const container: HTMLElement = document.getElementById('game-container');
@@ -56,32 +58,57 @@ async function enter_matchmaking(container: HTMLElement, user_id: number)
 	}
 	console.log("resp: ", resp);
 	const match_id: number = resp.match_id;
-	return (new Game(user_id, container, match_id, ''));
-
+	return (new Game(user_id, container, match_id, "default", ''));
 }
 
-async function test_game(): Promise<void> {
-	if (btn && input) {
-		btn.addEventListener('click', async () => {
-			const val = input.value.trim();
-			const user_id = Number(val);
-			if (isNaN(user_id)) {
-				alert("invalid id");
-				return;
-			}
-			input.disabled = true;
-			let reconnect: Game | undefined = await attempt_reconnect(container, user_id);
-			if (reconnect == undefined) {
-				const matchmaking_game: Game | ServerError = await enter_matchmaking(container, user_id);
-				if (matchmaking_game instanceof Game) {
-				} else {
-					console.log(matchmaking_game as ServerError);
-				}
-			}
-		});
-	} else {
-		console.error("Input or button not found in HTML.");
+async function test_enter_matchmaking(container: HTMLElement, user_id: number)
+	: Promise<void>
+{
+	let reconnect: Game | undefined = await attempt_reconnect(container, user_id);
+	if (reconnect == undefined) {
+		const matchmaking_game: Game | ServerError = await enter_matchmaking(container, user_id);
+		if (matchmaking_game instanceof Game) {
+		} else {
+			console.log(matchmaking_game as ServerError);
+		}
 	}
 }
 
-test_game();
+// if user_id == 1: creates lobby with password "a"
+// else asks user to enter lobby id and joins it
+async function test_create_join_lobby(user_id: number)
+	: Promise<void>
+{
+	const password: string = "a";
+
+	if (user_id == 1) {
+		const resp: CreateLobbyResp = await GameApi.create_lobby("default", 0, password);
+		if (resp.error != "") {
+			console.log(resp.error);
+			return ;
+		}
+		console.log("created lobby with id ", resp.match_id);
+		const game: Game  = new Game(user_id, container, resp.match_id, "default", password)
+	} else {
+		const game: Game  = new Game(user_id, container, 0, "default", password)
+	}
+}
+
+if (btn && input) {
+	btn.addEventListener('click', async () => {
+		const val = input.value.trim();
+		const user_id = Number(val);
+		if (isNaN(user_id)) {
+			alert("invalid id");
+			return;
+		}
+		input.disabled = true;
+		//test_enter_matchmaking(container, user_id);
+		test_create_join_lobby(user_id);
+	});
+} else {
+	console.error("Input or button not found in HTML.");
+}
+
+
+

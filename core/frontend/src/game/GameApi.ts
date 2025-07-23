@@ -3,10 +3,12 @@ import type {
 	EnterMatchmakingResp,
 	CreateLobbyReq,
 	CreateLobbyResp,
+	JoinLobbyReq,
 	CreateTournamentReq,
 	CreateTournamentResp,
 	ReconnectReq,
 	ReconnectResp,
+	ServerError,
 } from './game_shared/message_types.ts';
 
 
@@ -53,6 +55,35 @@ export class GameApi {
 		});
 		const data: CreateLobbyResp = await response.json();
 		console.log("Game: create_lobby api response: ", data);
+		return (data);
+	}
+
+	public static async join_lobby(
+		user_id: number,
+		lobby_id: number,
+		map_name: string,
+		password: string)
+		: Promise<ServerError>
+	{
+		const req: JoinLobbyReq = {
+			lobby_id: lobby_id,
+			user_id: user_id,
+			map_name: map_name,
+			password: password
+		};
+		const response = await fetch('/api/join_lobby', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(req)
+		});
+		const data: ServerError = await response.json();
+		if (data == "") {
+			console.log("Game: create_lobby api success");
+		} else {
+			console.log("Game: create_lobby api error: ", data);
+		}
 		return (data);
 	}
 

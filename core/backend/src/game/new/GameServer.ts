@@ -18,6 +18,7 @@ import type {
 	EnterMatchmakingResp,
 	CreateLobbyReq,
 	CreateLobbyResp,
+	JoinLobbyReq,
 	CreateTournamentReq,
 	CreateTournamentResp,
 	ReconnectReq,
@@ -59,6 +60,19 @@ const create_lobby_schema = {
 		properties: {
 			map_name: { type: 'string' },
 			ai_count: { type: 'number' },
+			password: { type: 'string' },
+		}
+	}
+};
+
+const join_lobby_schema = {
+	body: {
+		type: 'object',
+		required: ['map_name', 'password', ],
+		properties: {
+			user_id: { type: 'number' },
+			map_name: { type: 'string' },
+			lobby_id: { type: 'number' },
 			password: { type: 'string' },
 		}
 	}
@@ -133,6 +147,15 @@ export class GameServer {
 			}
 		);
 
+		this._join_lobby_api = this._join_lobby_api.bind(this);
+		this._fastify.post<{Body: JoinLobbyReq}>(
+			'/api/join_lobby',
+			{ schema: join_lobby_schema},
+			async (request, reply) => {
+				return (await this._join_lobby_api(request));
+			}
+		);
+
 
 		this._rcv_game_msg = this._rcv_game_msg.bind(this);
 		this._fastify.get('/game/:game_id', { websocket: true }, (socket: WebSocket, req: FastifyRequest) => {
@@ -163,7 +186,7 @@ export class GameServer {
 		const { user_id, map_name, ai_count } = request.body;
 		console.log("GAME: _enter_matchmaking_api: ", request.body);
 		for (const [lobby_id, lobby] of this._lobbies) {
-			if (lobby.join(user_id, map_name)) {
+			if (lobby.join(user_id, map_name) == "") {
 				response.match_id = lobby_id;
 				return (response);
 			}
@@ -178,8 +201,10 @@ export class GameServer {
 				return (response);
 			}
 			try {
-				if (!lobby.join(user_id, map_name)) {
+				const join_error: ServerError = lobby.join(user_id, map_name);
+				if (join_error != "") {
 					console.log("Could not join newly created game, game the settings weird?");
+					console.log("Error: ", join_error);
 					response.error = "Internal Error";
 					return (response);
 				}
@@ -213,6 +238,17 @@ export class GameServer {
 			response.error = error;
 			return (response);
 		}
+	}
+
+	private async _join_lobby_api(request: FastifyRequest< { Body: JoinLobbyReq } >)
+		: Promise<ServerError>
+	{
+		const { lobby_id, user_id, password, map_name } = request.body;
+		const lobby: GameLobby | undefined = this._lobbies.get(lobby_id);
+		if (!lobby) {
+			return ("Not Found");
+		}
+		return (lobby.join(user_id, map_name, password));
 	}
 
 	//todo: finish this

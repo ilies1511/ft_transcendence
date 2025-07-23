@@ -3,10 +3,12 @@
 refactor game backend:
 
 API endpoints:
-	- /enter_matchmaking -> takes the player id and map name; returns match id
-	- /create_lobby ->  like enter_matchmaking but also takes a password; returns match id
-	- /create_tournament -> input playercount, map, password; returns tournament id
-	- /reconnect -> input user id; returns potential tournament and match id the user is currently taking part in
+[x]	- /enter_matchmaking -> takes the player id and map name; returns match id
+[x]	- /create_lobby ->  like enter_matchmaking but also takes a password; returns match id
+[x]	- /create_tournament -> input playercount, map, password; returns tournament id
+[x]	- /reconnect -> input user id; returns potential tournament and match id the user is currently taking part in
+
+[ ] - /join_game -> takes password, map_name, lobby_id and user_id and returns ServerError (on success empty)
 
 
 websocket endpoints:

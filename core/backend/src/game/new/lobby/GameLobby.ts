@@ -104,18 +104,18 @@ export class GameLobby {
 
 	// returns false if player can not join
 	// this does not setup the connection, without this the client tring to connect will be denied
-	public join(user_id: number, map_name: string, password?: string): boolean {
+	public join(user_id: number, map_name: string, password?: string): ServerError {
 		if (this._map_name != map_name) {
-			return (false);
+			return ("Invalid Request");
 		}
 		if (this._ai_count + this._connections.length >= this._map_file.clients.length) {
-			return (false);
+			return ("Full");
 		}
 		if (password == undefined) {
 			password = '';
 		}
 		if (this.password != password) {
-			return (false);
+			return ("Invalid Password");
 		}
 		console.log("Game: User", user_id, " joing lobby ", this.id);
 		const connection: GameConnection = {
@@ -123,8 +123,7 @@ export class GameLobby {
 			sock: undefined,
 		};
 		this._connections.push(connection);
-
-		return (true);
+		return ("");
 	}
 
 	public check_finished(): boolean {

@@ -1,5 +1,6 @@
 import * as BABYLON from '@babylonjs/core/Legacy/legacy';
 
+import { GameApi } from './GameApi.ts';
 
 //import * as BABYLON from 'babylonjs';
 import type {
@@ -55,11 +56,13 @@ export class Game {
 		id: number, //some number that is unique for each client, ideally bound to the account
 		container: HTMLElement,
 		game_id: number,
+		map_name: string,
 		password?: string,
 	) {
 		this.container = container;
 		if (password !== undefined) {
 			this.password = password;
+			GameApi.join_lobby(id, game_id, map_name, password);
 		}
 		this.game_id = game_id;
 		this._process_msg = this._process_msg.bind(this);

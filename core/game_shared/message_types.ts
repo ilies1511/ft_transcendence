@@ -17,6 +17,13 @@ export interface CreateLobbyReq {
 	password: string;
 };
 
+export interface JoinLobbyReq {
+	user_id: number;
+	map_name: string;
+	lobby_id: number;
+	password: string;
+};
+
 export interface CreateLobbyResp {
 	error: ServerError;
 	match_id: number;
@@ -75,6 +82,7 @@ export type GameLobbyUpdate = {
 export type ServerError =
 	'Invalid Request'
 	| 'Invalid Password'
+	| 'Full'
 	| 'Internal Error'
 	| 'Not Found'
 	| ''
