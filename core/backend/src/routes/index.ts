@@ -8,10 +8,12 @@ import { matchRoutes } from './match.ts';
 import { blockRoutes } from './block.ts';
 import friendsInviteNotificationRoute from './friends_invitation.ts';
 import { twoFaRoutes } from './2fa.ts';
+import { googleAuthRoutes } from './auth-google.ts';
 
 export default fp(async(fastify: FastifyInstance) => {
 	await fastify.register(wsRoute);
 	await fastify.register(authRoutes);
+	await fastify.register(googleAuthRoutes);
 	await fastify.register(userRoutes);
 	await fastify.register(friendRoutes);
 	await fastify.register(matchRoutes);
