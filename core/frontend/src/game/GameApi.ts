@@ -80,9 +80,9 @@ export class GameApi {
 		});
 		const data: ServerError = await response.text() as ServerError;
 		if (data == "") {
-			console.log("Game: create_lobby api success");
+			console.log("Game: join_lobby api success");
 		} else {
-			console.log("Game: create_lobby api error: ", data);
+			console.log("Game: join_lobby api error: ", data);
 		}
 		return (data);
 	}

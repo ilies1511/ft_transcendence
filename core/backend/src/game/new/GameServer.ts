@@ -267,11 +267,7 @@ export class GameServer {
 	}
 
 	//todo: finish this
-	private async _reconnect_api(request: FastifyRequest<{Body: ReconnectReq}>)
-		: Promise<ReconnectResp>
-	{
-
-		const { client_id } = request.body;
+	private _connections_of(client_id: number): ReconnectResp {
 		const response: ReconnectResp = {
 			match_id: -1,
 			match_has_password: false,
@@ -287,8 +283,15 @@ export class GameServer {
 				return (response);
 			}
 		}
-
 		return (response);
+	}
+
+	private async _reconnect_api(request: FastifyRequest<{Body: ReconnectReq}>)
+		: Promise<ReconnectResp>
+	{
+
+		const { client_id } = request.body;
+		return (this._connections_of(client_id));
 	}
 
 	private _rcv_game_msg(game_id_str: string, message: string, ws: WebSocket) {

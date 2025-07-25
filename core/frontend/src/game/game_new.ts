@@ -1,5 +1,8 @@
 import * as BABYLON from '@babylonjs/core/Legacy/legacy';
 
+import { is_unloading } from './globals.ts';
+import { get_password_from_user } from './placeholder_globals.ts';
+
 import { GameApi } from './GameApi.ts';
 
 //import * as BABYLON from 'babylonjs';
@@ -9,6 +12,7 @@ import type {
 	LobbyToClientJson,
 	GameStartInfo,
 	ClientToMatch,
+	ClientToMatchConnect,
 	ClientToGame,
 	ClientToMatchLeave,
 	GameToClientFinish,
@@ -44,26 +48,29 @@ export class Game {
 
 	private _last_server_msg: LobbyToClient | null = null;
 
-	private _socket: WebSocket;
+	private _socket?: WebSocket = undefined;
 	private _id: number;
 
 	public game_id: number;
 	public password: string = '';
 	public container: HTMLElement;
 
+	public map_name: string;
+
+	private _password_attempts: number = 3;
 
 	constructor(
 		id: number, //some number that is unique for each client, ideally bound to the account
 		container: HTMLElement,
 		game_id: number,
 		map_name: string,
-		password?: string,
+		password: string,
 	) {
+		this.password = password;
+		this.map_name = map_name;
+
 		this.container = container;
-		if (password !== undefined) {
-			this.password = password;
-			GameApi.join_lobby(id, game_id, map_name, password);
-		}
+
 		this.game_id = game_id;
 		this._process_msg = this._process_msg.bind(this);
 		this._rcv_msg = this._rcv_msg.bind(this);
@@ -72,7 +79,6 @@ export class Game {
 
 		console.log("GAME: game constructor");
 		this._id = id;
-
 
 		this._canvas = this._createCanvas();
 		container.appendChild(this._canvas);
@@ -87,9 +93,37 @@ export class Game {
 			this._process_msg();
 			this._active_scene.render();
 		});
-	
+	}
+
+	private _handle_join_err(error: ServerError) {
+		switch (error) {
+			case (''):
+				return ;
+			case ('Full'):
+			case ('Internal Error'):
+			case ('Invalid Map'):
+			case ('Not Found'):
+				break ;
+			case ('Invalid Password'):
+				break ;
+			case ('Invalid Request'):
+				throw ("Game: Server answered with 'Invalid Request' to join request?");
+			default:
+				console.log("Game: join error unsupported: ", error);
+				throw (error);
+		}
+	}
+
+	// Needs to be seperated from constructor since potentially some async code needs to run first.
+	// Always call this on the game object.
+	public async async_constructor(): Promise<void> {
+		if (this.password != '') {
+			const join_error: ServerError = await GameApi.join_lobby(this._id, this.game_id, this.map_name, this.password);
+			this._handle_join_err(join_error);
+		}
 		this._open_socket = this._open_socket.bind(this);
 		this._open_socket();
+		return ;
 	}
 
 	public leave() {
@@ -119,12 +153,14 @@ export class Game {
 	}
 
 	private _cleanup() {
-		this._engine.stopRenderLoop();
-		this._socket.close();
+		console.log("Game: cleanup()");
 		this._game_scene.cleanup();
 		this._lobby_scene.cleanup();
 		this._engine.dispose();
 		this.container.removeChild(this._canvas);
+		this._engine.stopRenderLoop();
+		this._socket.close();
+		this.container.innerHTML = '';
 	}
 
 	private _open_socket() {
@@ -139,7 +175,7 @@ export class Game {
 
 			this._socket.addEventListener("open", (event) => {
 				console.log("GAME: Connected to server");
-				const msg: ClientToMatch = {
+				const msg: ClientToMatchConnect = {
 					client_id: this._id,
 					type: 'connect',
 					password: this.password,
@@ -152,7 +188,7 @@ export class Game {
 				event: MessageEvent<LobbyToClient>) => this._rcv_msg(event);
 			this._socket.addEventListener("close", () => {
 				console.log("GAME: Disconnected");
-				if (!this.finished) {
+				if (!this.finished && !is_unloading) {
 					console.log("GAME: Attempting reconnect..");
 					this._open_socket();
 				} else {
@@ -238,6 +274,9 @@ export class Game {
 			case ('Invalid Request'):
 				break ;
 			case ('Invalid Password'):
+				this.finished = true;
+				this.disconnect();
+				break ;
 			case ('Full'):
 			case ('Invalid Map'):
 			case ('Not Found'):

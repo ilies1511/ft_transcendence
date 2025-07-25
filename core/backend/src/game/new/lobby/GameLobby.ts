@@ -177,6 +177,7 @@ export class GameLobby {
 	private _connect(client_id: number, ws: WebSocket, password: string) {
 		if (password != this.password) {
 			WebsocketConnection.static_send_error(ws, 'Invalid Password');
+			console.log("this.password: ", this.password, "; password: ", password);
 			ws.close();
 			return ;
 		}

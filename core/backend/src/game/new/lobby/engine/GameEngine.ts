@@ -71,7 +71,7 @@ export class GameEngine {
 		//ball.pos.x = 0;
 		//ball.obj_id = this._next_obj_id++;
 		//this.balls.push(ball);
-		console.log(this.walls);
+		//console.log(this.walls);
 		//console.log(this.balls);
 		//this.start_loop();
 	}

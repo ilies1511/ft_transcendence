@@ -8,7 +8,10 @@ API endpoints:
 [x]	- /create_tournament -> input playercount, map, password; returns tournament id
 [x]	- /reconnect -> input user id; returns potential tournament and match id the user is currently taking part in
 
-[ ] - /join_game -> takes password, map_name, lobby_id and user_id and returns ServerError (on success empty)
+[x] - /join_game -> takes password, map_name, lobby_id and user_id and returns ServerError (on success empty)
+
+[ ] - frontend: when to call the 'join' api (don't call it on reconnect)
+	-> refactor joing a lobby only through api pre game constructor, join_game api should then return the lobby id or an errr like enter_matchmaking
 
 
 websocket endpoints:

@@ -144,7 +144,7 @@ export type ClientToGameInput = {
 
 export type ClientToGame = ClientToGameInput;
 
-export type ClietToMatchConnect = {
+export type ClientToMatchConnect = {
 	client_id: number,
 	type: 'connect';
 	password: string;
@@ -158,7 +158,7 @@ export type ClientToMatchLeave = {
 
 export type ClientToMatch =
 	ClientToGame
-	| ClietToMatchConnect
+	| ClientToMatchConnect
 ;
 
 export type ClientToTournament = {

@@ -9,7 +9,7 @@ export class LobbyScene extends BaseScene {
 
 	private _player_count_text: GUI.TextBlock;
 	private _loaded_player_count_text: GUI.TextBlock;
-	private _status_text: GUI.TextBlock;
+	private _header: GUI.TextBlock;
 
 	constructor(engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
 		super(engine, canvas);
@@ -37,12 +37,12 @@ export class LobbyScene extends BaseScene {
 		panel.paddingBottom = "20px";
 		this._gui.addControl(panel);
 
-		const header = new GUI.TextBlock();
-		header.text = "Waiting for Players...";
-		header.height = "40px";
-		header.color = "white";
-		header.fontSize = 24;
-		panel.addControl(header);
+		this._header = new GUI.TextBlock();
+		this._header.text = "Loading...";
+		this._header.height = "40px";
+		this._header.color = "white";
+		this._header.fontSize = 24;
+		panel.addControl(this._header);
 
 		this._player_count_text = new GUI.TextBlock();
 		this._player_count_text.color = "white";
@@ -53,11 +53,6 @@ export class LobbyScene extends BaseScene {
 		this._loaded_player_count_text.color = "white";
 		this._loaded_player_count_text.height = "30px";
 		panel.addControl(this._loaded_player_count_text);
-
-		this._status_text = new GUI.TextBlock();
-		this._status_text.color = "#BBBBBB";
-		this._status_text.height = "25px";
-		panel.addControl(this._status_text);
 	}
 
 	public update(info: GameLobbyUpdate) {
@@ -65,11 +60,11 @@ export class LobbyScene extends BaseScene {
 		this._loaded_player_count_text.text = `Loaded: ${info.loaded_player_count}/${info.target_player_count}`;
 		
 		if (info.player_count < info.target_player_count) {
-			this._status_text.text = "Waiting for more players to join...";
+			this._header.text = "Waiting for more players to join...";
 		} else if (info.loaded_player_count < info.target_player_count) {
-			this._status_text.text = "Waiting for players to load...";
+			this._header.text = "Waiting for players to load...";
 		} else {
-			this._status_text.text = "Game starting soon!";
+			this._header.text = "Game starting soon!";
 		}
 	}
 
