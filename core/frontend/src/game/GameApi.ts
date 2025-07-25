@@ -78,7 +78,7 @@ export class GameApi {
 			},
 			body: JSON.stringify(req)
 		});
-		const data: ServerError = await response.json();
+		const data: ServerError = await response.text() as ServerError;
 		if (data == "") {
 			console.log("Game: create_lobby api success");
 		} else {
