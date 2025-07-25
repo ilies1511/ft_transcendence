@@ -3,6 +3,7 @@ import { ServerWall } from '../../../objects/ServerWall.ts';
 import { ServerBall } from '../../../objects/ServerBall.ts';
 import { ServerClient } from '../../../objects/ServerClient.ts';
 import { Effects } from '../../../game_shared/serialization.ts';
+import type { ServerError } from '../../../game_shared/message_types.ts';
 
 import default_map from './default.json';
 
@@ -19,7 +20,7 @@ export class MapFile {
 		if (map_name == "default") {
 			map_data = default_map;
 		} else {
-			throw new Error("Unknown map name");
+			throw ('Invalid Map');
 		}
 		this.max_time = map_data.max_time;
 		//console.log(map_data);

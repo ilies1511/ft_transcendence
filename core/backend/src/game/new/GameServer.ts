@@ -27,6 +27,8 @@ import type {
 	ClientToMatch,
 } from '../game_shared/message_types.ts';
 
+import { is_ServerError } from '../game_shared/message_types.ts';
+
 
 /*
 API endpoints:
@@ -200,23 +202,20 @@ export class GameServer {
 				response.error = "Internal Error";
 				return (response);
 			}
-			try {
-				const join_error: ServerError = lobby.join(user_id, map_name);
-				if (join_error != "") {
-					console.log("Could not join newly created game, game the settings weird?");
-					console.log("Error: ", join_error);
-					response.error = "Internal Error";
-					return (response);
-				}
-				response.match_id = lobby_id;
-				return (response);
-			} catch (error) {
-				console.log(error);
-				response.error = error;
+			const join_error: ServerError = lobby.join(user_id, map_name);
+			if (join_error != "") {
+				console.log("Could not join newly created game, game the settings weird?");
+				console.log("Error: ", join_error);
+				response.error = "Internal Error";
 				return (response);
 			}
-		} catch (error) {
-			console.log(error);
+			response.match_id = lobby_id;
+			return (response);
+		} catch (e) {
+			const error: ServerError | undefined = is_ServerError(e);
+			if (error == undefined) {
+				throw (e);
+			}
 			response.error = error;
 			return (response);
 		}
@@ -234,7 +233,11 @@ export class GameServer {
 			const lobby_id: number = await this._create_lobby(map_name, ai_count, password);
 			response.match_id = lobby_id;
 			return (response);
-		} catch (error) {
+		} catch (e) {
+			const error: ServerError | undefined = is_ServerError(e);
+			if (error == undefined) {
+				throw (e);
+			}
 			response.error = error;
 			return (response);
 		}

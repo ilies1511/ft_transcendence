@@ -15,6 +15,8 @@ import type {
 	ClientToGameInput,
 } from '../../game_shared/message_types.ts';
 
+import { is_ServerError } from '../../game_shared/message_types.ts';
+
 type GameConnection = {
 	id: number,
 	sock?: WebsocketConnection,

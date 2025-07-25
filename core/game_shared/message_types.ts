@@ -85,8 +85,28 @@ export type ServerError =
 	| 'Full'
 	| 'Internal Error'
 	| 'Not Found'
+	| 'Invalid Map'
 	| ''
 ;
+
+export function is_ServerError(data: unknown): ServerError | undefined {
+	if (data !== 'string') {
+		return (undefined);
+	}
+	if ([
+		'Invalid Request',
+		 'Invalid Password',
+		 'Full',
+		 'Internal Error',
+		 'Not Found',
+		 'Invalid Map',
+		 '',
+		].includes(data)
+	) {
+		return (data as ServerError);
+	}
+	return (undefined);
+}
 
 export type ServerToClientError = {
 	type: 'error',
