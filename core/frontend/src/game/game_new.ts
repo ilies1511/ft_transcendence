@@ -73,8 +73,6 @@ export class Game {
 		console.log("GAME: game constructor");
 		this._id = id;
 
-		this._open_socket = this._open_socket.bind(this);
-		this._open_socket();
 
 		this._canvas = this._createCanvas();
 		container.appendChild(this._canvas);
@@ -89,6 +87,9 @@ export class Game {
 			this._process_msg();
 			this._active_scene.render();
 		});
+	
+		this._open_socket = this._open_socket.bind(this);
+		this._open_socket();
 	}
 
 	public leave() {
@@ -237,11 +238,13 @@ export class Game {
 			case ('Invalid Request'):
 				break ;
 			case ('Invalid Password'):
-				break ;
-			case ('Internal Error'):
-				break ;
+			case ('Full'):
+			case ('Invalid Map'):
 			case ('Not Found'):
 				this.finished = true;
+				this.disconnect();
+				break ;
+			case ('Internal Error'):
 				break ;
 			case (''):
 				break ;
