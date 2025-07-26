@@ -4,6 +4,7 @@ export type LobbyInvite = {
 	map_name: string;
 	lobby_password: string;
 	lobby_id: number;
+	valid: boolean; // if the invite should be ignored
 };
 
 export interface EnterMatchmakingReq {

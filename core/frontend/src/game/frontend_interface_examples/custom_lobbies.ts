@@ -70,7 +70,7 @@ export async function create_join_lobby(
 	return (game as Game);
 }
 
-export function invite_user_to_lobby_skeletion(
+export function invite_user_to_lobby_skeleton(
 	game: Game,
 	target_user_id: number, /* or whatever the server needs to identify the correct live chat websocket */
 ) {
@@ -113,7 +113,13 @@ export async function recv_lobby_invite_skeleton(): Promise<LobbyInvite>
 		//  and I guess the user would need to enter it anyway?
 		lobby_password: await get_password_from_user("Game"),
 		lobby_id: 0,
+		valid: true,
 	};
+	if (globalThis.game !== undefined) {
+		// Tell the user who send the invite that the player is allready in a game
+		lobby_invite.valid = false;
+		// maybe display something about the missed invite
+	}
 	return (lobby_invite);
 }
 

@@ -7,7 +7,7 @@ import { attempt_reconnect } from './game/frontend_interface_examples/reconnect.
 import {
 	accept_lobby_invite,
 	create_join_lobby,
-	invite_user_to_lobby_skeletion,
+	invite_user_to_lobby_skeleton,
 	recv_lobby_invite_skeleton,
 
 } from './game/frontend_interface_examples/custom_lobbies.ts';
@@ -64,7 +64,6 @@ async function test_enter_matchmaking(container: HTMLElement, user_id: number)
 	const matchmaking_game: Game | ServerError = await enter_matchmaking(
 		user_id, container, matchmaking_options);
 	if (matchmaking_game instanceof Game) {
-
 	} else {
 		console.log(matchmaking_game as ServerError);
 	}
@@ -75,7 +74,7 @@ async function test_lobby(user_id: number, container: HTMLElement)
 	: Promise<void>
 {
 	lobby_password = await get_password_from_user("Game");
-	if (user_id == 1) {
+	if (user_id == 1 /* the user who creates the lobby */) {
 		// Options is filled by the user.
 		// Dosn't need to use get_password_from_user(). Here it's only used to
 		//  have the same password string everywhere.
@@ -92,9 +91,12 @@ async function test_lobby(user_id: number, container: HTMLElement)
 		// Later something like this should send a lobby invite to user 2.
 		// Right now does nothing.
 		const target_user_id: number = 2;
-		invite_user_to_lobby_skeletion(game, target_user_id);
-	} else {
+		invite_user_to_lobby_skeleton(game, target_user_id);
+	} else /* users who try to join the lobby */ {
 		const lobby_invite: LobbyInvite = await recv_lobby_invite_skeleton();
+		if (!lobby_invite.valid) {
+			return ;
+		}
 		let game: Game | ServerError = await accept_lobby_invite(user_id, container, lobby_invite);
 	}
 }
@@ -111,8 +113,8 @@ if (btn && input) {
 		//how do i remove the button here
 		await attempt_reconnect(container, user_id);
 		if (globalThis.game == undefined) {
-			test_enter_matchmaking(container, user_id);
-			//test_lobby(user_id, container);
+			//test_enter_matchmaking(container, user_id);
+			test_lobby(user_id, container);
 		}
 	});
 } else {
