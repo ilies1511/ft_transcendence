@@ -66,6 +66,19 @@ export async function listIncomingRequests(
 	return rows
 }
 
+export async function listOutgoingRequests(
+	fastify: FastifyInstance,
+	userId: number
+): Promise<FriendRequestRow[]> {
+	const rows = await fastify.db.all<FriendRequestRow[]>(
+		`SELECT * FROM friend_requests
+		WHERE requester_id = ?
+		ORDER BY created_at DESC`,
+		userId
+	)
+	return rows
+}
+
 // // Old behavior
 // export async function acceptFriendRequest(
 // 	fastify: FastifyInstance,
@@ -151,7 +164,6 @@ export async function rejectFriendRequest(
 	fastify: FastifyInstance,
 	requestId: number
 ): Promise<void> {
-	const now = Date.now()
 	const info = await fastify.db.run(
 		`DELETE FROM friend_requests WHERE id = ?`, requestId)
 	if (info.changes === 0) throw new Error('RequestNotFoundOrHandled')

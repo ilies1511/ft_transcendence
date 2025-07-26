@@ -1,8 +1,10 @@
 import type { FastifyPluginAsync } from "fastify";
 import { type UserWithFriends, type FriendRequestRow, type UserRow } from "../types/userTypes.ts";
 import { findUserWithFriends } from "../functions/user.ts";
-import { sendFriendRequest, listIncomingRequests, acceptFriendRequest,
-	rejectFriendRequest, removeFriend } from "../functions/friends.ts";
+import {
+	sendFriendRequest, listIncomingRequests, acceptFriendRequest,
+	rejectFriendRequest, removeFriend, withdrawFriendRequest, listOutgoingRequests
+} from "../functions/friends.ts";
 import * as helpers from "../functions/friends.ts";
 
 export const friendRoutes: FastifyPluginAsync = async (fastify) => {
@@ -119,12 +121,12 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 			}
 		}
 	)
-	// b) Incoming requests listen
+	// b.1) Incoming requests listen ---> received request
 	fastify.get<{
 		Params: { id: number }
 		Reply: FriendRequestRow[]
 	}>(
-		'/api/users/:id/requests',
+		'/api/users/:id/requests/incoming',
 		{
 			schema: {
 				tags: ['friends'],
@@ -149,6 +151,38 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 		},
 		async (req) => listIncomingRequests(fastify, req.params.id)
 	)
+
+	// b.2) Outgoing requests listen ---> sent request
+	fastify.get<{
+		Params: { id: number }
+		Reply: FriendRequestRow[]
+	}>(
+		'/api/users/:id/requests/outgoing',
+		{
+			schema: {
+				tags: ['friends'],
+				params: { type: 'object', required: ['id'], properties: { id: { type: 'integer' } } },
+				response: {
+					200: {
+						type: 'array',
+						items: {
+							type: 'object',
+							properties: {
+								id: { type: 'integer' },
+								requester_id: { type: 'integer' },
+								recipient_id: { type: 'integer' },
+								status: { type: 'string' },
+								created_at: { type: 'integer' },
+								responded_at: { type: ['integer', 'null'] }
+							}
+						}
+					}
+				}
+			}
+		},
+		async (req) => listOutgoingRequests(fastify, req.params.id)
+	)
+
 	// c) Anfrage annehmen
 	fastify.post<{
 		Params: { requestId: number }
