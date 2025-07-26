@@ -319,7 +319,8 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 			if (!data.filename.toLowerCase().endsWith('.png')) {
 				return reply.code(400).send({ error: 'Only .png allowed' })
 			}
-			const filename = "NewUploadedAvatar.png";
+			// const filename = "NewUploadedAvatar.png";
+			const filename = "NewUploadedAvatar" + `_${userId}`;
 			const destPath = path.join(
 				__dirname,
 				'../../../frontend/public/',

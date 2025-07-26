@@ -42,7 +42,8 @@ export const googleAuthRoutes: FastifyPluginAsync = async fastify => {
 					hash,
 					profile.name,
 					profile.name,
-					profile.picture, // or default avatar
+					// profile.picture, // or default avatar
+					avatar,
 					0
 				)
 				user = { id: info.lastID, username: profile.name, email: profile.email }
