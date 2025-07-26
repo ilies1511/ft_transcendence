@@ -17,9 +17,9 @@ interface. --> Already given through Endpoints
 ## Major module: Implement remote authentication.
 ### In this major module, the goal is to implement the following authentication system:
 #### Google Sign-in . Key features and objectives include:
-[] Integrate the authentication system, allowing users to securely sign in.
+[x] Integrate the authentication system, allowing users to securely sign in.
 
-[] Obtain the necessary credentials and permissions from the authority to enable
+[x] Obtain the necessary credentials and permissions from the authority to enable
 secure login.
 
 [] Implement user-friendly login and authorization flows that adhere to best prac-

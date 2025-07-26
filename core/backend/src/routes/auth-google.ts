@@ -2,6 +2,8 @@ import { type FastifyPluginAsync } from 'fastify'
 import { createUser, /* Vielleicht updateUser */ } from '../functions/user.js'
 import { DEFAULT_AVATARS } from '../constants/avatars.ts'
 import { setUserLive } from '../functions/user.ts'
+import { v4 as uuidv4 } from 'uuid';
+import bcrypt from 'bcrypt';
 
 export const googleAuthRoutes: FastifyPluginAsync = async fastify => {
 	// 1 /api/auth/google -> automatic redirect to GOogle (Plugin)
@@ -21,6 +23,11 @@ export const googleAuthRoutes: FastifyPluginAsync = async fastify => {
 		const profile = userinfo as GoogleUser;
 
 		const avatar = DEFAULT_AVATARS[Math.floor(Math.random() * DEFAULT_AVATARS.length)]
+		const randomPass = uuidv4();
+
+		console.log("Length of randomPass: " + randomPass + "- " + randomPass.length);
+
+		const hash = await bcrypt.hash(randomPass, 12);
 
 		let user = await fastify.db.get('SELECT * FROM users WHERE email = ?', profile.email)
 		if (!user) {
@@ -31,7 +38,8 @@ export const googleAuthRoutes: FastifyPluginAsync = async fastify => {
 					VALUES (?, ?, ?, ?, ?, ?)`,
 					profile.email,
 					// null, // no password to set since google sign in but will cause problems since in user table, column password not NULL
-					'null', // TODO: no password to set since google sign in but will cause problems since in user table, column password not NULL
+					// 'null', // TODO: no password to set since google sign in but will cause problems since in user table, column password not NULL
+					hash,
 					profile.name,
 					profile.name,
 					profile.picture, // or default avatar
