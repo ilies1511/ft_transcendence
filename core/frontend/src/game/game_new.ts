@@ -32,7 +32,24 @@ import { BaseScene } from './scenes/base.ts';
 import { LobbyScene } from './scenes/LobbyScene.ts';
 import { GameScene } from './scenes/game_scene.ts';
 
+type KeySet = {
+	case: string;
+	key: string;
+}[];
 
+type KeyType = 'down' | 'up' | 'reset';
+
+type KeyPressType = "keydown" | "keyup";
+type KeyHookGeneratorArgs = {
+	press_type: KeyPressType;
+	server_type: KeyType;
+	key_set: KeySet;
+};
+
+type KeyHook = {
+	type: KeyPressType,
+	handler: (event: KeyboardEvent) => void
+};
 
 export class Game {
 	private _canvas: HTMLCanvasElement;
@@ -66,6 +83,9 @@ export class Game {
 
 	private _password_attempts: number = 3;
 
+	private _key_hooks: KeyHook[] = [];
+
+
 	constructor(
 		id: number, //some number that is unique for each client, ideally bound to the account
 		container: HTMLElement,
@@ -87,8 +107,7 @@ export class Game {
 		this.game_id = game_id;
 		this._process_msg = this._process_msg.bind(this);
 		this._rcv_msg = this._rcv_msg.bind(this);
-		this._key_up_handler = this._key_up_handler.bind(this);
-		this._key_down_handler = this._key_down_handler.bind(this);
+
 
 		console.log("GAME: game constructor");
 		this._id = id;
@@ -151,6 +170,7 @@ export class Game {
 			console.log("WARNING: Game cleanup called when the game was allready cleaned");
 			return ;
 		}
+		this._cleanup_key_hooks();
 		console.log("Game: cleanup()");
 		this._game_scene.cleanup();
 		this._lobby_scene.cleanup();
@@ -205,74 +225,102 @@ export class Game {
 		}
 	}
 
-	private _key_up_handler(event: KeyboardEvent) {
-		if (!this._socket) {
+	private _cleanup_key_hooks() {
+		if (!this._key_hooks)
 			return ;
+		for (const { type, handler } of this._key_hooks) {
+			window.removeEventListener(type, handler);
 		}
-		const msg: ClientToGame = {
-			client_id: this._id,
-			type: "send_input",
-			payload: {
-				key: "",
-				type: "up",
-			}
-		}
-		console.log("key event: ", event);
-		switch (event.code) {
-			case "KeyW":
-				msg.payload.key = "w";
-				break;
-			case "KeyA":
-				msg.payload.key = "a";
-				break;
-			case "KeyS":
-				msg.payload.key = "s";
-				break;
-			case "KeyD":
-				msg.payload.key = "d";
-				break;
-			default:
-				return ;
-		}
-		console.log("key up ", msg.payload.key);
-		this._socket.send(JSON.stringify(msg));
+		this._key_hooks = [];
 	}
 
-	private _key_down_handler(event: KeyboardEvent) {
-		if (!this._socket) {
-			return ;
-		}
-		const msg: ClientToGame = {
-			type: "send_input",
-			client_id: this._id,
-			payload: {
-				key: "",
-				type: "down",
+	private _generate_key_handler(args: KeyHookGeneratorArgs) {
+		const key_hook: KeyHook = {
+			type: args.press_type,
+			handler:
+				(event: KeyboardEvent) => {
+					if (!this._socket) {
+						return ;
+					}
+
+					const match = args.key_set.find(k => k.case === event.code);
+					if (!match) {
+						return ;
+					}
+
+					const msg: ClientToGame = {
+						client_id: this._id,
+						type: "send_input",
+						payload: {
+							key: match.key,
+							type: args.server_type,
+						}
+					};
+					this._socket.send(JSON.stringify(msg));
+				}
+		};
+		window.addEventListener(key_hook.type, key_hook.handler);
+		this._key_hooks.push(key_hook);
+	}
+
+	private _setup_key_hooks() {
+		const movement_key_sets: KeySet[] = [];
+		movement_key_sets.push(
+			[
+				{ case: 'KeyW', key: 'w' },
+				{ case: 'KeyA', key: 'a' },
+				{ case: 'KeyS', key: 's' },
+				{ case: 'KeyD', key: 'd' },
+			]
+		);
+		const types: KeyType [] = [ 'up', 'down'];
+		for (const type of types) {
+			for (const movement_key_set of movement_key_sets) {
+				const key_hook_generator_args: KeyHookGeneratorArgs = {
+					server_type: type,
+					press_type: 'keydown',
+					key_set: movement_key_set,
+				};
+				if (type == 'up') {
+					key_hook_generator_args.press_type = 'keyup';
+				}
+				this._generate_key_handler(key_hook_generator_args);
 			}
 		}
-		switch (event.code) {
-			case "KeyW":
-				msg.payload.key = "w";
-				break;
-			case "KeyA":
-				msg.payload.key = "a";
-				break;
-			case "KeyS":
-				msg.payload.key = "s";
-				break;
-			case "KeyD":
-				msg.payload.key = "d";
-				break;
-			case "KeyR":
-				msg.payload.key = "r";
-				msg.payload.type = "reset";
-				break;
-			default:
-				return ;
-		}
-		console.log("key down ", msg.payload.key);
-		this._socket.send(JSON.stringify(msg));
+		const key_hook_generator_args: KeyHookGeneratorArgs = {
+			server_type: 'reset',
+			press_type: 'keydown',
+			key_set: [ {case: 'KeyR', key: 'r'} ],
+		};
+		this._generate_key_handler(key_hook_generator_args);
 	}
+
+	private _add_second_player_keys() {
+		const movement_key_sets: KeySet[] = [];
+		movement_key_sets.push(
+			[
+				{ case: 'ArrowUp', key: 'ArrowUp' },
+				{ case: 'ArrowDown', key: 'ArrowDown' },
+				{ case: 'ArrowLeft', key: 'ArrowLeft' },
+				{ case: 'ArrowRight', key: 'ArrowRight' },
+			]
+		);
+		const types: KeyType [] = [ 'up', 'down'];
+		for (const type of types) {
+			for (const movement_key_set of movement_key_sets) {
+				const key_hook_generator_args: KeyHookGeneratorArgs = {
+					server_type: type,
+					press_type: 'keydown',
+					key_set: movement_key_set,
+				};
+				if (type == 'up') {
+					key_hook_generator_args.press_type = 'keyup';
+				}
+				this._generate_key_handler(key_hook_generator_args);
+			}
+		}
+	}
+
 
 	private  _start_game() {
 		const display_names_promise: Promise<LobbyDisplaynameResp> =
@@ -286,10 +334,8 @@ export class Game {
 				this._game_scene.score_panel.update_display_name(player.id, player.name);
 			}
 		});
+		this._setup_key_hooks();
 		this._active_scene = this._game_scene;
-		window.addEventListener("keyup", this._key_up_handler);
-		window.addEventListener("keydown", this._key_down_handler);
-
 	}
 
 	private _process_server_error(error: ServerError) {
@@ -392,5 +438,9 @@ export class Game {
 		this._canvas.id = "gameCanvas";
 		document.body.appendChild(this._canvas);
 		return (this._canvas);
+	}
+
+	public add_local_player(display_name: string) {
+		this._add_second_player_keys();
 	}
 };

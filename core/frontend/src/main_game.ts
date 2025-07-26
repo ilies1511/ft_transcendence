@@ -114,8 +114,8 @@ if (btn && input) {
 		console.log("got user_id: ", user_id);
 		await attempt_reconnect(container, user_id);
 		if (globalThis.game == undefined) {
-			test_enter_matchmaking(container, user_id);
-			//test_lobby(user_id, container);
+			//test_enter_matchmaking(container, user_id);
+			test_lobby(user_id, container);
 		}
 		console.log("GAME OBJECT: ", globalThis.game);
 	});

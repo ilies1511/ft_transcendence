@@ -9,7 +9,7 @@ class ScoreLine {
 	constructor(id: number, score: number, color: BABYLON.Color3, display_name?: string) {
 		this.id = id;
 		this.textBlock = new GUI.TextBlock();
-		this.update(score, color, name);
+		this.update(score, color);
 		this.textBlock.fontSize = 28;
 		this.textBlock.height = "32px";
 		this.textBlock.textHorizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
@@ -31,7 +31,7 @@ export class ScorePanel {
 
 	constructor(gui: GUI.AdvancedDynamicTexture) {
 		this.panel = new GUI.StackPanel();
-		this.panel.width = "220px";
+		this.panel.width = "2200px";
 		this.panel.isVertical = true;
 		this.panel.top = "0px";
 		this.panel.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
