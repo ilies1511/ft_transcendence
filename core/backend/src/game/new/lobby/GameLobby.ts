@@ -198,6 +198,8 @@ export class GameLobby {
 			}
 		}
 		console.log("Game: Error: client ", client_id, " failed to connect to lobby ", this.id);
+		const error: ServerError = 'Not Found';
+		WebsocketConnection.static_send(ws, error);
 	}
 
 	//todo:

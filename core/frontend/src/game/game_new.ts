@@ -20,6 +20,7 @@ import type {
 	GameOptions,
 	EnterMatchmakingReq,
 	EnterMatchmakingResp,
+	LobbyInvite,
 } from './game_shared/message_types.ts';
 
 
@@ -93,6 +94,17 @@ export class Game {
 			this._process_msg();
 			this._active_scene.render();
 		});
+		this._open_socket = this._open_socket.bind(this);
+		this._open_socket();
+	}
+
+	public lobby_invite_data(): LobbyInvite {
+		const invite: LobbyInvite = {
+			map_name: this.map_name,
+			lobby_password: this.password,
+			lobby_id: this.game_id,
+		};
+		return (invite);
 	}
 
 	private _handle_join_err(error: ServerError) {
@@ -112,18 +124,6 @@ export class Game {
 				console.log("Game: join error unsupported: ", error);
 				throw (error);
 		}
-	}
-
-	// Needs to be seperated from constructor since potentially some async code needs to run first.
-	// Always call this on the game object.
-	public async async_constructor(): Promise<void> {
-		if (this.password != '') {
-			const join_error: ServerError = await GameApi.join_lobby(this._id, this.game_id, this.map_name, this.password);
-			this._handle_join_err(join_error);
-		}
-		this._open_socket = this._open_socket.bind(this);
-		this._open_socket();
-		return ;
 	}
 
 	public leave() {

@@ -1,20 +1,33 @@
-
 import { Game } from './game/game_new.ts';
 import { GameApi } from './game/GameApi.ts';
 
 import { get_password_from_user } from './game/placeholder_globals.ts';
 
+import { attempt_reconnect } from './game/frontend_interface_examples/reconnect.ts';
+import {
+	accept_lobby_invite,
+	create_join_lobby,
+	invite_user_to_lobby_skeletion,
+	recv_lobby_invite_skeleton,
+
+} from './game/frontend_interface_examples/custom_lobbies.ts';
+import type { CustomLobbyOptions } from './game/frontend_interface_examples/custom_lobbies.ts';
+
+import type { MatchmakingOptions } from './game/frontend_interface_examples/matchmaking.ts';
+import { enter_matchmaking } from './game/frontend_interface_examples/matchmaking.ts';
+
+
 import type {
-	ServerToClientMessage,
-	GameStartInfo,
-	ClientToServerMessage,
-	GameOptions,
-	EnterMatchmakingResp,
-	ReconnectResp,
 	ServerError,
-	CreateLobbyReq,
-	CreateLobbyResp,
+	LobbyInvite,
 } from './game/game_shared/message_types.ts';
+
+
+// Important!! Only have one game object at the same time!!
+declare global {
+  var game: Game | undefined;
+}
+globalThis.game = undefined;
 
 const container: HTMLElement = document.getElementById('game-container');
 const input = document.getElementById('user-id-input') as HTMLInputElement | null;
@@ -26,82 +39,53 @@ const btn = document.getElementById('start-game-btn');
 let lobby_password: string = "";
 
 
-// reconnects to a running game or tournament
-// (right now only game, not tournament)
-async function attempt_reconnect(match_container: HTMLElement, user_id: number)
-	: Promise<Game | undefined>
-{
-	const reconnect: ReconnectResp = await GameApi.reconnect(user_id);
-	let match_id: number = -1;
-	if (reconnect.tournament_id >= 0) {
-		lobby_password = await get_password_from_user('Tournament');
-		//todo
-	} else if (reconnect.match_id >= 0) {
-		match_id = reconnect.match_id;
-		if (reconnect.match_has_password) {
-			lobby_password = await get_password_from_user('Game');
-		}
-	}
-	if (match_id != -1) {
-		console.log("Game: Reconnecting to match with password:" , lobby_password);
-		const game: Game = new Game(user_id, match_container, match_id, "default", lobby_password)
-		await game.async_constructor();
-		return (game);
-	}
-}
-
-async function enter_matchmaking(container: HTMLElement, user_id: number)
-	: Promise<Game | ServerError>
-{
-	console.log("user_id: ", user_id);
-
-	if (!container) {
-		throw ("Container element not found");
-	}
-
-	container.innerHTML = '';
-	const resp: EnterMatchmakingResp = await GameApi.enter_matchmaking(user_id, "default", 0);
-	if (resp.error != "") {
-		console.log(resp.error);
-		return (resp.error);
-	}
-	console.log("resp: ", resp);
-	const match_id: number = resp.match_id;
-	lobby_password = '';
-	const game: Game = new Game(user_id, container, match_id, "default", lobby_password);
-	await game.async_constructor();
-	return (game);
-}
 
 async function test_enter_matchmaking(container: HTMLElement, user_id: number)
 	: Promise<void>
 {
-	const matchmaking_game: Game | ServerError = await enter_matchmaking(container, user_id);
+	const matchmaking_options: MatchmakingOptions = {
+		map_name: "default",
+		ai_count: 0,
+	};
+	if (game !== undefined) {
+		game.leave();
+		game = undefined;
+	}
+	const matchmaking_game: Game | ServerError = await enter_matchmaking(
+		user_id, container, matchmaking_options);
 	if (matchmaking_game instanceof Game) {
+
 	} else {
 		console.log(matchmaking_game as ServerError);
 	}
 }
 
-// if user_id == 1: creates lobby with password "a"
-// else asks user to enter lobby id and joins it
-async function test_create_join_lobby(user_id: number)
+// for testing user with id == 1 creates the lobby and others join
+async function test_lobby(user_id: number, container: HTMLElement)
 	: Promise<void>
 {
+	lobby_password = await get_password_from_user("Game");
 	if (user_id == 1) {
-		lobby_password = await get_password_from_user("Game");
-		const resp: CreateLobbyResp = await GameApi.create_lobby("default", 0, lobby_password);
-		if (resp.error != "") {
-			console.log(resp.error);
+		// Options is filled by the user.
+		// Dosn't need to use get_password_from_user(). Here it's only used to
+		//  have the same password string everywhere.
+		const options: CustomLobbyOptions = {
+			map_name: "default",
+			lobby_password: await get_password_from_user("Game"),
+			ai_count: 0,
+		};
+		const game: Game | ServerError = await create_join_lobby(user_id, container, options);
+		if (!(game instanceof Game)) {
 			return ;
 		}
-		console.log("created lobby with id ", resp.match_id);
-		const game: Game  = new Game(user_id, container, resp.match_id, "default", lobby_password)
-		await game.async_constructor();
+
+		// Later something like this should send a lobby invite to user 2.
+		// Right now does nothing.
+		const target_user_id: number = 2;
+		invite_user_to_lobby_skeletion(game, target_user_id);
 	} else {
-		lobby_password = await get_password_from_user("Game");
-		const game: Game  = new Game(user_id, container, 0, "default", lobby_password)
-		await game.async_constructor();
+		const lobby_invite: LobbyInvite = await recv_lobby_invite_skeleton();
+		let game: Game | ServerError = await accept_lobby_invite(user_id, container, lobby_invite);
 	}
 }
 
@@ -114,18 +98,14 @@ if (btn && input) {
 			return ;
 		}
 		console.log("got user_id: ", user_id);
-		input.disabled = true;
-
-		lobby_password = 'a'; //later would be user input (only for when lobby is created manually)
+		//how do i remove the button here
 		let reconnect: Game | undefined = await attempt_reconnect(container, user_id);
 		if (reconnect == undefined) {
-			//test_enter_matchmaking(container, user_id);
-			test_create_join_lobby(user_id);
+			test_enter_matchmaking(container, user_id);
+			//test_lobby(user_id, container);
 		}
 	});
 } else {
 	console.error("Input or button not found in HTML.");
 }
-
-
 

@@ -1,5 +1,11 @@
 //todo: enable map selection
 
+export type LobbyInvite = {
+	map_name: string;
+	lobby_password: string;
+	lobby_id: number;
+};
+
 export interface EnterMatchmakingReq {
 	user_id: number;
 	map_name: string;
@@ -131,7 +137,7 @@ export type LobbyToClientJson =
 
 export type LobbyToClient = LobbyToClientJson | ArrayBuffer;
 
-export type ServerToClientMessage = LobbyToClient;
+export type ServerToClientMessage = ServerError | LobbyToClient;
 
 export type ClientToGameInput = {
 	client_id: number,
