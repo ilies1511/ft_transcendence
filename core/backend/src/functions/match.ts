@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify'
-import type { UserMatch, UserStats, MatchRow } from '../types/userTypes.ts'
+import type { UserMatch, UserStats, MatchParticipants} from '../types/userTypes.ts'
 
 type HistoryRow = {
 	match_id: number;
@@ -179,4 +179,19 @@ export async function completeMatch(
 		)
 	}
 	await fastify.db.exec('COMMIT')
+}
+
+export async function getParticipantsForMatch(
+	fastify: FastifyInstance,
+	matchId: number
+): Promise<Array<MatchParticipants>> {
+	return fastify.db.all<MatchParticipants[]>(
+		`SELECT
+		p.user_id,
+		u.username,
+		p.score,
+		p.result
+			FROM match_participants AS p JOIN users AS u ON p.user_id = u.id
+		WHERE p.match_id = ? ORDER BY p.score DESC`, matchId
+	)
 }

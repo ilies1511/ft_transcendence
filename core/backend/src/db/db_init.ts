@@ -4,12 +4,27 @@ import type { FastifyInstance } from 'fastify'
  * Führt beim Serverstart alle notwendigen CREATE-TABLE-Statements aus.
  */
 export async function runMigrations(fastify: FastifyInstance): Promise<void> {
-	await fastify.db.exec(`
-		ALTER TABLE users
-		ADD COLUMN live INTEGER NOT NULL DEFAULT 0;
-		ADD COLUMN avatar TEXT NOT NULL '' ;
-		`).catch(() => {
-	})
+	// await fastify.db.exec(`
+	// 	ALTER TABLE users
+	// 	ADD COLUMN live INTEGER NOT NULL DEFAULT 0;
+	// 	ADD COLUMN avatar TEXT NOT NULL '' ;
+	// 	ALTER TABLE users ADD COLUMN twofa_secret TEXT;
+	// 	ALTER TABLE users ADD COLUMN twofa_enabled INTEGER NOT NULL DEFAULT 0;
+	// 	`).catch(() => {
+	// })
+
+	const alters = [
+		`ALTER TABLE users ADD COLUMN twofa_secret TEXT;`,
+		`ALTER TABLE users ADD COLUMN twofa_enabled INTEGER NOT NULL DEFAULT 0;`
+	];
+	for (const sql of alters) {
+		try {
+			await fastify.db.exec(sql);
+			fastify.log.info(`Migration success: ${sql}`);
+		} catch (err) {
+			fastify.log.warn(`Migration skipped or failed: ${sql}`, err);
+		}
+	}
 	await fastify.db.exec(`
 		CREATE TABLE IF NOT EXISTS users (
 		id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -19,6 +34,8 @@ export async function runMigrations(fastify: FastifyInstance): Promise<void> {
 		email       TEXT    UNIQUE,
 		live        INTEGER NOT NULL DEFAULT 0,  -- 0 = offline, 1 = online
 		avatar      TEXT NOT NULL,
+		twofa_secret TEXT NOT NULL DEFAULT '0',
+		twofa_enabled INTEGER NOT NULL DEFAULT 0,
 		created_at  INTEGER NOT NULL DEFAULT (strftime('%s','now'))
 	);
 	`)
@@ -27,20 +44,34 @@ export async function runMigrations(fastify: FastifyInstance): Promise<void> {
 	// more tables:
 	// await fastify.db.exec(`CREATE TABLE IF NOT EXISTS games ( … );`)
 
+	// vor created_at // status         TEXT    NOT NULL DEFAULT 'pending',  -- 'pending' now only option
 	await fastify.db.exec(`
 		CREATE TABLE IF NOT EXISTS friend_requests (
 		id             INTEGER PRIMARY KEY AUTOINCREMENT,
 		requester_id   INTEGER NOT NULL,
 		recipient_id   INTEGER NOT NULL,
-		status         TEXT    NOT NULL DEFAULT 'pending',  -- 'pending' | 'accepted' | 'rejected'
-		created_at     INTEGER NOT NULL,
+		created_at     INTEGER NOT NULL DEFAULT (strftime('%s','now')),
 		responded_at   INTEGER,
 
 		FOREIGN KEY(requester_id) REFERENCES users(id) ON DELETE CASCADE,
 		FOREIGN KEY(recipient_id) REFERENCES users(id) ON DELETE CASCADE,
 		UNIQUE(requester_id, recipient_id)            -- nur eine offene/ever-Anfrage pro Paar
 		);
-	  `)
+	`)
+	// await fastify.db.exec(`
+	// 	CREATE TABLE IF NOT EXISTS friend_requests (
+	// 	id             INTEGER PRIMARY KEY AUTOINCREMENT,
+	// 	requester_id   INTEGER NOT NULL,
+	// 	recipient_id   INTEGER NOT NULL,
+	// 	status         TEXT    NOT NULL DEFAULT 'pending',  -- 'pending' now only option
+	// 	created_at     INTEGER NOT NULL DEFAULT (strftime('%s','now')),
+	// 	responded_at   INTEGER,
+
+	// 	FOREIGN KEY(requester_id) REFERENCES users(id) ON DELETE CASCADE,
+	// 	FOREIGN KEY(recipient_id) REFERENCES users(id) ON DELETE CASCADE,
+	// 	UNIQUE(requester_id, recipient_id)            -- nur eine offene/ever-Anfrage pro Paar
+	// 	);
+	// `)
 
 	await fastify.db.exec(`
 		CREATE TABLE IF NOT EXISTS friendships(
