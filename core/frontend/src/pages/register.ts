@@ -52,6 +52,14 @@ const template = /*html*/`
 				Sign Up
 			</button>
 
+			<p class="text-center text-sm text-white">or</p>
+
+			<a href="/api/auth/google"
+				class="w-full block h-10 rounded-xl bg-white text-[#221116] text-center leading-10 font-bold tracking-wide
+						hover:bg-gray-200 active:bg-gray-300">
+				Sign up with Google
+			</a>
+
 			<p id="msg"></p>
 
 			<p class="text-center text-sm">

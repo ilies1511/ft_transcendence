@@ -39,7 +39,9 @@ export default async function authRoutes(app: FastifyInstance) {
 				'INSERT INTO users (email, password, username, nickname, avatar, live) VALUES (?, ?, ?, ?, ?, ?)',
 				[email, hash, username, username, avatar, false] // password stored as hash
 			)
-			reply.code(201).send({ userId: lastID })
+			// reply.code(201).send({ userId: lastID })
+			reply.redirect(`http://localhost:5173/profile/${lastID}`) // TODO: to be decided with Maksim
+
 		} catch (err: any) {
 			// if (err.code === 'SQLITE_CONSTRAINT') {
 			// 	return reply.code(409).send({ error: 'That e-mail address or username is already taken!' })
@@ -131,7 +133,7 @@ export default async function authRoutes(app: FastifyInstance) {
 				// 	app.log.error(err)
 				// 	return reply.code(500).send({ error: 'Internal Server Error' })
 				// }
-				return reply.send({ twofa_required: true })
+				return reply.send({ twofa_required: true }) // IF true, then redirect to '/api/login/2fa'
 			}
 
 			const token = await reply.jwtSign({ id: user.id, name: user.username })
@@ -223,7 +225,18 @@ export default async function authRoutes(app: FastifyInstance) {
 			})
 			setUserLive(app, user.id, true);
 			return reply.send({ ok: true });
+	// 		const jwt = await reply.jwtSign({ id: user.id, name: user.username })
+	// 		setUserLive(app, user.id, true);
+	// 		return reply
+	// 			.setCookie('token', jwt, {
+	// 				path: '/',
+	// 				httpOnly: true,
+	// 				sameSite: 'lax',
+	// 				secure: false // TODO: in prod auf true setzen, wenn HTTPS aktiv
+	// 			})
+	// 			// .redirect('/') // TODO: to be decided with Maksim
+	// 			.redirect(`http://localhost:5173/profile/${user.id}`) // TODO: to be decided with Maksim
+	// 			// .send({ ok: true })
 		}
 	)
-
 }
