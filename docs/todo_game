@@ -10,13 +10,22 @@ API endpoints:
 
 [x] - /join_game -> takes password, map_name, lobby_id and user_id and returns ServerError (on success empty)
 
-[ ] - frontend: when to call the 'join' api (don't call it on reconnect)
+[x] - frontend: when to call the 'join' api (don't call it on reconnect)
 	-> refactor joing a lobby only through api pre game constructor, join_game api should then return the lobby id or an errr like enter_matchmaking
 
 
 websocket endpoints:
 	- /game/{game_id} -> opens websocket to connect to a game(lobby), might need password on first connection
 	- tournament/{tournament_id} -> opens websocket to trournament, first connection needs password verification
+
+
+[ ]: 
+	-> [x]: 1. Game server needs to know the display name for each client: add to the join game api call
+	-> [ ]: 2. and broadcast them to the lobby
+	-> [ ]: 2.5 what if the client misses the broadcast?
+	-> [ ]: 3. frontend needs to display them
+
+
 
 [ ]: backend: game timer
 

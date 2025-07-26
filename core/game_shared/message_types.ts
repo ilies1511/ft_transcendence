@@ -9,6 +9,7 @@ export type LobbyInvite = {
 
 export interface EnterMatchmakingReq {
 	user_id: number;
+	display_name: string;
 	map_name: string;
 	ai_count: number;
 };
@@ -29,6 +30,7 @@ export interface JoinLobbyReq {
 	map_name: string;
 	lobby_id: number;
 	password: string;
+	display_name: string;
 };
 
 export interface CreateLobbyResp {

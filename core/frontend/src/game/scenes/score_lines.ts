@@ -4,18 +4,24 @@ import * as BABYLON from "@babylonjs/core/Legacy/legacy";
 class ScoreLine {
 	public id: number;
 	public textBlock: GUI.TextBlock;
+	public display_name: string;
 
-	constructor(id: number, score: number, color: BABYLON.Color3, name?: string) {
+	constructor(id: number, score: number, color: BABYLON.Color3, display_name?: string) {
 		this.id = id;
 		this.textBlock = new GUI.TextBlock();
 		this.update(score, color, name);
 		this.textBlock.fontSize = 28;
 		this.textBlock.height = "32px";
 		this.textBlock.textHorizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+		if (display_name) {
+			this.display_name = display_name;
+		} else {
+			this.display_name = this.id
+		}
 	}
 
 	public update(score: number, color: BABYLON.Color3, name?: string) {
-		this.textBlock.text = `${name ?? this.id}: ${score}`;
+		this.textBlock.text = `${name ?? this.display_name}: ${score}`;
 		this.textBlock.color = color.toHexString();
 	}
 }

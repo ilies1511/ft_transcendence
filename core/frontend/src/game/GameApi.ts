@@ -18,13 +18,15 @@ export class GameApi {
 	public static async enter_matchmaking(
 		user_id: number,
 		map_name: string,
-		ai_count: number)
-		: Promise<EnterMatchmakingResp>
+		ai_count: number,
+		display_name: string,
+	) : Promise<EnterMatchmakingResp>
 	{
 		const req: EnterMatchmakingReq = {
 			user_id: user_id,
 			map_name: map_name,
 			ai_count: ai_count,
+			display_name: display_name,
 		};
 		const response = await fetch('/api/enter_matchmaking', {
 			method: 'POST',
@@ -38,8 +40,9 @@ export class GameApi {
 		return (data);
 	}
 
-	public static async create_lobby(map_name: string, ai_count: number, password: string)
-		: Promise<CreateLobbyResp>
+	public static async create_lobby(map_name: string, ai_count: number,
+		password: string, display_name: string,
+	) : Promise<CreateLobbyResp>
 	{
 		const req: CreateLobbyReq = {
 			map_name: map_name,
@@ -62,14 +65,17 @@ export class GameApi {
 		user_id: number,
 		lobby_id: number,
 		map_name: string,
-		password: string)
+		password: string,
+		display_name: string,
+	)
 		: Promise<ServerError>
 	{
 		const req: JoinLobbyReq = {
 			lobby_id: lobby_id,
 			user_id: user_id,
 			map_name: map_name,
-			password: password
+			password: password,
+			display_name: display_name,
 		};
 		const response = await fetch('/api/join_lobby', {
 			method: 'POST',

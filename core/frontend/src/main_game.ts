@@ -56,6 +56,7 @@ async function test_enter_matchmaking(container: HTMLElement, user_id: number)
 	const matchmaking_options: MatchmakingOptions = {
 		map_name: "default",
 		ai_count: 0,
+		display_name: `placeholder_displayname_clinet_${user_id}`
 	};
 	if (game !== undefined) {
 		game.leave();
@@ -82,6 +83,7 @@ async function test_lobby(user_id: number, container: HTMLElement)
 			map_name: "default",
 			lobby_password: await get_password_from_user("Game"),
 			ai_count: 0,
+			display_name: `placeholder_displayname_clinet_${user_id}`,
 		};
 		const game: Game | ServerError = await create_join_lobby(user_id, container, options);
 		if (!(game instanceof Game)) {
@@ -113,8 +115,8 @@ if (btn && input) {
 		//how do i remove the button here
 		await attempt_reconnect(container, user_id);
 		if (globalThis.game == undefined) {
-			//test_enter_matchmaking(container, user_id);
-			test_lobby(user_id, container);
+			test_enter_matchmaking(container, user_id);
+			//test_lobby(user_id, container);
 		}
 	});
 } else {

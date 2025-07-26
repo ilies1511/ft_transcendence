@@ -20,6 +20,7 @@ import { is_ServerError } from '../../game_shared/message_types.ts';
 type GameConnection = {
 	id: number,
 	sock?: WebsocketConnection,
+	display_name: string,
 };
 
 
@@ -106,7 +107,9 @@ export class GameLobby {
 
 	// returns false if player can not join
 	// this does not setup the connection, without this the client tring to connect will be denied
-	public join(user_id: number, map_name: string, password?: string): ServerError {
+	public join(user_id: number, map_name: string, display_name: string, password?: string
+		): ServerError
+	{
 		if (this._map_name != map_name) {
 			return ("Invalid Request");
 		}
@@ -123,6 +126,7 @@ export class GameLobby {
 		const connection: GameConnection = {
 			id: user_id,
 			sock: undefined,
+			display_name: display_name,
 		};
 		this._connections.push(connection);
 		return ("");

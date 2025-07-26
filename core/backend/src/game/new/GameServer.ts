@@ -49,6 +49,7 @@ const enter_matchmaking_schema = {
 		required: ['user_id', 'map_name', 'ai_count'],
 		properties: {
 			user_id: { type: 'number' },
+			display_name: { type: 'string' },
 			map_name: { type: 'string' },
 			ai_count: { type: 'number' }
 		}
@@ -76,6 +77,7 @@ const join_lobby_schema = {
 			map_name: { type: 'string' },
 			lobby_id: { type: 'number' },
 			password: { type: 'string' },
+			display_name: { type: 'string' },
 		}
 	}
 };
@@ -185,10 +187,10 @@ export class GameServer {
 			match_id: -1,
 		};
 
-		const { user_id, map_name, ai_count } = request.body;
+		const { user_id, display_name, map_name, ai_count } = request.body;
 		console.log("GAME: _enter_matchmaking_api: ", request.body);
 		for (const [lobby_id, lobby] of this._lobbies) {
-			if (lobby.join(user_id, map_name) == "") {
+			if (lobby.join(user_id, map_name, display_name) == "") {
 				response.match_id = lobby_id;
 				return (response);
 			}
@@ -202,7 +204,7 @@ export class GameServer {
 				response.error = "Internal Error";
 				return (response);
 			}
-			const join_error: ServerError = lobby.join(user_id, map_name);
+			const join_error: ServerError = lobby.join(user_id, map_name, display_name);
 			if (join_error != "") {
 				console.log("Could not join newly created game, game the settings weird?");
 				console.log("Error: ", join_error);
@@ -246,12 +248,14 @@ export class GameServer {
 	private async _join_lobby_api(request: FastifyRequest< { Body: JoinLobbyReq } >)
 		: Promise<ServerError>
 	{
-		const { lobby_id, user_id, password, map_name } = request.body;
+		const { lobby_id, user_id, password, map_name, display_name } = request.body;
+
 		const lobby: GameLobby | undefined = this._lobbies.get(lobby_id);
 		if (!lobby) {
 			return ("Not Found");
 		}
-		return (lobby.join(user_id, map_name, password));
+		const msg: ServerError = lobby.join(user_id, map_name, display_name, password);
+		return (msg);
 	}
 
 	//todo: finish this

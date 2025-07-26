@@ -13,19 +13,22 @@ export type CustomLobbyOptions = {
 	map_name: string;
 	lobby_password: string;
 	ai_count: number;
+	display_name: string;
 };
 
 export async function accept_lobby_invite(
 	user_id: number,
 	container: HTMLElement,
-	invite: LobbyInvite
+	invite: LobbyInvite,
+	display_name: string,
 	) : Promise<ServerError | Game>
 {
 	const join_error: ServerError = await GameApi.join_lobby(
 		user_id,
 		invite.lobby_id,
 		invite.map_name,
-		invite.lobby_password
+		invite.lobby_password,
+		`placeholder_diplay_name_of_client_${user_id}`,
 	);
 	if (join_error != '') {
 		return (join_error);
@@ -47,7 +50,7 @@ export async function create_join_lobby(
 	): Promise<Game | ServerError>
 {
 	const resp: CreateLobbyResp = await GameApi.create_lobby(options.map_name,
-		options.ai_count, options.lobby_password);
+		options.ai_count, options.lobby_password, options.display_name);
 	if (resp.error != "") {
 		console.log(resp.error);
 		return (resp.error);
@@ -57,12 +60,14 @@ export async function create_join_lobby(
 		map_name: options.map_name,
 		lobby_password: options.lobby_password,
 		lobby_id: resp.match_id,
+		valid: true,
 	};
 	// By default the user is not in the lobby itself.
 	// Sinece we have everything to build a LobbyInvite object in the frontend
 	//  the invite does not need to go through the server when joining your
 	//  own lobby.
-	let game: Game | ServerError = await accept_lobby_invite(user_id, container, lobby_invite);
+	let game: Game | ServerError = await accept_lobby_invite(user_id, container,
+		lobby_invite, `placeholder_diplay_name_of_client_${user_id}`);
 	if (!(game instanceof Game)) {
 		console.log("Game: got ServerError '", game, "'");
 		return (game as ServerError);

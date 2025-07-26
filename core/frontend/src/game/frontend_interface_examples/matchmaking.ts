@@ -9,6 +9,7 @@ import type {
 export type MatchmakingOptions = {
 	map_name: string,
 	ai_count: number,
+	display_name: string,
 };
 
 export async function enter_matchmaking(user_id: number,
@@ -25,7 +26,8 @@ export async function enter_matchmaking(user_id: number,
 	const resp: EnterMatchmakingResp = await GameApi.enter_matchmaking(
 		user_id,
 		options.map_name,
-		options.ai_count
+		options.ai_count,
+		options.display_name,
 	);
 	if (resp.error != "") {
 		console.log("Game: enter_matchmaking server response error: ", resp.error);
