@@ -30,8 +30,14 @@ import type {
 	 //'game.leave()' tells the server that we will not reconnect
 */
 export async function attempt_reconnect(match_container: HTMLElement, user_id: number)
-	: Promise<Game | undefined>
+	: Promise<void>
 {
+	if (globalThis.game !== undefined) {
+		console.log("WARNING: Game: attempt_reconnect() was called while game object existed.",
+			"\n\tIt simply returned right way!");
+		return ;
+	}
+
 	let lobby_password: string = '';
 
 	const reconnect: ReconnectResp = await GameApi.reconnect(user_id);
@@ -47,8 +53,8 @@ export async function attempt_reconnect(match_container: HTMLElement, user_id: n
 	}
 	if (match_id != -1) {
 		console.log("Game: Reconnecting to match with password:" , lobby_password);
-		const game: Game = new Game(user_id, match_container, match_id, "default", lobby_password)
-		return (game);
+		new Game(user_id, match_container, match_id, "default", lobby_password)
+		return ;
 	}
 }
 

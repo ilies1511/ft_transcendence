@@ -22,12 +22,22 @@ import type {
 	LobbyInvite,
 } from './game/game_shared/message_types.ts';
 
+/* Important!! Only have one game object at the same time!!
+ * The Game class will manage it's value.
+ * Don't overwrite it manually (treat it as read only outside the Game class).
+ * If you need a new game object and globalThis.game !== undefined always call
+    either 'globalThis.game.disconnect()' or 'globalThis.game.leave()'.
+    Otherwise the constructor of the object will call 'globalThis.game.leave()'.
+*/
 
-// Important!! Only have one game object at the same time!!
 declare global {
   var game: Game | undefined;
 }
+
+// You can get always get the game object from here if it exists.
 globalThis.game = undefined;
+
+
 
 const container: HTMLElement = document.getElementById('game-container');
 const input = document.getElementById('user-id-input') as HTMLInputElement | null;
@@ -99,8 +109,8 @@ if (btn && input) {
 		}
 		console.log("got user_id: ", user_id);
 		//how do i remove the button here
-		let reconnect: Game | undefined = await attempt_reconnect(container, user_id);
-		if (reconnect == undefined) {
+		await attempt_reconnect(container, user_id);
+		if (globalThis.game == undefined) {
 			test_enter_matchmaking(container, user_id);
 			//test_lobby(user_id, container);
 		}

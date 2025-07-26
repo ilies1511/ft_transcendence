@@ -41,8 +41,13 @@ export class Game {
 	private _game_scene: GameScene;
 
 	private _active_scene: BaseScene;
+
 	public finished: boolean = false;
 
+	private _cleaned: boolean = false;
+	// If this is true don't use the object anymore.
+	// globalThis.game should also be !== this
+	public is_cleaned(): boolean { return (this._cleaned)}
 
 	//private _sphere: BABYLON.Mesh;
 
@@ -67,6 +72,12 @@ export class Game {
 		map_name: string,
 		password: string,
 	) {
+		if (globalThis.game !== undefined) {
+			console.log("WARNING: Game constructor called while globalThis.game !== undefined");
+			console.log("WARNING: Game constructor: Disconnecting old game");
+			globalThis.game.leave();
+			globalThis.game = undefined;
+		}
 		this.password = password;
 		this.map_name = map_name;
 
@@ -96,6 +107,7 @@ export class Game {
 		});
 		this._open_socket = this._open_socket.bind(this);
 		this._open_socket();
+		globalThis.game = this;
 	}
 
 	public lobby_invite_data(): LobbyInvite {
@@ -107,35 +119,16 @@ export class Game {
 		return (invite);
 	}
 
-	private _handle_join_err(error: ServerError) {
-		switch (error) {
-			case (''):
-				return ;
-			case ('Full'):
-			case ('Internal Error'):
-			case ('Invalid Map'):
-			case ('Not Found'):
-				break ;
-			case ('Invalid Password'):
-				break ;
-			case ('Invalid Request'):
-				throw ("Game: Server answered with 'Invalid Request' to join request?");
-			default:
-				console.log("Game: join error unsupported: ", error);
-				throw (error);
-		}
-	}
-
 	public leave() {
 		if (this.finished) {
 			this._cleanup();
 			return ;
 		}
 		this.finished = true;
-		if (this._socket.readyState !== WebSocket.OPEN) {
+		if (!this._socket || this._socket.readyState !== WebSocket.OPEN) {
 			this._open_socket();
 		}
-		if (this._socket.readyState == WebSocket.OPEN) {
+		if (this._socket && this._socket.readyState == WebSocket.OPEN) {
 			const msg: ClientToMatchLeave = {
 				client_id: this._id,
 				type: 'leave',
@@ -153,14 +146,26 @@ export class Game {
 	}
 
 	private _cleanup() {
+		if (this._cleaned) {
+			console.log("WARNING: Game cleanup called when the game was allready cleaned");
+			return ;
+		}
 		console.log("Game: cleanup()");
 		this._game_scene.cleanup();
 		this._lobby_scene.cleanup();
 		this._engine.dispose();
 		this.container.removeChild(this._canvas);
 		this._engine.stopRenderLoop();
-		this._socket.close();
+		if (this._socket) {
+			this._socket.close();
+		}
 		this.container.innerHTML = '';
+		if (globalThis.game === this) {
+			globalThis.game = undefined;
+		} else {
+			console.log("WARNING: Game cleanup(): globalThis.game was not this game object");
+		}
+		this._cleaned = true;
 	}
 
 	private _open_socket() {
@@ -200,6 +205,9 @@ export class Game {
 	}
 
 	private _key_up_handler(event: KeyboardEvent) {
+		if (!this._socket) {
+			return ;
+		}
 		const msg: ClientToGame = {
 			client_id: this._id,
 			type: "send_input",
@@ -230,6 +238,9 @@ export class Game {
 	}
 
 	private _key_down_handler(event: KeyboardEvent) {
+		if (!this._socket) {
+			return ;
+		}
 		const msg: ClientToGame = {
 			type: "send_input",
 			client_id: this._id,
@@ -340,7 +351,7 @@ export class Game {
 		console.log(msg);
 	}
 
-	private _rcv_msg(event: MessageEvent<ServerToClientMessage>): undefined {
+	private _rcv_msg(event: MessageEvent<LobbyToClient>): undefined {
 		//console.log("GAME: recieved msg");
 		const data = event.data;
 		//console.log(data);
