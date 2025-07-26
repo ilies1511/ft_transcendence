@@ -21,6 +21,7 @@ import type {
 	EnterMatchmakingReq,
 	EnterMatchmakingResp,
 	LobbyInvite,
+	LobbyDisplaynameResp,
 } from './game_shared/message_types.ts';
 
 
@@ -273,10 +274,22 @@ export class Game {
 		this._socket.send(JSON.stringify(msg));
 	}
 
-	private _start_game() {
+	private  _start_game() {
+		const display_names_promise: Promise<LobbyDisplaynameResp> =
+			GameApi.get_display_names(this.game_id);
+		display_names_promise.then(names => {
+			console.log("got names: ", names);
+			if (names.error != '') {
+				return ;
+			}
+			for (const player of names.data) {
+				this._game_scene.score_panel.update_display_name(player.id, player.name);
+			}
+		});
 		this._active_scene = this._game_scene;
 		window.addEventListener("keyup", this._key_up_handler);
 		window.addEventListener("keydown", this._key_down_handler);
+
 	}
 
 	private _process_server_error(error: ServerError) {

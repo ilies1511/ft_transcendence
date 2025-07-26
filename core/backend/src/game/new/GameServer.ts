@@ -1,7 +1,7 @@
 import Fastify from 'fastify';
 import type { fastifyWebsocket } from '@fastify/websocket';
 import websocketPlugin from '@fastify/websocket';
-import type { FastifyInstance, FastifyRequest } from 'fastify';
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import type { WebSocket } from '@fastify/websocket';
 import { GameLobby } from './lobby/GameLobby.ts';
 import { Tournament } from './Tournament.ts';
@@ -25,6 +25,7 @@ import type {
 	ReconnectResp,
 	ServerError,
 	ClientToMatch,
+	LobbyDisplaynameResp,
 } from '../game_shared/message_types.ts';
 
 import { is_ServerError } from '../game_shared/message_types.ts';
@@ -157,6 +158,15 @@ export class GameServer {
 			{ schema: join_lobby_schema},
 			async (request, reply) => {
 				return (await this._join_lobby_api(request));
+			}
+		);
+
+		this._display_names_api = this._display_names_api.bind(this);
+		this._fastify.get(
+			'/game/:game_id/display_names',
+			async (request: FastifyRequest<{ Params: { game_id: string } }>, reply: FastifyReply) => {
+			const {game_id } = request.params as { game_id: string};
+				return (await this._display_names_api(game_id));
 			}
 		);
 
@@ -296,6 +306,28 @@ export class GameServer {
 
 		const { client_id } = request.body;
 		return (this._connections_of(client_id));
+	}
+
+	private async _display_names_api(game_id_str: string)
+		: Promise<LobbyDisplaynameResp>
+	{
+		try {
+			const game_id: number = parseInt(game_id_str);
+			const lobby: GameLobby | undefined = this._lobbies.get(game_id);
+			if (lobby == undefined) {
+				console.log("game: _display_names_api: lobby with key ", game_id, " was not found");
+				return ({error: 'Not Found', data: []});
+			}
+			if (lobby.engine == undefined) {
+				console.log("game: _display_names_api: ", game_id, ": game did not start yet");
+				return ({error: 'Not Found', data: []});
+			}
+			return (lobby.get_lobby_displaynames());
+			
+		} catch (e) {
+			console.log("game: lobby key invalid: ", game_id_str, "; _display_names_api");
+			return ({error: 'Not Found', data: []});
+		}
 	}
 
 	private _rcv_game_msg(game_id_str: string, message: string, ws: WebSocket) {

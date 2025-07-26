@@ -273,9 +273,9 @@ export class GameEngine {
 		this.broadcast_game_state();
 	}
 
-	public start_loop() {
+	public async start_loop() {
 		if (this._interval)
-			return;
+			return ;
 		this.running = true;
 		this._interval= setInterval(() => {
 			try {

@@ -88,7 +88,7 @@ export class GameScene extends BaseScene {
 
 	private _color_schemes: Map<number, PlayerColors> = new Map<number, PlayerColors>;
 
-	private _score_panel: ScorePanel;
+	public score_panel: ScorePanel;
 
 	constructor(engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
 		super(engine, canvas);
@@ -121,14 +121,14 @@ export class GameScene extends BaseScene {
 		this._ground.rotate(BABYLON.Axis.X, -Math.PI / 2, BABYLON.Space.LOCAL);
 
 		const gui = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this);
-		this._score_panel = new ScorePanel(gui);
+		this.score_panel = new ScorePanel(gui);
 	}
 
 	public cleanup() {
 		super.cleanup();
 		this._meshes.clear();
 		this._color_schemes.clear();
-		this._score_panel.cleanup();
+		this.score_panel.cleanup();
 	}
 
 	loop(): void {
@@ -242,7 +242,7 @@ export class GameScene extends BaseScene {
 
 		game_state.clients.forEach((c: ClientClient) => {
 			const color: BABYLON.Color3 = this._color_schemes.get(c.obj_id).major.diffuseColor;
-			this._score_panel.update_score(c.obj_id, c.score, color, undefined);
+			this.score_panel.update_score(c.obj_id, c.score, color, undefined);
 		});
 
 	}

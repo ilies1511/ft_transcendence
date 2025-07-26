@@ -13,12 +13,14 @@ import type {
 	ClientToMatch,
 	ClientToGame,
 	ClientToGameInput,
+	LobbyDisplaynameResp,
 } from '../../game_shared/message_types.ts';
 
 import { is_ServerError } from '../../game_shared/message_types.ts';
 
 type GameConnection = {
 	id: number,
+	ingame_id?: number,
 	sock?: WebsocketConnection,
 	display_name: string,
 };
@@ -99,9 +101,9 @@ export class GameLobby {
 		while (i < this._connections.length) {
 			this.engine.clients[i].set_socket(this._connections[i].sock.ws);
 			this.engine.clients[i].global_id = this._connections[i].id;
+			this._connections[i].ingame_id = this.engine.clients[i].obj_id;
 			i++;
 		}
-
 		this.engine.start_loop();
 	}
 
@@ -219,5 +221,21 @@ export class GameLobby {
 				break ;
 		}
 		return (false);
+	}
+
+	public get_lobby_displaynames(): LobbyDisplaynameResp {
+		const resp: LobbyDisplaynameResp = {
+			error: '',
+			data: [],
+		};
+		for (const connection of this._connections) {
+			if (connection.ingame_id) {
+				resp.data.push({name: connection.display_name, id: connection.ingame_id});
+			} else {
+				console.log("Game: Error: Missing ingame_id in client ",
+					"connection in lobby when get_lobby_displaynames was called");
+			}
+		}
+		return (resp);
 	}
 };

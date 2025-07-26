@@ -19,6 +19,14 @@ export interface EnterMatchmakingResp {
 	match_id: number;
 };
 
+export interface LobbyDisplaynameResp {
+	error: ServerError,
+	data: {
+		name: string;
+		id: number;
+	}[];
+};
+
 export interface CreateLobbyReq {
 	map_name: string;
 	ai_count: number;
@@ -73,13 +81,14 @@ export function eq_options(a: GameOptions, b: GameOptions): boolean {
 	return (true);
 }
 
-export type GameStartInfo = 
-{
-		type: 'starting_game',
-		game_id: number,
-		ingame_id: number,
-		options: GameOptions
-};
+//export type GameStartInfo = 
+//{
+//	type: 'starting_game',
+//	display_names: {
+//		id: number;
+//		name: string;
+//	}[]
+//};
 
 export type GameLobbyUpdate = {
 	type: 'game_lobby_update',
@@ -131,7 +140,6 @@ export type GameToClientFinish = {
 };
 
 //	| GameLobbyUpdate
-//	| GameStartInfo
 export type LobbyToClientJson =
 	ServerToClientError
 	| GameLobbyUpdate

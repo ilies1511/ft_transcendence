@@ -13,17 +13,19 @@ API endpoints:
 [x] - frontend: when to call the 'join' api (don't call it on reconnect)
 	-> refactor joing a lobby only through api pre game constructor, join_game api should then return the lobby id or an errr like enter_matchmaking
 
+[x] - /game/{game_id}/displaynames; returns the displaynames of the game
 
 websocket endpoints:
 	- /game/{game_id} -> opens websocket to connect to a game(lobby), might need password on first connection
 	- tournament/{tournament_id} -> opens websocket to trournament, first connection needs password verification
 
 
-[ ]: 
+[x]:
 	-> [x]: 1. Game server needs to know the display name for each client: add to the join game api call
-	-> [ ]: 2. and broadcast them to the lobby
-	-> [ ]: 2.5 what if the client misses the broadcast?
-	-> [ ]: 3. frontend needs to display them
+	-> [x]: 2. and broadcast them to the lobby
+	-> [x]: 2.5 what if the client misses the broadcast? -> solved by going through an api instead
+	-> [x]: 3. frontend needs to display them
+	-> [ ]: would be cool: have display names for the lobby screen while waiting -> later (should be simple tho)
 
 
 

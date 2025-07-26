@@ -9,6 +9,7 @@ import type {
 	ReconnectReq,
 	ReconnectResp,
 	ServerError,
+	LobbyDisplaynameResp,
 } from './game_shared/message_types.ts';
 
 
@@ -37,6 +38,16 @@ export class GameApi {
 		});
 		const data: EnterMatchmakingResp = await response.json();
 		console.log("game: enter_matchmaking api response: ", data);
+		return (data);
+	}
+
+	public static async get_display_names(match_id: number): Promise<LobbyDisplaynameResp>
+	{
+		const response = await fetch(`/game/${match_id}/display_names`, {
+			method: 'GET'
+		});
+		const data: CreateLobbyResp = await response.json();
+		console.log("Game: create_lobby api response: ", data);
 		return (data);
 	}
 

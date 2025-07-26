@@ -4,7 +4,7 @@ import * as BABYLON from "@babylonjs/core/Legacy/legacy";
 class ScoreLine {
 	public id: number;
 	public textBlock: GUI.TextBlock;
-	public display_name: string;
+	public display_name: string = "Loading name..";
 
 	constructor(id: number, score: number, color: BABYLON.Color3, display_name?: string) {
 		this.id = id;
@@ -15,8 +15,6 @@ class ScoreLine {
 		this.textBlock.textHorizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
 		if (display_name) {
 			this.display_name = display_name;
-		} else {
-			this.display_name = this.id
 		}
 	}
 
@@ -41,6 +39,14 @@ export class ScorePanel {
 		gui.addControl(this.panel);
 
 		this.lines = new Map<number, ScoreLine>();
+	}
+
+	public update_display_name(id: number, display_name: string) {
+		const line: ScoreLine | undefined = this.lines.get(id);
+		if (!line) {
+			return ;
+		}
+		line.display_name = display_name;
 	}
 
 	public cleanup() {
