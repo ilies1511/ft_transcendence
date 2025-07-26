@@ -185,3 +185,15 @@ export async function removeFriend(
 	const deletedCount = (direction1.changes ?? 0) + (direction2.changes ?? 0)
 	return deletedCount > 0
 }
+
+export async function withdrawFriendRequest(
+	fastify: FastifyInstance,
+	requesterId: number,
+	requestId: number): Promise<boolean> {
+	const info = await fastify.db.run(
+		`DELETE FROM friend_requests WHERE id = ? AND requester_id = ?`,
+		requestId,
+		requesterId
+	)
+	return (info.changes ?? 0) > 0
+}

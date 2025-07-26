@@ -233,6 +233,71 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 			}
 		}
 	)
+
+	// fastify.delete<{
+	// 	Params: { requestId: number }
+	// 	Reply: { message: string } | { error: string }
+	// }>(
+	// 	'/api/requests/:requestId/withdraw',
+	// 	{
+	// 		schema: {
+	// 			tags: ['friends'],
+	// 			params: { type: 'object', required: ['requestId'], properties: { requestId: { type: 'integer' } } },
+	// 			response: {
+	// 				200: { type: 'object', properties: { message: { type: 'string' } } },
+	// 				404: { type: 'object', properties: { error: { type: 'string' } } }
+	// 			}
+	// 		}
+	// 	},
+	// 	async (req, reply) => {
+	// 		try {
+	// 			await rejectFriendRequest(fastify, req.params.requestId) // Since reject is simly deleting the db entry in friend_requests table, we can use this function
+	// 			return { message: 'Friend request withdrawed' }
+	// 		} catch (err: any) {
+	// 			return reply.code(404).send({ error: err.message })
+	// 		}
+	// 	}
+	// )
+
+	fastify.delete<{
+		Params: { id: number; requestId: number }
+		Reply: { message: string } | { error: string }
+	}>(
+		'/api/users/:id/requests/:requestId',
+		{
+			schema: {
+				tags: ['friends'],
+				params: {
+					type: 'object',
+					required: ['id', 'requestId'],
+					properties: {
+						id: { type: 'integer' },
+						requestId: { type: 'integer' }
+					}
+				},
+				response: {
+					200: {
+						type: 'object',
+						properties: { message: { type: 'string' } }
+					},
+					404: {
+						type: 'object',
+						properties: { error: { type: 'string' } }
+					}
+				}
+			}
+		},
+		async (req, reply) => {
+			const requesterId = req.params.id
+			const requestId = req.params.requestId
+
+			const ok = await withdrawFriendRequest(fastify, requesterId, requestId)
+			if (!ok) {
+				return reply.code(404).send({ error: 'No pending request to withdraw' })
+			}
+			return reply.code(200).send({ message: 'Friend request withdrawn' })
+		}
+	)
 	//POST -- BEGIN
 
 	//DELETE -- BEGIN
