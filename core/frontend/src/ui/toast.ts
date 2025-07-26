@@ -42,6 +42,10 @@ export async function friendRequestToast(requestId: number, from: string): Promi
 							: 'Request rejected 👌' }</p>`
 					: '<p class="text-center text-red-400 py-2">Server error</p>';
 
+					if (act === 'accept' && res.ok) {
+						document.dispatchEvent(new Event('friends-changed'));
+					}
+
 				setTimeout(() => box.remove(), 1500);
 			})
 		);

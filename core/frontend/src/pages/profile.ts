@@ -6,6 +6,7 @@ import { router } from '../main'
 import { updateDot } from '../utils/statusDot'
 import { isFriend } from '../utils/isFriend'
 
+
 const template = /*html*/ `
 	<div class="w-full max-w-6xl mx-auto p-6 space-y-6">
 		<!-- avatar + name -->
@@ -145,7 +146,58 @@ async function renderProfile(root: HTMLElement, user: ApiUser) {
 	} else {
 		dot.classList.add('hidden') // strangers see no dot
 	}
+
+	// TESTING USER STATS AND MACHES
+	const stats = await fetchUserStats(user.id);
+	const history = await fetchMatchHistory(user.id);
 }
+
+// Helper function for stats
+async function fetchUserStats(userId: number) {
+	try {
+		const res = await fetch(`/api/users/${userId}/stats`);
+		if (!res.ok) throw new Error(`stats ${res.status}`);
+		const data = await res.json();
+		console.log('⭐ user stats', data);
+		return data;
+	} catch (err) {
+		console.error('Failed to load stats:', err);
+		return null; // Or fallback data
+	}
+}
+
+// Helper function for history
+async function fetchMatchHistory(userId: number) {
+	try {
+		const res = await fetch(`/api/users/${userId}/matches`);
+		if (!res.ok) throw new Error(`matches ${res.status}`);
+		const data = await res.json();
+		console.log('📜 match history', data);
+		return data;
+	} catch (err) {
+		console.error('Failed to load history:', err);
+		return []; // Empty array as fallback
+	}
+}
+
+const onFriendsChanged = async () => {
+	// are we still on the same profile?
+	const dot = document.querySelector<HTMLSpanElement>('#profileStatus');
+	if (!dot)
+		return; // already updated
+	const id = Number(dot.dataset.userId);
+
+	// profile owner became a friend? → show dot
+	if (await isFriend(id)) {
+		dot.classList.remove('hidden');
+		/* fetch fresh live flag so the first colour is correct */
+		const r = await fetch(`/api/users/${id}`);
+		const obj = await r.json() as ApiUser;
+		updateDot(id, obj.live);
+	}
+};
+
+document.addEventListener('friends-changed', onFriendsChanged, { once:true });
 
 const ProfilePage: PageModule & { renderWithParams?: Function } = {
 	render(root) {
