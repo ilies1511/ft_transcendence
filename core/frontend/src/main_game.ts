@@ -83,7 +83,6 @@ async function test_lobby(user_id: number, container: HTMLElement)
 			map_name: "default",
 			lobby_password: await get_password_from_user("Game"),
 			ai_count: 0,
-			display_name: `placeholder_displayname_clinet_${user_id}`,
 		};
 		const game: Game | ServerError = await create_join_lobby(user_id, container, options);
 		if (!(game instanceof Game)) {
@@ -99,7 +98,8 @@ async function test_lobby(user_id: number, container: HTMLElement)
 		if (!lobby_invite.valid) {
 			return ;
 		}
-		let game: Game | ServerError = await accept_lobby_invite(user_id, container, lobby_invite);
+		let game: Game | ServerError = await accept_lobby_invite(
+			user_id, container, lobby_invite, `placeholder_displayname_clinet_${user_id}`);
 	}
 }
 
@@ -112,12 +112,12 @@ if (btn && input) {
 			return ;
 		}
 		console.log("got user_id: ", user_id);
-		//how do i remove the button here
 		await attempt_reconnect(container, user_id);
 		if (globalThis.game == undefined) {
 			test_enter_matchmaking(container, user_id);
 			//test_lobby(user_id, container);
 		}
+		console.log("GAME OBJECT: ", globalThis.game);
 	});
 } else {
 	console.error("Input or button not found in HTML.");

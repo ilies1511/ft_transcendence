@@ -52,7 +52,7 @@ export class GameApi {
 	}
 
 	public static async create_lobby(map_name: string, ai_count: number,
-		password: string, display_name: string,
+		password: string,
 	) : Promise<CreateLobbyResp>
 	{
 		const req: CreateLobbyReq = {

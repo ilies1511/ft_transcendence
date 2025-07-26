@@ -13,7 +13,6 @@ export type CustomLobbyOptions = {
 	map_name: string;
 	lobby_password: string;
 	ai_count: number;
-	display_name: string;
 };
 
 export async function accept_lobby_invite(
@@ -50,7 +49,7 @@ export async function create_join_lobby(
 	): Promise<Game | ServerError>
 {
 	const resp: CreateLobbyResp = await GameApi.create_lobby(options.map_name,
-		options.ai_count, options.lobby_password, options.display_name);
+		options.ai_count, options.lobby_password,);
 	if (resp.error != "") {
 		console.log(resp.error);
 		return (resp.error);
