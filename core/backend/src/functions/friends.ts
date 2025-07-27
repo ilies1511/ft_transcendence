@@ -9,11 +9,14 @@ export enum FriendRequestMsg {
 	AlreadyFriends			= 'AlreadyFriends',
 }
 
+export type FriendRequestResult =
+	{ type: 'pending'; request: FriendRequestRow } | { type: 'accepted' }
+
 export async function sendFriendRequest(
 	fastify: FastifyInstance,
 	requesterId: number,
 	recipientUsername: string
-	): Promise<FriendRequestRow>
+	): Promise<FriendRequestResult>
 {
 	const rec = await fastify.db.get<{ id: number }>(
 		'SELECT id FROM users WHERE username = ?',
@@ -38,7 +41,8 @@ export async function sendFriendRequest(
 		// await fastify.db.run('DELETE FROM friend_requests WHERE id = ?', rev_pending.id);
 		// // return { message: 'Friend request accepted' };
 		// // return 'Friend request accepted';
-		throw new Error('RecipientAlreadySentFR')
+		// throw new Error('RecipientAlreadySentFR');
+		return { type: 'accepted' };
 	}
 
 	// // TODO: Check within friend_requests whether requester_id already send to recipient_id
@@ -70,10 +74,12 @@ export async function sendFriendRequest(
 		requesterId,
 		rec.id
 	)
-	return fastify.db.get<FriendRequestRow>(
-		'SELECT * FROM friend_requests WHERE id = ?',
-		info.lastID
-	) as Promise<FriendRequestRow>
+	const row = await fastify.db.get<FriendRequestRow>(
+		'SELECT * FROM friend_requests WHERE id = ?', info.lastID);
+	if (row === undefined) {
+		throw new Error('Could not fetch created friend_request')
+	}
+	return { type: 'pending', request: row }
 }
 
 export async function listIncomingRequests(
