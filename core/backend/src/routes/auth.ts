@@ -1,12 +1,13 @@
 // backend/src/auth.ts
 import bcrypt from 'bcrypt'
 // import { fastify, type FastifyInstance } from 'fastify'
-import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify';
 import { DEFAULT_AVATARS } from '../constants/avatars.ts'
 // backend/src/auth.ts
 import { setUserLive } from '../functions/user.ts'
-import { userRoutes } from './users.ts'
 import { error } from 'console'
+import { validateCredentials } from '../functions/2fa.ts';
+import { verify2FaToken } from '../functions/2fa.ts';
 
 const COST = 12  // bcrypt cost factor (2^12 ≈ 400 ms on laptop)
 
@@ -38,17 +39,33 @@ export default async function authRoutes(app: FastifyInstance) {
 				'INSERT INTO users (email, password, username, nickname, avatar, live) VALUES (?, ?, ?, ?, ?, ?)',
 				[email, hash, username, username, avatar, false] // password stored as hash
 			)
-			reply.code(201).send({ userId: lastID })
+			// reply.code(201).send({ userId: lastID })
+			reply.redirect(`http://localhost:5173/profile/${lastID}`) // TODO: to be decided with Maksim
+
 		} catch (err: any) {
+			// if (err.code === 'SQLITE_CONSTRAINT') {
+			// 	return reply.code(409).send({ error: 'That e-mail address or username is already taken!' })
+			console.error('INSERT-ERROR:', {
+				code: err.code, // 'SQLITE_CONSTRAINT'
+				errno: err.errno, // 19 or 1299 etc..
+				message: err.message, // 'SQLITE_CONSTRAINT_NOTNULL: NOT NULL constraint failed: users.twofa_secret'
+				stack: err.stack
+			});
 			if (err.code === 'SQLITE_CONSTRAINT') {
-				return reply.code(409).send({ error: 'That e-mail address or username is already taken!' })
+				if (err.message.includes('UNIQUE')) {
+					return reply.code(409).send({ error: 'That e-mail address or username is already taken!' });
+				}
+				if (err.message.includes('NOT NULL')) {
+					return reply.code(400).send({ error: 'A required field is missing: ' + err.message });
+				}
 			}
 			throw err
 		}
 	})
 	app.post<{
+		// Body: { email: string; password: string; token: string }
 		Body: { email: string; password: string }
-		Reply: { ok: true } | { error: string }
+		Reply: { ok: true } | { error: string } | { twofa_required: true }
 	}>(
 		'/api/login',
 		{
@@ -61,6 +78,7 @@ export default async function authRoutes(app: FastifyInstance) {
 					properties: {
 						email: { type: 'string', format: 'email' },
 						password: { type: 'string', minLength: 1 }
+						// token: { type: 'string'}
 					}
 				},
 				response: {
@@ -87,13 +105,35 @@ export default async function authRoutes(app: FastifyInstance) {
 				id: number
 				password: string
 				username: string
+				twofa_enabled: string
 			}>(
-				'SELECT id, password, username FROM users WHERE email = ?',
+				'SELECT id, password, username, twofa_enabled FROM users WHERE email = ?',
 				[email]
 			)
 
 			if (!user || !(await bcrypt.compare(password, user.password))) {
 				return reply.code(401).send({ error: 'invalid credentials' })
+			}
+
+			if (user.twofa_enabled) {
+				// const { email, password, token } = req.body
+				// const user = await validateCredentials(app, email, password)
+				// if (!user) {
+				// 	return reply.code(401).send({ error: 'Invalid credentials' })
+				// }
+				// try {
+				// 	const ok = verify2FaToken(user, token)
+				// 	if (!ok) {
+				// 		return reply.code(401).send({ error: 'Invalid 2FA code' })
+				// 	}
+				// } catch (err: any) {
+				// 	if (err.message === '2FA_NOT_SETUP') {
+				// 		return reply.code(400).send({ error: '2FA not set up' })
+				// 	}
+				// 	app.log.error(err)
+				// 	return reply.code(500).send({ error: 'Internal Server Error' })
+				// }
+				return reply.send({ twofa_required: true }) // IF true, then redirect to '/api/login/2fa'
 			}
 
 			const token = await reply.jwtSign({ id: user.id, name: user.username })
@@ -139,4 +179,64 @@ export default async function authRoutes(app: FastifyInstance) {
 		)
 		return user
 	})
+
+	app.post<{
+		Body: { email: string; password: string; token: string }
+	}>(
+		'/api/login/2fa',
+		{
+			schema: {
+				tags: ['auth'],
+				body: {
+					type: 'object',
+					required: ['email', 'password', 'token'],
+					properties: {
+						email: { type: 'string', format: 'email' },
+						password: { type: 'string' },
+						token: { type: 'string' }
+					}
+				}
+			}
+		},
+		async (req, reply) => {
+			const { email, password, token } = req.body
+			const user = await validateCredentials(app, email, password)
+			if (!user) {
+				return reply.code(401).send({ error: 'Invalid credentials' })
+			}
+			try {
+				const ok = verify2FaToken(user, token)
+				if (!ok) {
+					return reply.code(401).send({ error: 'Invalid 2FA code' })
+				}
+			} catch (err: any) {
+				if (err.message === '2FA_NOT_SETUP') {
+					return reply.code(400).send({ error: '2FA not set up' })
+				}
+				app.log.error(err)
+				return reply.code(500).send({ error: 'Internal Server Error' })
+			}
+			const jwt = await reply.jwtSign({ id: user.id, name: user.username })
+			reply.setCookie('token', jwt, {
+				path: '/',
+				httpOnly: true,
+				sameSite: 'lax',
+				secure: false // in prod auf true setzen, wenn HTTPS aktiv
+			})
+			setUserLive(app, user.id, true);
+			return reply.send({ ok: true });
+	// 		const jwt = await reply.jwtSign({ id: user.id, name: user.username })
+	// 		setUserLive(app, user.id, true);
+	// 		return reply
+	// 			.setCookie('token', jwt, {
+	// 				path: '/',
+	// 				httpOnly: true,
+	// 				sameSite: 'lax',
+	// 				secure: false // TODO: in prod auf true setzen, wenn HTTPS aktiv
+	// 			})
+	// 			// .redirect('/') // TODO: to be decided with Maksim
+	// 			.redirect(`http://localhost:5173/profile/${user.id}`) // TODO: to be decided with Maksim
+	// 			// .send({ ok: true })
+		}
+	)
 }

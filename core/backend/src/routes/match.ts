@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify'
-import { getMatchHistory, getUserStats, createMatchMeta, completeMatch } from '../functions/match.ts'
+import { getMatchHistory, getUserStats, createMatchMeta, completeMatch,
+	getParticipantsForMatch } from '../functions/match.ts'
 import { type UserStats } from '../types/userTypes.ts'
-import { type NewMatch } from '../functions/match.ts'
 
 export const matchRoutes: FastifyPluginAsync = async fastify => {
 	// BEGIN -- GET
@@ -37,6 +37,51 @@ export const matchRoutes: FastifyPluginAsync = async fastify => {
 		},
 		async (request) => {
 			return getMatchHistory(fastify, request.params.id)
+		}
+	)
+
+	// What Maksim asked for
+	fastify.get<{
+		Params: { matchId: number }
+		Reply: Array<{
+			user_id: number
+			username: string
+			score: number
+			result: 'win' | 'loss' | 'draw'
+		}>
+	}>(
+		'/api/matches/:matchId/participants',
+		{
+			schema: {
+				description: 'Alle Teilnehmer eines Matches mit Score und Ergebnis',
+				tags: ['match'],
+				params: {
+					type: 'object',
+					required: ['matchId'],
+					properties: {
+						matchId: { type: 'integer' }
+					}
+				},
+				response: {
+					200: {
+						type: 'array',
+						items: {
+							type: 'object',
+							properties: {
+								user_id: { type: 'integer' },
+								username: { type: 'string' },
+								score: { type: 'integer' },
+								result: { type: 'string', enum: ['win', 'loss', 'draw'] }
+							}
+						}
+					}
+				}
+			}
+		},
+		async (request, reply) => {
+			const participants =
+				await getParticipantsForMatch(fastify, request.params.matchId)
+			return participants
 		}
 	)
 	// END -- GET
