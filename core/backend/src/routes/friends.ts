@@ -70,7 +70,7 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 	fastify.post<{
 		Params: { id: number }
 		Body: { username: string }
-		Reply: { requestId: number } | { error: string }
+		Reply: { requestId: number } | { error: string } | { message: string}
 	}>(
 		'/api/users/:id/requests',
 		{
@@ -89,33 +89,40 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 		async (req, reply) => {
 			try {
 				const fr = await sendFriendRequest(fastify, req.params.id, req.body.username)
-				// [START] SEND A FRIEND NOTIFICATION VIA WS INSTANTLY
-				if (fr) {
-					const sender = await fastify.db.get<{ username: string }>(
-						'SELECT username FROM users WHERE id = ?', req.params.id);
-
-					const recipient = await fastify.db.get<{ id: number }>(
-						'SELECT id FROM users WHERE username = ?', req.body.username);
-
-					if (recipient && sender) {
-						fastify.websocketServer.clients.forEach((client: any) => {
-							if (client.userId === recipient.id && client.wsPath === '/friends') {
-								client.send(JSON.stringify({
-									type: 'new_friend_request',
-									requestId: fr.id,
-									from: sender.username
-								}));
-							}
-						});
-					}
+				if (fr.type === 'accepted') {
+					reply.code(200).send({ message: 'Friend request automatically accepted' });
 				}
-				// [END] SEND A FRIEND NOTIFICATION VIA WS INSTANTLY
-				return reply.code(201).send({ requestId: fr.id })
+				else if (fr.type === 'pending') {
+					// [START] SEND A FRIEND NOTIFICATION VIA WS INSTANTLY
+					if (fr) {
+						const sender = await fastify.db.get<{ username: string }>(
+							'SELECT username FROM users WHERE id = ?', req.params.id);
+
+						const recipient = await fastify.db.get<{ id: number }>(
+							'SELECT id FROM users WHERE username = ?', req.body.username);
+
+						if (recipient && sender) {
+							fastify.websocketServer.clients.forEach((client: any) => {
+								if (client.userId === recipient.id && client.wsPath === '/friends') {
+									client.send(JSON.stringify({
+										type: 'new_friend_request',
+										// requestId: fr.id,
+										requestId: fr.request.id,
+										from: sender.username
+									}));
+								}
+							});
+						}
+					}
+					// [END] SEND A FRIEND NOTIFICATION VIA WS INSTANTLY
+					return reply.code(201).send({ requestId: fr.request.id });
+				}
 			} catch (err: any) {
 				if (err.message === 'RecipientNotFound') return reply.code(404).send({ error: 'User not found' })
 				if (err.message === 'CannotRequestYourself') return reply.code(400).send({ error: "Can't friend yourself" })
 				if (err.message === 'RequestAlreadyPending') return reply.code(400).send({ error: "Request already sent" })
 				if (err.message === 'AlreadyFriends') return reply.code(400).send({ error: "AlreadyFriends" })
+				if (err.message === 'RecipientAlreadySentFR') return reply.code(400).send({ error: "RecipientAlreadySentFR" })
 				if (err.message.includes('UNIQUE')) return reply.code(409).send({ error: 'Request already sent' })
 				return reply.code(500).send({ error: 'Could not send request: ' + err.message })
 			}
@@ -233,31 +240,6 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 			}
 		}
 	)
-
-	// fastify.delete<{
-	// 	Params: { requestId: number }
-	// 	Reply: { message: string } | { error: string }
-	// }>(
-	// 	'/api/requests/:requestId/withdraw',
-	// 	{
-	// 		schema: {
-	// 			tags: ['friends'],
-	// 			params: { type: 'object', required: ['requestId'], properties: { requestId: { type: 'integer' } } },
-	// 			response: {
-	// 				200: { type: 'object', properties: { message: { type: 'string' } } },
-	// 				404: { type: 'object', properties: { error: { type: 'string' } } }
-	// 			}
-	// 		}
-	// 	},
-	// 	async (req, reply) => {
-	// 		try {
-	// 			await rejectFriendRequest(fastify, req.params.requestId) // Since reject is simly deleting the db entry in friend_requests table, we can use this function
-	// 			return { message: 'Friend request withdrawed' }
-	// 		} catch (err: any) {
-	// 			return reply.code(404).send({ error: err.message })
-	// 		}
-	// 	}
-	// )
 
 	fastify.delete<{
 		Params: { id: number; requestId: number }
