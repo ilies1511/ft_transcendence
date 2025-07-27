@@ -1,6 +1,14 @@
 import type { FastifyInstance } from 'fastify'
 import type { FriendRequestRow } from '../types/userTypes.ts'
 
+export enum FriendRequestMsg {
+	RecipientNotFound		= 'RecipientNotFound',
+	CannotRequestYourself	= 'CannotRequestYourself',
+	RecipientAlreadySentFR	= 'RecipientAlreadySentFR',
+	RequestAlreadyPending	= 'RequestAlreadyPending',
+	AlreadyFriends			= 'AlreadyFriends',
+}
+
 export async function sendFriendRequest(
 	fastify: FastifyInstance,
 	requesterId: number,
@@ -17,9 +25,24 @@ export async function sendFriendRequest(
 	if (rec.id === requesterId) {
 		throw new Error('CannotRequestYourself')
 	}
+	const recipientId = rec.id;
+	//TODO: Check whether entry already exists in friend_requests table
+	const rev_pending = await fastify.db.get<{ id: number }>(
+		`SELECT id FROM friend_requests WHERE requester_id = ?
+		AND recipient_id = ?`,
+		recipientId,
+		requesterId
+	)
+	if (rev_pending) {
+		acceptFriendRequest(fastify, rev_pending.id);
+		// await fastify.db.run('DELETE FROM friend_requests WHERE id = ?', rev_pending.id);
+		// // return { message: 'Friend request accepted' };
+		// // return 'Friend request accepted';
+		throw new Error('RecipientAlreadySentFR')
+	}
 
 	// // TODO: Check within friend_requests whether requester_id already send to recipient_id
-	const recipientId = rec.id;
+	// const recipientId = rec.id;
 	const pending = await fastify.db.get<{ id: number }>(
 		`SELECT id FROM friend_requests WHERE requester_id = ?
 		AND recipient_id = ?`,
