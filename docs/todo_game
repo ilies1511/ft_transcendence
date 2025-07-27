@@ -39,9 +39,6 @@ websocket endpoints:
 [x]: backend: engine migration
 [x]: frontend: adjust websocket communication
 
-[ ]: frontend: cleanup
-[ ]: backend: cleanup
-
 [ ]: backend: handle clients that leave the game(during game dosnt matter, but pre game start)
 [ ]: backend: in the lobby pre game not connected clients need to be timed out so others can join
 
@@ -60,7 +57,7 @@ websocket endpoints:
 [x]: game server: handle clinet bases
 
 [x] - shared serilized classes refactor: split into classes Shared|Server|Client
-	- [ ] utilize these split classes more
+	- [x] utilize these split classes more
 
 
 
@@ -88,7 +85,7 @@ misc:
 	- [x] backend: figure out proper way to handle js packages and ts compilation
 
 game options:
-	- [ ] client: on confirmation enter matchmaking
+	- [x] client: on confirmation enter matchmaking
 	- [x] json map format: create a json map format to define maps
 
 matchmaking:
@@ -130,7 +127,7 @@ game:
 	- [x] server: send binary messages for frame updates
 	- [x] client: parse binary msg fn
 	- [x] implement basic pong using babylon-js
-	- [ ] make it possible for each client to be 1 or 2 players
+	- [x] make it possible for each client to be 1 or 2 players
 	- [x] client: implement a recconect fn that can be called from the main menu
 	- [ ] client: implement ESC to leave the game (to be used to go back to main menu)
 
