@@ -131,8 +131,11 @@ export type ServerToClientError = {
 	msg: ServerError,
 };
 
+//todo: include display_names
 export type GameToClientFinish = {
 	type: 'finish',
+	duration: number, //unused atm
+	mode: number, // unused atm
 	placements: {
 		id: number,
 		final_placement: number,

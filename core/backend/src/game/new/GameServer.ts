@@ -7,6 +7,8 @@ import { GameLobby } from './lobby/GameLobby.ts';
 import { Tournament } from './Tournament.ts';
 import { WebsocketConnection } from './WebsocketConnection.ts';
 
+import { createMatchMeta, completeMatch, } from '../../functions/match.ts';
+import type { NewMatch } from '../../functions/match.ts';
 
 import type {
 	GameOptions,
@@ -26,6 +28,7 @@ import type {
 	ServerError,
 	ClientToMatch,
 	LobbyDisplaynameResp,
+	GameToClientFinish,
 } from '../game_shared/message_types.ts';
 
 import { is_ServerError } from '../game_shared/message_types.ts';
@@ -364,23 +367,52 @@ export class GameServer {
 		console.log("game: got tournament msg: ", message);
 	}
 
-	private _remove_lobby(game_id: number): undefined {
-		console.log("removing lobby ", game_id, ": ");
-		this._lobbies.delete(game_id);
-		console.log("lobbies now", this._lobbies);
+	private _remove_lobby(id: number, end_data?: GameToClientFinish): undefined {
+		if (end_data) {
+			const match_data: NewMatch = {
+				duration: end_data.duration,
+				mode: end_data.mode,
+				participants: [],
+			};
+			let i = 0;
+			let win_result: 'win' | 'draw' = 'win';
+			let winners: number = 0;
+			for (const placement of end_data.placements) {
+				if (placement.final_placement == 1) {
+					winners++;
+				}
+			}
+			if (winners > 1) {
+				win_result = 'draw';
+			}
+			while (i , end_data.placements.length) {
+				let result: 'win' | 'loss' | 'draw' = 'loss';
+				if (end_data.placements[i].final_placement == 1) {
+					result = win_result;
+				}
+				//don't push local player results to db
+				if (end_data.placements[i].id > 0) {
+					match_data.participants.push({user_id: end_data.placements[i].id,
+						score: end_data.placements[i].final_placement, result: result});
+				}
+				i++;
+			}
+			completeMatch(this._fastify, id, match_data);
+		}
+		console.log("removing lobby ", id, ": ");
+		this._lobbies.delete(id);
 	}
 
 	//returns the lobby id or and error string
-	private _next_lobby_id: number = 0; //placeholder
 	private async _create_lobby(
 		map_name: string,
 		ai_count: number,
 		password?: string
 	): Promise<number>
 	{
-		const lobby_id: number = this._next_lobby_id++;
-		//todo: actually create lobby in db and use real id
-		//const lobby_id: number = await create looby in db();
+		//todo: mode
+		const dummy_mode: number = 42;
+		const lobby_id: number = await createMatchMeta(this._fastify, dummy_mode);
 		const lobby: GameLobby = new GameLobby(this._remove_lobby, lobby_id, map_name, ai_count, password);
 		this._lobbies.set(lobby_id, lobby);
 		return (lobby_id);

@@ -14,6 +14,7 @@ import type {
 	ClientToGame,
 	ClientToGameInput,
 	LobbyDisplaynameResp,
+	GameToClientFinish,
 } from '../../game_shared/message_types.ts';
 
 import { is_ServerError } from '../../game_shared/message_types.ts';
@@ -47,7 +48,7 @@ export class GameLobby {
 
 	private _last_broadcast: LobbyToClient;
 
-	private _completion_callback: (id: number) => undefined;
+	private _completion_callback: (id: number, end_data?: GameToClientFinish) => undefined;
 
 	constructor(
 		completion_callback: (id: number) => undefined,

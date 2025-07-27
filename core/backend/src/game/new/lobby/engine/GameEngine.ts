@@ -16,6 +16,7 @@ import type {
 	ClientToGameInput,
 } from './../../../game_shared/message_types.ts';
 
+
 import { MapFile } from './../maps/Map.ts';
 
 //import type { GameOptions, GameStartInfo, ServerToClientJson, ServerToClientMessage } from '../../game_shared/message_types';
@@ -46,7 +47,7 @@ export class GameEngine {
 	public balls: ServerBall[] = [];
 	public walls: ServerWall[] = [];
 	private _alive_player_count: number;
-	private _finish_callback: () => undefined;
+	private _finish_callback: (end_data?: GameToClientFinish) => undefined;
 
 	constructor(map_name: string, finish_callback: () => undefined) {
 		this.update = this.update.bind(this);
@@ -112,11 +113,16 @@ export class GameEngine {
 		this.stop_loop();
 		const msg: GameToClientFinish = {
 			type: 'finish',
+			duration: 42,
+			mode: 69,
 			placements: [],
-		}
+		};
 		for (const client of this.clients) {
 			if (client.global_id == 0) {
 				continue ;
+			}
+			if (client.final_placement == -1) {
+				client.final_placement = 1;
 			}
 			msg.placements.push({
 				id: client.global_id,
@@ -138,7 +144,7 @@ export class GameEngine {
 				client.socket = undefined;
 			}
 		}
-		this._finish_callback();
+		this._finish_callback(msg);
 	}
 
 	private update_balls(delta_time: number) {
@@ -207,7 +213,7 @@ export class GameEngine {
 						goaled_client.final_placement = this._alive_player_count;
 						this._alive_player_count--;
 						//todo: later chage this to 1 so the game is over when 1 player is alive
-						if (this._alive_player_count == 0) {
+						if (this._alive_player_count == 1) {
 							this._finish_game();
 						}
 					}
