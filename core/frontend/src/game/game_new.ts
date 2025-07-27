@@ -5,6 +5,8 @@ import { get_password_from_user } from './placeholder_globals.ts';
 
 import { GameApi } from './GameApi.ts';
 
+import { LocalPlayer } from './LocalPlayer.ts';
+
 //import * as BABYLON from 'babylonjs';
 import type {
 	ServerToClientMessage,
@@ -22,6 +24,7 @@ import type {
 	EnterMatchmakingResp,
 	LobbyInvite,
 	LobbyDisplaynameResp,
+	ReconnectResp,
 } from './game_shared/message_types.ts';
 
 
@@ -73,7 +76,7 @@ export class Game {
 	private _last_server_msg: LobbyToClient | null = null;
 
 	private _socket?: WebSocket = undefined;
-	private _id: number;
+	public client_id: number;
 
 	public game_id: number;
 	public password: string = '';
@@ -84,6 +87,8 @@ export class Game {
 	private _password_attempts: number = 3;
 
 	private _key_hooks: KeyHook[] = [];
+
+	private _local_player?: LocalPlayer = undefined;
 
 
 	constructor(
@@ -110,7 +115,7 @@ export class Game {
 
 
 		console.log("GAME: game constructor");
-		this._id = id;
+		this.client_id = id;
 
 		this._canvas = this._createCanvas();
 		container.appendChild(this._canvas);
@@ -150,7 +155,7 @@ export class Game {
 		}
 		if (this._socket && this._socket.readyState == WebSocket.OPEN) {
 			const msg: ClientToMatchLeave = {
-				client_id: this._id,
+				client_id: this.client_id,
 				type: 'leave',
 				password: this.password,
 			};
@@ -158,10 +163,17 @@ export class Game {
 				this._socket.send(JSON.stringify(msg));
 			} catch {}
 		}
+
+		if (this._local_player) {
+			this._local_player.leave();
+		}
 		this._cleanup();
 	}
 
 	public disconnect() {
+		if (this._local_player) {
+			this._local_player.disconnect();
+		}
 		this._cleanup();
 	}
 
@@ -202,7 +214,7 @@ export class Game {
 			this._socket.addEventListener("open", (event) => {
 				console.log("GAME: Connected to server");
 				const msg: ClientToMatchConnect = {
-					client_id: this._id,
+					client_id: this.client_id,
 					type: 'connect',
 					password: this.password,
 				};
@@ -249,7 +261,7 @@ export class Game {
 					}
 
 					const msg: ClientToGame = {
-						client_id: this._id,
+						client_id: this.client_id,
 						type: "send_input",
 						payload: {
 							key: match.key,
@@ -295,33 +307,6 @@ export class Game {
 		this._generate_key_handler(key_hook_generator_args);
 	}
 
-	private _add_second_player_keys() {
-		const movement_key_sets: KeySet[] = [];
-		movement_key_sets.push(
-			[
-				{ case: 'ArrowUp', key: 'ArrowUp' },
-				{ case: 'ArrowDown', key: 'ArrowDown' },
-				{ case: 'ArrowLeft', key: 'ArrowLeft' },
-				{ case: 'ArrowRight', key: 'ArrowRight' },
-			]
-		);
-		const types: KeyType [] = [ 'up', 'down'];
-		for (const type of types) {
-			for (const movement_key_set of movement_key_sets) {
-				const key_hook_generator_args: KeyHookGeneratorArgs = {
-					server_type: type,
-					press_type: 'keydown',
-					key_set: movement_key_set,
-				};
-				if (type == 'up') {
-					key_hook_generator_args.press_type = 'keyup';
-				}
-				this._generate_key_handler(key_hook_generator_args);
-			}
-		}
-	}
-
-
 	private  _start_game() {
 		const display_names_promise: Promise<LobbyDisplaynameResp> =
 			GameApi.get_display_names(this.game_id);
@@ -335,6 +320,9 @@ export class Game {
 			}
 		});
 		this._setup_key_hooks();
+		if (this._local_player) {
+			this._local_player.start_game();
+		}
 		this._active_scene = this._game_scene;
 	}
 
@@ -440,7 +428,43 @@ export class Game {
 		return (this._canvas);
 	}
 
-	public add_local_player(display_name: string) {
-		this._add_second_player_keys();
+	public async add_local_player(display_name: string): Promise<void> {
+		console.log("Game: add_local_player()");
+		if (this._local_player) {
+			console.log("Error: Game allready has local player!");
+			return ;
+		}
+		const error: ServerError = await GameApi.join_lobby(this.client_id * -1,
+			this.game_id, this.map_name, this.password, display_name);
+		if (error != '') {
+			console.log("Error: Game: Could not join a local player into lobby: ",
+				error, '!');
+			return ;
+		}
+		this._local_player = new LocalPlayer(this, display_name);
+	}
+
+	public async reconnect_local_player() {
+		if (this._local_player) {
+			console.log("Warning: tried to reconnect local player when there was allready one set!");
+			console.log("Skipping reconnect for local player..");
+			return ;
+		}
+		const reconnect: ReconnectResp = await GameApi.reconnect(this.client_id* - 1);
+		let match_id: number = -1;
+		if (reconnect.tournament_id >= 0) {
+			console.log("Game Error: foud local player in tournament when reconnecting!");
+			return ;
+		} else if (reconnect.match_id >= 0) {
+			match_id = reconnect.match_id;
+			if (reconnect.match_has_password) {
+			}
+		}
+		if (match_id != -1) {
+			console.log("Game: Reconnecting local player to match with password:" , this.password);
+			//todo: solution to recover local player name
+			this._local_player = new LocalPlayer(this, "Local player name lost");
+			return ;
+		}
 	}
 };

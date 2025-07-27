@@ -102,6 +102,7 @@ export class GameScene extends BaseScene {
 		);
 
 		this._camera.attachControl(this._canvas, true);
+		this._camera.inputs.removeByType("ArcRotateCameraKeyboardMoveInput")
 
 		this._light = new BABYLON.PointLight(
 				"pointLight", new BABYLON.Vector3(10, 10, -5), this);

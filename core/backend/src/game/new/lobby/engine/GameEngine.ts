@@ -97,7 +97,8 @@ export class GameEngine {
 	private broadcast_game_state() {
 		const buffer = this.serialize_game_state();
 		for (const client of this.clients) {
-			if (client.global_id == 0) {
+			// invalid or local client
+			if (client.global_id <= 0) {
 				continue ;
 			}
 			if (client.socket && client.socket.readyState === client.socket.OPEN) {
@@ -128,7 +129,9 @@ export class GameEngine {
 			}
 			if (client.socket && client.socket.readyState === client.socket.OPEN) {
 				console.log("sending: ", msg);
-				client.socket.send(JSON.stringify(msg));
+				if (client.global_id > 0) {
+					client.socket.send(JSON.stringify(msg));
+				}
 			}
 			if (client.socket) {
 				client.socket.close();

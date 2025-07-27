@@ -103,6 +103,23 @@ async function test_lobby(user_id: number, container: HTMLElement)
 	}
 }
 
+async function test_local_player(user_id: number, container: HTMLElement)
+	: Promise<void>
+{
+	lobby_password = await get_password_from_user("Game");
+	const options: CustomLobbyOptions = {
+		map_name: "default",
+		lobby_password: await get_password_from_user("Game"),
+		ai_count: 0,
+	};
+	const game: Game | ServerError = await create_join_lobby(user_id, container, options);
+	if (!(game instanceof Game)) {
+		return ;
+	}
+	//
+	game.add_local_player('local_player_name');
+}
+
 if (btn && input) {
 	btn.addEventListener('click', async () => {
 		const val = input.value.trim();
@@ -115,7 +132,8 @@ if (btn && input) {
 		await attempt_reconnect(container, user_id);
 		if (globalThis.game == undefined) {
 			//test_enter_matchmaking(container, user_id);
-			test_lobby(user_id, container);
+			//test_lobby(user_id, container);
+			test_local_player(user_id, container);
 		}
 		console.log("GAME OBJECT: ", globalThis.game);
 	});

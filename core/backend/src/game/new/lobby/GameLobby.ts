@@ -153,7 +153,7 @@ export class GameLobby {
 		};
 		this._last_broadcast = update_msg;
 		for (const connection of this._connections) {
-			if (connection.sock) {
+			if (connection.sock && connection.id > 0) {
 				connection.sock.send(this._last_broadcast);
 			}
 		}
@@ -169,14 +169,16 @@ export class GameLobby {
 			connection.sock = new WebsocketConnection(ws);
 			if (this.engine) {
 				for (const client of this.engine.clients) {
-					if (client.global_id = connection.id) {
+					if (client.global_id == connection.id) {
 						client.socket = connection.sock.ws;
 						break ;
 					}
 				}
 			}
 		}
-		connection.sock.send(this._last_broadcast);
+		if (connection.id > 0) {
+			connection.sock.send(this._last_broadcast);
+		}
 		console.log("Game: client ", connection.id, " reconnected to lobby, ", this.id);
 	}
 
@@ -193,7 +195,9 @@ export class GameLobby {
 				return ;
 			} else if (client_id == connection.id) {
 				connection.sock = new WebsocketConnection(ws);
-				connection.sock.send(this._last_broadcast);
+				if (client_id > 0) {
+					connection.sock.send(this._last_broadcast);
+				}
 				console.log("Game: client ", client_id, " connected to lobby ", this.id);
 				this.loaded_player_count++;
 				this._update_lobby();
