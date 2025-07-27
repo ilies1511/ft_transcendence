@@ -38,15 +38,10 @@ export async function sendFriendRequest(
 	)
 	if (rev_pending) {
 		acceptFriendRequest(fastify, rev_pending.id);
-		// await fastify.db.run('DELETE FROM friend_requests WHERE id = ?', rev_pending.id);
-		// // return { message: 'Friend request accepted' };
-		// // return 'Friend request accepted';
-		// throw new Error('RecipientAlreadySentFR');
 		return { type: 'accepted' };
 	}
 
 	// // TODO: Check within friend_requests whether requester_id already send to recipient_id
-	// const recipientId = rec.id;
 	const pending = await fastify.db.get<{ id: number }>(
 		`SELECT id FROM friend_requests WHERE requester_id = ?
 		AND recipient_id = ?`,
@@ -108,38 +103,6 @@ export async function listOutgoingRequests(
 	return rows
 }
 
-// // Old behavior
-// export async function acceptFriendRequest(
-// 	fastify: FastifyInstance,
-// 	requestId: number
-// ): Promise<void> {
-// 	const req = await fastify.db.get<FriendRequestRow>(
-// 		'SELECT * FROM friend_requests WHERE id = ?',
-// 		requestId
-// 	)
-// 	if (!req) throw new Error('RequestNotFound')
-// 	if (req.status !== 'pending') throw new Error('AlreadyHandled')
-
-// 	const now = Date.now()
-// 	await fastify.db.run(
-// 		`UPDATE friend_requests
-// 		SET status = 'accepted', responded_at = ?
-// 		WHERE id = ?`,
-// 		now,
-// 		requestId
-// 	)
-// 	await fastify.db.run(
-// 		`INSERT INTO friendships (user_id, friend_id) VALUES (?, ?)`,
-// 		req.requester_id,
-// 		req.recipient_id
-// 	)
-// 	await fastify.db.run(
-// 		`INSERT INTO friendships (user_id, friend_id) VALUES (?, ?)`,
-// 		req.recipient_id,
-// 		req.requester_id
-// 	)
-// }
-
 export async function acceptFriendRequest(
 	fastify: FastifyInstance,
 	requestId: number
@@ -149,16 +112,7 @@ export async function acceptFriendRequest(
 		requestId
 	)
 	if (!req) throw new Error('RequestNotFound')
-	// if (req.status !== 'pending') throw new Error('AlreadyHandled')
 
-	// const now = Date.now()
-	// await fastify.db.run(
-	// 	`UPDATE friend_requests
-	// 	SET status = 'accepted', responded_at = ?
-	// 	WHERE id = ?`,
-	// 	now,
-	// 	requestId
-	// )
 	await fastify.db.run(
 		`INSERT INTO friendships (user_id, friend_id) VALUES (?, ?)`,
 		req.requester_id,
@@ -174,21 +128,6 @@ export async function acceptFriendRequest(
 	await fastify.db.run('DELETE FROM friend_requests WHERE id = ?', requestId);
 }
 
-// // Old behavior
-// export async function rejectFriendRequest(
-// 	fastify: FastifyInstance,
-// 	requestId: number
-// ): Promise<void> {
-// 	const now = Date.now()
-// 	const info = await fastify.db.run(
-// 		`UPDATE friend_requests
-// 		SET status = 'rejected', responded_at = ?
-// 		WHERE id = ? AND status = 'pending'`,
-// 		now,
-// 		requestId
-// 	)
-// 	if (info.changes === 0) throw new Error('RequestNotFoundOrHandled')
-// }
 export async function rejectFriendRequest(
 	fastify: FastifyInstance,
 	requestId: number
