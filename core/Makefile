@@ -43,3 +43,13 @@ backend/package-lock.json:
 modules: node_modules package-lock.json frontend/node_modules frontend/package-lock.json backend/node_modules backend/package-lock.json
 
 remodules: clean_modules modules
+
+game_test_env: frontend/index.html frontend/game_test_index.html
+	mv frontend/index.html frontend/main_index.html
+	mv frontend/game_test_index.html frontend/index.html
+
+
+undo_game_test_env: frontend/index.html frontend/main_index.html
+	mv frontend/index.html frontend/game_test_index.html
+	mv frontend/main_index.html frontend/index.html
+
