@@ -1,3 +1,4 @@
+// /frontend/src/main_game.ts
 import { Game } from './game/game_new.ts';
 import { GameApi } from './game/GameApi.ts';
 
@@ -41,7 +42,10 @@ globalThis.game = undefined;
 
 const container: HTMLElement = document.getElementById('game-container');
 const input = document.getElementById('user-id-input') as HTMLInputElement | null;
-const btn = document.getElementById('start-game-btn');
+// const btn = document.getElementById('start-game-btn');
+const btnMatch = document.getElementById('btn-matchmaking');
+const btnLobby = document.getElementById('btn-lobby');
+const btnLocal = document.getElementById('btn-local');
 /*
  * The lobby password is an empty string by default.
  * If the lobby is created manually the password is not empty
@@ -120,24 +124,56 @@ async function test_local_player(user_id: number, container: HTMLElement)
 	game.add_local_player('local_player_name');
 }
 
-if (btn && input) {
-	btn.addEventListener('click', async () => {
-		const val = input.value.trim();
-		const user_id = Number(val);
-		if (isNaN(user_id)) {
-			alert("invalid id");
-			return ;
-		}
-		console.log("got user_id: ", user_id);
-		await attempt_reconnect(container, user_id);
-		if (globalThis.game == undefined) {
-			//test_enter_matchmaking(container, user_id);
-			//test_lobby(user_id, container);
-			test_local_player(user_id, container);
-		}
-		console.log("GAME OBJECT: ", globalThis.game);
-	});
-} else {
-	console.error("Input or button not found in HTML.");
+// if (btn && input) {
+// 	btn.addEventListener('click', async () => {
+// 		const val = input.value.trim();
+// 		const user_id = Number(val);
+// 		if (isNaN(user_id)) {
+// 			alert("invalid id");
+// 			return ;
+// 		}
+// 		console.log("got user_id: ", user_id);
+// 		await attempt_reconnect(container, user_id);
+// 		if (globalThis.game == undefined) {
+// 			// test_enter_matchmaking(container, user_id);
+// 			test_lobby(user_id, container);
+// 			// test_local_player(user_id, container);
+// 		}
+// 		console.log("GAME OBJECT: ", globalThis.game);
+// 	});
+// } else {
+// 	console.error("Input or button not found in HTML.");
+// }
+
+function getUserId(): number | null {
+  const val = input?.value.trim() ?? '';
+  const user_id = Number(val);
+  return isNaN(user_id) ? null : user_id;
 }
 
+async function run(mode: 'match' | 'lobby' | 'local'): Promise<void> {
+	const user_id = getUserId();
+	if (user_id === null) {
+		alert('invalid id');
+		return;
+	}
+	await attempt_reconnect(container, user_id);
+	if (globalThis.game !== undefined) return;
+
+	switch (mode) {
+		case 'match':
+			await test_enter_matchmaking(container, user_id);
+			break;
+		case 'lobby':
+			await test_lobby(user_id, container);
+			break;
+		case 'local':
+			await test_local_player(user_id, container);
+			break;
+	}
+}
+
+
+btnMatch?.addEventListener('click', () => run('match'));
+btnLobby?.addEventListener('click', () => run('lobby'));
+btnLocal?.addEventListener('click', () => run('local'));

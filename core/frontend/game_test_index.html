@@ -1,26 +1,26 @@
+<!-- index.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>BabylonJS Game</title>
+  <meta charset="UTF-8" />
+  <title>BabylonJS Game Modes</title>
   <style>
-    html, body, #game-container {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      overflow: hidden;
-      background: #111;
-    }
-    #game-container { position: relative; }
+    html, body, #game-container { width:100%; height:100%; margin:0; overflow:hidden; background:#111; }
+    #ui-panel { position:absolute; z-index:10; left:20px; top:20px; display:flex; flex-direction:column; gap:6px; }
+    #ui-panel input { width:140px; }
+    #ui-panel button { padding:4px 8px; cursor:pointer; }
   </style>
 </head>
 <body>
-  <div style="position: absolute; z-index: 10; left: 20px; top: 20px;">
+  <div id="ui-panel">
     <input id="user-id-input" type="number" placeholder="Enter User ID" />
-    <button id="start-game-btn">Start Game</button>
+    <button id="btn-matchmaking">Match-making</button>
+    <button id="btn-lobby">Custom Lobby</button>
+    <button id="btn-local">Local Player</button>
   </div>
+
   <div id="game-container"></div>
+
   <script type="module" src="/src/main_game.ts"></script>
 </body>
-</html>
-
+</html> -->

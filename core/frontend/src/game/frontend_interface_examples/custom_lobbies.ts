@@ -27,7 +27,7 @@ export async function accept_lobby_invite(
 		invite.lobby_id,
 		invite.map_name,
 		invite.lobby_password,
-		`placeholder_diplay_name_of_client_${user_id}`,
+		`placeholder_diplay_name_of_client1_${user_id}`,
 	);
 	if (join_error != '') {
 		return (join_error);
@@ -66,7 +66,7 @@ export async function create_join_lobby(
 	//  the invite does not need to go through the server when joining your
 	//  own lobby.
 	let game: Game | ServerError = await accept_lobby_invite(user_id, container,
-		lobby_invite, `placeholder_diplay_name_of_client_${user_id}`);
+		lobby_invite, `placeholder_diplay_name_of_client2_${user_id}`);
 	if (!(game instanceof Game)) {
 		console.log("Game: got ServerError '", game, "'");
 		return (game as ServerError);
