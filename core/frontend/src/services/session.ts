@@ -10,6 +10,7 @@ export async function getSession() {
   } catch {
     cache = null;                          // treat network/401 as “guest”
   }
+  console.log(cache);
   return cache;
 }
 
