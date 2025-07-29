@@ -15,6 +15,7 @@ import type {
 	ClientToGameInput,
 	LobbyDisplaynameResp,
 	GameToClientFinish,
+	ClientToMatchLeave,
 } from '../../game_shared/message_types.ts';
 
 import { is_ServerError } from '../../game_shared/message_types.ts';
@@ -213,7 +214,38 @@ export class GameLobby {
 		WebsocketConnection.static_send(ws, error);
 	}
 
-	//todo:
+	// removes player from lobby
+	// also givs the game engine the option to take actions if needed
+	private _leave_game(ws: WebSocket, msg: ClientToMatchLeave) {
+		ws.close();
+		if (msg.password != this.password) {
+			console.log("Game: Invalid password for leave() request, ignoring it..");
+			return ;
+		}
+		// remove local player websocket and player from game
+		for (const connection of this._connections) {
+			if (connection.id == msg.client_id * -1) {
+				if (connection.sock) {
+					connection.sock.ws.close();
+					if (this.engine) {
+						this.engine.leave(msg.client_id * -1);
+					}
+					break ;
+				}
+			}
+			if (connection.id == msg.client_id) {
+				if (connection.sock && connection.sock.ws !== ws) {
+					connection.sock.ws.close();
+					if (this.engine) {
+						this.engine.leave(msg.client_id);
+					}
+					break ;
+				}
+			}
+		}
+		this._connections = this._connections.filter(c => c.id != msg.client_id && c.id != msg.client_id * -1);
+	}
+
 	public recv(ws: WebSocket, msg: ClientToMatch): boolean {
 		switch (msg.type) {
 			case ('send_input'):
@@ -223,6 +255,9 @@ export class GameLobby {
 				break ;
 			case ('connect'):
 				this._connect(msg.client_id, ws, msg.password);
+				break ;
+			case ('leave'):
+				this._leave_game(msg);
 				break ;
 		}
 		return (false);

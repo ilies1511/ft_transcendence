@@ -162,7 +162,16 @@ export type ClientToGameInput = {
 	}
 };
 
-export type ClientToGame = ClientToGameInput;
+export type ClientToMatchLeave = {
+	client_id: number,
+	type: 'leave';
+	password: string;
+};
+
+export type ClientToGame =
+	ClientToMatchLeave
+	| ClientToGameInput
+;
 
 export type ClientToMatchConnect = {
 	client_id: number,
@@ -170,15 +179,10 @@ export type ClientToMatchConnect = {
 	password: string;
 };
 
-export type ClientToMatchLeave = {
-	client_id: number,
-	type: 'leave';
-	password: string;
-};
-
 export type ClientToMatch =
 	ClientToGame
 	| ClientToMatchConnect
+	| ClientToMatchLeave
 ;
 
 export type ClientToTournament = {

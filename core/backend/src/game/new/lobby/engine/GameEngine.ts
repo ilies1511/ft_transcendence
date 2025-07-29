@@ -322,6 +322,10 @@ export class GameEngine {
 		}
 	}
 
+	// does nothing, the player simply dosn't give any inputs anymore
+	public leave(client_id: number) {
+	}
+
 	public process_input(input: ClientToGameInput) {
 		const client: ServerClient | undefined = this.clients.find(c => c.global_id == input.client_id);
 		if (client == undefined) {
