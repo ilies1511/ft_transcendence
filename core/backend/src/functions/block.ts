@@ -6,11 +6,21 @@ export async function blockUser(
 	fastify: FastifyInstance,
 	blockerId: number,
 	blockedId: number
-): Promise<void> {
+): Promise<boolean> {
+	//TODO: Add check if, blockedID exists in 'user_blocks' table
+	//TODO: If blockedId friend, rm from friend List
+	const row = await fastify.db.get<{ id: number }>(
+		'SELECT id FROM users WHERE id = ?',
+		blockedId
+	);
+	if (!row) {
+		return false;
+	}
 	await fastify.db.run(
 		`INSERT OR IGNORE INTO user_blocks (blocker_id, blocked_id) VALUES (?, ?)`,
 		blockerId, blockedId
 	)
+	return true;
 }
 
 export async function unblockUser(
@@ -48,14 +58,13 @@ export type BlockedUser = {
 }
 
 export async function getBlockedUsersList(
-	fastify:FastifyInstance,
+	fastify: FastifyInstance,
 	id: number
-// ): Promise<BlockedUser[]>
-): Promise<number[]>
-{
+	// ): Promise<BlockedUser[]>
+): Promise<number[]> {
 	// const blockedUsers = fastify.db.all<BlockedUser[]>(
 	// 	'SELECT * from user_blocks WHERE blocker_id = ?', id);
-	const blockedUsers = await fastify.db.all<{blocked_id : number}[]>(
+	const blockedUsers = await fastify.db.all<{ blocked_id: number }[]>(
 		'SELECT * from user_blocks WHERE blocker_id = ?', id);
 	// return blockedUsers;
 	return blockedUsers.map(r => r.blocked_id);

@@ -17,7 +17,10 @@ export const blockRoutes: FastifyPluginAsync = async (fastify) => {
 			if (id === targetId) {
 				return reply.code(400).send({ error: "Can't block yourself" })
 			}
-			await blockUser(fastify, id, targetId)
+			const ok = await blockUser(fastify, id, targetId);
+			if (!ok) {
+				return reply.send({ message: 'User to block not found' })
+			}
 			return reply.send({ message: 'User blocked' })
 		}
 	)
