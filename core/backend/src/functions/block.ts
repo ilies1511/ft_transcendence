@@ -1,4 +1,5 @@
 import { type FastifyInstance } from "fastify"
+import type { FriendRequestRow } from "../types/userTypes.ts"
 
 // BEGIN -- (Un)Block USer
 export async function blockUser(
@@ -38,3 +39,24 @@ export async function isBlocked(
 	return row?.count! > 0
 }
 // END -- (Un)Block USer
+
+export type BlockedUser = {
+	id: number,
+	username: string,
+	avatar: string,
+	email: string
+}
+
+export async function getBlockedUsersList(
+	fastify:FastifyInstance,
+	id: number
+// ): Promise<BlockedUser[]>
+): Promise<number[]>
+{
+	// const blockedUsers = fastify.db.all<BlockedUser[]>(
+	// 	'SELECT * from user_blocks WHERE blocker_id = ?', id);
+	const blockedUsers = await fastify.db.all<{blocked_id : number}[]>(
+		'SELECT * from user_blocks WHERE blocker_id = ?', id);
+	// return blockedUsers;
+	return blockedUsers.map(r => r.blocked_id);
+}
