@@ -52,50 +52,50 @@ export async function handleWsMessage(
 		// 	return extSocket.send(JSON.stringify({ type: 'pong' }))
 		// }
 
-		// /*
-			// TODO: Add case 'LobbyInvite'
-		//  */
-		case 'LobbyInvite' : {
-			const toId = msg.to as number;
-			if (await isBlocked(fastify, toId, extSocket.userId!)) {
-				return extSocket.send(JSON.stringify({
-					type: 'error',
-					error: 'Your messages are blocked by this user'
-				}))
-			}
-			if (await isBlocked(fastify, extSocket.userId!, toId)) {
-				return extSocket.send(JSON.stringify({
-					type: 'error',
-					error: 'You have blocked this user'
-				}))
-			}
-			/*
-			 * I don't know how the live chat works, so pseudo example code here:
-			 * const msg: LiveChatMsg = {
-			 *	type: 'LobbyInvite',
-			 *	target_user: target_user_id,
-			 *	data: invite,
-			 * };
-			 * livechat_ws.send(msg);
-			*/
-			const targets = userSockets.get(msg.to)
-			if (!targets?.size) {
-				return extSocket.send(JSON.stringify({
-					type: 'error',
-					error: 'User not connected'
-				}))
-			}
-			for (const tsock of targets) {
-				tsock.send(JSON.stringify({
-					type: 'LobbyInvite',
-					from: extSocket.userId,
-					content: msg.content,
-					ts: Date.now()
-				}))
-			}
-			return
+		// // /*
+		// 	// TODO: Add case 'LobbyInvite'
+		// //  */
+		// case 'LobbyInvite' : {
+		// 	const toId = msg.to as number;
+		// 	if (await isBlocked(fastify, toId, extSocket.userId!)) {
+		// 		return extSocket.send(JSON.stringify({
+		// 			type: 'error',
+		// 			error: 'Your messages are blocked by this user'
+		// 		}))
+		// 	}
+		// 	if (await isBlocked(fastify, extSocket.userId!, toId)) {
+		// 		return extSocket.send(JSON.stringify({
+		// 			type: 'error',
+		// 			error: 'You have blocked this user'
+		// 		}))
+		// 	}
+		// 	/*
+		// 	 * I don't know how the live chat works, so pseudo example code here:
+		// 	 * const msg: LiveChatMsg = {
+		// 	 *	type: 'LobbyInvite',
+		// 	 *	target_user: target_user_id,
+		// 	 *	data: invite,
+		// 	 * };
+		// 	 * livechat_ws.send(msg);
+		// 	*/
+		// 	const targets = userSockets.get(msg.to)
+		// 	if (!targets?.size) {
+		// 		return extSocket.send(JSON.stringify({
+		// 			type: 'error',
+		// 			error: 'User not connected'
+		// 		}))
+		// 	}
+		// 	for (const tsock of targets) {
+		// 		tsock.send(JSON.stringify({
+		// 			type: 'LobbyInvite',
+		// 			from: extSocket.userId,
+		// 			content: msg.content,
+		// 			ts: Date.now()
+		// 		}))
+		// 	}
+		// 	return
 
-		}
+		// }
 
 		default: {
 			return extSocket.send(JSON.stringify({

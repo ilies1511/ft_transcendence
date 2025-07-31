@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import type { FriendRequestRow } from '../types/userTypes.ts'
+import { isBlocked } from './block.ts';
 
 export enum FriendRequestMsg {
 	RecipientNotFound = 'RecipientNotFound',
@@ -23,6 +24,12 @@ export async function sendFriendRequest(
 	)
 	if (!rec) {
 		throw new Error('RecipientNotFound')
+	}
+	if (await isBlocked(fastify, rec?.id, requesterId)) {
+		throw new Error('Cannot friend. You are blocked by this user')
+	}
+	if (await isBlocked(fastify, requesterId, rec?.id)) {
+		throw new Error('Cannot friend. You blocked this user')
 	}
 	if (rec.id === requesterId) {
 		throw new Error('CannotRequestYourself')
