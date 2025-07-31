@@ -58,16 +58,16 @@ use of JSON Web Tokens (JWT).
 - [x]	disable 2FA
 
 ### Nice to have after Google Sign In
-- []	Add Blocked User List --> protects user from receiving further friend requests & game invites (to be discussed with Fabi) + live chat
-- []	Add Unblock User endpoint
-- []	Add deleteUserAccount Endpoint --> deletes entire User-Account: (GDPR compliance Module)
+- [x]	Add Blocked User List --> protects user from receiving further friend requests & game invites (to be discussed with Fabi) + live chat
+- [x]	Add Unblock User endpoint
+- [x]	Add deleteUserAccount Endpoint --> deletes entire User-Account: (GDPR compliance Module)
 			() after deletion, data related to this account shows 'deleted Account' instead of his old $username$
 
 #### Minor module: GDPR compliance options with user anonymization, local data management, and account deletion.
 The goal of this minor module is to introduce GDPR compliance options that allow
 users to exercise their data privacy rights. Key features and objectives include:
 
-[]	Implement GDPR-compliant features that enable users to request anonymiza-
+[x]	Implement GDPR-compliant features that enable users to request anonymiza-
 	tion of their personal data, ensuring that their identity and sensitive informa-
 	tion are protected.
 
