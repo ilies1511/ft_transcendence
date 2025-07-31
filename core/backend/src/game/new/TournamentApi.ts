@@ -113,15 +113,15 @@ export class TournamentApi {
 		return (msg);
 	}
 
-	static leave_tournament_api(client_id: number, password: string) {
+	static leave_tournament_api() {
 	}
 
-	static start_tournament_api(password: string) {
+	static start_tournament_api() {
 	}
 
-	static tournament_state_api(password: string) {
+	static tournament_state_api() {
 	}
 
-	static tournament_get_game_api(client_id: number, password: string) {
+	static tournament_get_game_api() {
 	}
 };

@@ -106,107 +106,82 @@ const reconnect_schema = {
 };
 
 export class GameServer {
-	private _lobbies: Map<number, GameLobby> = new Map<number, GameLobby>;
-	private _tournaments: Map<number, Tournament> = new Map<number, Tournament>;
-	private _fastify: FastifyInstance;
+	private static _lobbies: Map<number, GameLobby> = new Map<number, GameLobby>;
+	private static _tournaments: Map<number, Tournament> = new Map<number, Tournament>;
+	private static _fastify: FastifyInstance;
 
+	private constructor(){}
 
-	constructor(fastify: FastifyInstance) {
+	public static init(fastify: FastifyInstance) {
 		console.log("[GAME-BACK-END] constructor");
 
-		this._remove_lobby = this._remove_lobby.bind(this);
+		GameServer._remove_lobby = GameServer._remove_lobby.bind(GameServer);
 
-		this._fastify = fastify;
+		GameServer._fastify = fastify;
 
-		this._enter_matchmaking_api = this._enter_matchmaking_api.bind(this);
-		this._fastify.post<{Body: EnterMatchmakingReq}>(
+		GameServer._enter_matchmaking_api = GameServer._enter_matchmaking_api.bind(GameServer);
+		GameServer._fastify.post<{Body: EnterMatchmakingReq}>(
 			'/api/enter_matchmaking',
 			{ schema: enter_matchmaking_schema},
 			async (request, reply) => {
-				return (await this._enter_matchmaking_api(request));
+				return (await GameServer._enter_matchmaking_api(request));
 			}
 		);
 
-		this._create_tournament_api = this._create_tournament_api.bind(this);
-		this._fastify.post<{Body: CreateTournamentReq}>(
-			'/api/create_tournament',
-			{ schema: create_tournament_schema},
-			async (request, reply) => {
-				return (await this._create_tournament_api(request));
-			}
-		);
-
-		this._reconnect_api = this._reconnect_api.bind(this);
-		this._fastify.post<{Body: ReconnectReq}>(
+		GameServer._reconnect_api = GameServer._reconnect_api.bind(GameServer);
+		GameServer._fastify.post<{Body: ReconnectReq}>(
 			'/api/reconnect',
 			{ schema: reconnect_schema},
 			async (request, reply) => {
-				return (await this._reconnect_api(request));
+				return (await GameServer._reconnect_api(request));
 			}
 		);
 
-		this.create_lobby_api = this.create_lobby_api.bind(this);
-		this._fastify.post<{Body: CreateLobbyReq}>(
+		GameServer.create_lobby_api = GameServer.create_lobby_api.bind(GameServer);
+		GameServer._fastify.post<{Body: CreateLobbyReq}>(
 			'/api/create_lobby',
 			{ schema: create_lobby_schema},
 			async (request, reply) => {
-				return (await this.create_lobby_api(request));
+				return (await GameServer.create_lobby_api(request));
 			}
 		);
 
-		this._join_lobby_api = this._join_lobby_api.bind(this);
-		this._fastify.post<{Body: JoinReq}>(
+		GameServer._join_lobby_api = GameServer._join_lobby_api.bind(GameServer);
+		GameServer._fastify.post<{Body: JoinReq}>(
 			'/api/join_lobby',
 			{ schema: join_schema},
 			async (request, reply) => {
-				return (await this._join_lobby_api(request));
+				return (await GameServer._join_lobby_api(request));
 			}
 		);
 
-		this._join_tournament_api = this._join_tournament_api.bind(this);
-		this._fastify.post<{Body: JoinReq}>(
-			'/api/join_tournament',
-			{ schema: join_schema},
-			async (request, reply) => {
-				return (await this._join_tournament_api(request));
-			}
-		);
-
-		this._display_names_api = this._display_names_api.bind(this);
-		this._fastify.get(
+		GameServer._display_names_api = GameServer._display_names_api.bind(GameServer);
+		GameServer._fastify.get(
 			'/game/:game_id/display_names',
 			async (request: FastifyRequest<{ Params: { game_id: string } }>, reply: FastifyReply) => {
 			const {game_id } = request.params as { game_id: string};
-				return (await this._display_names_api(game_id));
+				return (await GameServer._display_names_api(game_id));
 			}
 		);
 
 
-		this._rcv_game_msg = this._rcv_game_msg.bind(this);
-		this._close_socket_lobby_handler = this._close_socket_lobby_handler.bind(this);
-		this._fastify.get('/game/:game_id', { websocket: true }, (socket: WebSocket, req: FastifyRequest) => {
+		GameServer._rcv_game_msg = GameServer._rcv_game_msg.bind(GameServer);
+		GameServer._close_socket_lobby_handler = GameServer._close_socket_lobby_handler.bind(GameServer);
+		GameServer._fastify.get('/game/:game_id', { websocket: true }, (socket: WebSocket, req: FastifyRequest) => {
 			const { game_id } = req.params as { game_id: string };
 			socket.on('message', (raw) => {
-				this._rcv_game_msg(game_id, raw.toString(), socket);
+				GameServer._rcv_game_msg(game_id, raw.toString(), socket);
 			});
 			socket.on('close', () => {
-				this._close_socket_lobby_handler(game_id, socket);
-			});
-		});
-
-		this._rcv_tournament_msg = this._rcv_tournament_msg.bind(this);
-		this._fastify.get('/tournament/:tournament_id', { websocket: true }, (socket: WebSocket, req: FastifyRequest) => {
-			const { tournament_id } = req.params as { tournament_id: string };
-			socket.on('message', (raw) => {
-				this._rcv_tournament_msg(tournament_id, raw.toString(), socket);
+				GameServer._close_socket_lobby_handler(game_id, socket);
 			});
 		});
 	}
 
-	private _close_socket_lobby_handler(lobby_id_str: string, ws: WebSocket) {
+	private static _close_socket_lobby_handler(lobby_id_str: string, ws: WebSocket) {
 		try {
 			const lobby_id: number = parseInt(lobby_id_str);
-			const lobby: GameLobby | undefined = this._lobbies.get(lobby_id);
+			const lobby: GameLobby | undefined = GameServer._lobbies.get(lobby_id);
 			if (!lobby) {
 				ws.close();
 				return ;
@@ -220,7 +195,7 @@ export class GameServer {
 		}
 	}
 
-	private async _enter_matchmaking_api(request: FastifyRequest< { Body: EnterMatchmakingReq } >)
+	private static async _enter_matchmaking_api(request: FastifyRequest< { Body: EnterMatchmakingReq } >)
 		: Promise<EnterMatchmakingResp>
 	{
 		const response: EnterMatchmakingResp = {
@@ -230,7 +205,7 @@ export class GameServer {
 
 		const { user_id, display_name, map_name, ai_count } = request.body;
 		console.log("GAME: _enter_matchmaking_api: ", request.body);
-		for (const [lobby_id, lobby] of this._lobbies) {
+		for (const [lobby_id, lobby] of GameServer._lobbies) {
 			if (lobby.join(user_id, map_name, display_name) == "") {
 				response.match_id = lobby_id;
 				return (response);
@@ -238,11 +213,11 @@ export class GameServer {
 		}
 	
 		try {
-			const lobby_id: number = await this.create_lobby(LobbyType.MATCHMAKING,
+			const lobby_id: number = await GameServer.create_lobby(LobbyType.MATCHMAKING,
 				map_name, ai_count)
-			const lobby: GameLobby | undefined = this._lobbies.get(lobby_id);
+			const lobby: GameLobby | undefined = GameServer._lobbies.get(lobby_id);
 			if (lobby === undefined) {
-				console.log("lobby not in this._lobbies eventhough it was just created");
+				console.log("lobby not in GameServer._lobbies eventhough it was just created");
 				response.error = "Internal Error";
 				return (response);
 			}
@@ -265,7 +240,7 @@ export class GameServer {
 		}
 	}
 
-	private async create_lobby_api(request: FastifyRequest< { Body: CreateLobbyReq } >)
+	private static async create_lobby_api(request: FastifyRequest< { Body: CreateLobbyReq } >)
 		: Promise<CreateLobbyResp>
 	{
 		const response: CreateLobbyResp = {
@@ -274,7 +249,7 @@ export class GameServer {
 		};
 		const { map_name, ai_count, password } = request.body;
 		try {
-			const lobby_id: number = await this.create_lobby(LobbyType.CUSTOM,
+			const lobby_id: number = await GameServer.create_lobby(LobbyType.CUSTOM,
 				map_name, ai_count, password);
 			response.match_id = lobby_id;
 			return (response);
@@ -288,12 +263,12 @@ export class GameServer {
 		}
 	}
 
-	private async _join_lobby_api(request: FastifyRequest< { Body: JoinReq } >)
+	private static async _join_lobby_api(request: FastifyRequest< { Body: JoinReq } >)
 		: Promise<ServerError>
 	{
 		const { lobby_id, user_id, password, map_name, display_name } = request.body;
 
-		const lobby: GameLobby | undefined = this._lobbies.get(lobby_id);
+		const lobby: GameLobby | undefined = GameServer._lobbies.get(lobby_id);
 		if (!lobby) {
 			return ("Not Found");
 		}
@@ -301,38 +276,7 @@ export class GameServer {
 		return (msg);
 	}
 
-	private async _join_tournament_api(request: FastifyRequest< { Body: JoinReq } >)
-		: Promise<ServerError>
-	{
-		const { lobby_id, user_id, password, map_name, display_name } = request.body;
-
-		const tournament: Tournament | undefined = this._tournaments.get(lobby_id);
-		if (!tournament) {
-			return ("Not Found");
-		}
-		const msg: ServerError = tournament.join(user_id, map_name, display_name, password);
-		return (msg);
-	}
-
-	private _next_tournament_id: number = 1;
-	private async _create_tournament_api(request: FastifyRequest<{Body: CreateTournamentReq}>)
-		: Promise<CreateTournamentResp>
-	{
-		const response: CreateTournamentResp = {
-			error: "",
-			tournament_id: -1,
-		};
-
-		const { map_name, password } = request.body;
-		const tournament_id: number = this._next_tournament_id++;
-
-		const tournament: Tournament = new Tournament(map_name, password);
-		this._tournaments.set(tournament_id, tournament);
-		response.tournament_id = tournament_id;
-		return (response);
-	}
-
-	private _connections_of(client_id: number): ReconnectResp {
+	private static _connections_of(client_id: number): ReconnectResp {
 		const response: ReconnectResp = {
 			match_id: -1,
 			match_has_password: false,
@@ -340,7 +284,7 @@ export class GameServer {
 			lobby_type: LobbyType.INVALID,
 		};
 
-		for (const [id, lobby] of this._lobbies) {
+		for (const [id, lobby] of GameServer._lobbies) {
 			if (lobby.can_reconnect(client_id)) {
 				response.match_id = id;
 				response.lobby_type = lobby.lobby_type;
@@ -353,20 +297,20 @@ export class GameServer {
 		return (response);
 	}
 
-	private async _reconnect_api(request: FastifyRequest<{Body: ReconnectReq}>)
+	private static async _reconnect_api(request: FastifyRequest<{Body: ReconnectReq}>)
 		: Promise<ReconnectResp>
 	{
 
 		const { client_id } = request.body;
-		return (this._connections_of(client_id));
+		return (GameServer._connections_of(client_id));
 	}
 
-	private async _display_names_api(game_id_str: string)
+	private static async _display_names_api(game_id_str: string)
 		: Promise<LobbyDisplaynameResp>
 	{
 		try {
 			const game_id: number = parseInt(game_id_str);
-			const lobby: GameLobby | undefined = this._lobbies.get(game_id);
+			const lobby: GameLobby | undefined = GameServer._lobbies.get(game_id);
 			if (lobby == undefined) {
 				console.log("game: _display_names_api: lobby with key ", game_id, " was not found");
 				return ({error: 'Not Found', data: []});
@@ -383,11 +327,11 @@ export class GameServer {
 		}
 	}
 
-	private _rcv_game_msg(game_id_str: string, message: string, ws: WebSocket) {
+	private static _rcv_game_msg(game_id_str: string, message: string, ws: WebSocket) {
 		//console.log("game: got game msg: ", message);
 		try {
 			const game_id: number = parseInt(game_id_str);
-			const lobby: GameLobby | undefined = this._lobbies.get(game_id);
+			const lobby: GameLobby | undefined = GameServer._lobbies.get(game_id);
 			if (lobby == undefined) {
 				console.log("game: lobby with key ", game_id, " was not found");
 				WebsocketConnection.static_send_error(ws, 'Not Found');
@@ -412,36 +356,7 @@ export class GameServer {
 		}
 	}
 
-	private _rcv_tournament_msg(tournament_id_str: string, message: string, ws: WebSocket) {
-		console.log("game: got tournament msg: ", message);
-		try {
-			const tournament_id: number = parseInt(tournament_id_str);
-			const tournament: Tournament | undefined = this._tournaments.get(tournament_id);
-			if (tournament == undefined) {
-				console.log("game: tournament with key ", tournament_id, " was not found");
-				WebsocketConnection.static_send_error(ws, 'Not Found');
-				ws.close();
-				return ;
-			}
-			let data: ClientToTournament;
-			try {
-				data = JSON.parse(message) as ClientToTournament;
-			} catch (e) {
-				WebsocketConnection.static_send_error(ws, 'Invalid Request');
-				ws.close();
-				return ;
-			}
-			tournament.recv(ws, data);
-			return ;
-		} catch (e) {
-			console.log("error: ", e);
-			WebsocketConnection.static_send_error(ws, 'Not Found');
-			ws.close();
-			return ;
-		}
-	}
-
-	private _remove_lobby(id: number, end_data: GameToClientFinish): undefined {
+	private static _remove_lobby(id: number, end_data: GameToClientFinish): undefined {
 		if (end_data) {
 			const match_data: NewMatch = {
 				duration: end_data.duration,
@@ -459,7 +374,7 @@ export class GameServer {
 			if (winners > 1) {
 				win_result = 'draw';
 			}
-			while (i , end_data.placements.length) {
+			while (i < end_data.placements.length) {
 				let result: 'win' | 'loss' | 'draw' = 'loss';
 				if (end_data.placements[i].final_placement == 1) {
 					result = win_result;
@@ -471,14 +386,14 @@ export class GameServer {
 				}
 				i++;
 			}
-			completeMatch(this._fastify, id, match_data);
+			completeMatch(GameServer._fastify, id, match_data);
 		}
 		console.log("removing lobby ", id, ": ");
-		this._lobbies.delete(id);
+		GameServer._lobbies.delete(id);
 	}
 
 	//returns the lobby id or and error string
-	public async create_lobby(
+	public static async create_lobby(
 		lobby_type: LobbyType,
 		map_name: string,
 		ai_count: number,
@@ -486,11 +401,10 @@ export class GameServer {
 		first_completion_callback?: (id: number, end_data: GameToClientFinish) => undefined,
 	): Promise<number>
 	{
-		const lobby_id: number = await createMatchMeta(this._fastify, lobby_type);
-		const lobby: GameLobby = new GameLobby(lobby_type, this._remove_lobby,
+		const lobby_id: number = await createMatchMeta(GameServer._fastify, lobby_type);
+		const lobby: GameLobby = new GameLobby(lobby_type, GameServer._remove_lobby,
 			lobby_id, map_name, ai_count, password, first_completion_callback);
-		this._lobbies.set(lobby_id, lobby);
+		GameServer._lobbies.set(lobby_id, lobby);
 		return (lobby_id);
 	}
-
 };

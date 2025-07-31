@@ -5,6 +5,8 @@ refactor game backend:
 [ ] - delete empty lobbies after some time in the backend
 [ ] - update GameLobby.loaded_player_count on websocket close event
 
+[x] - GameServer: make the class static and not object based
+
 
 API endpoints:
 [x]	- /enter_matchmaking -> takes the player id and map name; returns match id

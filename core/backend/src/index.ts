@@ -18,7 +18,7 @@ async function main() {
 		curl -i http://localhost:3000/api/users/1/stats
 	 */
 	// // to live ping/notify (via ws) a user, that we got friend request
-	const game_server = new GameServer(fastify);
+	GameServer.init(fastify);
 
 	await fastify.listen({ port: 3000, host: '0.0.0.0' })
 	console.log('[BACK-END PART] Fastify WebSocket server running on ws://localhost:3000/ws')
