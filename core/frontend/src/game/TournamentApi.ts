@@ -1,15 +1,9 @@
 import type {
-	EnterMatchmakingReq,
-	EnterMatchmakingResp,
-	CreateLobbyReq,
-	CreateLobbyResp,
 	JoinReq,
 	CreateTournamentReq,
 	CreateTournamentResp,
-	ReconnectReq,
-	ReconnectResp,
 	ServerError,
-	LobbyDisplaynameResp,
+	DefaultResp,
 } from './game_shared/message_types.ts';
 
 import type {
@@ -40,20 +34,18 @@ export class TournamentApi {
 			body: JSON.stringify(req)
 		});
 		const data: CreateTournamentResp = await response.json();
-		console.log("game: enter_matchmaking api response: ", data);
+		console.log("game: create_tournament api response: ", data);
 		return (data);
 	}
 
 	public static async join_tournament(
-		map_name: string,
 		password: string,
 		user_id: number,
 		lobby_id: number,
 		display_name: string,
-	) : Promise<ServerError>
+	) : Promise<DefaultResp>
 	{
 		const req: JoinReq = {
-			map_name: map_name,
 			password: password,
 			user_id: user_id,
 			lobby_id: lobby_id,
@@ -66,15 +58,15 @@ export class TournamentApi {
 			},
 			body: JSON.stringify(req)
 		});
-		const data: ServerError = await response.json();
-		console.log("game: enter_matchmaking api response: ", data);
+		const data: DefaultResp = await response.json();
+		console.log("game: join_tournament api response: ", data);
 		return (data);
 	}
 
 	public static async start_tournament(
 		user_id: number,
 		tournament_id: number,
-	) : Promise<ServerError>
+	) : Promise<DefaultResp>
 	{
 		const req: StartReq = {
 			client_id: user_id,
@@ -87,8 +79,8 @@ export class TournamentApi {
 			},
 			body: JSON.stringify(req)
 		});
-		const data: ServerError = await response.json();
-		console.log("game: enter_matchmaking api response: ", data);
+		const data: DefaultResp = await response.json();
+		console.log("game: start_tournament api response: ", data);
 		return (data);
 	}
 
@@ -108,5 +100,7 @@ export class TournamentApi {
 			},
 			body: JSON.stringify(req)
 		});
+
+		console.log("game: start_tournament api");
 	}
 };

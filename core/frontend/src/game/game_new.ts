@@ -145,6 +145,8 @@ export class Game {
 			map_name: this.map_name,
 			lobby_password: this.password,
 			lobby_id: this.game_id,
+			lobby_type: this._lobby_type,
+			valid: true,
 		};
 		return (invite);
 	}
@@ -440,7 +442,7 @@ export class Game {
 			return ;
 		}
 		const error: ServerError = await GameApi.join_lobby(this.client_id * -1,
-			this.game_id, this.map_name, this.password, display_name);
+			this.game_id, this.password, display_name);
 		if (error != '') {
 			console.log("Error: Game: Could not join a local player into lobby: ",
 				error, '!');

@@ -71,11 +71,11 @@
 
 
 
-
 // frontend/src/pages/GameModes.ts
 import type { PageModule } from '../router'
 
 import { Game } from '../game/game_new.ts'
+import { TournamentApi } from '../game/TournamentApi.ts'
 import { get_password_from_user } from '../game/placeholder_globals.ts'
 
 import { attempt_reconnect } from '../game/frontend_interface_examples/reconnect.ts'
@@ -91,7 +91,14 @@ import type { CustomLobbyOptions } from '../game/frontend_interface_examples/cus
 import type { MatchmakingOptions } from '../game/frontend_interface_examples/matchmaking.ts'
 import { enter_matchmaking } from '../game/frontend_interface_examples/matchmaking.ts'
 
-import type { ServerError, LobbyInvite } from '../game/game_shared/message_types.ts'
+import type {
+	JoinReq,
+	CreateTournamentReq,
+	CreateTournamentResp,
+	DefaultResp,
+	ServerError,
+	LobbyInvite
+} from '../game/game_shared/message_types.ts'
 
 import { getSession } from '../services/session'
 
@@ -131,6 +138,9 @@ const template = /*html*/`
 
 declare global { var game: Game | undefined }
 globalThis.game = undefined
+
+declare global { var tournament_id: number | undefined }
+globalThis.tournament_id = undefined
 
 function wireLocalPlayerButton(game: Game): void {
 	const btn = document.getElementById('btn-add-local-player') as HTMLButtonElement | null
@@ -225,10 +235,31 @@ async function test_local_player(
 	if (name) gm.add_local_player(name)
 }
 
+
+
 async function test_tournament(
 	container: HTMLElement,
 	user_id: number,
 ): Promise<void> {
+	const create_resp: CreateTournamentResp = await TournamentApi
+		.create_tournament("default", await get_password_from_user('Tournament'));
+	if (create_resp.error != '') {
+		console.log(create_resp);
+		return ;
+	}
+
+	const join_resp: DefaultResp = await TournamentApi.join_tournament(
+		await get_password_from_user('Tournament'), user_id,
+		create_resp.tournament_id, "placeholder_display_name");
+	if (join_resp.error != '') {
+		console.log(create_resp);
+		return ;
+	}
+	const start_resp: DefaultResp = await TournamentApi.start_tournament(user_id, create_resp.tournament_id);
+	if (start_resp.error != '') {
+		console.log("start tournament error: ", start_resp.error);
+		return ;
+	}
 
 }
 
@@ -267,9 +298,9 @@ function setupGameModes(root: HTMLElement): void {
 		await attempt_reconnect(container, user_id)
 		if (globalThis.game !== undefined) return
 
-		switch (mode) {
 			//case 'match':	await test_enter_matchmaking(container, user_id);	break
-			case 'match':	await test_enter_matchmaking(container, user_id);	break
+		switch (mode) {
+			case 'match':	await test_tournament(container, user_id);	break
 			case 'lobby':	await test_lobby(user_id, container);				break
 			case 'local':	await test_local_player(user_id, container);		break
 		}

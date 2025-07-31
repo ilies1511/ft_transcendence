@@ -25,9 +25,8 @@ export async function accept_lobby_invite(
 	const join_error: ServerError = await GameApi.join_lobby(
 		user_id,
 		invite.lobby_id,
-		invite.map_name,
 		invite.lobby_password,
-		`placeholder_diplay_name_of_client1_${user_id}`,
+		display_name,
 	);
 	if (join_error != '') {
 		return (join_error);
@@ -38,7 +37,7 @@ export async function accept_lobby_invite(
 		invite.lobby_id,
 		invite.map_name,
 		invite.lobby_password,
-		LobbyType.CUSTOM,
+		invite.lobby_type,
 	);
 	return (game);
 }
@@ -60,6 +59,7 @@ export async function create_join_lobby(
 		map_name: options.map_name,
 		lobby_password: options.lobby_password,
 		lobby_id: resp.match_id,
+		lobby_type: LobbyType.CUSTOM,
 		valid: true,
 	};
 	// By default the user is not in the lobby itself.
@@ -110,6 +110,7 @@ export async function recv_lobby_invite_skeleton(): Promise<LobbyInvite>
 	// This is just for now.
 	const lobby_invite: LobbyInvite = {
 		map_name: 'default',
+		lobby_type: LobbyType.CUSTOM,//placeholder
 		// Not sure if we should take the password from the websocket
 		//  or take it as text input.
 		//  When we send it through the socket and use it the user dosn't have

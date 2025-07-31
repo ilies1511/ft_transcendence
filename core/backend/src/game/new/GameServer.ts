@@ -11,6 +11,7 @@ import { createMatchMeta, completeMatch, } from '../../functions/match.ts';
 import type { NewMatch } from '../../functions/match.ts';
 import { TournamentApi } from './TournamentApi.ts';
 
+
 import type {
 	GameOptions,
 	ServerToClientMessage,
@@ -75,10 +76,9 @@ const create_lobby_schema = {
 const join_schema = {
 	body: {
 		type: 'object',
-		required: ['map_name', 'password', ],
+		required: [ 'password', ],
 		properties: {
 			user_id: { type: 'number' },
-			map_name: { type: 'string' },
 			lobby_id: { type: 'number' },
 			password: { type: 'string' },
 			display_name: { type: 'string' },
@@ -269,13 +269,13 @@ export class GameServer {
 	private static async _join_lobby_api(request: FastifyRequest< { Body: JoinReq } >)
 		: Promise<ServerError>
 	{
-		const { lobby_id, user_id, password, map_name, display_name } = request.body;
+		const { lobby_id, user_id, password, display_name } = request.body;
 
 		const lobby: GameLobby | undefined = GameServer.lobbies.get(lobby_id);
 		if (!lobby) {
 			return ("Not Found");
 		}
-		const msg: ServerError = lobby.join(user_id, map_name, display_name, password);
+		const msg: ServerError = lobby.join(user_id, display_name, password);
 		return (msg);
 	}
 

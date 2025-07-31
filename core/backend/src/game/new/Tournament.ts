@@ -11,8 +11,10 @@ import type {
 	ServerError,
     ClientToTournament,
 	GameToClientFinish,
+	LobbyInvite,
 } from '../game_shared/message_types.ts';
 
+import { LobbyType } from '../game_shared/message_types.ts';
 
 type TournamentPlayer = {
 	client_id: number;
@@ -83,8 +85,6 @@ export class Tournament {
 			placement: -1,
 		});
 		this.active_players.push(user_id);
-		this._total_player_count++;
-		this._next_placement++;
 		return ("");
 	}
 
@@ -95,7 +95,7 @@ export class Tournament {
 		this.active_players = this.active_players.filter(id => id != client_id);
 		if (!this._started) {
 			this._rounds[0].players = this._rounds[0].players.filter(
-				player => player.client_id == client_id);
+				player => player.client_id != client_id);
 			this._total_player_count = this._rounds[0].players.length;
 			this._next_placement = this._rounds[0].players.length;
 			return ("");
@@ -107,23 +107,69 @@ export class Tournament {
 
 	public start(client_id: number): ServerError {
 		this._total_player_count = this._rounds[0].players.length;
-		this._rounds[0].active_players = this._total_player_count;
+		this._rounds[0].active_players = 0;
 		this._rounds[0].looking_for_game = this._total_player_count;
+		this._next_placement = this._total_player_count;
 		if (this._total_player_count == 0) {
 			//todo
 		}
 		this._started = true;
 		this._start_round(0);
+		if (this._total_player_count <= 0) {
+			this._finish();
+		}
 		return ("");
 	}
 
-	private _start_round(round_idx: number) {
-		if (this._rounds[round_idx].players.length == 1) {
-			this._rounds[round_idx].players[0].placement = this._next_placement--;
+	private async _start_round(round_idx: number): Promise<void> {
+		const round: Round = this._rounds[round_idx];
+		if (round.players.length == 1) {
+			round.players[0].placement = this._next_placement--;
 			if (this._next_placement != 0) {
-				throw ("Tournament: next placement in the end != 0: ", this._next_placement);
+				console.log("tournament: next placement in the end != 0: ", this._next_placement);
+				throw ("tournament: next placement in the end != 0");
 			}
 			this._finish();
+			return ;
+		}
+		const next_round: Round = {
+			players: [],
+			game_ids: [],
+			active_players: 0,
+			looking_for_game: 0,
+		};
+		this._rounds.push(next_round);
+		let player_idx = 0;
+		while (player_idx < round.players.length - 1) {
+			const lobby_id: number = await GameServer.create_lobby(
+				LobbyType.TOURNAMENT,
+				this._map_name,
+				0,
+				this._password,
+				this._finish_game_callback
+			);
+			round.game_ids[player_idx / 2] = lobby_id;
+			const invite: LobbyInvite = {
+				lobby_password: this._password,
+				lobby_id: lobby_id,
+				valid: true,
+				map_name: this._map_name,
+				lobby_type: LobbyType.TOURNAMENT,
+			};
+			//todo: when send_invite works
+			//send_invite(round.players[player_idx].client_id, invite);
+			//send_invite(round.players[player_idx + 1].client_id, invite);
+			round.looking_for_game -= 2;
+			round.active_players += 2;
+			player_idx += 2;
+		}
+		if (player_idx < round.players.length) {
+			this._advance_player_to_round(round.players[player_idx], round_idx + 1);
+			round.looking_for_game--;
+		}
+		if (round.looking_for_game) {
+			console.log("looking for game in round after starting round, round: ", round);
+			throw ("looking for game in round after starting round ");
 		}
 	}
 
@@ -133,7 +179,14 @@ export class Tournament {
 		return (ret);
 	}
 
-	private _finish_game_callback(match_id: number, end_data: GameToClientFinish) {
+	private _advance_player_to_round(player: TournamentPlayer, round_idx: number) {
+		this._rounds[round_idx].players.push(player);
+		this._rounds[round_idx].looking_for_game++;
+	}
+
+	private _finish_game_callback(match_id: number, end_data: GameToClientFinish
+	): undefined
+	{
 		if (!end_data) {
 			throw ("game error: tournament game eneded without passing end_data");
 		}
@@ -148,7 +201,14 @@ export class Tournament {
 					const player_idx: number = game_idx * 2;
 					const player_1: TournamentPlayer = this._rounds[round_idx].players[player_idx];
 					const player_2: TournamentPlayer = this._rounds[round_idx].players[player_idx + 1];
-					
+					if (player_1.client_id == end_data.placements[0].id && end_data.placements[0].final_placement == 1) {
+						this._advance_player_to_round(player_1, round_idx + 1);
+						player_2.placement = this._next_placement--;
+					} else {
+						this._advance_player_to_round(player_2, round_idx + 1);
+						player_1.placement = this._next_placement--;
+					}
+					this._rounds[round_idx].active_players -= 2;
 				}
 				game_idx++;
 			}
@@ -159,5 +219,18 @@ export class Tournament {
 
 	private _finish() {
 		this._completion_callback(this._id);
+		if (this._total_player_count <= 0) {
+			return ;
+		}
+		const last_round: Round | undefined = this._rounds.pop();
+		if (!last_round) {
+			console.log("Warning: Finished tournament without rounds!");
+			return ;
+		}
+		if (last_round.players.length != 1) {
+			console.log("Warning: Finished tournament with != 1 plate count:", last_round.players);
+			return ;
+		}
+		console.log("winner: ", last_round.players[0]);
 	}
 };

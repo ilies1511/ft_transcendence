@@ -10,6 +10,7 @@ export type LobbyInvite = {
 	map_name: string;
 	lobby_password: string;
 	lobby_id: number;
+	lobby_type: LobbyType;
 	valid: boolean; // if the invite should be ignored
 };
 
@@ -41,7 +42,6 @@ export interface CreateLobbyReq {
 
 export interface JoinReq {
 	user_id: number;
-	map_name: string;
 	lobby_id: number;
 	password: string;
 	display_name: string;
@@ -114,6 +114,11 @@ export type ServerError =
 	| 'Invalid Map'
 	| ''
 ;
+
+export type DefaultResp = {
+	error: ServerError,
+	type: 'default',
+};
 
 export function is_ServerError(data: unknown): ServerError | undefined {
 	if (data !== 'string') {

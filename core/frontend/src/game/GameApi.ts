@@ -75,7 +75,6 @@ export class GameApi {
 	public static async join_lobby(
 		user_id: number,
 		lobby_id: number,
-		map_name: string,
 		password: string,
 		display_name: string,
 	)
@@ -84,7 +83,6 @@ export class GameApi {
 		const req: JoinReq = {
 			lobby_id: lobby_id,
 			user_id: user_id,
-			map_name: map_name,
 			password: password,
 			display_name: display_name,
 		};

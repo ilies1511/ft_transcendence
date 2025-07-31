@@ -35,6 +35,7 @@ import type {
 	LobbyDisplaynameResp,
 	GameToClientFinish,
 	ClientToTournament,
+	DefaultResp,
 } from '../game_shared/message_types.ts';
 
 import { LobbyType } from '../game_shared/message_types.ts';
@@ -43,10 +44,9 @@ import { is_ServerError } from '../game_shared/message_types.ts';
 const join_schema = {
 	body: {
 		type: 'object',
-		required: ['map_name', 'password', ],
+		required: ['password', 'user_id', 'display_name', 'lobby_id' ],
 		properties: {
 			user_id: { type: 'number' },
-			map_name: { type: 'string' },
 			lobby_id: { type: 'number' },
 			password: { type: 'string' },
 			display_name: { type: 'string' },
@@ -57,7 +57,7 @@ const join_schema = {
 const leave_schema = {
 	body: {
 		type: 'object',
-		required: ['map_name', 'password', ],
+		required: ['client_id', 'lobby_id'],
 		properties: {
 			client_id: { type: 'number' },
 			lobby_id: { type: 'number' },
@@ -68,7 +68,7 @@ const leave_schema = {
 const state_schema = {
 	body: {
 		type: 'object',
-		required: ['map_name', 'password', ],
+		required: ['client_id', 'lobby_id', ],
 		properties: {
 			client_id: { type: 'number' },
 			lobby_id: { type: 'number' },
@@ -79,7 +79,7 @@ const state_schema = {
 const start_schema = {
 	body: {
 		type: 'object',
-		required: ['map_name', 'password', ],
+		required: [ 'client_id', 'tournament_id', ],
 		properties: {
 			client_id: { type: 'number' },
 			lobby_id: { type: 'number' },
@@ -90,7 +90,7 @@ const start_schema = {
 const create_tournament_schema = {
 	body: {
 		type: 'object',
-		required: [],
+		required: ['map_name', 'password'],
 		properties: {
 			map_name: { type: 'string' },
 			password: { type: 'string' },
@@ -100,7 +100,6 @@ const create_tournament_schema = {
 
 export class TournamentApi {
 	private constructor(){}
-	static tournaments: Map<number, Tournament> = new Map<number, Tournament>;
 
 	static init(fastify: FastifyInstance) {
 
@@ -123,7 +122,7 @@ export class TournamentApi {
 		);
 
 		TournamentApi.start_tournament_api = TournamentApi.start_tournament_api.bind(TournamentApi);
-		fastify.post<{Body: LeaveReq}>(
+		fastify.post<{Body: StartReq}>(
 			'/api/start_tournament',
 			{ schema: start_schema},
 			async (request, reply) => {
@@ -137,6 +136,15 @@ export class TournamentApi {
 			{ schema: leave_schema},
 			async (request, reply) => {
 				TournamentApi.leave_tournament_api(request);
+			}
+		);
+
+		TournamentApi.tournament_state_api = TournamentApi.tournament_state_api.bind(TournamentApi);
+		fastify.post<{Body: StateReq}>(
+			'/api/tournament_state',
+			{ schema: state_schema},
+			async (request, reply) => {
+				TournamentApi.tournament_state_api(request);
 			}
 		);
 	}
@@ -155,21 +163,28 @@ export class TournamentApi {
 
 		const tournament: Tournament = new Tournament(map_name,
 			password, tournament_id, GameServer.finish_tournament_callback);
-		TournamentApi.tournaments.set(tournament_id, tournament);
+		GameServer.tournaments.set(tournament_id, tournament);
 		response.tournament_id = tournament_id;
+		console.log("create_tournament api: ", response);
 		return (response);
 	}
 
 	static async join_tournament_api(request: FastifyRequest< { Body: JoinReq } >)
-		: Promise<ServerError>
+		: Promise<DefaultResp>
 	{
-		const { lobby_id, user_id, password, map_name, display_name } = request.body;
-
-		const tournament: Tournament | undefined = TournamentApi.tournaments.get(lobby_id);
+		const msg: DefaultResp = {
+			error: '',
+			type: 'default',
+		};
+		const { lobby_id, user_id, password, display_name } = request.body;
+		const tournament: Tournament | undefined = GameServer.tournaments.get(lobby_id);
 		if (!tournament) {
-			return ("Not Found");
+			console.log("join_tournament api: Not Found");
+			msg.error = "Not Found";
+			return (msg);
 		}
-		const msg: ServerError = tournament.join(user_id, display_name, password);
+		msg.error = tournament.join(user_id, display_name, password),
+		console.log("join_tournament api: ", msg);
 		return (msg);
 	}
 
@@ -177,26 +192,40 @@ export class TournamentApi {
 		const { client_id, tournament_id } = request.body;
 		const tournament: Tournament | undefined = GameServer.tournaments.get(tournament_id);
 		if (!tournament) {
+			console.log("leave_tournament api: Not Found");
 			return ;
 		}
+		console.log("leave_tournament api: ", client_id);
 		tournament.leave(client_id);
 	}
 
-	static start_tournament_api(request: FastifyRequest< { Body: StartReq } >): ServerError {
+	static start_tournament_api(request: FastifyRequest< { Body: StartReq } >): DefaultResp {
+		const msg: DefaultResp = {
+			error: '',
+			type: 'default',
+		};
+		console.log(GameServer.tournaments);
 		const { client_id, tournament_id } = request.body;
 		const tournament: Tournament | undefined = GameServer.tournaments.get(tournament_id);
 		if (!tournament) {
-			return ("Not Found");
+			console.log("start_tournament api: Not Found");
+			msg.error = 'Not Found';
+			return (msg);
 		}
-		return (tournament.start(client_id));
+		msg.error = tournament.start(client_id);
+		console.log("start_tournament api: ", msg);
+		return (msg);
 	}
 
 	static tournament_state_api(request: FastifyRequest< { Body: StateReq } >): TournamentState | ServerError {
 		const { client_id, tournament_id } = request.body;
 		const tournament: Tournament | undefined = GameServer.tournaments.get(tournament_id);
 		if (!tournament) {
+			console.log("tournament_state api: Not Found");
 			return ("Not Found");
 		}
-		return (tournament.get_state(client_id));
+		const ret: TournamentState = tournament.get_state(client_id);
+		console.log("tournament_state api: ", ret);
+		return (ret);
 	}
 };
