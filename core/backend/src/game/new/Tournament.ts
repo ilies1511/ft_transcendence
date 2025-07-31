@@ -89,16 +89,18 @@ export class Tournament {
 	}
 
 	public leave(client_id: number): ServerError {
+		if (!this.active_players.find(client => client == client_id)) {
+			return ("Not Found");
+		}
 		this.active_players = this.active_players.filter(id => id != client_id);
 		if (!this._started) {
-			let found: boolean = false;
 			this._rounds[0].players = this._rounds[0].players.filter(
 				player => player.client_id == client_id);
 			this._total_player_count = this._rounds[0].players.length;
 			this._next_placement = this._rounds[0].players.length;
 			return ("");
 		}
-		//todo: player should loose leave running game or if no game is running should
+		//todo: player looses and leaves running game or if no game is running has to
 		// be set to loose as the next placement
 		return ("");
 	}

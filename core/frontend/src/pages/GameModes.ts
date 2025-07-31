@@ -229,6 +229,7 @@ async function test_tournament(
 	container: HTMLElement,
 	user_id: number,
 ): Promise<void> {
+
 }
 
 function setupGameModes(root: HTMLElement): void {
