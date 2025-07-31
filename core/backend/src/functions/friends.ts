@@ -2,11 +2,11 @@ import type { FastifyInstance } from 'fastify'
 import type { FriendRequestRow } from '../types/userTypes.ts'
 
 export enum FriendRequestMsg {
-	RecipientNotFound		= 'RecipientNotFound',
-	CannotRequestYourself	= 'CannotRequestYourself',
-	RecipientAlreadySentFR	= 'RecipientAlreadySentFR',
-	RequestAlreadyPending	= 'RequestAlreadyPending',
-	AlreadyFriends			= 'AlreadyFriends',
+	RecipientNotFound = 'RecipientNotFound',
+	CannotRequestYourself = 'CannotRequestYourself',
+	RecipientAlreadySentFR = 'RecipientAlreadySentFR',
+	RequestAlreadyPending = 'RequestAlreadyPending',
+	AlreadyFriends = 'AlreadyFriends',
 }
 
 export type FriendRequestResult =
@@ -16,8 +16,7 @@ export async function sendFriendRequest(
 	fastify: FastifyInstance,
 	requesterId: number,
 	recipientUsername: string
-	): Promise<FriendRequestResult>
-{
+): Promise<FriendRequestResult> {
 	const rec = await fastify.db.get<{ id: number }>(
 		'SELECT id FROM users WHERE username = ?',
 		recipientUsername
@@ -165,3 +164,38 @@ export async function withdrawFriendRequest(
 	)
 	return (info.changes ?? 0) > 0
 }
+
+export async function areFriends(
+	fastify: FastifyInstance,
+	id: number,
+	friendId: number
+): Promise<boolean> {
+	const row = await fastify.db.get<{ one: number }>(
+		'SELECT 1 AS one FROM friendships WHERE user_id = ? AND friend_id = ?',
+		id,
+		friendId
+	);
+
+	return !!row;
+	// if (!ok) {
+	// 	return false;
+	// }
+	// return true;
+}
+
+// export async function removeFriendship(
+// 	fastify: FastifyInstance,
+// 	userId: number,
+// 	friendId: number
+// ): Promise<void> {
+// 	await fastify.db.run(
+// 		'DELETE FROM friendships WHERE user_id = ? AND friend_id = ?',
+// 		userId,
+// 		friendId
+// 	);
+// 	await fastify.db.run(
+// 		'DELETE FROM friendships WHERE user_id = ? AND friend_id = ?',
+// 		friendId,
+// 		userId
+// 	)
+// }

@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { blockUser, unblockUser, getBlockedUsersList } from "../functions/block.ts";
+import { areFriends, removeFriend } from "../functions/friends.ts";
 
 export const blockRoutes: FastifyPluginAsync = async (fastify) => {
 	//block
@@ -21,7 +22,10 @@ export const blockRoutes: FastifyPluginAsync = async (fastify) => {
 			if (!ok) {
 				return reply.send({ message: 'User to block not found' })
 			}
-			return reply.send({ message: 'User blocked' })
+			if (await areFriends(fastify, id, targetId)) {
+				await removeFriend(fastify, id, targetId);
+			}
+			return reply.send({ message: 'User blocked and friendship removed' })
 		}
 	)
 
