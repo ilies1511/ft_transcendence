@@ -225,6 +225,12 @@ async function test_local_player(
 	if (name) gm.add_local_player(name)
 }
 
+async function test_tournament(
+	container: HTMLElement,
+	user_id: number,
+): Promise<void> {
+}
+
 function setupGameModes(root: HTMLElement): void {
 	const container = root.querySelector<HTMLElement>('#game-container')!
 	const input = root.querySelector<HTMLInputElement>('#user-id-input')
@@ -261,6 +267,7 @@ function setupGameModes(root: HTMLElement): void {
 		if (globalThis.game !== undefined) return
 
 		switch (mode) {
+			//case 'match':	await test_enter_matchmaking(container, user_id);	break
 			case 'match':	await test_enter_matchmaking(container, user_id);	break
 			case 'lobby':	await test_lobby(user_id, container);				break
 			case 'local':	await test_local_player(user_id, container);		break

@@ -9,6 +9,7 @@ import { WebsocketConnection } from './WebsocketConnection.ts';
 
 import { createMatchMeta, completeMatch, } from '../../functions/match.ts';
 import type { NewMatch } from '../../functions/match.ts';
+import { TournamentApi } from './TournamentApi.ts';
 
 import type {
 	GameOptions,
@@ -106,8 +107,8 @@ const reconnect_schema = {
 };
 
 export class GameServer {
-	private static _lobbies: Map<number, GameLobby> = new Map<number, GameLobby>;
-	private static _tournaments: Map<number, Tournament> = new Map<number, Tournament>;
+	public static lobbies: Map<number, GameLobby> = new Map<number, GameLobby>;
+	public static tournaments: Map<number, Tournament> = new Map<number, Tournament>;
 	private static _fastify: FastifyInstance;
 
 	private constructor(){}
@@ -118,6 +119,8 @@ export class GameServer {
 		GameServer._remove_lobby = GameServer._remove_lobby.bind(GameServer);
 
 		GameServer._fastify = fastify;
+
+		TournamentApi.init(fastify);
 
 		GameServer._enter_matchmaking_api = GameServer._enter_matchmaking_api.bind(GameServer);
 		GameServer._fastify.post<{Body: EnterMatchmakingReq}>(
@@ -181,7 +184,7 @@ export class GameServer {
 	private static _close_socket_lobby_handler(lobby_id_str: string, ws: WebSocket) {
 		try {
 			const lobby_id: number = parseInt(lobby_id_str);
-			const lobby: GameLobby | undefined = GameServer._lobbies.get(lobby_id);
+			const lobby: GameLobby | undefined = GameServer.lobbies.get(lobby_id);
 			if (!lobby) {
 				ws.close();
 				return ;
@@ -205,7 +208,7 @@ export class GameServer {
 
 		const { user_id, display_name, map_name, ai_count } = request.body;
 		console.log("GAME: _enter_matchmaking_api: ", request.body);
-		for (const [lobby_id, lobby] of GameServer._lobbies) {
+		for (const [lobby_id, lobby] of GameServer.lobbies) {
 			if (lobby.join(user_id, map_name, display_name) == "") {
 				response.match_id = lobby_id;
 				return (response);
@@ -215,9 +218,9 @@ export class GameServer {
 		try {
 			const lobby_id: number = await GameServer.create_lobby(LobbyType.MATCHMAKING,
 				map_name, ai_count)
-			const lobby: GameLobby | undefined = GameServer._lobbies.get(lobby_id);
+			const lobby: GameLobby | undefined = GameServer.lobbies.get(lobby_id);
 			if (lobby === undefined) {
-				console.log("lobby not in GameServer._lobbies eventhough it was just created");
+				console.log("lobby not in GameServer.lobbies eventhough it was just created");
 				response.error = "Internal Error";
 				return (response);
 			}
@@ -268,7 +271,7 @@ export class GameServer {
 	{
 		const { lobby_id, user_id, password, map_name, display_name } = request.body;
 
-		const lobby: GameLobby | undefined = GameServer._lobbies.get(lobby_id);
+		const lobby: GameLobby | undefined = GameServer.lobbies.get(lobby_id);
 		if (!lobby) {
 			return ("Not Found");
 		}
@@ -284,14 +287,23 @@ export class GameServer {
 			lobby_type: LobbyType.INVALID,
 		};
 
-		for (const [id, lobby] of GameServer._lobbies) {
+		for (const [id, lobby] of GameServer.lobbies) {
 			if (lobby.can_reconnect(client_id)) {
 				response.match_id = id;
 				response.lobby_type = lobby.lobby_type;
 				if (lobby.password != '') {
 					response.match_has_password = true;
 				}
-				return (response);
+				break ;
+				//return (response);
+			}
+		}
+		for (const [tournament_id, tournament] of this.tournaments) {
+			for (const tournament_player_id of tournament.active_players) {
+				if (tournament_player_id == client_id) {
+					response.tournament_id = tournament_id;
+					break ;
+				}
 			}
 		}
 		return (response);
@@ -310,7 +322,7 @@ export class GameServer {
 	{
 		try {
 			const game_id: number = parseInt(game_id_str);
-			const lobby: GameLobby | undefined = GameServer._lobbies.get(game_id);
+			const lobby: GameLobby | undefined = GameServer.lobbies.get(game_id);
 			if (lobby == undefined) {
 				console.log("game: _display_names_api: lobby with key ", game_id, " was not found");
 				return ({error: 'Not Found', data: []});
@@ -331,7 +343,7 @@ export class GameServer {
 		//console.log("game: got game msg: ", message);
 		try {
 			const game_id: number = parseInt(game_id_str);
-			const lobby: GameLobby | undefined = GameServer._lobbies.get(game_id);
+			const lobby: GameLobby | undefined = GameServer.lobbies.get(game_id);
 			if (lobby == undefined) {
 				console.log("game: lobby with key ", game_id, " was not found");
 				WebsocketConnection.static_send_error(ws, 'Not Found');
@@ -389,7 +401,7 @@ export class GameServer {
 			completeMatch(GameServer._fastify, id, match_data);
 		}
 		console.log("removing lobby ", id, ": ");
-		GameServer._lobbies.delete(id);
+		GameServer.lobbies.delete(id);
 	}
 
 	//returns the lobby id or and error string
@@ -404,7 +416,12 @@ export class GameServer {
 		const lobby_id: number = await createMatchMeta(GameServer._fastify, lobby_type);
 		const lobby: GameLobby = new GameLobby(lobby_type, GameServer._remove_lobby,
 			lobby_id, map_name, ai_count, password, first_completion_callback);
-		GameServer._lobbies.set(lobby_id, lobby);
+		GameServer.lobbies.set(lobby_id, lobby);
 		return (lobby_id);
+	}
+
+	public static finish_tournament_callback(id: number): undefined {
+		console.log("removing tournament with id: ", id);
+		GameServer.tournaments.delete(id);
 	}
 };

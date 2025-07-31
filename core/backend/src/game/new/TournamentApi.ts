@@ -9,6 +9,14 @@ import { WebsocketConnection } from './WebsocketConnection.ts';
 
 import { createMatchMeta, completeMatch, } from '../../functions/match.ts';
 import type { NewMatch } from '../../functions/match.ts';
+import { GameServer } from './GameServer.ts';
+
+import type {
+	LeaveReq,
+	StateReq,
+	StartReq,
+	TournamentState,
+} from '../game_shared/TournamentApiTypes.ts';
 
 import type {
 	GameOptions,
@@ -42,6 +50,39 @@ const join_schema = {
 			lobby_id: { type: 'number' },
 			password: { type: 'string' },
 			display_name: { type: 'string' },
+		}
+	}
+};
+
+const leave_schema = {
+	body: {
+		type: 'object',
+		required: ['map_name', 'password', ],
+		properties: {
+			client_id: { type: 'number' },
+			lobby_id: { type: 'number' },
+		}
+	}
+};
+
+const state_schema = {
+	body: {
+		type: 'object',
+		required: ['map_name', 'password', ],
+		properties: {
+			client_id: { type: 'number' },
+			lobby_id: { type: 'number' },
+		}
+	}
+};
+
+const start_schema = {
+	body: {
+		type: 'object',
+		required: ['map_name', 'password', ],
+		properties: {
+			client_id: { type: 'number' },
+			lobby_id: { type: 'number' },
 		}
 	}
 };
@@ -80,6 +121,24 @@ export class TournamentApi {
 				return (await TournamentApi.join_tournament_api(request));
 			}
 		);
+
+		TournamentApi.start_tournament_api = TournamentApi.start_tournament_api.bind(TournamentApi);
+		fastify.post<{Body: LeaveReq}>(
+			'/api/start_tournament',
+			{ schema: start_schema},
+			async (request, reply) => {
+				return (TournamentApi.start_tournament_api(request));
+			}
+		);
+
+		TournamentApi.leave_tournament_api = TournamentApi.leave_tournament_api.bind(TournamentApi);
+		fastify.post<{Body: LeaveReq}>(
+			'/api/leave_tournament',
+			{ schema: leave_schema},
+			async (request, reply) => {
+				TournamentApi.leave_tournament_api(request);
+			}
+		);
 	}
 
 	static next_tournament_id: number = 1;
@@ -94,7 +153,8 @@ export class TournamentApi {
 		const { map_name, password } = request.body;
 		const tournament_id: number = TournamentApi.next_tournament_id++;
 
-		const tournament: Tournament = new Tournament(map_name, password);
+		const tournament: Tournament = new Tournament(map_name,
+			password, tournament_id, GameServer.finish_tournament_callback);
 		TournamentApi.tournaments.set(tournament_id, tournament);
 		response.tournament_id = tournament_id;
 		return (response);
@@ -109,19 +169,34 @@ export class TournamentApi {
 		if (!tournament) {
 			return ("Not Found");
 		}
-		const msg: ServerError = tournament.join(user_id, map_name, display_name, password);
+		const msg: ServerError = tournament.join(user_id, display_name, password);
 		return (msg);
 	}
 
-	static leave_tournament_api() {
+	static leave_tournament_api(request: FastifyRequest< { Body: LeaveReq } >) {
+		const { client_id, tournament_id } = request.body;
+		const tournament: Tournament | undefined = GameServer.tournaments.get(tournament_id);
+		if (!tournament) {
+			return ;
+		}
+		tournament.leave(client_id);
 	}
 
-	static start_tournament_api() {
+	static start_tournament_api(request: FastifyRequest< { Body: StartReq } >): ServerError {
+		const { client_id, tournament_id } = request.body;
+		const tournament: Tournament | undefined = GameServer.tournaments.get(tournament_id);
+		if (!tournament) {
+			return ("Not Found");
+		}
+		return (tournament.start(client_id));
 	}
 
-	static tournament_state_api() {
-	}
-
-	static tournament_get_game_api() {
+	static tournament_state_api(request: FastifyRequest< { Body: StateReq } >): TournamentState | ServerError {
+		const { client_id, tournament_id } = request.body;
+		const tournament: Tournament | undefined = GameServer.tournaments.get(tournament_id);
+		if (!tournament) {
+			return ("Not Found");
+		}
+		return (tournament.get_state(client_id));
 	}
 };
