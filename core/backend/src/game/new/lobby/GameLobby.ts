@@ -31,7 +31,6 @@ type GameConnection = {
 
 
 //todo:
-//leave()
 //disconnect()
 export class GameLobby {
 	public finished: boolean = false;
@@ -55,8 +54,9 @@ export class GameLobby {
 
 	public lobby_type: LobbyType;
 
+
 	constructor(
-		lobby_type,
+		lobby_type: LobbyType,
 		completion_callback: (id: number) => undefined,
 		id: number,
 		map_name: string,
@@ -86,12 +86,10 @@ export class GameLobby {
 	}
 
 	public can_reconnect(client_id: number): boolean {
-		console.log("connections in can_reconnect: ", this._connections);
 		for (const connection of this._connections) {
 			if (connection.id == client_id) {
 				return (true);
 			} else {
-				console.log("client_id: ", client_id, "; connection.id: ", connection.id);
 			}
 		}
 		return (false);
@@ -153,6 +151,7 @@ export class GameLobby {
 	}
 
 	private _update_lobby() {
+		console.log("Game: _update_lobby()");
 		const update_msg: GameLobbyUpdate = {
 			type: 'game_lobby_update',
 			player_count: this._connections.length,
@@ -183,10 +182,10 @@ export class GameLobby {
 					}
 				}
 			}
+			this.loaded_player_count++;
+			this._update_lobby();
 		}
-		if (connection.id > 0) {
-			connection.sock.send(this._last_broadcast);
-		}
+
 		console.log("Game: client ", connection.id, " reconnected to lobby, ", this.id);
 	}
 
@@ -206,10 +205,12 @@ export class GameLobby {
 				if (client_id > 0) {
 					connection.sock.send(this._last_broadcast);
 				}
-				console.log("Game: client ", client_id, " connected to lobby ", this.id);
 				this.loaded_player_count++;
+				console.log("Game: client ", client_id, " connected to lobby ", this.id);
 				this._update_lobby();
-				if (this._ai_count + this.loaded_player_count == this._map_file.clients.length) {
+				if (this._ai_count + this.loaded_player_count >= this._map_file.clients.length
+					&& this._connections.length + this._ai_count == this._map_file.clients.length
+				) {
 					this._start_game();
 				}
 				return ;
@@ -231,6 +232,7 @@ export class GameLobby {
 		// remove local player websocket and player from game
 		for (const connection of this._connections) {
 			if (connection.id == msg.client_id * -1) {
+				this.loaded_player_count--;
 				if (connection.sock) {
 					connection.sock.ws.close();
 					if (this.engine) {
@@ -240,6 +242,7 @@ export class GameLobby {
 				}
 			}
 			if (connection.id == msg.client_id) {
+				this.loaded_player_count--;
 				if (connection.sock && connection.sock.ws !== ws) {
 					connection.sock.ws.close();
 					if (this.engine) {
@@ -250,23 +253,38 @@ export class GameLobby {
 			}
 		}
 		this._connections = this._connections.filter(c => c.id != msg.client_id && c.id != msg.client_id * -1);
+		this._update_lobby();
 	}
 
-	public recv(ws: WebSocket, msg: ClientToMatch): boolean {
+	public recv(ws: WebSocket, msg: ClientToMatch) {
+		if (msg.type == 'connect') {
+			this._connect(msg.client_id, ws, msg.password);
+			return ;
+		}
+
+		let found: boolean = false;
+		for (const connection of this._connections) {
+			if (connection.sock && connection.sock.ws === ws) {
+				found = true;
+				break ;
+			}
+		}
+		if (!found) {
+			ws.close();
+			return ;
+		}
+
 		switch (msg.type) {
 			case ('send_input'):
 				if (this.engine) {
 					this.engine.process_input(msg as ClientToGameInput);
 				}
 				break ;
-			case ('connect'):
-				this._connect(msg.client_id, ws, msg.password);
-				break ;
 			case ('leave'):
-				this._leave_game(msg);
+				this._leave_game(ws, msg);
 				break ;
 		}
-		return (false);
+		return ;
 	}
 
 	public get_lobby_displaynames(): LobbyDisplaynameResp {
@@ -283,5 +301,14 @@ export class GameLobby {
 			}
 		}
 		return (resp);
+	}
+
+	public ws_close_handler(ws: WebSocket) {
+		for (const connection of this._connections) {
+			if (connection.sock && connection.sock.ws === ws) {
+				this.loaded_player_count--;
+				this._update_lobby();
+			}
+		}
 	}
 };

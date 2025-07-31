@@ -2,6 +2,10 @@
 
 refactor game backend:
 
+[ ] - delete empty lobbies after some time in the backend
+[ ] - update GameLobby.loaded_player_count on websocket close event
+
+
 API endpoints:
 [x]	- /enter_matchmaking -> takes the player id and map name; returns match id
 [x]	- /create_lobby ->  like enter_matchmaking but also takes a password; returns match id
@@ -39,7 +43,7 @@ websocket endpoints:
 [x]: backend: engine migration
 [x]: frontend: adjust websocket communication
 
-[ ]: backend: handle clients that leave the game(during game dosnt matter, but pre game start)
+[ x: backend: handle clients that leave the game(during game dosnt matter, but pre game start)
 [ ]: backend: in the lobby pre game not connected clients need to be timed out so others can join
 
 

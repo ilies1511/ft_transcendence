@@ -176,10 +176,14 @@ export class GameServer {
 
 
 		this._rcv_game_msg = this._rcv_game_msg.bind(this);
+		this._close_socket_lobby_handler = this._close_socket_lobby_handler.bind(this);
 		this._fastify.get('/game/:game_id', { websocket: true }, (socket: WebSocket, req: FastifyRequest) => {
 			const { game_id } = req.params as { game_id: string };
 			socket.on('message', (raw) => {
 				this._rcv_game_msg(game_id, raw.toString(), socket);
+			});
+			socket.on('close', () => {
+				this._close_socket_lobby_handler(game_id, socket);
 			});
 		});
 
@@ -192,6 +196,22 @@ export class GameServer {
 		});
 	}
 
+	private _close_socket_lobby_handler(lobby_id_str: string, ws: WebSocket) {
+		try {
+			const lobby_id: number = parseInt(lobby_id_str);
+			const lobby: GameLobby | undefined = this._lobbies.get(lobby_id);
+			if (!lobby) {
+				ws.close();
+				return ;
+			}
+			lobby.ws_close_handler(ws);
+			return ;
+		} catch (e) {
+			console.log("error: ", e);
+			ws.close();
+			return ;
+		}
+	}
 
 	private async _enter_matchmaking_api(request: FastifyRequest< { Body: EnterMatchmakingReq } >)
 		: Promise<EnterMatchmakingResp>
