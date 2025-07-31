@@ -12,15 +12,12 @@ import type { NewMatch } from '../../functions/match.ts';
 
 import type {
 	GameOptions,
-	GameStartInfo,
-	ServerToClientJson,
 	ServerToClientMessage,
-	ClientToServerInput,
 	EnterMatchmakingReq,
 	EnterMatchmakingResp,
 	CreateLobbyReq,
 	CreateLobbyResp,
-	JoinLobbyReq,
+	JoinReq,
 	CreateTournamentReq,
 	CreateTournamentResp,
 	ReconnectReq,
@@ -29,6 +26,7 @@ import type {
 	ClientToMatch,
 	LobbyDisplaynameResp,
 	GameToClientFinish,
+	ClientToTournament,
 } from '../game_shared/message_types.ts';
 
 import { LobbyType } from '../game_shared/message_types.ts';
@@ -73,7 +71,7 @@ const create_lobby_schema = {
 	}
 };
 
-const join_lobby_schema = {
+const join_schema = {
 	body: {
 		type: 'object',
 		required: ['map_name', 'password', ],
@@ -147,21 +145,30 @@ export class GameServer {
 			}
 		);
 
-		this._create_lobby_api = this._create_lobby_api.bind(this);
+		this.create_lobby_api = this.create_lobby_api.bind(this);
 		this._fastify.post<{Body: CreateLobbyReq}>(
 			'/api/create_lobby',
 			{ schema: create_lobby_schema},
 			async (request, reply) => {
-				return (await this._create_lobby_api(request));
+				return (await this.create_lobby_api(request));
 			}
 		);
 
 		this._join_lobby_api = this._join_lobby_api.bind(this);
-		this._fastify.post<{Body: JoinLobbyReq}>(
+		this._fastify.post<{Body: JoinReq}>(
 			'/api/join_lobby',
-			{ schema: join_lobby_schema},
+			{ schema: join_schema},
 			async (request, reply) => {
 				return (await this._join_lobby_api(request));
+			}
+		);
+
+		this._join_tournament_api = this._join_tournament_api.bind(this);
+		this._fastify.post<{Body: JoinReq}>(
+			'/api/join_tournament',
+			{ schema: join_schema},
+			async (request, reply) => {
+				return (await this._join_tournament_api(request));
 			}
 		);
 
@@ -231,7 +238,7 @@ export class GameServer {
 		}
 	
 		try {
-			const lobby_id: number = await this._create_lobby(LobbyType.MATCHMAKING,
+			const lobby_id: number = await this.create_lobby(LobbyType.MATCHMAKING,
 				map_name, ai_count)
 			const lobby: GameLobby | undefined = this._lobbies.get(lobby_id);
 			if (lobby === undefined) {
@@ -258,7 +265,7 @@ export class GameServer {
 		}
 	}
 
-	private async _create_lobby_api(request: FastifyRequest< { Body: CreateLobbyReq } >)
+	private async create_lobby_api(request: FastifyRequest< { Body: CreateLobbyReq } >)
 		: Promise<CreateLobbyResp>
 	{
 		const response: CreateLobbyResp = {
@@ -267,7 +274,7 @@ export class GameServer {
 		};
 		const { map_name, ai_count, password } = request.body;
 		try {
-			const lobby_id: number = await this._create_lobby(LobbyType.CUSTOM,
+			const lobby_id: number = await this.create_lobby(LobbyType.CUSTOM,
 				map_name, ai_count, password);
 			response.match_id = lobby_id;
 			return (response);
@@ -281,7 +288,7 @@ export class GameServer {
 		}
 	}
 
-	private async _join_lobby_api(request: FastifyRequest< { Body: JoinLobbyReq } >)
+	private async _join_lobby_api(request: FastifyRequest< { Body: JoinReq } >)
 		: Promise<ServerError>
 	{
 		const { lobby_id, user_id, password, map_name, display_name } = request.body;
@@ -294,7 +301,20 @@ export class GameServer {
 		return (msg);
 	}
 
-	//todo: finish this
+	private async _join_tournament_api(request: FastifyRequest< { Body: JoinReq } >)
+		: Promise<ServerError>
+	{
+		const { lobby_id, user_id, password, map_name, display_name } = request.body;
+
+		const tournament: Tournament | undefined = this._tournaments.get(lobby_id);
+		if (!tournament) {
+			return ("Not Found");
+		}
+		const msg: ServerError = tournament.join(user_id, map_name, display_name, password);
+		return (msg);
+	}
+
+	private _next_tournament_id: number = 1;
 	private async _create_tournament_api(request: FastifyRequest<{Body: CreateTournamentReq}>)
 		: Promise<CreateTournamentResp>
 	{
@@ -303,6 +323,12 @@ export class GameServer {
 			tournament_id: -1,
 		};
 
+		const { map_name, password } = request.body;
+		const tournament_id: number = this._next_tournament_id++;
+
+		const tournament: Tournament = new Tournament(map_name, password);
+		this._tournaments.set(tournament_id, tournament);
+		response.tournament_id = tournament_id;
 		return (response);
 	}
 
@@ -386,12 +412,36 @@ export class GameServer {
 		}
 	}
 
-	//todo
 	private _rcv_tournament_msg(tournament_id_str: string, message: string, ws: WebSocket) {
 		console.log("game: got tournament msg: ", message);
+		try {
+			const tournament_id: number = parseInt(tournament_id_str);
+			const tournament: Tournament | undefined = this._tournaments.get(tournament_id);
+			if (tournament == undefined) {
+				console.log("game: tournament with key ", tournament_id, " was not found");
+				WebsocketConnection.static_send_error(ws, 'Not Found');
+				ws.close();
+				return ;
+			}
+			let data: ClientToTournament;
+			try {
+				data = JSON.parse(message) as ClientToTournament;
+			} catch (e) {
+				WebsocketConnection.static_send_error(ws, 'Invalid Request');
+				ws.close();
+				return ;
+			}
+			tournament.recv(ws, data);
+			return ;
+		} catch (e) {
+			console.log("error: ", e);
+			WebsocketConnection.static_send_error(ws, 'Not Found');
+			ws.close();
+			return ;
+		}
 	}
 
-	private _remove_lobby(id: number, end_data?: GameToClientFinish): undefined {
+	private _remove_lobby(id: number, end_data: GameToClientFinish): undefined {
 		if (end_data) {
 			const match_data: NewMatch = {
 				duration: end_data.duration,
@@ -428,17 +478,19 @@ export class GameServer {
 	}
 
 	//returns the lobby id or and error string
-	private async _create_lobby(
+	public async create_lobby(
 		lobby_type: LobbyType,
 		map_name: string,
 		ai_count: number,
 		password?: string,
+		first_completion_callback?: (id: number, end_data: GameToClientFinish) => undefined,
 	): Promise<number>
 	{
 		const lobby_id: number = await createMatchMeta(this._fastify, lobby_type);
 		const lobby: GameLobby = new GameLobby(lobby_type, this._remove_lobby,
-			lobby_id, map_name, ai_count, password);
+			lobby_id, map_name, ai_count, password, first_completion_callback);
 		this._lobbies.set(lobby_id, lobby);
 		return (lobby_id);
 	}
+
 };

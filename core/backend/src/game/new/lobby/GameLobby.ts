@@ -50,18 +50,20 @@ export class GameLobby {
 
 	private _last_broadcast: LobbyToClient;
 
-	private _completion_callback: (id: number, end_data?: GameToClientFinish) => undefined;
+	private _completion_callback: (id: number, end_data: GameToClientFinish) => undefined;
+	private _first_completion_callback?: (id: number, end_data: GameToClientFinish) => undefined;
 
 	public lobby_type: LobbyType;
 
 
 	constructor(
 		lobby_type: LobbyType,
-		completion_callback: (id: number) => undefined,
+		completion_callback: (id: number, msg: GameToClientFinish) => undefined,
 		id: number,
 		map_name: string,
 		ai_count: number,
-		password?: string
+		password?: string,
+		first_completion_callback?: (id: number, msg: GameToClientFinish) => undefined,
 	) {
 		console.log("game: GameLobby constructor");
 		this.lobby_type = lobby_type;
@@ -73,6 +75,7 @@ export class GameLobby {
 		this._map_name = map_name;
 		this._ai_count = ai_count;
 		this._map_file = new MapFile(map_name);
+		this._first_completion_callback = first_completion_callback;
 		if (this._ai_count < 0 || this._ai_count >= this._map_file.clients.length) {
 			throw ("invalid ai count");
 		}
@@ -95,8 +98,11 @@ export class GameLobby {
 		return (false);
 	}
 
-	private _game_engine_finish_callback(): undefined {
-		this._completion_callback(this.id);
+	private _game_engine_finish_callback(msg: GameToClientFinish): undefined {
+		if (this._first_completion_callback) {
+			this._first_completion_callback(this.id, msg);
+		}
+		this._completion_callback(this.id, msg);
 	}
 
 	private _start_game() {

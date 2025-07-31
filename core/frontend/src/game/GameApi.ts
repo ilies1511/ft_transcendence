@@ -3,7 +3,7 @@ import type {
 	EnterMatchmakingResp,
 	CreateLobbyReq,
 	CreateLobbyResp,
-	JoinLobbyReq,
+	JoinReq,
 	CreateTournamentReq,
 	CreateTournamentResp,
 	ReconnectReq,
@@ -46,7 +46,7 @@ export class GameApi {
 		const response = await fetch(`/game/${match_id}/display_names`, {
 			method: 'GET'
 		});
-		const data: CreateLobbyResp = await response.json();
+		const data: LobbyDisplaynameResp = await response.json();
 		console.log("Game: create_lobby api response: ", data);
 		return (data);
 	}
@@ -81,7 +81,7 @@ export class GameApi {
 	)
 		: Promise<ServerError>
 	{
-		const req: JoinLobbyReq = {
+		const req: JoinReq = {
 			lobby_id: lobby_id,
 			user_id: user_id,
 			map_name: map_name,
@@ -104,10 +104,12 @@ export class GameApi {
 		return (data);
 	}
 
-	public static async create_tournament()
+	public static async create_tournament(map_name: string, password: string)
 		: Promise<CreateTournamentResp>
 	{
 		const req: CreateTournamentReq = {
+			map_name: map_name,
+			password: password,
 		};
 		const response = await fetch('/api/create_tournament', {
 			method: 'POST',

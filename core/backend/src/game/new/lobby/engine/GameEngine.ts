@@ -47,9 +47,9 @@ export class GameEngine {
 	public balls: ServerBall[] = [];
 	public walls: ServerWall[] = [];
 	private _alive_player_count: number;
-	private _finish_callback: (end_data?: GameToClientFinish) => undefined;
+	private _finish_callback: (end_data: GameToClientFinish) => undefined;
 
-	constructor(map_name: string, finish_callback: () => undefined) {
+	constructor(map_name: string, finish_callback: (end_data: GameToClientFinish) => undefined) {
 		this.update = this.update.bind(this);
 		this._finish_callback = finish_callback;
 

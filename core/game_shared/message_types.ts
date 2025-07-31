@@ -39,7 +39,7 @@ export interface CreateLobbyReq {
 	password: string;
 };
 
-export interface JoinLobbyReq {
+export interface JoinReq {
 	user_id: number;
 	map_name: string;
 	lobby_id: number;
@@ -52,8 +52,9 @@ export interface CreateLobbyResp {
 	match_id: number;
 };
 
-//todo
 export interface CreateTournamentReq {
+	map_name: string;
+	password: string;
 };
 
 export interface CreateTournamentResp {
@@ -192,9 +193,14 @@ export type ClientToMatch =
 	| ClientToMatchLeave
 ;
 
-export type ClientToTournament = {
-	client_id: number,
+export type ClientToTournamentStart = {
+	type: 'start',
 };
+
+
+export type ClientToTournament = 
+	ClientToTournamentStart
+;
 
 export type ClientToServerMessage =
 	ClientToTournament
