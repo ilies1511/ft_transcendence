@@ -111,17 +111,16 @@ const template = /*html*/`
 				<button id="btn-matchmaking"
 					class="rounded bg-[#0bda8e] px-4 py-2 text-white">Matchmaking</button>
 				<button id="btn-lobby"
-					class="rounded bg-[#b99da6] px-4 py-2 text-white">Custom&nbsp;Lobby</button>
+					class="rounded bg-[#b99da6] px-4 py-2 text-white">Custom Lobby</button>
 				<button id="btn-local"
-					class="rounded bg-[#543b43] px-4 py-2 text-white">Local&nbsp;Game</button>
+					class="rounded bg-[#543b43] px-4 py-2 text-white">Local Game</button>
+				<!-- leave button -->
+				<button id="btn-leave" class="rounded bg-[#D22B2B] px-4 py-2 text-white">Leave Match</button>
 			</div>
 		</div>
 
 		<!-- extra action while a lobby is open -->
-		<button id="btn-add-local-player"
-			class="hidden rounded bg-[#0bda8e] px-4 py-2 text-white">
-			Add&nbsp;Local&nbsp;Player
-		</button>
+		<button id="btn-add-local-player" class="hidden rounded bg-[#0bda8e] px-4 py-2 text-white"> Add Local Player</button>
 
 		<!-- game canvas / iframe / whatever -->
 		<div id="game-container"
@@ -166,8 +165,11 @@ async function test_enter_matchmaking(
 	}
 
 	const gm = await enter_matchmaking(user_id, container, matchmaking_options)
-	if (gm instanceof Game) wireLocalPlayerButton(gm)
-	else console.log(gm as ServerError)
+	if (gm instanceof Game){
+		wireLocalPlayerButton(gm)
+	}else{
+		console.log(gm as ServerError)
+	}
 }
 
 async function test_lobby(
@@ -185,10 +187,10 @@ async function test_lobby(
 
 		const gm = await create_join_lobby(user_id, container, options)
 		if (!(gm instanceof Game)) return
-		wireLocalPlayerButton(gm)				/* attach button control */
+		wireLocalPlayerButton(gm)
 
-		invite_user_to_lobby_skeleton(gm, 2)	/* demo */
-	} else {									/* guest */
+		invite_user_to_lobby_skeleton(gm, 2)
+	} else {
 		const lobby_invite = await recv_lobby_invite_skeleton()
 		if (!lobby_invite.valid) return
 
@@ -225,10 +227,15 @@ async function test_local_player(
 
 function setupGameModes(root: HTMLElement): void {
 	const container = root.querySelector<HTMLElement>('#game-container')!
-	const input      = root.querySelector<HTMLInputElement>('#user-id-input')
-	const btnMatch   = root.querySelector<HTMLButtonElement>('#btn-matchmaking')
-	const btnLobby   = root.querySelector<HTMLButtonElement>('#btn-lobby')
-	const btnLocal   = root.querySelector<HTMLButtonElement>('#btn-local')
+	const input = root.querySelector<HTMLInputElement>('#user-id-input')
+	const btnMatch = root.querySelector<HTMLButtonElement>('#btn-matchmaking')
+	const btnLobby = root.querySelector<HTMLButtonElement>('#btn-lobby')
+	const btnLocal = root.querySelector<HTMLButtonElement>('#btn-local')
+
+	const btnLeave = root.querySelector<HTMLButtonElement>('#btn-leave')
+	btnLeave?.addEventListener('click', () => {
+		globalThis.game?.leave()
+	})
 
 	/* pre-fill & lock field when we already know the user */
 	void (async () => {
