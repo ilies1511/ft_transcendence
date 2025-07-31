@@ -6,6 +6,8 @@ import type {
 	ServerError,
 } from './../game_shared/message_types.ts';
 
+import { LobbyType } from './../game_shared/message_types.ts';
+
 export type MatchmakingOptions = {
 	map_name: string,
 	ai_count: number,
@@ -35,6 +37,6 @@ export async function enter_matchmaking(user_id: number,
 	}
 	const match_id: number = resp.match_id;
 	const game: Game = new Game(user_id, container, match_id,
-		options.map_name, "");
+		options.map_name, "", LobbyType.MATCHMAKING);
 	return (game);
 }

@@ -1,4 +1,10 @@
-//todo: enable map selection
+
+export enum LobbyType {
+	INVALID = 0,
+	MATCHMAKING = 1,
+	CUSTOM = 2,
+	TOURNAMENT = 3,
+};
 
 export type LobbyInvite = {
 	map_name: string;
@@ -63,6 +69,7 @@ export interface ReconnectResp {
 	match_id: number;
 	match_has_password: boolean;
 	tournament_id: number;
+	lobby_type: LobbyType;
 };
 
 export type GameOptions = {
@@ -189,7 +196,6 @@ export type ClientToTournament = {
 	client_id: number,
 };
 
-//todo: leave game option
 export type ClientToServerMessage =
 	ClientToTournament
 	| ClientToMatch

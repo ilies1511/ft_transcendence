@@ -30,6 +30,9 @@ import type {
 
 import { Effects, GameState }
 	from '../../../game_shared/serialization.ts';
+import { LobbyType }
+	from '../../../game_shared/message_types.ts';
+
 
 import { BaseScene } from './scenes/base.ts';
 import { LobbyScene } from './scenes/LobbyScene.ts';
@@ -90,6 +93,8 @@ export class Game {
 
 	private _local_player?: LocalPlayer = undefined;
 
+	private _lobby_type: LobbyType;
+
 
 	constructor(
 		id: number, //some number that is unique for each client, ideally bound to the account
@@ -97,6 +102,7 @@ export class Game {
 		game_id: number,
 		map_name: string,
 		password: string,
+		lobby_type: LobbyType,
 	) {
 		if (globalThis.game !== undefined) {
 			console.log("WARNING: Game constructor called while globalThis.game !== undefined");
@@ -106,9 +112,8 @@ export class Game {
 		}
 		this.password = password;
 		this.map_name = map_name;
-
 		this.container = container;
-
+		this._lobby_type = lobby_type;
 		this.game_id = game_id;
 		this._process_msg = this._process_msg.bind(this);
 		this._rcv_msg = this._rcv_msg.bind(this);

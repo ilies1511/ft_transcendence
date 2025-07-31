@@ -31,6 +31,7 @@ import type {
 	GameToClientFinish,
 } from '../game_shared/message_types.ts';
 
+import { LobbyType } from '../game_shared/message_types.ts';
 import { is_ServerError } from '../game_shared/message_types.ts';
 
 
@@ -210,7 +211,8 @@ export class GameServer {
 		}
 	
 		try {
-			const lobby_id: number = await this._create_lobby(map_name, ai_count)
+			const lobby_id: number = await this._create_lobby(LobbyType.MATCHMAKING,
+				map_name, ai_count)
 			const lobby: GameLobby | undefined = this._lobbies.get(lobby_id);
 			if (lobby === undefined) {
 				console.log("lobby not in this._lobbies eventhough it was just created");
@@ -245,7 +247,8 @@ export class GameServer {
 		};
 		const { map_name, ai_count, password } = request.body;
 		try {
-			const lobby_id: number = await this._create_lobby(map_name, ai_count, password);
+			const lobby_id: number = await this._create_lobby(LobbyType.CUSTOM,
+				map_name, ai_count, password);
 			response.match_id = lobby_id;
 			return (response);
 		} catch (e) {
@@ -283,17 +286,18 @@ export class GameServer {
 		return (response);
 	}
 
-	//todo: finish this
 	private _connections_of(client_id: number): ReconnectResp {
 		const response: ReconnectResp = {
 			match_id: -1,
 			match_has_password: false,
 			tournament_id: -1,
+			lobby_type: LobbyType.INVALID,
 		};
 
 		for (const [id, lobby] of this._lobbies) {
 			if (lobby.can_reconnect(client_id)) {
 				response.match_id = id;
+				response.lobby_type = lobby.lobby_type;
 				if (lobby.password != '') {
 					response.match_has_password = true;
 				}
@@ -405,15 +409,15 @@ export class GameServer {
 
 	//returns the lobby id or and error string
 	private async _create_lobby(
+		lobby_type: LobbyType,
 		map_name: string,
 		ai_count: number,
-		password?: string
+		password?: string,
 	): Promise<number>
 	{
-		//todo: mode
-		const dummy_mode: number = 42;
-		const lobby_id: number = await createMatchMeta(this._fastify, dummy_mode);
-		const lobby: GameLobby = new GameLobby(this._remove_lobby, lobby_id, map_name, ai_count, password);
+		const lobby_id: number = await createMatchMeta(this._fastify, lobby_type);
+		const lobby: GameLobby = new GameLobby(lobby_type, this._remove_lobby,
+			lobby_id, map_name, ai_count, password);
 		this._lobbies.set(lobby_id, lobby);
 		return (lobby_id);
 	}

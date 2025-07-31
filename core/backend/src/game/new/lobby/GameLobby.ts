@@ -18,6 +18,8 @@ import type {
 	ClientToMatchLeave,
 } from '../../game_shared/message_types.ts';
 
+import { LobbyType } from '../../game_shared/message_types.ts';
+
 import { is_ServerError } from '../../game_shared/message_types.ts';
 
 type GameConnection = {
@@ -51,7 +53,10 @@ export class GameLobby {
 
 	private _completion_callback: (id: number, end_data?: GameToClientFinish) => undefined;
 
+	public lobby_type: LobbyType;
+
 	constructor(
+		lobby_type,
 		completion_callback: (id: number) => undefined,
 		id: number,
 		map_name: string,
@@ -59,6 +64,7 @@ export class GameLobby {
 		password?: string
 	) {
 		console.log("game: GameLobby constructor");
+		this.lobby_type = lobby_type;
 		this._completion_callback = completion_callback;
 		if (password !== undefined) {
 			this.password = password;

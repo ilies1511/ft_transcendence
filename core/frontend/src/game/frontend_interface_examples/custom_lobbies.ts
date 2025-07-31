@@ -1,6 +1,6 @@
 import { Game } from '../game_new.ts';
 import { GameApi } from '../GameApi.ts';
-
+import { LobbyType } from '../game_shared/message_types.ts';
 import { get_password_from_user } from '../placeholder_globals.ts';
 
 import type {
@@ -37,7 +37,8 @@ export async function accept_lobby_invite(
 		container,
 		invite.lobby_id,
 		invite.map_name,
-		invite.lobby_password
+		invite.lobby_password,
+		LobbyType.CUSTOM,
 	);
 	return (game);
 }

@@ -53,7 +53,7 @@ export async function attempt_reconnect(match_container: HTMLElement, user_id: n
 	}
 	if (match_id != -1) {
 		console.log("Game: Reconnecting to match with password:" , lobby_password);
-		new Game(user_id, match_container, match_id, "default", lobby_password);
+		new Game(user_id, match_container, match_id, "default", lobby_password, reconnect.lobby_type);
 		await globalThis.game.reconnect_local_player();
 		return ;
 	}
