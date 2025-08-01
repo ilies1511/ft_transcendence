@@ -5,6 +5,9 @@ import { Effects } from '../game_shared/serialization.ts';
 export class ServerWall extends SharedWall {
 	public angular_vel: number;
 
+	public next_normal: ServerVec2 | undefined = undefined;
+	public interp_normal: ServerVec2 | undefined = undefined;
+
 	constructor(
 		center: ServerVec2,
 		normal: ServerVec2,
@@ -33,10 +36,14 @@ export class ServerWall extends SharedWall {
 		const newX = n.x * cos - n.y * sin;
 		const newY = n.x * sin + n.y * cos;
 
-		this.normal.x = newX;
-		this.normal.y = newY;
-		this.normal.unit();
-		this.update();
+		this.next_normal = new ServerVec2(newX, newY);
+		this.next_normal.unit();
+		//this.normal = next_normal;
+		//this.normal.x = newX;
+		//this.normal.y = newY;
+
+		//this.normal.unit();
+		//this.update();
 		this.angular_vel = angle;
 	}
 };

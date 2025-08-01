@@ -106,6 +106,7 @@ export class Tournament {
 	}
 
 	public start(client_id: number): ServerError {
+		console.log("Starting tournament..");
 		this._total_player_count = this._rounds[0].players.length;
 		this._rounds[0].active_players = 0;
 		this._rounds[0].looking_for_game = this._total_player_count;

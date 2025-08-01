@@ -1,7 +1,7 @@
 {
 	"paddle_length": 10,
 	"base_length": 10,
-	"health": 1,
+	"health": 10,
 	"max_time": 60,
 	"players": {
 		"1": {
@@ -24,6 +24,12 @@
 			"center": [0, -5],
 			"normal": [0, 1],
 			"length": 20,
+			"effects": []
+		},
+		"3": {
+			"center": [0, 0],
+			"normal": [0, 1],
+			"length": 40,
 			"effects": []
 		}
 	},

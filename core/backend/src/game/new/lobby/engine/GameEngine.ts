@@ -15,6 +15,7 @@ import type {
 	GameToClientFinish,
 	ClientToGameInput,
 } from './../../../game_shared/message_types.ts';
+import { SharedVec2 } from './../../../game_shared/objects/SharedVec2.ts';
 
 
 import { MapFile } from './../maps/Map.ts';
@@ -150,12 +151,15 @@ export class GameEngine {
 	private update_balls(delta_time: number) {
 		const input_d_time: number = delta_time;
 		for (const ball of this.balls) {
+			if (Math.abs(ball.pos.x) > 100 || Math.abs(ball.pos.y) > 100) {
+				ball.reset();
+				continue ;
+			}
 			delta_time = input_d_time;
 			//console.log(ball);
 			while (delta_time > EPSILON) {
 				//console.log("delta time: ", delta_time);
 				const intersecs: ft_math.intersection_point[] = [];
-				
 				for (const wall of this.walls) {
 					//console.log(wall);
 					const intersection: ft_math.intersection_point | undefined =
@@ -236,6 +240,14 @@ export class GameEngine {
 				}
 			}
 		}
+
+		for (const wall of this.walls) {
+			if (!wall.next_normal) {
+				continue ;
+			}
+			wall.normal = wall.next_normal;
+			wall.next_normal = undefined;
+		}
 	}
 
 	private rotate_wall(wall: ServerWall, angle: number, delta_time: number) {
@@ -259,6 +271,11 @@ export class GameEngine {
 
 	private update_walls(delta_time: number) {
 		//this.walls[4].rotate(Math.PI / 2, delta_time);
+		for (const wall of this.walls) {
+			if (wall.center.x == 0 && wall.center.y == 0) {
+				wall.rotate(Math.PI / 2, delta_time);
+			}
+		}
 	}
 
 	private update_paddles(delta_time: number) {
@@ -270,8 +287,8 @@ export class GameEngine {
 	private update(delta_time: number) {
 		//console.log("update");
 		this.update_paddles(delta_time);
-		this.update_balls(delta_time);
 		this.update_walls(delta_time);
+		this.update_balls(delta_time);
 		this.finish_frame(delta_time);
 	}
 

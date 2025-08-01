@@ -99,7 +99,7 @@ export class LocalPlayer {
 			});
 
 			this._socket.addEventListener("close", () => {
-				console.log("GAME: SecondPlayer soket disconnected");
+				console.log("GAME: SecondPlayer socket disconnected");
 			});
 		} catch (e) {
 			console.log("GAME: SecondPlayer error: ", e);

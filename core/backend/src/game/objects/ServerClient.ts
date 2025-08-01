@@ -1,5 +1,6 @@
 import { ServerVec2 } from './ServerVec2.ts'
 import { ServerWall } from './ServerWall.ts'
+import { ServerBall } from './ServerBall.ts'
 import { SharedClient } from '../game_shared/objects/SharedClient.ts';
 import type { WebSocket } from '@fastify/websocket';
 import { Effects } from '../game_shared/serialization.ts';

@@ -99,6 +99,7 @@ import type {
 	ServerError,
 	LobbyInvite
 } from '../game/game_shared/message_types.ts'
+import { LobbyType } from '../game/game_shared/message_types.ts'
 
 import { getSession } from '../services/session'
 
@@ -255,11 +256,22 @@ async function test_tournament(
 		console.log(create_resp);
 		return ;
 	}
+	const invite: LobbyInvite = {
+		map_name: "default",
+		lobby_password: await get_password_from_user('Tournament'),
+		lobby_id: create_resp.tournament_id,
+		lobby_type: LobbyType.TOURNAMENT,
+		valid: true,
+	};
+	//todo:
+	//invite(lobby_invite, target_user);
 	const start_resp: DefaultResp = await TournamentApi.start_tournament(user_id, create_resp.tournament_id);
 	if (start_resp.error != '') {
 		console.log("start tournament error: ", start_resp.error);
 		return ;
 	}
+
+
 
 }
 
