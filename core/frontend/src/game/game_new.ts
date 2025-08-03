@@ -178,6 +178,7 @@ export class Game {
 	}
 
 	public disconnect() {
+		this.finished = true;
 		if (this._local_player) {
 			this._local_player.disconnect();
 		}

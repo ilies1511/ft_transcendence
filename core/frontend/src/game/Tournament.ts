@@ -15,6 +15,7 @@ export class Tournament {
 
 
 	private constructor(user_id: number, tournament_id: number, password: string) {
+		this.user_id = user_id;
 		this.password = password;
 		this.tournament_id = tournament_id;
 		globalThis.tournament = this;
@@ -41,11 +42,7 @@ export class Tournament {
 			valid: true,
 		};
 
-		const tournament: Tournament | undefined =
-			await Tournament.accept_tournament_invite(user_id, display_name, invite);
-		if (!tournament) {
-			return ;
-		}
+		return (Tournament.accept_tournament_invite(user_id, display_name, invite));
 	}
 
 	//todo: user feedback if invite fails
@@ -92,6 +89,7 @@ export class Tournament {
 			console.log("start tournament error: ", start_resp.error);
 			return ;
 		}
+		console.log("started tournament");
 	}
 
 	public async invite(target_user_id: number) {

@@ -119,12 +119,16 @@ const template = /*html*/`
 			<div class="flex gap-2">
 				<button id="btn-matchmaking"
 					class="rounded bg-[#0bda8e] px-4 py-2 text-white">Matchmaking</button>
+				<button id="btn-create-tournament"
+					class="rounded bg-[#0bda8e] px-4 py-2 text-white">Create Tournament</button>
 				<button id="btn-lobby"
 					class="rounded bg-[#b99da6] px-4 py-2 text-white">Custom Lobby</button>
 				<button id="btn-local"
 					class="rounded bg-[#543b43] px-4 py-2 text-white">Local Game</button>
 				<!-- leave button -->
 				<button id="btn-leave" class="rounded bg-[#D22B2B] px-4 py-2 text-white">Leave Match</button>
+				<button id="btn-disconnect" class="rounded bg-[#D22B2B] px-4 py-2 text-white">Disconnect</button>
+				<button id="btn-reconnect" class="rounded bg-[#D22B2B] px-4 py-2 text-white">Reconnect</button>
 			</div>
 		</div>
 
@@ -260,14 +264,19 @@ function setupGameModes(root: HTMLElement): void {
 	const container = root.querySelector<HTMLElement>('#game-container')!
 	const input = root.querySelector<HTMLInputElement>('#user-id-input')
 	const btnMatch = root.querySelector<HTMLButtonElement>('#btn-matchmaking')
+	const btnCreateTournament = root.querySelector<HTMLButtonElement>('#btn-create-tournament')
 	const btnLobby = root.querySelector<HTMLButtonElement>('#btn-lobby')
 	const btnLocal = root.querySelector<HTMLButtonElement>('#btn-local')
 
 	const btnLeave = root.querySelector<HTMLButtonElement>('#btn-leave')
+	const btnDisconnect = root.querySelector<HTMLButtonElement>('#btn-disconnect')
+	const btnReconnect = root.querySelector<HTMLButtonElement>('#btn-reconnect')
 	btnLeave?.addEventListener('click', () => {
 		globalThis.game?.leave()
 	})
-
+	btnDisconnect?.addEventListener('click', () => {
+		globalThis.game?.disconnect()
+	})
 	/* pre-fill & lock field when we already know the user */
 	void (async () => {
 		const user = await getSession()
@@ -283,7 +292,8 @@ function setupGameModes(root: HTMLElement): void {
 		return isNaN(n) ? null : n
 	}
 
-	const run = async (mode: 'match' | 'lobby' | 'local'): Promise<void> => {
+	const run = async (mode: 'match' | 'lobby' | 'local' | 'tournament'
+		| 'reconnect'): Promise<void> => {
 		const user = await getSession()
 		const user_id = user?.id ?? getUserId()
 		if (user_id === null) { alert('invalid id'); return }
@@ -291,17 +301,27 @@ function setupGameModes(root: HTMLElement): void {
 		await attempt_reconnect(container, user_id)
 		if (globalThis.game !== undefined) return
 
+		const do_nothing = async () => {};
+
 		switch (mode) {
-			//case 'match':	await test_enter_matchmaking(container, user_id);	break
-			case 'match':	await test_tournament(container, user_id);	break
+			case 'match':	await test_enter_matchmaking(container, user_id);	break
+			case 'tournament':	await test_tournament(container, user_id);	break
 			case 'lobby':	await test_lobby(user_id, container);				break
 			case 'local':	await test_local_player(user_id, container);		break
-		}
+			// case 'reconnect': await attempt_reconnect(container, user_id); break ;
+	 	}
 	}
 
 	btnMatch?.addEventListener('click', () => run('match'))
 	btnLobby?.addEventListener('click', () => run('lobby'))
 	btnLocal?.addEventListener('click', () => run('local'))
+	btnCreateTournament?.addEventListener('click', () => run('tournament'))
+	btnReconnect?.addEventListener('click', () => run('reconnect'))
+	//btnPlaceholder2?.addEventListener('click', () => run('placeholder'))
+	//btnPlaceholder3?.addEventListener('click', () => run('placeholder'))
+	//btnPlaceholder4?.addEventListener('click', () => run('placeholder'))
+	//btnPlaceholder5?.addEventListener('click', () => run('placeholder'))
+	//btnPlaceholder6?.addEventListener('click', () => run('placeholder'))
 }
 
 
