@@ -209,7 +209,7 @@ export class GameServer {
 		const { user_id, display_name, map_name, ai_count } = request.body;
 		console.log("GAME: _enter_matchmaking_api: ", request.body);
 		for (const [lobby_id, lobby] of GameServer.lobbies) {
-			if (lobby.join(user_id, map_name, display_name) == "") {
+			if (lobby.join(user_id, display_name) == "") {
 				response.match_id = lobby_id;
 				return (response);
 			}
@@ -224,7 +224,7 @@ export class GameServer {
 				response.error = "Internal Error";
 				return (response);
 			}
-			const join_error: ServerError = lobby.join(user_id, map_name, display_name);
+			const join_error: ServerError = lobby.join(user_id, display_name);
 			if (join_error != "") {
 				console.log("Could not join newly created game, game the settings weird?");
 				console.log("Error: ", join_error);

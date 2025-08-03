@@ -22,6 +22,7 @@ export async function accept_lobby_invite(
 	display_name: string,
 	) : Promise<ServerError | Game>
 {
+	console.log("INVITE: ", invite);
 	const join_error: ServerError = await GameApi.join_lobby(
 		user_id,
 		invite.lobby_id,

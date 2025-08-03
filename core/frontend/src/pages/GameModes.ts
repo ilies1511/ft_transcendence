@@ -189,7 +189,7 @@ async function test_lobby(
 ): Promise<void> {
 	const lobby_password = await get_password_from_user('Game')
 
-	if (user_id === 1) {			/* host */
+	if (user_id === 2) {			/* host */
 		const options: CustomLobbyOptions = {
 			map_name: 'default',
 			lobby_password,
@@ -310,9 +310,9 @@ function setupGameModes(root: HTMLElement): void {
 		await attempt_reconnect(container, user_id)
 		if (globalThis.game !== undefined) return
 
-			//case 'match':	await test_enter_matchmaking(container, user_id);	break
 		switch (mode) {
-			case 'match':	await test_tournament(container, user_id);	break
+			case 'match':	await test_enter_matchmaking(container, user_id);	break
+			//case 'match':	await test_tournament(container, user_id);	break
 			case 'lobby':	await test_lobby(user_id, container);				break
 			case 'local':	await test_local_player(user_id, container);		break
 		}

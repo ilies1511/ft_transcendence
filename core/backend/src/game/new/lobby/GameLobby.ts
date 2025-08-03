@@ -86,6 +86,7 @@ export class GameLobby {
 			target_player_count: this._map_file.clients.length,
 		};
 		this._last_broadcast = lobby_status;
+		//console.log(this);
 	}
 
 	public can_reconnect(client_id: number): boolean {
@@ -131,7 +132,7 @@ export class GameLobby {
 			password = '';
 		}
 		if (this.password != password) {
-			console.log("this.password: ", this.password, "; password: ", password);
+			console.log("join: this.password: ", this.password, "; password: ", password);
 			return ("Invalid Password");
 		}
 		console.log("Game: User", user_id, " joing lobby ", this.id);
@@ -196,7 +197,7 @@ export class GameLobby {
 	private _connect(client_id: number, ws: WebSocket, password: string) {
 		if (password != this.password) {
 			WebsocketConnection.static_send_error(ws, 'Invalid Password');
-			console.log("this.password: ", this.password, "; password: ", password);
+			console.log("connect: this.password: ", this.password, "; password: ", password);
 			ws.close();
 			return ;
 		}
