@@ -1,6 +1,7 @@
 import type { ExtendedWebSocket, Message} from '../../types/wsTypes.ts';
 import { type FastifyInstance } from 'fastify'
 import { isBlocked } from '../block.ts';
+import { findUserWithFriends } from '../user.ts';
 
 export async function handleWsMessage(
 	fastify: FastifyInstance,
@@ -19,6 +20,18 @@ export async function handleWsMessage(
 
 		case 'direct_message': {
 			const toId = msg.to as number
+			const senderId = extSocket.userId!;
+
+			//NEW: checking if friends
+			const senderFriends = await findUserWithFriends(fastify, senderId);
+			const isFriend = senderFriends?.friends.some(f => f.id === toId);
+			if (!isFriend) {
+				return extSocket.send(JSON.stringify({
+					type: 'error',
+					error: 'You can only message friends'
+				}));
+			}
+
 			if (await isBlocked(fastify, toId, extSocket.userId!)) {
 				return extSocket.send(JSON.stringify({
 					type: 'error',
@@ -38,14 +51,24 @@ export async function handleWsMessage(
 					error: 'User not connected'
 				}))
 			}
+
+			const timestamp = Date.now();
 			for (const tsock of targets) {
 				tsock.send(JSON.stringify({
 					type: 'direct_message',
 					from: extSocket.userId,
 					content: msg.content,
-					ts: Date.now()
+					ts: timestamp
 				}))
 			}
+			//NEW: echo back sender his message for its own UI/history
+			extSocket.send(JSON.stringify({
+				type: 'direct_message',
+				from: senderId,
+				content: msg.content,
+				ts: timestamp
+			}));
+
 			return
 		}
 		// case 'ping': {
