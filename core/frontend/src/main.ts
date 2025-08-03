@@ -1,8 +1,9 @@
 import './style.css';
 import { Router } from './router.ts';
-import { initFriendUI } from './pages/friendUI.ts';
+import { initFriendUI, destroyFriendUI } from './chat/chat-init.ts';
 import { currentUser } from './services/auth';
-import { initFriendsWs, closeFriendsWs } from './websocket.ts';
+// import { initFriendsWs, closeFriendsWs } from './websocket.ts';
+import { initWs, closeWs } from './services/websocket';
 import { presence } from './services/presence';
 import { updateDot } from './utils/statusDot';
 import type { FriendStatusMsg } from './types/ws';
@@ -12,7 +13,7 @@ import { refreshHeader } from './ui/header';
 const root = document.querySelector<HTMLElement>('#app')!;
 export const router = new Router(root);
 
-initFriendUI(); // friend-list UI
+// initFriendUI(); // friend-list UI
 document.addEventListener('click', router.linkHandler); // link delegation
 
 /* Fire auth-change once if a valid cookie already exists */
@@ -28,10 +29,14 @@ document.addEventListener('auth-change', async () => {
 
 	if (user) {
 		presence.start();
-		initFriendsWs();
+		// initFriendsWs();
+		initWs();
+		initFriendUI();
 	} else {
 		presence.stop();
-		closeFriendsWs();
+		// closeFriendsWs();
+		closeWs();
+		destroyFriendUI();
 	}
 });
 

@@ -1,11 +1,17 @@
-// src/features/chat/chat-state.ts  (updated: use chatState for myUserId/myUsername in functions like appendMessage/loadHistory)
+// src/features/chat/chat-state.ts
+import { chatState } from './chat-init';
 
-import { chatState } from './chat-init';  // Shared state
+const unreadCounts = new Map<number, number>(); // friendId -> #unread
+const friendUsernames = new Map<number, string>(); // friendId -> username
 
-const unreadCounts = new Map<number, number>();		// friendId → #unread
-const friendUsernames = new Map<number, string>();	// friendId → username
+//TODO: move this?
+interface StoredMsg {
+	from: number;
+	content: string;
+	ts: number;
+}
 
-// Badge utilities
+// badge utilities
 export function updateMainBadge() {
 	let total = 0;
 	unreadCounts.forEach(c => total += c);
@@ -49,12 +55,12 @@ export function saveUnreadCounts() {
 	sessionStorage.setItem('unreadCounts', JSON.stringify(obj));
 }
 
-// Message helpers (append, load, save history)
+// message helpers (append, load, save history)
 export function appendMessage(from: number, username: string, content: string, ts: number) {
 	const box = document.getElementById('messages')!;
 	const align = from === chatState.myUserId ? 'ml-auto text-right' : 'mr-auto text-left';
-	const bg	= from === chatState.myUserId ? 'bg-[#f22667] text-white' : 'bg-[#181113] text-[#b99da6]';
-	const time	= new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+	const bg = from === chatState.myUserId ? 'bg-[#f22667] text-white' : 'bg-[#181113] text-[#b99da6]';
+	const time = new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
 	box.insertAdjacentHTML('beforeend', `
 		<div class="max-w-[75%] mb-2 ${align}">
@@ -75,7 +81,7 @@ export function loadHistory(friendId: number | null) {
 	box.innerHTML = '';
 
 	const key = `chat_${friendId}`;
-	const msgs: { from: number; content: string; ts: number; }[] =
+	const msgs: StoredMsg[] =
 		JSON.parse(sessionStorage.getItem(key) || '[]');
 
 	msgs.forEach(m =>
@@ -95,17 +101,16 @@ export function saveToHistory(keyId: number, from: number, content: string, ts: 
 		JSON.parse(sessionStorage.getItem(key) || '[]');
 
 	const last = arr[arr.length - 1];
-	if (last && last.content === content && last.ts === ts) return;	// exact dup
+	if (last && last.content === content && last.ts === ts)
+		return;	// exact dup
 	arr.push({ from, content, ts });
 	sessionStorage.setItem(key, JSON.stringify(arr));
 }
 
-// Cleanup helper
 export function clearChatHistory() {
 	sessionStorage.clear();
 	unreadCounts.clear();
 	updateMainBadge();
 }
 
-// Expose maps for internal use
 export { unreadCounts, friendUsernames };

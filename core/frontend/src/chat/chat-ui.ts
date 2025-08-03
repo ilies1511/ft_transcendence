@@ -1,9 +1,8 @@
-// src/features/chat/chat-ui.ts  (updated: import/use chatState instead of direct imports; no more assignment errors)
-
-import { sendWs } from '../services/websocket';  // for send
-import { appendMessage, saveToHistory } from './chat-state';  // for optimistic send
-import { chatState } from './chat-init';  // Shared state
-import { updateMainBadge } from './chat-state';  // For showFriends
+// src/features/chat/chat-ui.ts
+import { sendWs } from '../services/websocket';
+import { appendMessage, saveToHistory } from './chat-state';
+import { chatState } from './chat-init';
+import { updateMainBadge } from './chat-state';
 
 // Static HTML skeleton
 export const template = /*html*/ `
@@ -52,7 +51,6 @@ export const template = /*html*/ `
 	</div>
 `;
 
-// Visibility helpers
 export function showWrapper() {
 	document.getElementById('panelWrapper')!.classList.remove('hidden');
 }
@@ -65,9 +63,9 @@ export function showFriends() {
 	friendsPan.classList.remove('hidden');
 	chatPan.classList.add('hidden');
 	chatPan.style.display = 'none';
-	chatState.currentChatUserId = null;  // Now assigning to property (mutable)
+	chatState.currentChatUserId = null;
 	document.getElementById('messages')!.innerHTML = '';
-	updateMainBadge();  // From chat-state
+	updateMainBadge();
 }
 export function showChat() {
 	const friendsPan = document.getElementById('friendsPanel') as HTMLElement;
@@ -77,21 +75,41 @@ export function showChat() {
 	chatPan.style.display = 'flex';
 }
 
-// Wire all DOM events
+// wire DOM elements
 export function wireEvents(root: HTMLElement) {
-	const toggleBtn = root.querySelector<HTMLButtonElement>('#toggleBtn')!;
-	const closePanel = root.querySelector<HTMLButtonElement>('#closePanel')!;
-	const backBtn = root.querySelector<HTMLButtonElement>('#backBtn')!;
-	const closeChat = root.querySelector<HTMLButtonElement>('#closeChat')!;
-	const msgForm = root.querySelector<HTMLFormElement>('#msgForm')!;
-	const msgInput = root.querySelector<HTMLInputElement>('#msgInput')!;
-	const messagesBox = root.querySelector<HTMLElement>('#messages')!;
+	const toggleBtn = root.querySelector<HTMLButtonElement>('#toggleBtn');
+	if (!toggleBtn) throw new Error('#toggleBtn element not found');
+
+	const closePanel = root.querySelector<HTMLButtonElement>('#closePanel');
+	if (!closePanel) throw new Error('#closePanel element not found');
+
+	const backBtn = root.querySelector<HTMLButtonElement>('#backBtn');
+	if (!backBtn) throw new Error('#backBtn element not found');
+
+	const closeChat = root.querySelector<HTMLButtonElement>('#closeChat');
+	if (!closeChat) throw new Error('#closeChat element not found');
+
+	const msgForm = root.querySelector<HTMLFormElement>('#msgForm');
+	if (!msgForm) throw new Error('#msgForm element not found');
+
+	const msgInput = root.querySelector<HTMLInputElement>('#msgInput');
+	if (!msgInput) throw new Error('#msgInput element not found');
+
+	const messages = root.querySelector<HTMLElement>('#messages');
+	if (!messages) throw new Error('#messages element not found');
 
 	// bubble toggle
 	toggleBtn.addEventListener('click', () => {
-		const hidden = document.getElementById('panelWrapper')!
-			.classList.contains('hidden');
-		hidden ? (showFriends(), showWrapper()) : hideWrapper();
+		const wrapper = document.getElementById('panelWrapper')!;
+		const hidden  = wrapper.classList.contains('hidden');
+
+		if (hidden) {
+			showFriends();
+			showWrapper();
+		} else {
+			hideWrapper();
+			showFriends();
+		}
 	});
 
 	// close icons
@@ -125,7 +143,15 @@ export function wireEvents(root: HTMLElement) {
 			content: msgInput.value
 		});
 
+
+		// TODO: refactor friends logic request
+		// client.send(JSON.stringify({
+		// 	type: 'new_friend_request',
+		// 	requestId: fr.id,
+		// 	from: sender.username
+		// }));
+
 		msgInput.value = '';
-		messagesBox.scrollTop = messagesBox.scrollHeight;
+		messages.scrollTop = messages.scrollHeight;
 	});
 }
