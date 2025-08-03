@@ -4,6 +4,7 @@ export enum LobbyType {
 	MATCHMAKING = 1,
 	CUSTOM = 2,
 	TOURNAMENT = 3,
+	TOURNAMENT_GAME = 4,
 };
 
 export type LobbyInvite = {
