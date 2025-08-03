@@ -28,10 +28,10 @@ const UsersPage: PageModule = {
 			if (!(usersRes.ok && friendsRes.ok && outRes.ok && inRes.ok))
 				throw new Error('Failed to load friendship data');
 
-			const users		= await usersRes.json()			as any[];
-			const friends	= (await friendsRes.json()).friends as { id: number }[];
-			const outReq	= await outRes.json()				as { id: number; recipient_id: number }[];
-			const inReq		= await inRes.json()				as { id: number; requester_id: number }[];
+			const users = await usersRes.json() as any[];
+			const friends = (await friendsRes.json()).friends as { id: number }[];
+			const outReq = await outRes.json() as { id: number; recipient_id: number }[];
+			const inReq = await inRes.json() as { id: number; requester_id: number }[];
 
 			const friendIds	 = new Set(friends.map(f => f.id));
 			const outPending = new Map(outReq.map(r => [r.recipient_id, r.id]));
