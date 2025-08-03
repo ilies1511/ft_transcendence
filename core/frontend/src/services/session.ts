@@ -1,18 +1,22 @@
 import { currentUser } from './auth';
 
-/* in-memory cache that lives only for the life of the tab */
+// in memory cache so we dont need to call currentUser every time.
 let cache: Awaited<ReturnType<typeof currentUser>> | undefined;
 
 export async function getSession() {
-  if (cache !== undefined) return cache;   // reuse if already known
-  try {
-    cache = await currentUser();           // GET /api/me  (may 401)
-  } catch {
-    cache = null;                          // treat network/401 as “guest”
-  }
-  return cache;
+	if (cache !== undefined)
+	return cache;
+
+	try {
+		cache = await currentUser();
+	} catch {
+		cache = null;
+	}
+
+	return cache;
 }
 
+// reset after logout
 export function clearSession() {
-  cache = undefined;                       // reset after logout
+	cache = undefined;
 }
