@@ -53,7 +53,7 @@ export async function fetchAndFill(myId: number) {
 					//todo: does it need map_name?
 					invite.valid = true;
 				} else if (globalThis.game) {
-					invite.lobby_type = LobbyType.CUSTOM;//todo: correct type
+					invite.lobby_type = globalThis.game.lobby_type;
 					invite.lobby_password = globalThis.game.password;
 					invite.lobby_id = globalThis.game.game_id;
 					invite.map_name = globalThis.game.map_name;

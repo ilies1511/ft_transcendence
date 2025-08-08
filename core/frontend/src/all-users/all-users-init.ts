@@ -4,6 +4,7 @@ import { template, wireEvents, unWireEvents } from './all-users-ui';
 import { fetchAndFill } from './all-users-list';
 import { inviteToast } from '../ui/inviteToast';
 import type { LobbyInvite, ServerError } from '../game/game_shared/message_types.ts';
+import { LobbyType } from '../game/game_shared/message_types.ts';
 import {
 	accept_lobby_invite,
 	create_join_lobby,
@@ -11,6 +12,7 @@ import {
 	recv_lobby_invite_skeleton,
 } from '../game/frontend_interface_examples/custom_lobbies.ts';
 import { Game } from '../game/game_new.ts'
+import { Tournament } from '../game/Tournament.ts'
 
 
 export async function initAllUsersUI() {
@@ -39,19 +41,39 @@ async function handleLobbyInvite(ev: Event) {
 
 	console.log('[LobbyInvite] from user', from, content);
 
-	//const game: Game | ServerError = await accept_lobby_invite(
-	//	user_id,
-	//	container,
-	//	invite,
-	//	display_name,
-	//);
+	const me           = await getSession();
+	const container    = document.querySelector<HTMLElement>('#game-container');
 
-	//if (game == '') {
-	//	//game should be running
-	//	return ;
-	//} else {
-	//	console.log("Error with lobby invite: ", game);
-	//}
+	if (!me || !container) {
+		return;
+	}
+	const user_id      = me.id;
+	const display_name = me.nickname ?? `player_${user_id}`;
+
+	switch (invite.lobby_type) {
+		case (LobbyType.INVALID):
+			return ;
+		case (LobbyType.CUSTOM):
+		case (LobbyType.MATCHMAKING):
+		case (LobbyType.TOURNAMENT_GAME):
+			const game: Game | ServerError = await accept_lobby_invite(
+				user_id,
+				container,
+				invite,
+				display_name,
+			);
+			if (game == '') {
+				//game should be running
+				return ;
+			} else {
+				console.log("Error with lobby invite: ", game);
+			}
+			return ;
+		case (LobbyType.TOURNAMENT):
+			const tournament: Tournament | undefined = await
+				Tournament.accept_tournament_invite(user_id, display_name, invite);
+			return ;
+	}
 }
 
 export function destroyAllUsersUI() {
