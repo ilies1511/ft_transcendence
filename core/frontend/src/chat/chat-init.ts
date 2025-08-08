@@ -1,4 +1,4 @@
-// src/features/chat/chat-init.ts  (updated: use shared mutable state object for currentChatUserId/myUserId/myUsername to allow assignments across modules)
+// src/features/chat/chat-init.ts
 
 import { getSession } from '../services/session';
 import { wsEvents } from '../services/websocket';

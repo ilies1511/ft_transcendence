@@ -69,7 +69,31 @@ export async function handleWsMessage(
 				ts: timestamp
 			}));
 
-			return
+			return;
+		}
+		case 'lobby_invite': {
+			const toId = msg.to as number
+			const senderId = extSocket.userId!;
+
+			const targets = userSockets.get(toId);
+
+			if (!targets?.size) {
+				return extSocket.send(JSON.stringify({
+					type:  'error',
+					error: 'User not connected'
+				}));
+			}
+
+			for (const tsock of targets) {
+				tsock.send(JSON.stringify({
+					type: 'lobby_invite',
+					from: senderId,
+					content: msg.content,
+				}));
+			}
+
+			return;
+			//TODO: Do we send something back to the inviter?
 		}
 		// case 'ping': {
 		// 	return extSocket.send(JSON.stringify({ type: 'pong' }))

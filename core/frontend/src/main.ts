@@ -9,6 +9,7 @@ import { updateDot } from './utils/statusDot';
 import type { FriendStatusMsg } from './types/ws';
 import { refreshMenu } from './ui/menu';
 import { refreshHeader } from './ui/header';
+import { initAllUsersUI, destroyAllUsersUI } from './all-users/all-users-init.ts';
 
 const root = document.querySelector<HTMLElement>('#app')!;
 export const router = new Router(root);
@@ -32,10 +33,12 @@ document.addEventListener('auth-change', async () => {
 		// initFriendsWs();
 		initWs();
 		initFriendUI();
+		initAllUsersUI();
 	} else {
 		presence.stop();
 		// closeFriendsWs();
 		closeWs();
+		destroyAllUsersUI(); 
 		destroyFriendUI();
 	}
 });
