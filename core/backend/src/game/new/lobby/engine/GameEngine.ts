@@ -119,6 +119,7 @@ export class GameEngine {
 	}
 
 	private _finish_game() {
+		console.log("Finishing game engine..");
 		this.finished = true;
 		this.stop_loop();
 		const msg: GameToClientFinish = {
@@ -330,14 +331,33 @@ export class GameEngine {
 	private update(delta_time: number) {
 		//console.log("update");
 		this._duration += delta_time;
-		if (this._timer) {
+		if (this._timer != undefined) {
 			this._timer -= delta_time;
 			if (this._timer <= 0) {
+				this._timer = 0;
 				if (this.lobby_type != LobbyType.TOURNAMENT) {
 					this._finish_game();
 					return ;
 				}
-				//this is a tournament lobby and a draw is not an option
+				// this is a tournament lobby and a draw is not an option
+				let highest_health: number = 1;
+				for (const client of this.clients) {
+					if (client.score > highest_health) {
+						highest_health = client.score;
+					}
+				}
+				let tied_player_count: number = 0;
+				for (const client of this.clients) {
+					if (client.score == highest_health) {
+						tied_player_count++;
+					}
+				}
+				if (tied_player_count <= 1) {
+					this._finish_game();
+					return ;
+				} else {
+					console.log("Tournament not ending since players are tied..");
+				}
 			}
 		}
 		this.update_paddles(delta_time);

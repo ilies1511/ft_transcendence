@@ -255,7 +255,7 @@ export class Tournament {
 			console.log("Warning: Finished tournament with != 1 plate count:", last_round.players);
 			return ;
 		}
-		console.log("winner: ", last_round.players[0]);
+		//console.log("winner: ", last_round.players[0]);
 		const msg: Finish = {
 			type: 'finish',
 		};

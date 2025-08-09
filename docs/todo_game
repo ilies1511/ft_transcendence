@@ -41,7 +41,7 @@ websocket endpoints:
 
 [x]: backend: game timer
 [ ]: serilize game timer
-[ ]: backend: game timer for tournament games: currently does nothing
+[x]: backend: game timer for tournament games: currently does nothing
 
 [x]: implement a way to have a lobby for 2 players on the same keyboard
 
