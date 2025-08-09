@@ -33,6 +33,7 @@ export async function initAllUsersUI() {
 	wsEvents.addEventListener('lobby_invite', handleLobbyInvite);
 }
 
+//todo: currently the ivite gets automatically accepted
 async function handleLobbyInvite(ev: Event) {
 	const { from, content } = (ev as CustomEvent).detail;
 	const invite: LobbyInvite = content as LobbyInvite;
@@ -71,7 +72,7 @@ async function handleLobbyInvite(ev: Event) {
 			return ;
 		case (LobbyType.TOURNAMENT):
 			const tournament: Tournament | undefined = await
-				Tournament.accept_tournament_invite(user_id, display_name, invite);
+				Tournament.accept_tournament_invite(user_id, display_name, invite, container);
 			return ;
 	}
 }

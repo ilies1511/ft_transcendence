@@ -454,6 +454,7 @@ export class Game {
 			console.log("Skipping reconnect for local player..");
 			return ;
 		}
+		console.log("Game: attempting to reconnect local player..");
 		const reconnect: ReconnectResp = await GameApi.reconnect(this.client_id* - 1);
 		let match_id: number = -1;
 		if (reconnect.tournament_id >= 0) {

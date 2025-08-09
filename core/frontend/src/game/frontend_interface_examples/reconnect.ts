@@ -1,4 +1,5 @@
 import { Game } from '../game_new.ts';
+import { Tournament } from '../Tournament.ts';
 import { GameApi } from '../GameApi.ts';
 
 import { get_password_from_user } from '../placeholder_globals.ts';
@@ -44,6 +45,14 @@ export async function attempt_reconnect(match_container: HTMLElement, user_id: n
 	let match_id: number = -1;
 	if (reconnect.tournament_id >= 0) {
 		lobby_password = await get_password_from_user('Tournament');
+		if (!globalThis.tournament) {
+			new Tournament(user_id, reconnect.tournament_id, lobby_password, match_container);
+		} else {
+			console.log("Error: there is allready a tournament obj");
+		}
+		if (reconnect.match_id >= 0) {
+			match_id = reconnect.match_id;
+		}
 		//todo
 	} else if (reconnect.match_id >= 0) {
 		match_id = reconnect.match_id;

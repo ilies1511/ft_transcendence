@@ -129,6 +129,7 @@ const template = /*html*/`
 				<button id="btn-leave" class="rounded bg-[#D22B2B] px-4 py-2 text-white">Leave Match</button>
 				<button id="btn-disconnect" class="rounded bg-[#D22B2B] px-4 py-2 text-white">Disconnect</button>
 				<button id="btn-reconnect" class="rounded bg-[#D22B2B] px-4 py-2 text-white">Reconnect</button>
+				<button id="btn-start_tournament" class="rounded bg-[#D22B2B] px-4 py-2 text-white">Start Tournament</button>
 			</div>
 		</div>
 
@@ -251,13 +252,10 @@ async function test_tournament(
 	const tournament_password = await get_password_from_user('Tournament');
 
 	const tournament: Tournament | undefined = await Tournament.create_tournament(
-		user_id, display_name, map_name, tournament_password);
+		user_id, display_name, map_name, tournament_password, container);
 	if (!tournament) {
 		return ;
 	}
-	//todo:
-	//tournament.invite(lobby_invite, target_user);
-	tournament.start();
 }
 
 function setupGameModes(root: HTMLElement): void {
@@ -271,11 +269,15 @@ function setupGameModes(root: HTMLElement): void {
 	const btnLeave = root.querySelector<HTMLButtonElement>('#btn-leave')
 	const btnDisconnect = root.querySelector<HTMLButtonElement>('#btn-disconnect')
 	const btnReconnect = root.querySelector<HTMLButtonElement>('#btn-reconnect')
+	const btnStartTournament = root.querySelector<HTMLButtonElement>('#btn-start_tournament')
 	btnLeave?.addEventListener('click', () => {
 		globalThis.game?.leave()
 	})
 	btnDisconnect?.addEventListener('click', () => {
 		globalThis.game?.disconnect()
+	})
+	btnStartTournament?.addEventListener('click', () => {
+		globalThis.tournament?.start()
 	})
 	/* pre-fill & lock field when we already know the user */
 	void (async () => {
@@ -317,11 +319,6 @@ function setupGameModes(root: HTMLElement): void {
 	btnLocal?.addEventListener('click', () => run('local'))
 	btnCreateTournament?.addEventListener('click', () => run('tournament'))
 	btnReconnect?.addEventListener('click', () => run('reconnect'))
-	//btnPlaceholder2?.addEventListener('click', () => run('placeholder'))
-	//btnPlaceholder3?.addEventListener('click', () => run('placeholder'))
-	//btnPlaceholder4?.addEventListener('click', () => run('placeholder'))
-	//btnPlaceholder5?.addEventListener('click', () => run('placeholder'))
-	//btnPlaceholder6?.addEventListener('click', () => run('placeholder'))
 }
 
 
