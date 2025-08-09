@@ -107,6 +107,10 @@ export class Tournament {
 		console.log("got tournament msg: ", event.data);
 		const msg: TournamentToClient = JSON.parse(event.data) as TournamentToClient;
 		switch (msg.type) {
+			case ('finish'):
+				//todo: render result or smth
+				this.finished = true;
+				break ;
 			case ('update'):
 				break ;
 			case ('new_game'):

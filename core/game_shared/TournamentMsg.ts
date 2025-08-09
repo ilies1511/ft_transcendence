@@ -16,6 +16,12 @@ export type NewGame = {
 	type: 'new_game';
 };
 
+export type Finish = {
+	type: 'finish';
+};
+
 export type TournamentToClient =
 	Update
-	| NewGame;
+	| Finish
+	| NewGame
+;

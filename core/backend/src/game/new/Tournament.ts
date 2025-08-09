@@ -11,6 +11,7 @@ import type {
 	TournamentToClient,
 	Update,
 	NewGame,
+	Finish,
 } from '../game_shared/TournamentMsg.ts';
 
 import type {
@@ -255,6 +256,13 @@ export class Tournament {
 			return ;
 		}
 		console.log("winner: ", last_round.players[0]);
+		const msg: Finish = {
+			type: 'finish',
+		};
+		for (const player of this._rounds[0].players) {
+			player.ws?.send(JSON.stringify(msg));
+			player.ws?.close();
+		}
 	}
 
 	public rcv_msg(data: string, ws: WebSocket) {
