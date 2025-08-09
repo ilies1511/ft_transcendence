@@ -50,7 +50,7 @@ export class GameEngine {
 	private _alive_player_count: number;
 	private _finish_callback: (end_data: GameToClientFinish) => undefined;
 	private _duration: number = 0;
-	private _timer?: number;//seconds left of the game
+	public timer?: number;//seconds left of the game
 	public lobby_type: LobbyType;
 
 	constructor(map_name: string,
@@ -61,7 +61,7 @@ export class GameEngine {
 		this.update = this.update.bind(this);
 		this._finish_callback = finish_callback;
 		this.lobby_type = lobby_type;
-		this._timer = duration;
+		this.timer = duration;
 
 		this.running = false;
 		const map: MapFile = new MapFile(map_name);
@@ -331,10 +331,10 @@ export class GameEngine {
 	private update(delta_time: number) {
 		//console.log("update");
 		this._duration += delta_time;
-		if (this._timer != undefined) {
-			this._timer -= delta_time;
-			if (this._timer <= 0) {
-				this._timer = 0;
+		if (this.timer != undefined) {
+			this.timer -= delta_time;
+			if (this.timer <= 0) {
+				this.timer = 0;
 				if (this.lobby_type != LobbyType.TOURNAMENT) {
 					this._finish_game();
 					return ;

@@ -40,7 +40,7 @@ websocket endpoints:
 [ ]: render tournament result
 
 [x]: backend: game timer
-[ ]: serilize game timer
+[x]: serilize game timer
 [x]: backend: game timer for tournament games: currently does nothing
 
 [x]: implement a way to have a lobby for 2 players on the same keyboard
@@ -51,7 +51,7 @@ websocket endpoints:
 [x]: backend: engine migration
 [x]: frontend: adjust websocket communication
 
-[ x: backend: handle clients that leave the game(during game dosnt matter, but pre game start)
+[x]: backend: handle clients that leave the game(during game dosnt matter, but pre game start)
 [ ]: backend: in the lobby pre game not connected clients need to be timed out so others can join
 
 
@@ -126,7 +126,7 @@ sockets:
 		-- [x] deactive objects on frontend
 		-- [x] update objects on frontend
 	- [x] add score communication
-	- [ ] add time communication
+	- [x] add time communication
 	! [x] communicate button press/release from frontend to backend
 		-- [x] client: include account bound unique client ID
 		-- [x] server: map the client id to the correct object
@@ -169,7 +169,7 @@ cli:
 	- [ ] TBD
 
 live chat:
-	- [ ] game invitation
+	- [x] game invitation
 	- [ ] tournament notification
 
 DOCS:
