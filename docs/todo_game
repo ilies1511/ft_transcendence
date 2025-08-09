@@ -3,7 +3,7 @@
 refactor game backend:
 
 [ ] - delete empty lobbies after some time in the backend
-[ ] - update GameLobby.loaded_player_count on websocket close event
+[x] - update GameLobby.loaded_player_count on websocket close event
 
 [x] - GameServer: make the class static and not object based
 
@@ -33,13 +33,19 @@ websocket endpoints:
 	-> [x]: 3. frontend needs to display them
 	-> [ ]: would be cool: have display names for the lobby screen while waiting -> later (should be simple tho)
 
+[ ]: send tournament upates to frontend
 
+[ ]: render tournament state
+[ ]: render game result
+[ ]: render tournament result
 
-[ ]: backend: game timer
+[x]: backend: game timer
+[ ]: serilize game timer
+[ ]: backend: game timer for tournament games: currently does nothing
 
 [x]: implement a way to have a lobby for 2 players on the same keyboard
 
-[ ]: tournament system
+[x]: tournament system
 
 
 [x]: backend: engine migration
@@ -79,7 +85,7 @@ server:
 	- [x] fix buggy intersection fn: Ball still flies out after a few minutes with high speed..
 	- [x] fix buggy intersection fn: Ball still flies out after a few minutes with rotating wall..
 		-> made checks so this only effects walls that are currently rotating(walls that can rotate can be hit multiple times in a row)
-	- [ ] slow balls don't get pushed by rotating walls
+	- [x] slow balls don't get pushed by rotating walls
 	- [x] why does the server stop sending updates with buggy intersection fn
 	- [x] break down 'Game' class into smaller ones like 'GameLobby' and 'Physics'
 
@@ -152,7 +158,7 @@ game state:
 	- [x] movable player paddles with ball interaction
 	- [x] point scoring
 	- [x] score board
-	- [x] win conditon (timer[ ]/score[x])
+	- [x] win conditon (timer[x]/score[x])
 tournament:
 	- [ ] TBD
 

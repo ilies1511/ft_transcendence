@@ -6,7 +6,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 //import websocketPlugin, { SocketStream } from '@fastify/websocket'
 //import type { ClientToGameMessage } from '../../game_shared/message_types';
 import type { WebSocket } from '@fastify/websocket';
-import type { ClientToGame } from './../../../game_shared/message_types.ts';
+import { LobbyType, type ClientToGame } from './../../../game_shared/message_types.ts';
 import type {
 	GameOptions,
 	GameStartInfo,
@@ -49,10 +49,19 @@ export class GameEngine {
 	public walls: ServerWall[] = [];
 	private _alive_player_count: number;
 	private _finish_callback: (end_data: GameToClientFinish) => undefined;
+	private _duration: number = 0;
+	private _timer?: number;//seconds left of the game
+	public lobby_type: LobbyType;
 
-	constructor(map_name: string, finish_callback: (end_data: GameToClientFinish) => undefined) {
+	constructor(map_name: string,
+		lobby_type: LobbyType,
+		finish_callback: (end_data: GameToClientFinish) => undefined,
+		duration?: number,
+	) {
 		this.update = this.update.bind(this);
 		this._finish_callback = finish_callback;
+		this.lobby_type = lobby_type;
+		this._timer = duration;
 
 		this.running = false;
 		const map: MapFile = new MapFile(map_name);
@@ -114,16 +123,50 @@ export class GameEngine {
 		this.stop_loop();
 		const msg: GameToClientFinish = {
 			type: 'finish',
-			duration: 42,
-			mode: 69,
+			duration: this._duration,
+			mode: this.lobby_type,
 			placements: [],
 		};
+		let unplaced_player_count: number = 0;
+
 		for (const client of this.clients) {
 			if (client.global_id == 0) {
 				continue ;
 			}
 			if (client.final_placement == -1) {
-				client.final_placement = 1;
+				unplaced_player_count++;
+			}
+		}
+
+		let next_placement: number = 1;
+		// fill out placements of players that did not die
+		while (unplaced_player_count > 0) {
+			let highest_health: number = 1;
+			let clients_to_place: ServerClient[] = [];
+			for (const client of this.clients) {
+				if (client.global_id == 0 || client.final_placement != -1) {
+					continue ;
+				}
+				if (client.score > highest_health) {
+					highest_health = client.score;
+					clients_to_place = [];
+				}
+				if (client.score == highest_health) {
+					clients_to_place.push(client);
+				}
+			}
+			for (const client of clients_to_place) {
+				client.final_placement = next_placement;
+			}
+			unplaced_player_count -= clients_to_place.length;
+			next_placement += clients_to_place.length;
+		}
+		if (unplaced_player_count < 0) {
+			console.log("ERROR: game: unplaced_player_count < 0: logic bug");
+		}
+		for (const client of this.clients) {
+			if (client.global_id == 0) {
+				continue ;
 			}
 			msg.placements.push({
 				id: client.global_id,
@@ -286,6 +329,17 @@ export class GameEngine {
 
 	private update(delta_time: number) {
 		//console.log("update");
+		this._duration += delta_time;
+		if (this._timer) {
+			this._timer -= delta_time;
+			if (this._timer <= 0) {
+				if (this.lobby_type != LobbyType.TOURNAMENT) {
+					this._finish_game();
+					return ;
+				}
+				//this is a tournament lobby and a draw is not an option
+			}
+		}
 		this.update_paddles(delta_time);
 		this.update_walls(delta_time);
 		this.update_balls(delta_time);
