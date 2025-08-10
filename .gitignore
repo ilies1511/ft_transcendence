@@ -35,5 +35,5 @@ dist-ssr
 *.sw?
 core/backend/stash.ts
 fs2.txt
-*.png
+# *.png
 core/backend/client_google.json
