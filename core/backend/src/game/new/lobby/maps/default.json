@@ -1,5 +1,5 @@
 {
-	"paddle_length": 10,
+	"paddle_length": 7,
 	"base_length": 10,
 	"health": 10,
 	"max_time": 60,
@@ -18,29 +18,39 @@
 			"center": [0, 5],
 			"normal": [0, 1],
 			"length": 20,
-			"effects": []
+			"effects": [],
+			"rotation": 0
 		},
 		"2": {
 			"center": [0, -5],
 			"normal": [0, 1],
 			"length": 20,
-			"effects": []
+			"effects": [],
+			"rotation": 0
 		},
 		"3": {
-			"center": [0, 0],
+			"center": [0, -3.5],
 			"normal": [0, 1],
-			"length": 40,
-			"effects": []
+			"length": 5,
+			"effects": [],
+			"rotation": 0.4
+		},
+		"4": {
+			"center": [0, 3.5],
+			"normal": [0, 1],
+			"length": 5,
+			"effects": [],
+			"rotation": 0.4
 		}
 	},
 	"balls": {
 		"1": {
-			"point": [1, 0],
+			"point": [2, 1],
 			"speed": [3, 0],
 			"effects": []
 		},
 		"2": {
-			"point": [1, 0],
+			"point": [-2, -1],
 			"speed": [-3, 1],
 			"effects": []
 		}

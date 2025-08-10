@@ -244,12 +244,13 @@ export class GameEngine {
 					hit_points.push(intersc.p);
 				}
 				delta_time -= first_intersec.time;
-				delta_time -= EPSILON; /* idk why but without this the ball flys through walls */
-				ball.pos = first_intersec.p;
-				if (first_intersec.wall.effects.indexOf(Effects.BASE) != -1) {
+				//delta_time -= EPSILON; /* idk why but without this the ball flys through walls */
+
+				const wall = first_intersec.wall;
+				if (wall.effects.indexOf(Effects.BASE) != -1) {
 					//console.log("hit base");
 					ball.reset();
-					const goaled_client = this.clients.find(c => c.base === first_intersec.wall);
+					const goaled_client = this.clients.find(c => c.base === wall);
 					if (goaled_client == undefined) {
 						console.log("Game: error: base that was scored at could not be matched to a client");
 						process.exit(1);
@@ -267,13 +268,18 @@ export class GameEngine {
 					}
 					break ;
 				}
-				const offset: ServerVec2 = first_intersec.wall.normal.clone();
-				offset.scale(0.01);
-				if (ft_math.dot(ball.speed, first_intersec.wall.normal) < 0) {
-					ball.pos.add(offset);
-				} else {
-					ball.pos.sub(offset);
-				}
+
+				ball.pos = first_intersec.p;
+				const normal_hit = wall.interp_normal ? wall.interp_normal.clone() : wall.normal.clone();
+
+				const r_to_hit = first_intersec.p.clone().sub(wall.center);
+				const wall_vel_at_hit = new ServerVec2(-wall.angular_vel * r_to_hit.y, wall.angular_vel * r_to_hit.x);
+				const rel_v = ball.speed.clone().sub(wall_vel_at_hit);
+				
+				// small positional slop; keep it tiny
+				const sign = ft_math.dot(rel_v, normal_hit) < 0 ? 1 : -1;
+				ball.pos.add(normal_hit.scale(sign * EPSILON));
+
 				ball.reflect(hit_walls, hit_points);
 
 				ball.last_collision_obj_id = ball.cur_collision_obj_id;
@@ -316,9 +322,7 @@ export class GameEngine {
 	private update_walls(delta_time: number) {
 		//this.walls[4].rotate(Math.PI / 2, delta_time);
 		for (const wall of this.walls) {
-			if (wall.center.x == 0 && wall.center.y == 0) {
-				wall.rotate(Math.PI / 2, delta_time);
-			}
+			wall.rotate(wall.rotation * Math.PI / 2, delta_time);
 		}
 	}
 

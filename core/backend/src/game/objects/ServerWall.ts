@@ -7,6 +7,7 @@ export class ServerWall extends SharedWall {
 
 	public next_normal: ServerVec2 | undefined = undefined;
 	public interp_normal: ServerVec2 | undefined = undefined;
+	public rotation: number = 0;
 
 	constructor(
 		center: ServerVec2,
@@ -14,8 +15,8 @@ export class ServerWall extends SharedWall {
 		length: number,
 		effects?: Effects[],
 		obj_id?: number,
-		dispose?: boolean)
-	{
+		dispose?: boolean
+	) {
 		super(center, normal, length, effects, obj_id, dispose);
 		this.angular_vel = 0;
 	}
