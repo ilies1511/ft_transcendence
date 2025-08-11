@@ -15,3 +15,6 @@ export const icons = {
 	</svg>`
 
 } as const;
+
+// ALL THE ICONS FROM HERE, JUST ADD NEW IF YOU NEED ANY:
+// https://heroicons.com/outline
