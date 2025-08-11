@@ -1,45 +1,41 @@
-import { getSession } from '../services/session';
+import { getSession } from '../services/session'
 
 const PUBLIC_LINKS = [
-	{ href: '/login', text: 'Login' },
-	{ href: '/register', text: 'Register' }
-];
+	{ href:'/login', text:'Login' },
+	{ href:'/register', text:'Register' }
+]
 
 const PRIVATE_LINKS = [
-	{ href: '/', text: 'Home' },
-	{ href: '/about', text: 'About' },
-	{ href: '/profile', text: 'Profile' },
-	{ href: '/users', text: 'All users' },
-	{ href: '/settings', text: 'Settings' },
-	{ href: '/modes', text: 'Game Modes' },
-	{ href: '/test', text: 'test' },
-	{ href: '/friendlist', text: 'Friend list' }
-];
+	{ href:'/', text:'Home', inMenu:true },
+	{ href:'/profile', text:'Profile', inMenu:false },
+	{ href:'/users', text:'All users', inMenu:true },
+	{ href:'/settings', text:'Settings', inMenu:false },
+	{ href:'/modes', text:'Game Modes', inMenu:true },
+	{ href:'/friendlist', text:'Friend list',inMenu:false }
+]
 
 export async function refreshMenu() {
-	const user = await getSession();
-	const desktopMenu = document.getElementById('desktop-menu');
-	const mobileMenuList = document.getElementById('mobile-menu-list');
+	const user = await getSession()
+	const nav = document.getElementById('desktop-menu')
+	const mobile = document.getElementById('mobile-menu-list')
+	if (!nav || !mobile) return
 
-	if (!desktopMenu || !mobileMenuList) {
-		console.error('Menu elements not found in DOM');
-		return;
-	}
+	nav.innerHTML = ''
+	mobile.innerHTML = ''
 
-	desktopMenu.innerHTML = '';
-	mobileMenuList.innerHTML = '';
+	const pool = user ? PRIVATE_LINKS : PUBLIC_LINKS
+	const links = pool.filter(l => (l as any).inMenu ?? true)
 
-	const links = user ? PRIVATE_LINKS : PUBLIC_LINKS;
+	links.forEach(l => {
+		const li = document.createElement('li')
+		li.innerHTML = `<a href="${l.href}" data-route>${l.text}</a>`
+		nav.appendChild(li)
+	})
 
-	links.forEach(link => {
-		const li = document.createElement('li');
-		li.innerHTML = `<a href="${link.href}" data-route>${link.text}</a>`;
-		desktopMenu.appendChild(li);
-	});
-
-	links.forEach(link => {
-		const li = document.createElement('li');
-		li.innerHTML = `<a href="${link.href}" data-route class="block py-2">${link.text}</a>`;
-		mobileMenuList.appendChild(li);
-	});
+	links.forEach(l => {
+		const li = document.createElement('li')
+		li.innerHTML =
+			`<a href="${l.href}" data-route class="block py-2">${l.text}</a>`
+		mobile.appendChild(li)
+	})
 }

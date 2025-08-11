@@ -3,11 +3,9 @@ export const template = /*html*/`
 	<!-- bubble -->
 	<button id="allToggle"
 		class="fixed bottom-[140px] right-6 z-50 flex h-14 w-14 items-center justify-center
-		       rounded-full bg-[#357edd] text-white shadow-lg hover:bg-[#2c69b8]">
-		🧑‍🤝‍🧑
+			rounded-full bg-[#357edd] text-white shadow-lg hover:bg-[#2c69b8]"> 🧑‍🤝‍🧑
 	</button>
 
-	<!-- wrapper -->
 	<div id="allWrapper"
 		class="fixed bottom-[210px] right-6 z-40 w-80 hidden flex flex-col">
 
@@ -26,7 +24,6 @@ export const template = /*html*/`
 	</div>
 `;
 
-/* ───── helpers ───── */
 export function showAll() {
 	document.getElementById('allWrapper')!.classList.remove('hidden');
 }
@@ -34,25 +31,23 @@ export function hideAll() {
 	document.getElementById('allWrapper')!.classList.add('hidden');
 }
 
-/* ───── named handlers ───── */
 function toggleHandler() {
 	const wrap = document.getElementById('allWrapper')!;
 	wrap.classList.toggle('hidden');
 }
 function closeHandler() { hideAll(); }
 
-/* ───── wire / unwire ───── */
 export function wireEvents(root: HTMLElement) {
 	const toggle = root.querySelector<HTMLButtonElement>('#allToggle');
 	const close	 = root.querySelector<HTMLButtonElement>('#allClose');
 
 	if (toggle) toggle.addEventListener('click', toggleHandler);
-	if (close)	 close.addEventListener('click', closeHandler);
+	if (close) close.addEventListener('click', closeHandler);
 }
 export function unWireEvents(root: HTMLElement) {
 	const toggle = root.querySelector<HTMLButtonElement>('#allToggle');
-	const close	 = root.querySelector<HTMLButtonElement>('#allClose');
+	const close = root.querySelector<HTMLButtonElement>('#allClose');
 
 	if (toggle) toggle.removeEventListener('click', toggleHandler);
-	if (close)	 close.removeEventListener('click', closeHandler);
+	if (close) close.removeEventListener('click', closeHandler);
 }

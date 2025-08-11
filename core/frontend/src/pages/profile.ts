@@ -1,10 +1,13 @@
 // frontend/src/pages/profile.ts
 import type { PageModule } from '../router';
 import type { ApiUser }       from '../types/api'
-import { currentUser } from '../services/auth'
+// import { getSession } from '../services/auth'
 import { router } from '../main'
 import { updateDot } from '../utils/statusDot'
 import { isFriend } from '../utils/isFriend'
+import { presence } from '../services/presence';
+import type { FriendStatusMsg } from '../types/ws';
+import { getSession } from '../services/session';
 
 
 const template = /*html*/ `
@@ -134,8 +137,8 @@ async function renderProfile(root: HTMLElement, user: ApiUser) {
 	const dot = root.querySelector<HTMLSpanElement>('#profileStatus')!
 	dot.dataset.userId = String(user.id)
 
-	const me = await currentUser()
-	const isMe = me?.id === user.id
+	const me = await getSession();
+	const isMe = me?.id === user.id;
 
 	if (isMe) {
 		updateDot(user.id, 1) // always green for yourself
@@ -146,6 +149,19 @@ async function renderProfile(root: HTMLElement, user: ApiUser) {
 	} else {
 		dot.classList.add('hidden') // strangers see no dot
 	}
+
+	// const onStatus = (ev:Event) => {
+	// 	const { friendId, online } = (ev as CustomEvent<FriendStatusMsg>).detail
+	// 	if (friendId === user.id) updateDot(friendId, online);
+	// }
+
+	// // attach when the profile is shown
+	// presence.addEventListener('friend-status', onStatus);
+
+	// // detach when the route is left
+	// (root as any).onDestroy = () => {
+	// 	presence.removeEventListener('friend-status', onStatus)
+	// }
 
 	// TESTING USER STATS AND MACHES
 	const stats = await fetchUserStats(user.id);
@@ -215,7 +231,7 @@ const ProfilePage: PageModule & { renderWithParams?: Function } = {
 			const user = await res.json() as ApiUser
 			await renderProfile(root, user)
 		} else {
-			const me = await currentUser()
+			const me = await getSession()
 			if (!me) { router.go('/login'); return }
 			await renderProfile(root, { ...me, live: 1 } as ApiUser)
 		}
@@ -223,7 +239,7 @@ const ProfilePage: PageModule & { renderWithParams?: Function } = {
 
 	// /profile (current user)
 	async afterRender(root) {
-		const me = await currentUser()
+		const me = await getSession()
 		if (!me) { router.go('/login'); return }
 		await renderProfile(root, { ...me, live: 1 } as ApiUser)
 	}

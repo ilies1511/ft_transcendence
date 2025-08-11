@@ -1,13 +1,9 @@
 import { router } from '../main';
 import { getSession, clearSession } from '../services/session';
+import { closeWs } from './websocket';
 
-const DEFAULT_REDIRECT = '/';  // Fallback route if session fetch fails after login
+const DEFAULT_REDIRECT = '/';
 
-/**
- * Submits login credentials and redirects to the user's profile on success.
- * @param email User's email
- * @param password User's password
- */
 export async function submitLogin(email: string, password: string) {
 	const res = await fetch('/api/login', {
 		method: 'POST',
@@ -44,10 +40,6 @@ export interface AuthUser {
 	live: number;
 }
 
-/**
- * Fetches the current authenticated user from /api/me.
- * @returns AuthUser object or null if not authenticated
- */
 export async function currentUser(): Promise<AuthUser | null> {
 	const res = await fetch('/api/me', { credentials: 'include' });
 	if (!res.ok) return null;
@@ -58,10 +50,8 @@ export async function currentUser(): Promise<AuthUser | null> {
 	}
 }
 
-/**
- * Logs out the user, clears the session cache, and redirects to login.
- */
 export async function logout() {
+	closeWs()
 	await fetch('/api/logout', { method: 'POST', credentials: 'include' });
 	clearSession();  // Reset cache for next session check
 	document.dispatchEvent(new Event('auth-change'));

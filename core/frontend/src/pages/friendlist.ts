@@ -1,118 +1,180 @@
-import type { PageModule } from '../router'
+// frontend/src/pages/friends.ts
+import type { PageModule } from '../router';
+import { getSession } from '../services/session';
+import { wsEvents } from '../services/websocket';
 
-type UserPreview = { id: number; username: string; avatar: string }
+type UserPreview = {
+	id: number;
+	username: string;
+	avatar: string;
+};
 
-/* ---- fetch helper (only used when friends[] still contains IDs) ---- */
-async function fetchUser(id: number): Promise<UserPreview> {
-	const u = await fetch(`/api/users/${id}`).then(r => r.json())
-	return { id: u.id, username: u.username, avatar: u.avatar }
+// build one list item
+const row = (u:UserPreview, right = '') => /*html*/`
+	<li class="bg-[#2b171e] rounded-xl p-5 sm:px-6 sm:py-5 text-lg text-white
+		flex flex-col sm:flex-row sm:items-center justify-between gap-5"
+		data-uid="${u.id}">
+		<span class="font-medium truncate flex items-center gap-2">
+			<img src="/avatars/${u.avatar}" class="h-6 w-6 rounded-full object-cover">
+			<a href="/profile/${u.id}" data-route class="hover:underline">${u.username}</a>
+		</span>
+		${right}
+	</li>`;
+
+// empty-state helper
+const emptyMsg = (txt:string) => `<p class="text-[#ca91a3]">${txt}</p>`;
+
+// fetch single user preview
+async function getUser(id: number): Promise<UserPreview> {
+	const response = await fetch(`/api/users/${id}`);
+	const userData = await response.json();
+
+	return {
+		id: userData.id,
+		username: userData.username,
+		avatar: userData.avatar
+	};
 }
 
-const li = (u: UserPreview, right = '') => /*html*/`
-<li class="bg-[#2b171e] rounded-xl p-5 sm:px-6 sm:py-5 text-lg text-white
-		   flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-	<span class="font-medium truncate flex items-center gap-2">
-		<img src="/avatars/${u.avatar}" class="h-6 w-6 rounded-full object-cover">
-		${u.username}
-	</span>
-	${right}
-</li>`
-
-const empty = (txt: string) => `<p class="text-[#ca91a3]">${txt}</p>`
-
-const FriendListPage: PageModule = {
+const FriendListPage:PageModule = {
 	render(root) {
 		root.innerHTML = /*html*/`
 			<div class="min-h-screen bg-[#221116] flex flex-col items-center p-10 space-y-10">
-				<h2 class="text-4xl text-white font-semibold">Friend list</h2>
+				<h2 class="text-4xl text-white font-semibold">Friends</h2>
 
-				${['Pending', 'Accepted', 'Rejected'].map(s => /*html*/`
+				${['Incoming', 'Outgoing', 'Friends'].map(label => /*html*/`
 					<section class="w-full max-w-2xl space-y-4">
-						<h3 class="text-xl text-white">${s}</h3>
-						<ul id="${s.toLowerCase()}" class="space-y-4"></ul>
-						<div id="${s.toLowerCase()}-empty">${empty('Loading…')}</div>
+						<h3 class="text-xl text-white">${label}</h3>
+						<ul id="${label.toLowerCase()}" class="space-y-4"></ul>
+						<div id="${label.toLowerCase()}-empty">${emptyMsg('Loading…')}</div>
 					</section>`).join('')}
-			</div>`
+			</div>`;
 	},
 
-	async afterRender(root) {
-		/* refs */
-		const	$pending	= root.querySelector<HTMLUListElement>('#pending')!
-		const	$accepted	= root.querySelector<HTMLUListElement>('#accepted')!
-		const	$rejected	= root.querySelector<HTMLUListElement>('#rejected')!
-		const	$pEmpty		= root.querySelector('#pending-empty')!
-		const	$aEmpty		= root.querySelector('#accepted-empty')!
-		const	$rEmpty		= root.querySelector('#rejected-empty')!
+	async afterRender(root:HTMLElement) {
+		// element refs
+		const $in = root.querySelector<HTMLUListElement>('#incoming')!;
+		const $out = root.querySelector<HTMLUListElement>('#outgoing')!;
+		const $friends = root.querySelector<HTMLUListElement>('#friends')!;
+		const $iEmpty = root.querySelector('#incoming-empty')!;
+		const $oEmpty = root.querySelector('#outgoing-empty')!;
+		const $fEmpty = root.querySelector('#friends-empty')!;
 
-		/* current user */
-		const me = await fetch('/api/me').then(r => r.json())
+		// session
+		const me = await getSession();
+		if (!me) { $iEmpty.textContent = 'Not logged in'; return; }
 
-		/* data */
-		const [reqs, friendsRaw] = await Promise.all([
-			fetch(`/api/users/${me.id}/requests`).then(r => r.json()),
-			fetch(`/api/users/${me.id}/friends`).then(r => r.json())
-		])
+		// refresh lists
+		const refresh = async () => {
+			const [inRes, outRes, frRes] = await Promise.all([
+				fetch(`/api/users/${me.id}/requests/incoming`),
+				fetch(`/api/users/${me.id}/requests/outgoing`),
+				fetch(`/api/users/${me.id}/friends`)
+			]);
+			if (!(inRes.ok && outRes.ok && frRes.ok)) {
+				$iEmpty.textContent = 'Failed to load'; return;
+			}
 
-		/* ---------- Accepted ---------- */
-		const friendList = Array.isArray(friendsRaw.friends) ? friendsRaw.friends : []
+			const incoming = await inRes.json() as { id:number; requester_id:number }[];
+			const outgoing = await outRes.json() as { id:number; recipient_id:number }[];
+			const friendsR = await frRes.json();
+			const friends = friendsR.friends ?? [];
 
-		// detect format: array of numbers OR array of objects
-		if (friendList.length && typeof friendList[0] === 'object') {
-			// already full objects
-			const users = friendList as UserPreview[]
-			$accepted.innerHTML = users.map(u => li(u)).join('')
-			$aEmpty.remove()
-		} else if (friendList.length) {
-			// numeric IDs → fetch full rows
-			const users = await Promise.all((friendList as number[]).map(fetchUser))
-			$accepted.innerHTML = users.map(u => li(u)).join('')
-			$aEmpty.remove()
-		} else {
-			$aEmpty.textContent = 'No accepted friends'
-		}
+			// incoming
+			$in.innerHTML = '';
+			if (incoming.length) {
+				const users = await Promise.all(incoming.map(r => getUser(r.requester_id)));
+				$in.innerHTML = users.map((u, i) => row(u, /*html*/`
+					<div class="flex gap-2">
+						<button class="act px-3 py-1 rounded-md bg-[#0bda8e] hover:bg-[#0ac582]"
+							data-id="${incoming[i].id}" data-act="accept">✓</button>
+						<button class="act px-3 py-1 rounded-md bg-[#D22B2B] hover:bg-[#b91c1c]"
+							data-id="${incoming[i].id}" data-act="reject">✗</button>
+					</div>`)).join('');
+				$iEmpty.textContent = '';
+			} else {
+				$iEmpty.textContent = 'No incoming requests';
+			}
 
-		/* ---------- Pending ---------- */
-		const pendingRows = reqs.filter((r: any) => r.status === 'pending')
-		if (pendingRows.length) {
-			const users = await Promise.all(
-				pendingRows.map((r: any) => fetchUser(r.requester_id))
-			)
-			$pending.innerHTML = users.map((u, i) => li(u, `
-				<div class="flex gap-2">
-					<button class="action px-3 py-1 rounded-md bg-[#0bda8e] hover:bg-[#0ac582]"
-							data-id="${pendingRows[i].id}" data-act="accept">✓</button>
-					<button class="action px-3 py-1 rounded-md bg-[#D22B2B] hover:bg-[#b91c1c]"
-							data-id="${pendingRows[i].id}" data-act="reject">✗</button>
-				</div>`)).join('')
-			$pEmpty.remove()
-		} else {
-			$pEmpty.textContent = 'No pending requests'
-		}
+			// outgoing
+			$out.innerHTML = '';
+			if (outgoing.length) {
+				const users = await Promise.all(outgoing.map(r => getUser(r.recipient_id)));
+				$out.innerHTML = users.map(u => row(u, '<span>Pending…</span>')).join('');
+				$oEmpty.textContent = '';
+			} else {
+				$oEmpty.textContent = 'No outgoing requests';
+			}
 
-		/* ---------- Rejected ---------- */
-		const rejectedRows = reqs.filter((r: any) => r.status === 'rejected')
-		if (rejectedRows.length) {
-			const users = await Promise.all(
-				rejectedRows.map((r: any) => fetchUser(r.requester_id))
-			)
-			$rejected.innerHTML = users.map(u => li(u)).join('')
-			$rEmpty.remove()
-		} else {
-			$rEmpty.textContent = 'No rejected requests'
-		}
+			// friends
+			$friends.innerHTML = '';
+			if (friends.length) {
+				const users = typeof friends[0] === 'object'
+					? friends as UserPreview[]
+					: await Promise.all((friends as number[]).map(getUser));
+				$friends.innerHTML = users.map(u => row(u, /*html*/`
+					<button class="rm px-3 py-1 rounded-md bg-[#D22B2B] hover:bg-[#b91c1c]"
+						data-id="${u.id}">Remove</button>`)).join('');
+				$fEmpty.textContent = '';
+			} else {
+				$fEmpty.textContent = 'You have no friends';
+			}
 
-		/* ---------- Button handlers ---------- */
-		root.querySelectorAll<HTMLButtonElement>('.action')
-			.forEach(btn => btn.addEventListener('click', async () => {
-				btn.disabled = true
-				const ok = await fetch(
-					`/api/requests/${btn.dataset.id}/${btn.dataset.act}`,
-					{ method: 'POST' }
-				).then(r => r.ok)
+			attachHandlers();
+		};
 
-				ok ? btn.closest('li')?.remove() : (alert('Server error'), btn.disabled = false)
-			}))
+		// button handlers
+		const attachHandlers = () => {
+			root.querySelectorAll<HTMLButtonElement>('.act').forEach(btn => {
+				btn.onclick = async () => {
+					const li = btn.closest('li')!;
+					btn.disabled = true;
+					const ok = await fetch(
+						`/api/requests/${btn.dataset.id}/${btn.dataset.act}`,
+						{ method:'POST' }
+					).then(r => r.ok);
+
+					ok
+						? (li.remove(), document.dispatchEvent(new Event('friends-changed')))
+						: (alert('Server error'), btn.disabled = false);
+				};
+			});
+
+			root.querySelectorAll<HTMLButtonElement>('.rm').forEach(btn => {
+				btn.onclick = async () => {
+					btn.disabled = true;
+					const ok = await fetch(
+						`/api/users/${me.id}/friends/${btn.dataset.id}`,
+						{ method:'DELETE' }
+					).then(r => r.ok);
+
+					ok
+						? document.dispatchEvent(new Event('friends-changed'))
+						: (alert('Server error'), btn.disabled = false);
+				};
+			});
+		};
+
+		// initial load
+		await refresh();
+
+		// live updates
+		const onChange = () => refresh();
+		document.addEventListener('friends-changed', onChange);
+		wsEvents.addEventListener('new_friend_request', onChange);
+		wsEvents.addEventListener('friend_accepted', onChange);
+		wsEvents.addEventListener('friend_rejected', onChange);
+		wsEvents.addEventListener('friend_removed', onChange);
+
+		// cleanup
+		(root as any).onDestroy = () => {
+			document.removeEventListener('friends-changed', onChange);
+			wsEvents.removeEventListener('new_friend_request', onChange);
+			wsEvents.removeEventListener('friend_accepted', onChange);
+			wsEvents.removeEventListener('friend_rejected', onChange);
+			wsEvents.removeEventListener('friend_removed', onChange);
+		};
 	}
-}
+};
 
-export default FriendListPage
+export default FriendListPage;

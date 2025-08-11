@@ -23,7 +23,7 @@ export async function fetchAndFill(myId: number) {
 			const li = document.createElement('li');
 			li.className = 'flex items-center justify-between rounded-lg px-3 py-2 bg-[#181113] text-white';
 
-			/* left part */
+			// left part
 			li.innerHTML = `
 				<span class="truncate flex items-center gap-2">
 					<img src="/avatars/${u.avatar}" class="h-5 w-5 rounded-full object-cover">
@@ -31,7 +31,7 @@ export async function fetchAndFill(myId: number) {
 				</span>
 			`;
 
-			/* right part – 🎮 invite */
+			// right part
 			const btn = document.createElement('button');
 			btn.className =
 				'ml-2 bg-purple-800 text-white text-xs px-2 py-1 rounded-md hover:bg-purple-700';
@@ -51,6 +51,7 @@ export async function fetchAndFill(myId: number) {
 					content: invite
 				});
 				console.log(`[invite] sent to user ${u.id}`);
+				console.log(JSON.stringify(invite, null, 2));
 				btn.disabled = true;
 			});
 
