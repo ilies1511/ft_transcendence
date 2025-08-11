@@ -28,6 +28,8 @@ class ScoreLine {
 export class ScorePanel {
 	private panel: GUI.StackPanel;
 	private lines: Map<number, ScoreLine>;
+	private timer_text: GUI.TextBlock;
+	private timer?: number;
 
 	constructor(gui: GUI.AdvancedDynamicTexture) {
 		this.panel = new GUI.StackPanel();
@@ -39,6 +41,14 @@ export class ScorePanel {
 		gui.addControl(this.panel);
 
 		this.lines = new Map<number, ScoreLine>();
+
+		this.timer_text = new GUI.TextBlock();
+		this.timer_text.fontSize = 28;
+		this.timer_text.height = "32px";
+		this.timer_text.textHorizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+		this.timer_text.color = "#ffffff";
+		this.timer_text.isVisible = false;
+		this.panel.addControl(this.timer_text);
 	}
 
 	public update_display_name(id: number, display_name: string) {
@@ -70,6 +80,34 @@ export class ScorePanel {
 			this.panel.removeControl(line.textBlock);
 			this.lines.delete(id);
 		}
+	}
+
+	public update_timer(seconds: number) {
+		if (seconds === -1) {
+			this.timer_text.isVisible = false;
+			return;
+		}
+		if (seconds == this.timer) {
+			return;
+		}
+
+		this.timer_text.isVisible = true;
+		this.timer_text.text = `⏱ ${this.formatTime(seconds)}`;
+
+		if (seconds < 5) {
+			this.timer_text.color = "#ff4d4d"; //red
+		} else if (seconds < 10) {
+			this.timer_text.color = "#ffa500"; //orange
+		} else {
+			this.timer_text.color = "#ffffff"; //white
+		}
+	}
+
+	private formatTime(totalSeconds: number): string {
+		const s = Math.max(0, Math.floor(totalSeconds));
+		const m = Math.floor(s / 60);
+		const r = s % 60;
+		return `${m}:${r.toString().padStart(2, "0")}`;
 	}
 
 	public clear() {

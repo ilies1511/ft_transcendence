@@ -236,7 +236,7 @@ export class GameScene extends BaseScene {
 	}
 
 	update(game_state: GameState): void {
-		//console.log(game_state);
+		//console.log("game_timer: ", game_state.game_timer);
 		this._update_balls(game_state.balls);
 		this._update_walls(game_state.walls);
 		this._init_color_schemes(game_state.clients);
@@ -244,6 +244,7 @@ export class GameScene extends BaseScene {
 		game_state.clients.forEach((c: ClientClient) => {
 			const color: BABYLON.Color3 = this._color_schemes.get(c.obj_id).major.diffuseColor;
 			this.score_panel.update_score(c.obj_id, c.score, color, undefined);
+			this.score_panel.update_timer(game_state.game_timer);
 		});
 
 	}

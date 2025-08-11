@@ -47,6 +47,10 @@ export default defineConfig({
 				target: 'ws://localhost:3000',
 				ws: true
 			},
+			'/tournament': {
+				target: 'ws://localhost:3000',
+				ws: true
+			},
 			'/friends': {
 				target: 'ws://localhost:3000',
 				ws: true

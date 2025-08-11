@@ -1,5 +1,6 @@
 import { sendWs } from '../services/websocket';
-import type { LobbyInvite, LobbyType } from '../../src/game/game_shared/message_types.ts';
+import type { LobbyInvite } from '../../src/game/game_shared/message_types.ts';
+import { LobbyType } from '../../src/game/game_shared/message_types.ts';
 
 export async function fetchAndFill(myId: number) {
 	const ul = document.getElementById('allList') as HTMLUListElement;
@@ -39,12 +40,29 @@ export async function fetchAndFill(myId: number) {
 
 			btn.addEventListener('click', () => {
 				const invite: LobbyInvite = {
-					map_name: 'map1',
-					lobby_password: '123',
-					lobby_id: 1,
-					lobby_type: 1,
-					valid: true
+					map_name: '',
+					lobby_password: '',
+					lobby_id: -1,
+					lobby_type: LobbyType.INVALID,
+					valid: false,
 				};
+				if (globalThis.tournament) {
+					invite.lobby_type = LobbyType.TOURNAMENT;
+					invite.lobby_password = globalThis.tournament.password;
+					invite.lobby_id = globalThis.tournament.tournament_id;
+					//todo: does it need map_name?
+					invite.valid = true;
+				} else if (globalThis.game) {
+					invite.lobby_type = globalThis.game.lobby_type;
+					invite.lobby_password = globalThis.game.password;
+					invite.lobby_id = globalThis.game.game_id;
+					invite.map_name = globalThis.game.map_name;
+					invite.valid = true;
+				} else {
+					//currently not in any game
+					return ;
+				}
+
 				sendWs({
 					type: 'lobby_invite',
 					to: u.id,

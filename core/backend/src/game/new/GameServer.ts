@@ -179,6 +179,32 @@ export class GameServer {
 				GameServer._close_socket_lobby_handler(game_id, socket);
 			});
 		});
+
+		GameServer._fastify.get('/tournament/:tournament_id_str', { websocket: true }, (socket: WebSocket, req: FastifyRequest) => {
+			const { tournament_id_str } = req.params as { tournament_id_str: string };
+			socket.on('message', (raw) => {
+				try {
+					const tournament_id: number = parseInt(tournament_id_str);
+					const tournament: Tournament | undefined = this.tournaments.get(tournament_id);
+					if (!tournament) {
+						socket.close();
+						console.log("no tournament for id ", tournament_id_str);
+						console.log(this.tournaments);
+						return ;
+					}
+					tournament.rcv_msg(raw.toString(), socket);
+				} catch (e) {
+					socket.close();
+					console.log(e);
+					return ;
+				}
+
+			});
+			socket.on('close', () => {
+				//GameServer._close_socket_lobby_handler(game_id, socket);
+			});
+		});
+
 	}
 
 	private static _close_socket_lobby_handler(lobby_id_str: string, ws: WebSocket) {

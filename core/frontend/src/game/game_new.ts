@@ -1,7 +1,6 @@
 import * as BABYLON from '@babylonjs/core/Legacy/legacy';
 
 import { is_unloading } from './globals.ts';
-import { get_password_from_user } from './placeholder_globals.ts';
 
 import { GameApi } from './GameApi.ts';
 
@@ -12,7 +11,6 @@ import type {
 	ServerToClientMessage,
 	LobbyToClient,
 	LobbyToClientJson,
-	GameStartInfo,
 	ClientToMatch,
 	ClientToMatchConnect,
 	ClientToGame,
@@ -87,13 +85,11 @@ export class Game {
 
 	public map_name: string;
 
-	private _password_attempts: number = 3;
-
 	private _key_hooks: KeyHook[] = [];
 
 	private _local_player?: LocalPlayer = undefined;
 
-	private _lobby_type: LobbyType;
+	public lobby_type: LobbyType;
 
 
 	constructor(
@@ -113,7 +109,7 @@ export class Game {
 		this.password = password;
 		this.map_name = map_name;
 		this.container = container;
-		this._lobby_type = lobby_type;
+		this.lobby_type = lobby_type;
 		this.game_id = game_id;
 		this._process_msg = this._process_msg.bind(this);
 		this._rcv_msg = this._rcv_msg.bind(this);
@@ -145,7 +141,7 @@ export class Game {
 			map_name: this.map_name,
 			lobby_password: this.password,
 			lobby_id: this.game_id,
-			lobby_type: this._lobby_type,
+			lobby_type: this.lobby_type,
 			valid: true,
 		};
 		return (invite);
@@ -178,6 +174,7 @@ export class Game {
 	}
 
 	public disconnect() {
+		this.finished = true;
 		if (this._local_player) {
 			this._local_player.disconnect();
 		}
@@ -457,6 +454,7 @@ export class Game {
 			console.log("Skipping reconnect for local player..");
 			return ;
 		}
+		console.log("Game: attempting to reconnect local player..");
 		const reconnect: ReconnectResp = await GameApi.reconnect(this.client_id* - 1);
 		let match_id: number = -1;
 		if (reconnect.tournament_id >= 0) {

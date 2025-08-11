@@ -48,10 +48,10 @@ export class ServerClient extends SharedClient {
 		const direct: ServerVec2 = this.paddle.get_direct();
 		const new_paddle_pos: ServerVec2 = this.paddle.center.clone();
 		if (this.up) {
-			new_paddle_pos.add(direct.scale(0.08));
+			new_paddle_pos.add(direct.scale(0.12));
 		}
 		if (this.down) {
-			new_paddle_pos.add(direct.scale(-0.08));
+			new_paddle_pos.add(direct.scale(-0.12));
 		}
 		if (this.up || this.down) {
 			let p1: vec2, p2:vec2 = this.paddle.get_endpoints();
@@ -69,13 +69,13 @@ export class ServerClient extends SharedClient {
 		}
 
 		if (this.left && this.right) {
-			this.paddle.rotate(0, delta_time);
+			this.paddle.rotation = 0;
 		} else if (this.left) {
-			this.paddle.rotate(Math.PI / 2, delta_time);
+			this.paddle.rotation = Math.PI / 2;
 		} else if (this.right) {
-			this.paddle.rotate(Math.PI / -2, delta_time);
+			this.paddle.rotation = Math.PI / -2;
 		} else {
-			this.paddle.rotate(0, delta_time);
+			this.paddle.rotation = 0;
 		}
 	}
 };

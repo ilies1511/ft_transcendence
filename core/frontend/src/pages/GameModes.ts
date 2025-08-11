@@ -75,6 +75,7 @@
 import type { PageModule } from '../router'
 
 import { Game } from '../game/game_new.ts'
+import { Tournament } from '../game/Tournament.ts'
 import { TournamentApi } from '../game/TournamentApi.ts'
 import { get_password_from_user } from '../game/placeholder_globals.ts'
 
@@ -118,12 +119,17 @@ const template = /*html*/`
 			<div class="flex gap-2">
 				<button id="btn-matchmaking"
 					class="rounded bg-[#0bda8e] px-4 py-2 text-white">Matchmaking</button>
+				<button id="btn-create-tournament"
+					class="rounded bg-[#0bda8e] px-4 py-2 text-white">Create Tournament</button>
 				<button id="btn-lobby"
 					class="rounded bg-[#b99da6] px-4 py-2 text-white">Custom Lobby</button>
 				<button id="btn-local"
 					class="rounded bg-[#543b43] px-4 py-2 text-white">Local Game</button>
 				<!-- leave button -->
 				<button id="btn-leave" class="rounded bg-[#D22B2B] px-4 py-2 text-white">Leave Match</button>
+				<button id="btn-disconnect" class="rounded bg-[#D22B2B] px-4 py-2 text-white">Disconnect</button>
+				<button id="btn-reconnect" class="rounded bg-[#D22B2B] px-4 py-2 text-white">Reconnect</button>
+				<button id="btn-start_tournament" class="rounded bg-[#D22B2B] px-4 py-2 text-white">Start Tournament</button>
 			</div>
 		</div>
 
@@ -140,8 +146,8 @@ const template = /*html*/`
 declare global { var game: Game | undefined }
 globalThis.game = undefined
 
-declare global { var tournament_id: number | undefined }
-globalThis.tournament_id = undefined
+declare global { var tournament: Tournament | undefined }
+globalThis.tournament = undefined
 
 function wireLocalPlayerButton(game: Game): void {
 	const btn = document.getElementById('btn-add-local-player') as HTMLButtonElement | null
@@ -236,57 +242,43 @@ async function test_local_player(
 	if (name) gm.add_local_player(name)
 }
 
-
-
 async function test_tournament(
 	container: HTMLElement,
 	user_id: number,
 ): Promise<void> {
-	const create_resp: CreateTournamentResp = await TournamentApi
-		.create_tournament("default", await get_password_from_user('Tournament'));
-	if (create_resp.error != '') {
-		console.log(create_resp);
+
+	const display_name: string = `placeholder_display_name_${user_id}`;
+	const map_name: string = 'default';
+	const tournament_password = await get_password_from_user('Tournament');
+
+	const tournament: Tournament | undefined = await Tournament.create_tournament(
+		user_id, display_name, map_name, tournament_password, container);
+	if (!tournament) {
 		return ;
 	}
-
-	const join_resp: DefaultResp = await TournamentApi.join_tournament(
-		await get_password_from_user('Tournament'), user_id,
-		create_resp.tournament_id, "placeholder_display_name");
-	if (join_resp.error != '') {
-		console.log(create_resp);
-		return ;
-	}
-	const invite: LobbyInvite = {
-		map_name: "default",
-		lobby_password: await get_password_from_user('Tournament'),
-		lobby_id: create_resp.tournament_id,
-		lobby_type: LobbyType.TOURNAMENT,
-		valid: true,
-	};
-	//todo:
-	//invite(lobby_invite, target_user);
-	const start_resp: DefaultResp = await TournamentApi.start_tournament(user_id, create_resp.tournament_id);
-	if (start_resp.error != '') {
-		console.log("start tournament error: ", start_resp.error);
-		return ;
-	}
-
-
-
 }
 
 function setupGameModes(root: HTMLElement): void {
 	const container = root.querySelector<HTMLElement>('#game-container')!
 	const input = root.querySelector<HTMLInputElement>('#user-id-input')
 	const btnMatch = root.querySelector<HTMLButtonElement>('#btn-matchmaking')
+	const btnCreateTournament = root.querySelector<HTMLButtonElement>('#btn-create-tournament')
 	const btnLobby = root.querySelector<HTMLButtonElement>('#btn-lobby')
 	const btnLocal = root.querySelector<HTMLButtonElement>('#btn-local')
 
 	const btnLeave = root.querySelector<HTMLButtonElement>('#btn-leave')
+	const btnDisconnect = root.querySelector<HTMLButtonElement>('#btn-disconnect')
+	const btnReconnect = root.querySelector<HTMLButtonElement>('#btn-reconnect')
+	const btnStartTournament = root.querySelector<HTMLButtonElement>('#btn-start_tournament')
 	btnLeave?.addEventListener('click', () => {
 		globalThis.game?.leave()
 	})
-
+	btnDisconnect?.addEventListener('click', () => {
+		globalThis.game?.disconnect()
+	})
+	btnStartTournament?.addEventListener('click', () => {
+		globalThis.tournament?.start()
+	})
 	/* pre-fill & lock field when we already know the user */
 	void (async () => {
 		const user = await getSession()
@@ -302,7 +294,8 @@ function setupGameModes(root: HTMLElement): void {
 		return isNaN(n) ? null : n
 	}
 
-	const run = async (mode: 'match' | 'lobby' | 'local'): Promise<void> => {
+	const run = async (mode: 'match' | 'lobby' | 'local' | 'tournament'
+		| 'reconnect'): Promise<void> => {
 		const user = await getSession()
 		const user_id = user?.id ?? getUserId()
 		if (user_id === null) { alert('invalid id'); return }
@@ -310,17 +303,22 @@ function setupGameModes(root: HTMLElement): void {
 		await attempt_reconnect(container, user_id)
 		if (globalThis.game !== undefined) return
 
+		const do_nothing = async () => {};
+
 		switch (mode) {
 			case 'match':	await test_enter_matchmaking(container, user_id);	break
-			//case 'match':	await test_tournament(container, user_id);	break
+			case 'tournament':	await test_tournament(container, user_id);	break
 			case 'lobby':	await test_lobby(user_id, container);				break
 			case 'local':	await test_local_player(user_id, container);		break
-		}
+			// case 'reconnect': await attempt_reconnect(container, user_id); break ;
+	 	}
 	}
 
 	btnMatch?.addEventListener('click', () => run('match'))
 	btnLobby?.addEventListener('click', () => run('lobby'))
 	btnLocal?.addEventListener('click', () => run('local'))
+	btnCreateTournament?.addEventListener('click', () => run('tournament'))
+	btnReconnect?.addEventListener('click', () => run('reconnect'))
 }
 
 

@@ -5,11 +5,19 @@ import { GameServer } from './GameServer.ts';
 import type {
 	TournamentState,
 } from '../game_shared/TournamentApiTypes.ts';
+
+import type {
+	ClientToTournament,
+	TournamentToClient,
+	Update,
+	NewGame,
+	Finish,
+} from '../game_shared/TournamentMsg.ts';
+
 import type {
 	ServerToClientError,
 	ServerToClientMessage,
 	ServerError,
-    ClientToTournament,
 	GameToClientFinish,
 	LobbyInvite,
 } from '../game_shared/message_types.ts';
@@ -20,6 +28,7 @@ type TournamentPlayer = {
 	client_id: number;
 	display_name: string;
 	placement: number;
+	ws?: WebSocket;
 };
 
 type Round = {
@@ -65,6 +74,7 @@ export class Tournament {
 		this._map_name = map_name;
 		this._id = id;
 		this._completion_callback = completion_callback;
+		this._finish_game_callback = this._finish_game_callback.bind(this);
 	}
 
 	public join(
@@ -107,18 +117,17 @@ export class Tournament {
 
 	public start(client_id: number): ServerError {
 		console.log("Starting tournament..");
+		console.log(this.active_players);
 		this._total_player_count = this._rounds[0].players.length;
 		this._rounds[0].active_players = 0;
 		this._rounds[0].looking_for_game = this._total_player_count;
 		this._next_placement = this._total_player_count;
-		if (this._total_player_count == 0) {
-			//todo
-		}
-		this._started = true;
-		this._start_round(0);
 		if (this._total_player_count <= 0) {
 			this._finish();
 		}
+		this._started = true;
+		this._start_round(0);
+
 		return ("");
 	}
 
@@ -149,6 +158,12 @@ export class Tournament {
 				this._password,
 				this._finish_game_callback
 			);
+			const game_lobby: GameLobby | undefined = GameServer.lobbies.get(lobby_id);
+			if (!game_lobby) {
+				//todo:
+				console.log("ERROR: game lobby not found");
+				return ;
+			}
 			round.game_ids[player_idx / 2] = lobby_id;
 			const invite: LobbyInvite = {
 				lobby_password: this._password,
@@ -157,9 +172,13 @@ export class Tournament {
 				map_name: this._map_name,
 				lobby_type: LobbyType.TOURNAMENT,
 			};
-			//todo: when send_invite works
-			//send_invite(round.players[player_idx].client_id, invite);
-			//send_invite(round.players[player_idx + 1].client_id, invite);
+			game_lobby.join(round.players[player_idx].client_id, round.players[player_idx].display_name, this._password);
+			game_lobby.join(round.players[player_idx + 1].client_id, round.players[player_idx + 1].display_name, this._password);
+			const msg: NewGame = {
+				type: 'new_game',
+			};
+			round.players[player_idx].ws?.send(JSON.stringify(msg));
+			round.players[player_idx + 1].ws?.send(JSON.stringify(msg));
 			round.looking_for_game -= 2;
 			round.active_players += 2;
 			player_idx += 2;
@@ -210,6 +229,10 @@ export class Tournament {
 						player_1.placement = this._next_placement--;
 					}
 					this._rounds[round_idx].active_players -= 2;
+					if (this._rounds[round_idx].active_players < 2) {
+						this._start_round(round_idx + 1);
+					}
+					return ;
 				}
 				game_idx++;
 			}
@@ -232,6 +255,37 @@ export class Tournament {
 			console.log("Warning: Finished tournament with != 1 plate count:", last_round.players);
 			return ;
 		}
-		console.log("winner: ", last_round.players[0]);
+		//console.log("winner: ", last_round.players[0]);
+		const msg: Finish = {
+			type: 'finish',
+		};
+		for (const player of this._rounds[0].players) {
+			player.ws?.send(JSON.stringify(msg));
+			player.ws?.close();
+		}
+	}
+
+	public rcv_msg(data: string, ws: WebSocket) {
+		let msg: ClientToTournament;
+		try {
+			msg = JSON.parse(data) as ClientToTournament;
+		} catch (e) {
+			ws.close();
+			console.log("Tournament got invalid msg through socket: ", data);
+			return ;
+		}
+		console.log("tournament received msg: ", msg);
+		switch (msg.type) {
+			case ('reconnect'):
+				for (const player of this._rounds[0].players) {
+					if (player.client_id == msg.client_id) {
+						if (player.ws) {
+							player.ws.close();
+						}
+						player.ws = ws;
+					}
+				}
+				break ;
+		}
 	}
 };

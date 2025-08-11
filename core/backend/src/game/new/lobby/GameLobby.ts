@@ -109,7 +109,8 @@ export class GameLobby {
 	private _start_game() {
 		console.log("starting game..");
 		this._game_engine_finish_callback = this._game_engine_finish_callback.bind(this);
-		this.engine = new GameEngine(this._map_name, this._game_engine_finish_callback);
+		this.engine = new GameEngine(this._map_name, this.lobby_type,
+			this._game_engine_finish_callback, 1000 /* todo: hardcoded 1000 sec */);
 		let i = 0;
 		while (i < this._connections.length) {
 			this.engine.clients[i].set_socket(this._connections[i].sock.ws);

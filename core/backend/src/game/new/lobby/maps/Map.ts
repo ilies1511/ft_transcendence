@@ -49,6 +49,7 @@ export class MapFile {
 			const nor: ServerVec2 = new ServerVec2(w.normal[0], w.normal[1]);
 			const len: number = w.length;
 			const wall: ServerWall = new ServerWall(cent, nor, len, undefined, this.next_obj_id++);
+			wall.rotation = w.rotation;
 			wall.effects = w.effects;
 			this.walls.push(wall);
 		});

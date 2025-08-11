@@ -6,7 +6,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 //import websocketPlugin, { SocketStream } from '@fastify/websocket'
 //import type { ClientToGameMessage } from '../../game_shared/message_types';
 import type { WebSocket } from '@fastify/websocket';
-import type { ClientToGame } from './../../../game_shared/message_types.ts';
+import { LobbyType, type ClientToGame } from './../../../game_shared/message_types.ts';
 import type {
 	GameOptions,
 	GameStartInfo,
@@ -49,10 +49,19 @@ export class GameEngine {
 	public walls: ServerWall[] = [];
 	private _alive_player_count: number;
 	private _finish_callback: (end_data: GameToClientFinish) => undefined;
+	private _duration: number = 0;
+	public timer?: number;//seconds left of the game
+	public lobby_type: LobbyType;
 
-	constructor(map_name: string, finish_callback: (end_data: GameToClientFinish) => undefined) {
+	constructor(map_name: string,
+		lobby_type: LobbyType,
+		finish_callback: (end_data: GameToClientFinish) => undefined,
+		duration?: number,
+	) {
 		this.update = this.update.bind(this);
 		this._finish_callback = finish_callback;
+		this.lobby_type = lobby_type;
+		this.timer = duration;
 
 		this.running = false;
 		const map: MapFile = new MapFile(map_name);
@@ -110,20 +119,55 @@ export class GameEngine {
 	}
 
 	private _finish_game() {
+		console.log("Finishing game engine..");
 		this.finished = true;
 		this.stop_loop();
 		const msg: GameToClientFinish = {
 			type: 'finish',
-			duration: 42,
-			mode: 69,
+			duration: this._duration,
+			mode: this.lobby_type,
 			placements: [],
 		};
+		let unplaced_player_count: number = 0;
+
 		for (const client of this.clients) {
 			if (client.global_id == 0) {
 				continue ;
 			}
 			if (client.final_placement == -1) {
-				client.final_placement = 1;
+				unplaced_player_count++;
+			}
+		}
+
+		let next_placement: number = 1;
+		// fill out placements of players that did not die
+		while (unplaced_player_count > 0) {
+			let highest_health: number = 1;
+			let clients_to_place: ServerClient[] = [];
+			for (const client of this.clients) {
+				if (client.global_id == 0 || client.final_placement != -1) {
+					continue ;
+				}
+				if (client.score > highest_health) {
+					highest_health = client.score;
+					clients_to_place = [];
+				}
+				if (client.score == highest_health) {
+					clients_to_place.push(client);
+				}
+			}
+			for (const client of clients_to_place) {
+				client.final_placement = next_placement;
+			}
+			unplaced_player_count -= clients_to_place.length;
+			next_placement += clients_to_place.length;
+		}
+		if (unplaced_player_count < 0) {
+			console.log("ERROR: game: unplaced_player_count < 0: logic bug");
+		}
+		for (const client of this.clients) {
+			if (client.global_id == 0) {
+				continue ;
 			}
 			msg.placements.push({
 				id: client.global_id,
@@ -200,12 +244,13 @@ export class GameEngine {
 					hit_points.push(intersc.p);
 				}
 				delta_time -= first_intersec.time;
-				delta_time -= EPSILON; /* idk why but without this the ball flys through walls */
-				ball.pos = first_intersec.p;
-				if (first_intersec.wall.effects.indexOf(Effects.BASE) != -1) {
+				//delta_time -= EPSILON; /* idk why but without this the ball flys through walls */
+
+				const wall = first_intersec.wall;
+				if (wall.effects.indexOf(Effects.BASE) != -1) {
 					//console.log("hit base");
 					ball.reset();
-					const goaled_client = this.clients.find(c => c.base === first_intersec.wall);
+					const goaled_client = this.clients.find(c => c.base === wall);
 					if (goaled_client == undefined) {
 						console.log("Game: error: base that was scored at could not be matched to a client");
 						process.exit(1);
@@ -223,13 +268,18 @@ export class GameEngine {
 					}
 					break ;
 				}
-				const offset: ServerVec2 = first_intersec.wall.normal.clone();
-				offset.scale(0.01);
-				if (ft_math.dot(ball.speed, first_intersec.wall.normal) < 0) {
-					ball.pos.add(offset);
-				} else {
-					ball.pos.sub(offset);
-				}
+
+				ball.pos = first_intersec.p;
+				const normal_hit = wall.interp_normal ? wall.interp_normal.clone() : wall.normal.clone();
+
+				const r_to_hit = first_intersec.p.clone().sub(wall.center);
+				const wall_vel_at_hit = new ServerVec2(-wall.angular_vel * r_to_hit.y, wall.angular_vel * r_to_hit.x);
+				const rel_v = ball.speed.clone().sub(wall_vel_at_hit);
+				
+				// small positional slop; keep it tiny
+				const sign = ft_math.dot(rel_v, normal_hit) < 0 ? 1 : -1;
+				ball.pos.add(normal_hit.scale(sign * EPSILON));
+
 				ball.reflect(hit_walls, hit_points);
 
 				ball.last_collision_obj_id = ball.cur_collision_obj_id;
@@ -272,9 +322,7 @@ export class GameEngine {
 	private update_walls(delta_time: number) {
 		//this.walls[4].rotate(Math.PI / 2, delta_time);
 		for (const wall of this.walls) {
-			if (wall.center.x == 0 && wall.center.y == 0) {
-				wall.rotate(Math.PI / 2, delta_time);
-			}
+			wall.rotate(wall.rotation * Math.PI / 2, delta_time);
 		}
 	}
 
@@ -286,6 +334,36 @@ export class GameEngine {
 
 	private update(delta_time: number) {
 		//console.log("update");
+		this._duration += delta_time;
+		if (this.timer != undefined) {
+			this.timer -= delta_time;
+			if (this.timer <= 0) {
+				this.timer = 0;
+				if (this.lobby_type != LobbyType.TOURNAMENT) {
+					this._finish_game();
+					return ;
+				}
+				// this is a tournament lobby and a draw is not an option
+				let highest_health: number = 1;
+				for (const client of this.clients) {
+					if (client.score > highest_health) {
+						highest_health = client.score;
+					}
+				}
+				let tied_player_count: number = 0;
+				for (const client of this.clients) {
+					if (client.score == highest_health) {
+						tied_player_count++;
+					}
+				}
+				if (tied_player_count <= 1) {
+					this._finish_game();
+					return ;
+				} else {
+					console.log("Tournament not ending since players are tied..");
+				}
+			}
+		}
 		this.update_paddles(delta_time);
 		this.update_walls(delta_time);
 		this.update_balls(delta_time);

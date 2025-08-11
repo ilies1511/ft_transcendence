@@ -82,7 +82,7 @@ const start_schema = {
 		required: [ 'client_id', 'tournament_id', ],
 		properties: {
 			client_id: { type: 'number' },
-			lobby_id: { type: 'number' },
+			tournament_id: { type: 'number' },
 		}
 	}
 };

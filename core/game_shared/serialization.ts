@@ -18,11 +18,17 @@ export class GameState {
 	public clients: SharedClient[];
 	public balls: SharedBall[];
 	public walls: SharedWall[];
+	public game_timer: number;
 
-	constructor(game: Game) {
+	constructor(game: GameEngine) {
 		this.clients = game.clients;
 		this.balls = game.balls;
 		this.walls = game.walls;
+		if (game.timer != undefined) {
+			this.game_timer = game.timer;
+		} else {
+			this.game_timer = -1;
+		}
 	}
 
 	public serialize(): ArrayBuffer {
@@ -35,7 +41,9 @@ export class GameState {
 		let totalSize =
 			4 + clientBuffers.reduce((s, b) => s + b.byteLength, 0) +
 			4 + ballBuffers.reduce((s, b) => s + b.byteLength, 0) +
-			4 + wallBuffers.reduce((s, b) => s + b.byteLength, 0);
+			4 + wallBuffers.reduce((s, b) => s + b.byteLength, 0)
+			+ 4 /*game_timer */
+		;
 		const buffer = new ArrayBuffer(totalSize);
 		const view = new DataView(buffer);
 		let offset = 0;
@@ -60,6 +68,8 @@ export class GameState {
 			new Uint8Array(buffer, offset, b.byteLength).set(new Uint8Array(b));
 			offset += b.byteLength;
 		});
+		view.setInt32(offset, this.game_timer, true);
+		offset += 4;
 		return buffer;
 	}
 
@@ -93,10 +103,14 @@ export class GameState {
 			walls.push(wall);
 			offset = newOffset;
 		}
+		const game_timer = view.getInt32(offset, true);
+		offset += 4;
+
 		const state = Object.create(GameState.prototype) as GameState;
 		state.clients = clients;
 		state.balls = balls;
 		state.walls = walls;
+		state.game_timer = game_timer;
 		return state;
 	}
 };
