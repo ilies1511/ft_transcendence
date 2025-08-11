@@ -4,6 +4,8 @@ refactor game backend:
 
 [ ] - Tournament leaving support
 
+[ ] - matchmaking bug: connections counting to infinity
+
 [ ] - delete empty lobbies after some time in the backend
 [x] - update GameLobby.loaded_player_count on websocket close event
 

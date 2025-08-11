@@ -32,31 +32,41 @@ export default defineConfig({
 		// host: "0.0.0.0",
 		host: true,
 		port: 5173,
-		allowedHosts: ['2-i-4.42heilbronn.de'],
-		proxy: {
-			'/api': {
-				target: 'http://localhost:3000',
-				changeOrigin: true,
-				secure: false
-			},
-			'/ws': {
-				target: 'ws://localhost:3000',
-				ws: true
-			},
-			'/game': {
-				target: 'ws://localhost:3000',
-				ws: true
-			},
-			'/tournament': {
-				target: 'ws://localhost:3000',
-				ws: true
-			},
-			'/friends': {
-				target: 'ws://localhost:3000',
-				ws: true
-			},
-			'/avatars': 'http://localhost:3000',
-		}
+		allowedHosts: ['2-h-5.42heilbronn.de'],
+proxy: {
+  '/api': { target: 'http://localhost:3000', changeOrigin: true, secure: false },
+
+  '/ws':         { target: 'ws://localhost:3000', ws: true, changeOrigin: true },
+  '/game':       { target: 'ws://localhost:3000', ws: true, changeOrigin: true },
+  '/tournament': { target: 'ws://localhost:3000', ws: true, changeOrigin: true },
+  '/friends':    { target: 'ws://localhost:3000', ws: true, changeOrigin: true },
+
+  '/avatars': 'http://localhost:3000',
+}
+		//proxy: {
+		//	'/api': {
+		//		target: 'http://localhost:3000',
+		//		changeOrigin: true,
+		//		secure: false
+		//	},
+		//	'/ws': {
+		//		target: 'ws://localhost:3000',
+		//		ws: true
+		//	},
+		//	'/game': {
+		//		target: 'ws://localhost:3000',
+		//		ws: true
+		//	},
+		//	'/tournament': {
+		//		target: 'ws://localhost:3000',
+		//		ws: true
+		//	},
+		//	'/friends': {
+		//		target: 'ws://localhost:3000',
+		//		ws: true
+		//	},
+		//	'/avatars': 'http://localhost:3000',
+		//}
 	}
 })
 
