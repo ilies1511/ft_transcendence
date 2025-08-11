@@ -31,6 +31,7 @@ const friendsInviteNotificationRoute: FastifyPluginAsync = async (fastify) => {
 				open : c.readyState === 1, // true ⇢ OPEN, false ⇢ CLOSING/CLOSED
 				path : c.wsPath,
 			}));
+			//TODO: Copy this in /ws endpoint logic
 			console.log(
 				chalk.magenta.bold(
 					`Total WS clients: ${rows.length}\n` + util.inspect(rows, {
