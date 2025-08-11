@@ -93,28 +93,6 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 					reply.code(200).send({ message: 'Friend request automatically accepted' });
 				}
 				else if (fr.type === 'pending') {
-					// [START] SEND A FRIEND NOTIFICATION VIA WS INSTANTLY
-					if (fr) {
-						const sender = await fastify.db.get<{ username: string }>(
-							'SELECT username FROM users WHERE id = ?', req.params.id);
-
-						const recipient = await fastify.db.get<{ id: number }>(
-							'SELECT id FROM users WHERE username = ?', req.body.username);
-
-						if (recipient && sender) {
-							fastify.websocketServer.clients.forEach((client: any) => {
-								if (client.userId === recipient.id && client.wsPath === '/friends') {
-									client.send(JSON.stringify({
-										type: 'new_friend_request',
-										// requestId: fr.id,
-										requestId: fr.request.id,
-										from: sender.username
-									}));
-								}
-							});
-						}
-					}
-					// [END] SEND A FRIEND NOTIFICATION VIA WS INSTANTLY
 					return reply.code(201).send({ requestId: fr.request.id });
 				}
 			} catch (err: any) {
