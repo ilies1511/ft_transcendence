@@ -14,3 +14,5 @@ Fastify, Vite, and TypeScript Setup
 - [ ] Protecting routes 
 
 // can be something in friends
+
+TODO: after friend invite, the friendlist is not updated in the live chat.
