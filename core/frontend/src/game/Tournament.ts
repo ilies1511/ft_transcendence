@@ -8,6 +8,7 @@ import { is_unloading } from './globals.ts';
 import { LobbyType } from './game_shared/message_types.ts';
 
 import { TournamentApi } from './TournamentApi.ts';
+import { createBracket } from 'bracketry';
 
 import type {
 	Update,
@@ -15,9 +16,61 @@ import type {
 	TournamentToClient,
 	ClientToTournament,
 	ReconnectMsg,
+	BracketRound,
+	BracketMatch,
+	BracketPlayer,
+	TournamentState,
 } from './game_shared/TournamentMsg.ts';
 
 import { attempt_reconnect } from './frontend_interface_examples/reconnect.ts';
+
+
+export type Data = {
+    rounds: Round[],
+    matches?: Match[],
+    contestants?: {
+        [contestantId: string]: Contestant
+    }
+}
+
+export type Round = {
+    name?: string,
+}
+
+export type Match = {
+    roundIndex: number, // 0-based
+    order: number, // 0-based
+    sides?: Side[],
+    matchStatus?: string,
+    isLive?: boolean
+    isBronzeMatch?: string,
+}
+
+export type Contestant = {
+    entryStatus?: string,
+    players: Player[]
+}
+
+export type Side = {
+    title?: string,
+    contestantId?: string,
+    scores?: Score[],
+    currentScore?: number | string,
+    isServing?: boolean,
+    isWinner?: boolean
+}
+
+type Score = {
+    mainScore: number | string,
+    subscore?: number | string,
+    isWinner?: boolean
+}
+
+
+export type Player = {
+    title: string,
+    nationality?: string
+}
 
 
 export class Tournament {
@@ -27,6 +80,8 @@ export class Tournament {
 	private _socket: WebSocket;
 	public finished: boolean = false;
 	private _match_container: HTMLElement;
+
+	public latest_tournament_state?: TournamentState;
 
 	public constructor(user_id: number,
 		tournament_id: number,
@@ -66,7 +121,6 @@ export class Tournament {
 		};
 		return (Tournament.accept_tournament_invite(user_id, display_name, invite, match_container));
 	}
-
 
 	private _open_socket() {
 		try {
@@ -108,10 +162,17 @@ export class Tournament {
 		const msg: TournamentToClient = JSON.parse(event.data) as TournamentToClient;
 		switch (msg.type) {
 			case ('finish'):
-				//todo: render result or smth
+				//todo: render result or smth and cleanup
 				this.finished = true;
+				if (!globalThis.game) {
+					this.render_tournament_state();
+				}
 				break ;
 			case ('update'):
+				this.latest_tournament_state = msg.state;
+				if (!globalThis.game) {
+					this.render_tournament_state();
+				}
 				break ;
 			case ('new_game'):
 				//todo: let user know next game is ready and don't just instantly attempt connecting
@@ -168,6 +229,79 @@ export class Tournament {
 		console.log("started tournament");
 	}
 
-	public async invite(target_user_id: number) {
+	public render_tournament_state() {
+		if (!this.latest_tournament_state) {
+			return ;
+		}
+		const data: Data = {
+			rounds: [],
+			matches: [],
+			contestants: {}
+		};
+
+		for (const my_match of this.latest_tournament_state.rounds[0].matches) {
+			if (my_match.p1) {
+				data.contestants[`${my_match.p1.id}`] = {
+					players: [{title: my_match.p1.name}]
+				}
+			}
+			if (my_match.p2) {
+				data.contestants[`${my_match.p2.id}`] = {
+					players: [{title: my_match.p2.name}]
+				}
+			}
+		}
+
+		for (const round of this.latest_tournament_state.rounds) {
+			data.rounds.push({name: `Round ${round.index}`});
+			let order: number = 0;
+			for (const my_match of round.matches) {
+  //game_id: number | null;
+  //p1: BracketPlayer | null;
+  //p2: BracketPlayer | null;
+  //status: 'pending' | 'active' | 'finished' | 'bye';
+				const match: Match = {
+					roundIndex: round.index,
+					order: order, // 0-based
+					sides: [],
+    				//matchStatus?: string,
+    				//isLive?: boolean
+    				//isBronzeMatch?: string,
+				};
+				const get_side = (player: BracketPlayer | null): Side | undefined => {
+					if (!player) {
+						return ;
+					}
+					const side: Side = {
+						title: player.name,
+						contestantId: `${player.id}`,
+					};
+					if (player.placement == 1) {
+						side.isWinner = true;
+					}
+					if (player.placement == -1) {
+						side.isServing = true;
+					}
+					return (side);
+				}
+				let side: Side | undefined = get_side(my_match.p1);
+				if (side) {
+					match.sides.push(side);
+				}
+				side = get_side(my_match.p2);
+				if (side) {
+					match.sides.push(side);
+				}
+				if (my_match.p1?.placement == -1 || my_match.p2?.placement == -1) {
+					match.isLive = true;
+				} else {
+					match.isLive = false;
+				}
+				data.matches.push(match);
+				order++;
+			}
+		}
+		console.log('data: ', data);
+		const bracket = createBracket(data, this._match_container);
 	}
 };

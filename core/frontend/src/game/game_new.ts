@@ -109,6 +109,7 @@ export class Game {
 		this.password = password;
 		this.map_name = map_name;
 		this.container = container;
+		container.innerHTML = '';
 		this.lobby_type = lobby_type;
 		this.game_id = game_id;
 		this._process_msg = this._process_msg.bind(this);
@@ -179,6 +180,9 @@ export class Game {
 			this._local_player.disconnect();
 		}
 		this._cleanup();
+		if (globalThis.tournament) {
+			globalThis.tournament.render_tournament_state();
+		}
 	}
 
 	private _cleanup() {
