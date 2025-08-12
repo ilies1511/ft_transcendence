@@ -22,8 +22,9 @@ interface. --> Already given through Endpoints
 [x] Obtain the necessary credentials and permissions from the authority to enable
 secure login.
 
-[] Implement user-friendly login and authorization flows that adhere to best prac-
+[~] Implement user-friendly login and authorization flows that adhere to best prac-
 tices and security standards.
+	[] On top off QR, add Raw Secret --> provides both
 
 [] Ensure the secure exchange of authentication tokens and user information
 between the web application and the authentication provider.
@@ -71,7 +72,7 @@ users to exercise their data privacy rights. Key features and objectives include
 	tion of their personal data, ensuring that their identity and sensitive informa-
 	tion are protected.
 
-[]	Provide tools for users to manage their local data, including the ability to
+[x]	Provide tools for users to manage their local data, including the ability to
 	view, edit, or delete their personal information stored within the system.
 
 []	Offer a streamlined process for users to request the permanent deletion of
