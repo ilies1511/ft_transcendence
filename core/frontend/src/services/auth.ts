@@ -23,9 +23,9 @@ export async function submitLogin(email: string, password: string) {
 
 	// Redirect based on session
 	if (user) {
-		router.go(`/profile/${user.id}`);
+		router.go(`/`);
 	} else {
-		router.go(DEFAULT_REDIRECT);  // Fallback
+		router.go(`/login`);  // Fallback
 	}
 
 	document.dispatchEvent(new Event('auth-change'));
