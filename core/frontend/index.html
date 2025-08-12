@@ -64,7 +64,7 @@
 	<!-- Footer -->
 	<footer class="bg-[#221116] shadow-inner border-t-2 border-solid border-t-[#48232f] rounded-[25px]">
 		<div class="max-w-5xl mx-auto px-4 py-6 flex flex-col md:flex-row items-center justify-between">
-		<span class="text-sm text-gray-400">© 2025 MySite. All rights reserved.</span>
+		<span id="copyright" class="text-sm text-gray-400"></span>
 		<ul class="flex space-x-4 mt-2 md:mt-0">
 			<li><a href="#" class="hover:text-blue-400 transition">Privacy</a></li>
 			<li><a href="#" class="hover:text-blue-400 transition">Terms</a></li>
@@ -80,6 +80,7 @@
 		btn.addEventListener('click', () => {
 			menu.classList.toggle('hidden');
 		});
+		document.getElementById('copyright').innerHTML = `&copy; ${new Date().getFullYear()} MySite. All rights reserved.`;
 	</script>
 		<script type="module" src="/src/main.ts"></script>
 	</body>
