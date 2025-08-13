@@ -49,8 +49,12 @@ Game frontend.
 			Same as Machmaking, you can select options for the game, like MAP, speed and score maybe, time. Not avaire of full available options.
 		
 		- Tournament.
-			Not sure about behavior of this. Fabian please update this part.
+			Not sure about behavior of this. Tournament will be simmilar to custom lobby.
+			There is a map selection of a sub set of all the maps (only 1v1 maps).
+			After that the tournament is allready created and you can invite people the same way as to a lobby. Right now there is no UI for that part and it might be glitchy. At any point any participant of the tournament can start the tournament, after which no more people can be invited.
+
 4. If you leave the gamemode page, you disconnect from the game.
+
 5. Game invite should be using "/core/frontend/src/ui/gameInviteToast.ts".
 
 
