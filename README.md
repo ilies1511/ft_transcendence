@@ -39,16 +39,16 @@ Game frontend.
 		a. Map. Might be more, like speed, colors and so on.
 	4. When you selected the options, you enter the match.
 	Differences between gamemodes.
-		Matchmaking. 
+		- Matchmaking. 
 			If somebody already created a loby whit the same options you selected, you will enter that loby.
 			If there is no loby avaible with your options, the new loby will be created. Other peope who are searching for the game with the same options will automatically join your game loby.
 			Also, you you can invite other people to join the loby.
 
-		Custom loby.
+		- Custom loby.
 			With password. You create a loby and you create a password. Only people who knows the password, can join. You can also invite friends (or everybody, not sure yet) to this custom loby.
 			Same as Machmaking, you can select options for the game, like MAP, speed and score maybe, time. Not avaire of full available options.
 		
-		Tournament.
+		- Tournament.
 			Not sure about behavior of this. Fabian please update this part.
 4. If you leave the gamemode page, you disconnect from the game.
 5. Game invite should be using "/core/frontend/src/ui/gameInviteToast.ts".
