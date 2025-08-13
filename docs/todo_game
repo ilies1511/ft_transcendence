@@ -2,13 +2,18 @@
 
 refactor game backend:
 
+[ ] - remove password from lobbies (invite system makes that not needed)
+[ ] - improved invite popup
+[ ] - game should not need to be disconnected when switching side
+	 -> notification when game starts
 [x] - server crash when a game finishes while a player left with the engine running
-[ ] - game server: tournamet needs to use new client participation map
+[x] - game server: tournamet needs to use new client participation map
 [ ] - Tournament leaving support
+[ ] - frontend tournamet cleanup
 
 [ ] - game backend: think of what should happen with timeouts in a tournamet lobby
 
-[ ] - matchmaking bug: connections counting to infinity
+[not sure] - matchmaking bug: connections counting to infinity
 
 [ ] - delete empty lobbies after some time in the backend
 [x] - update GameLobby.loaded_player_count on websocket close event
