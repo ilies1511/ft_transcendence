@@ -8,7 +8,7 @@ import { is_unloading } from './globals.ts';
 import { LobbyType } from './game_shared/message_types.ts';
 
 import { TournamentApi } from './TournamentApi.ts';
-import { createBracket } from 'bracketry';
+// import { createBracket } from 'bracketry';
 
 import type {
 	Update,
