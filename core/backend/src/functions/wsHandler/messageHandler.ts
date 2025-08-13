@@ -1,4 +1,8 @@
 import type { ExtendedWebSocket, Message} from '../../types/wsTypes.ts';
+import type { LobbyInvite } from '../../game/game_shared/message_types.ts';
+import { LobbyType } from '../../game/game_shared/message_types.ts';
+import type { ClientParticipation } from '../../game/new/GameServer.ts';
+import { GameServer } from '../../game/new/GameServer.ts';
 import { type FastifyInstance } from 'fastify'
 import { isBlocked } from '../block.ts';
 import { findUserWithFriends } from '../user.ts';
@@ -83,6 +87,24 @@ export async function handleWsMessage(
 					error: 'User not connected'
 				}));
 			}
+			const invite: LobbyInvite = msg.content as LobbyInvite;
+			const parti: ClientParticipation | undefined =
+				GameServer.client_participations.get(senderId);
+			if (!parti) {
+				console.log("Warning: user that was not part of any lobby tried to invite");
+				return ;
+			}
+			if (invite.lobby_type == LobbyType.TOURNAMENT &&
+				parti.tournament_id != invite.lobby_id
+			) {
+				console.log("Warning: user tried to invite to a tournament he was not part of");
+				return ;
+			} else if (invite.lobby_type != LobbyType.TOURNAMENT &&
+				parti.lobby_id != invite.lobby_id
+			) {
+				console.log("Warning: user tried to invite to a match he was not part of");
+				return ;
+			}
 
 			for (const tsock of targets) {
 				tsock.send(JSON.stringify({
@@ -94,6 +116,7 @@ export async function handleWsMessage(
 
 			return;
 			//TODO: Do we send something back to the inviter?
+			//fabi: at the moment not, do we need to?
 		}
 		// case 'ping': {
 		// 	return extSocket.send(JSON.stringify({ type: 'pong' }))

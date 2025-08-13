@@ -417,8 +417,11 @@ export class GameEngine {
 		}
 	}
 
-	// does nothing, the player simply dosn't give any inputs anymore
 	public leave(client_id: number) {
+		//todo: to make tournament leave handling easier and games less chore to continue without players
+		// broadcast msg to other players that this player left
+		// set this player to loose as the next positon
+		// potentially end game if only 1 player is left
 	}
 
 	public process_input(input: ClientToGameInput) {
