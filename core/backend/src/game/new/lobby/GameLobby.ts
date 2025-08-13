@@ -255,7 +255,7 @@ export class GameLobby {
 		// remove local player websocket and player from game
 		for (const connection of this._connections) {
 			if (connection.id == msg.client_id * -1) {
-				//this.loaded_player_count--;
+				this.loaded_player_count--;
 				GameServer.remove_client_lobby_participation(msg.client_id * -1, this.id);
 				if (connection.sock) {
 					connection.sock.ws.close();
@@ -267,7 +267,7 @@ export class GameLobby {
 			}
 			if (connection.id == msg.client_id) {
 				GameServer.remove_client_lobby_participation(msg.client_id, this.id);
-				//this.loaded_player_count--;
+				this.loaded_player_count--;
 				if (connection.sock && connection.sock.ws !== ws) {
 					connection.sock.ws.close();
 					if (this.engine) {

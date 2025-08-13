@@ -357,7 +357,10 @@ export class GameServer {
 		return (msg);
 	}
 
-	private static _connections_of(client_id: number): ReconnectResp {
+	private static async _reconnect_api(request: FastifyRequest<{Body: ReconnectReq}>)
+		: Promise<ReconnectResp>
+	{
+		const { client_id } = request.body;
 		const response: ReconnectResp = {
 			match_id: -1,
 			match_has_password: false,
@@ -365,35 +368,32 @@ export class GameServer {
 			lobby_type: LobbyType.INVALID,
 		};
 
-		for (const [id, lobby] of GameServer.lobbies) {
-			if (lobby.can_reconnect(client_id)) {
-				response.match_id = id;
-				response.lobby_type = lobby.lobby_type;
-				if (lobby.password != '') {
-					response.match_has_password = true;
-				}
-				break ;
-				//return (response);
+		const parti: ClientParticipation | undefined = GameServer.client_participations.get(client_id);
+		if (!parti) {
+			return (response);
+		}
+		if (parti.lobby_id) {
+			const lobby: GameLobby | undefined = GameServer.lobbies.get(parti.lobby_id);
+			if (!lobby) {
+				console.log(`Error: client had participation ${parti}, but match ${parti.lobby_id} was not found!`);
+				return (response);
+			}
+			response.match_id = parti.lobby_id;
+			response.lobby_type = lobby.lobby_type;
+			if (lobby.password != '') {
+				response.match_has_password = true;
 			}
 		}
-		console.log("tournaments: ", this.tournaments);
-		for (const [tournament_id, tournament] of this.tournaments) {
-			for (const tournament_player_id of tournament.active_players) {
-				if (tournament_player_id == client_id) {
-					response.tournament_id = tournament_id;
-					break ;
-				}
+		if (parti.tournament_id) {
+			const tournament: Tournament | undefined = GameServer.tournaments.get(parti.tournament_id);
+			if (!tournament) {
+				console.log(`Error: client had participation ${parti}, but tournament ${parti.tournament_id} was not found!`);
+				return (response);
 			}
+			response.tournament_id = parti.tournament_id;
 		}
+
 		return (response);
-	}
-
-	private static async _reconnect_api(request: FastifyRequest<{Body: ReconnectReq}>)
-		: Promise<ReconnectResp>
-	{
-
-		const { client_id } = request.body;
-		return (GameServer._connections_of(client_id));
 	}
 
 	private static async _display_names_api(game_id_str: string)
