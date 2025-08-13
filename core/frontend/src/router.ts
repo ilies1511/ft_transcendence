@@ -1,8 +1,7 @@
-// import { currentUser } from './services/auth'
 import { getSession } from './services/session'
 
-const PUBLIC_ROUTES = ['/login', '/register'];   // guest-only pages
-const LOGIN_REDIRECT = '/login';                  // where guests are sent
+const PUBLIC_ROUTES = ['/login', '/register']; // guest-only pages
+const LOGIN_REDIRECT = '/login'; // where guests are sent
 
 export type PageModule = { // contract every page must fulfil
 	render(root: HTMLElement): void;
@@ -19,11 +18,9 @@ type Loader = () => Promise<PageModule>
 
 const routes: Record<string, Loader> = {
 	'/': () => import('./pages/home').then(m => m.default),
-	'/about': () => import('./pages/about').then(m => m.default),
 	'/login': () => import('./pages/login').then(m => m.default),
 	'/register': () => import('./pages/register').then(m => m.default),
 	'/modes': () => import('./pages/GameModes').then(m => m.default),
-	'/test': () => import('./pages/test').then(m => m.default),
 	// '/profile':  () => import('./pages/profile').then(m => m.default),
 	'/users': () => import('./pages/UsersPage').then(m => m.default),
 	'/profile/:id': () => import('./pages/profile').then(m => m.default),
@@ -31,7 +28,6 @@ const routes: Record<string, Loader> = {
 	'/friendlist': () => import('./pages/friendlist').then(m => m.default),
 }
 
-// Helper to match dynamic routes (e.g., /profile/123)  //just a test for now 1144
 function matchDynamicRoute(path: string): { route: string, params: Record<string, string> } | null {
 	const profileMatch = path.match(/^\/profile\/(\d+)$/);
 	if (profileMatch) {
@@ -74,9 +70,9 @@ export class Router {
 		if (path === '/profile' || path === '/settings') {
 			if (user && user.id) {
 				const dynamicPath = `${path}/${user.id}`;
-				return this.go(dynamicPath, false);  // No pushHistory to avoid loop
+				return this.go(dynamicPath, false); // No pushHistory to avoid loop
 			} else {
-				return this.go('/login', false);    // Guests to login
+				return this.go('/login', false); // Guests to login
 			}
 		}
 

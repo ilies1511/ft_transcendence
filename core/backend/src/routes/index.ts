@@ -6,7 +6,6 @@ import { userRoutes } from './users.ts';
 import { friendRoutes } from './friends.ts';
 import { matchRoutes } from './match.ts';
 import { blockRoutes } from './block.ts';
-import friendsInviteNotificationRoute from './friends_invitation.ts';
 import { twoFaRoutes } from './2fa.ts';
 import { googleAuthRoutes } from './auth-google.ts';
 
@@ -18,6 +17,5 @@ export default fp(async(fastify: FastifyInstance) => {
 	await fastify.register(friendRoutes);
 	await fastify.register(matchRoutes);
 	await fastify.register(blockRoutes);
-	await fastify.register(friendsInviteNotificationRoute);
 	await fastify.register(twoFaRoutes);
 })

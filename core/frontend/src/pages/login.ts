@@ -46,7 +46,7 @@ const template = /*html*/ `
 
 			<p class="text-center text-sm">
 				<a href="/register" data-route
-				   class="text-[#ca91a3] underline hover:text-[#f22667]">
+					class="text-[#ca91a3] underline hover:text-[#f22667]">
 					Don't have an account? Sign up
 				</a>
 			</p>
@@ -60,9 +60,9 @@ const LoginPage: PageModule = {
 	},
 
 	async afterRender(root) {
-		const form	= root.querySelector<HTMLFormElement>('#login-form')!;
-		const msg	= root.querySelector<HTMLParagraphElement>('#msg')!;
-		const baseMsg	= 'text-center text-sm font-semibold';
+		const form = root.querySelector<HTMLFormElement>('#login-form')!;
+		const msg = root.querySelector<HTMLParagraphElement>('#msg')!;
+		const baseMsg = 'text-center text-sm font-semibold';
 
 		form.addEventListener('submit', async e => {
 			e.preventDefault();
@@ -75,9 +75,9 @@ const LoginPage: PageModule = {
 			try {
 				await submitLogin(email, password); // set cookies
 				document.dispatchEvent(new Event('auth-change')); // for ws
-				router.go('/profile');
+				router.go('/');
 			} catch (err: any) {
-				msg.className	= `${baseMsg} text-red-500`;
+				msg.className = `${baseMsg} text-red-500`;
 				msg.textContent	= err.message ?? 'Login failed';
 			}
 		});

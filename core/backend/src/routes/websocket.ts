@@ -9,12 +9,13 @@ import { notifyFriendStatus } from '../functions/wsHandler/connectHandler.ts'
 import type { ExtendedWebSocket} from '../types/wsTypes.ts'
 import { handleWsMessage } from '../functions/wsHandler/messageHandler.ts'
 import { handleClose } from '../functions/wsHandler/closeHandler.ts'
+import { userSockets } from '../types/wsTypes.ts'
 
 /*
 	FOr Live Chat, where every user can send msgs to other users and not only friends
 */
 
-const userSockets = new Map<number, Set<ExtendedWebSocket>>()
+// const userSockets = new Map<number, Set<ExtendedWebSocket>>()
 
 export const wsRoute = async function (app: FastifyInstance) {
 	app.get('/ws', { websocket: true }, async (socket: WebSocket, req) => {
