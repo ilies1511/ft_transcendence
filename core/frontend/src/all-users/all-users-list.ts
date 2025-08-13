@@ -1,6 +1,7 @@
 import { sendWs } from '../services/websocket';
 import type { LobbyInvite } from '../../src/game/game_shared/message_types.ts';
 import { LobbyType } from '../../src/game/game_shared/message_types.ts';
+import { icons } from '../ui/icons';
 
 export async function fetchAndFill(myId: number) {
 	const ul = document.getElementById('allList') as HTMLUListElement;
@@ -35,8 +36,9 @@ export async function fetchAndFill(myId: number) {
 			// right part
 			const btn = document.createElement('button');
 			btn.className =
-				'ml-2 bg-purple-800 text-white text-xs px-2 py-1 rounded-md hover:bg-purple-700';
-			btn.textContent = '🎮 Invite';
+				`ml-2 bg-purple-800 text-white text-xs px-3 py-2
+					rounded-md hover:bg-purple-700 flex items-center cursor-pointer gap-1`;
+			btn.innerHTML = `${icons.game_invite}Invite`;
 
 			btn.addEventListener('click', () => {
 				const invite: LobbyInvite = {

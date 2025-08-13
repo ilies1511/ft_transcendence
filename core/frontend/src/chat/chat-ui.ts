@@ -3,14 +3,15 @@ import { sendWs } from '../services/websocket';
 import { appendMessage, saveToHistory } from './chat-state';
 import { chatState } from './chat-init';
 import { updateMainBadge } from './chat-state';
+import { icons } from '../ui/icons';
 
 // Static HTML skeleton
 export const template = /*html*/ `
 	<!-- floating button -->
 	<button id="toggleBtn"
 		class="fixed bottom-[60px] right-6 z-50 flex h-14 w-14 items-center justify-center
-				rounded-full bg-[#f22667] text-white shadow-lg hover:bg-[#d71d59]">
-	💬
+				rounded-full bg-[#f22667] text-white shadow-lg hover:bg-[#d71d59] cursor-pointer">
+	${icons.chat}
 	<span id="mainBadge"
 		class="absolute top-0 right-0 text-xs bg-red-500 text-white rounded-full px-1 py-0 hidden">!</span>
 	</button>
@@ -24,7 +25,9 @@ export const template = /*html*/ `
 			class="space-y-2 rounded-xl bg-[#2b171e] p-4 shadow-lg">
 			<div class="flex items-center justify-between text-white">
 				<h3 class="text-lg font-bold">Friends</h3>
-				<button id="closePanel" class="text-xl leading-none">✕</button>
+				<button id="closePanel" class="text-xl leading-none cursor-pointer">
+					${icons.closeX_micro}
+				</button>
 			</div>
 			<ul id="friendsList" class="mt-3 space-y-2"></ul>
 		</div>
@@ -33,9 +36,11 @@ export const template = /*html*/ `
 		<div id="chatPanel"
 			class="hidden flex flex-col h-[320px] rounded-xl bg-[#2b171e] p-4 shadow-lg">
 			<div class="mb-2 flex items-center justify-between text-white">
-				<button id="backBtn"	class="text-xl leading-none">←</button>
-				<h3 id="chatUser"		class="font-bold"></h3>
-				<button id="closeChat"	class="text-xl leading-none">✕</button>
+				<button id="backBtn" class="text-xl leading-none">←</button>
+				<h3 id="chatUser" class="font-bold"></h3>
+				<button id="closeChat" class="text-xl leading-none cursor-pointer">
+					${icons.closeX_micro}
+				</button>
 			</div>
 			<div id="messages"
 				class="flex flex-col flex-1 min-h-0 overflow-y-auto space-y-2 pr-2 text-[#b99da6]">

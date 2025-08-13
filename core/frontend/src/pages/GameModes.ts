@@ -118,18 +118,18 @@ const template = /*html*/`
 
 			<div class="flex gap-2">
 				<button id="btn-matchmaking"
-					class="rounded bg-[#0bda8e] px-4 py-2 text-white">Matchmaking</button>
+					class="rounded bg-[#0bda8e] px-4 py-2 text-white cursor-pointer">Matchmaking</button>
 				<button id="btn-create-tournament"
-					class="rounded bg-[#0bda8e] px-4 py-2 text-white">Create Tournament</button>
+					class="rounded bg-[#0bda8e] px-4 py-2 text-white cursor-pointer">Create Tournament</button>
 				<button id="btn-lobby"
-					class="rounded bg-[#b99da6] px-4 py-2 text-white">Custom Lobby</button>
+					class="rounded bg-[#b99da6] px-4 py-2 text-white cursor-pointer">Custom Lobby</button>
 				<button id="btn-local"
-					class="rounded bg-[#543b43] px-4 py-2 text-white">Local Game</button>
+					class="rounded bg-[#543b43] px-4 py-2 text-white cursor-pointer">Local Game</button>
 				<!-- leave button -->
-				<button id="btn-leave" class="rounded bg-[#D22B2B] px-4 py-2 text-white">Leave Match</button>
-				<button id="btn-disconnect" class="rounded bg-[#D22B2B] px-4 py-2 text-white">Disconnect</button>
-				<button id="btn-reconnect" class="rounded bg-[#D22B2B] px-4 py-2 text-white">Reconnect</button>
-				<button id="btn-start_tournament" class="rounded bg-[#D22B2B] px-4 py-2 text-white">Start Tournament</button>
+				<button id="btn-leave" class="rounded bg-[#D22B2B] px-4 py-2 text-white cursor-pointer">Leave Match</button>
+				<button id="btn-disconnect" class="rounded bg-[#D22B2B] px-4 py-2 text-white cursor-pointer">Disconnect</button>
+				<button id="btn-reconnect" class="rounded bg-[#D22B2B] px-4 py-2 text-white cursor-pointer">Reconnect</button>
+				<button id="btn-start_tournament" class="rounded bg-[#D22B2B] px-4 py-2 text-white cursor-pointer">Start Tournament</button>
 			</div>
 		</div>
 
