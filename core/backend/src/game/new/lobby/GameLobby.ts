@@ -4,6 +4,7 @@ import type { fastifyWebsocket } from '@fastify/websocket';
 import websocketPlugin from '@fastify/websocket';
 import type { WebSocket } from '@fastify/websocket';
 import { WebsocketConnection } from '../WebsocketConnection.ts';
+import { GameServer } from '../GameServer.ts';
 
 import type {
 	ServerToClientError,
@@ -27,11 +28,9 @@ type GameConnection = {
 	ingame_id?: number,
 	sock?: WebsocketConnection,
 	display_name: string,
+	timeout?: ReturnType<typeof setTimeout>,
 };
 
-
-//todo:
-//disconnect()
 export class GameLobby {
 	public finished: boolean = false;
 	public engine?: GameEngine = undefined;
@@ -54,6 +53,9 @@ export class GameLobby {
 	private _first_completion_callback?: (id: number, end_data: GameToClientFinish) => undefined;
 
 	public lobby_type: LobbyType;
+
+	private static readonly PENDING_CONNECT_TIMEOUT_MS = 15_000;
+	private static readonly RECONNECT_GRACE_MS = 30_000;
 
 
 	constructor(
@@ -100,6 +102,9 @@ export class GameLobby {
 	}
 
 	private _game_engine_finish_callback(msg: GameToClientFinish): undefined {
+		for (const connection of this._connections) {
+			GameServer.remove_client_lobby_participation(connection.id, this.id);
+		}
 		if (this._first_completion_callback) {
 			this._first_completion_callback(this.id, msg);
 		}
@@ -109,10 +114,11 @@ export class GameLobby {
 	private _start_game() {
 		console.log("starting game..");
 		this._game_engine_finish_callback = this._game_engine_finish_callback.bind(this);
-		this.engine = new GameEngine(this._map_name, this.lobby_type,
+		this.engine = new GameEngine(this._map_name, this.lobby_type, this,
 			this._game_engine_finish_callback, 1000 /* todo: hardcoded 1000 sec */);
 		let i = 0;
 		while (i < this._connections.length) {
+			this._clear_timeout(this._connections[i]);
 			this.engine.clients[i].set_socket(this._connections[i].sock.ws);
 			this.engine.clients[i].global_id = this._connections[i].id;
 			this._connections[i].ingame_id = this.engine.clients[i].obj_id;
@@ -121,11 +127,13 @@ export class GameLobby {
 		this.engine.start_loop();
 	}
 
-	// returns false if player can not join
 	// this does not setup the connection, without this the client tring to connect will be denied
 	public join(user_id: number, display_name: string, password?: string
 		): ServerError
 	{
+		if (this.engine) {
+			return ('Allready started');
+		}
 		if (this._ai_count + this._connections.length >= this._map_file.clients.length) {
 			return ("Full");
 		}
@@ -143,6 +151,8 @@ export class GameLobby {
 			display_name: display_name,
 		};
 		this._connections.push(connection);
+		GameServer.add_client_lobby_participation(user_id, this.id);
+		this._arm_timeout(connection, GameLobby.PENDING_CONNECT_TIMEOUT_MS, 'pending');
 		return ("");
 	}
 
@@ -180,6 +190,7 @@ export class GameLobby {
 		} else {
 			connection.sock.ws.close();
 			connection.sock = new WebsocketConnection(ws);
+			this._clear_timeout(connection);
 			if (this.engine) {
 				for (const client of this.engine.clients) {
 					if (client.global_id == connection.id) {
@@ -190,6 +201,11 @@ export class GameLobby {
 			}
 			this.loaded_player_count++;
 			this._update_lobby();
+			if (this._ai_count + this.loaded_player_count >= this._map_file.clients.length
+				&& this._connections.length + this._ai_count == this._map_file.clients.length
+			) {
+				this._start_game();
+			}
 		}
 
 		console.log("Game: client ", connection.id, " reconnected to lobby, ", this.id);
@@ -207,6 +223,7 @@ export class GameLobby {
 				this._reconnect(ws, connection);
 				return ;
 			} else if (client_id == connection.id) {
+				this._clear_timeout(connection);
 				connection.sock = new WebsocketConnection(ws);
 				if (client_id > 0) {
 					connection.sock.send(this._last_broadcast);
@@ -230,6 +247,7 @@ export class GameLobby {
 	// removes player from lobby
 	// also givs the game engine the option to take actions if needed
 	private _leave_game(ws: WebSocket, msg: ClientToMatchLeave) {
+		console.log(`GameLobby: ${msg.client_id} tries to leave lobby ${this.id}`);
 		ws.close();
 		if (msg.password != this.password) {
 			console.log("Game: Invalid password for leave() request, ignoring it..");
@@ -239,28 +257,29 @@ export class GameLobby {
 		for (const connection of this._connections) {
 			if (connection.id == msg.client_id * -1) {
 				this.loaded_player_count--;
+				GameServer.remove_client_lobby_participation(msg.client_id * -1, this.id);
 				if (connection.sock) {
 					connection.sock.ws.close();
-					if (this.engine) {
-						this.engine.leave(msg.client_id * -1);
-					}
-					break ;
+					//break ;
 				}
+				this.engine?.leave(msg.client_id * -1);
 			}
 			if (connection.id == msg.client_id) {
+				GameServer.remove_client_lobby_participation(msg.client_id, this.id);
 				this.loaded_player_count--;
 				if (connection.sock && connection.sock.ws !== ws) {
 					connection.sock.ws.close();
-					if (this.engine) {
-						this.engine.leave(msg.client_id);
-					}
-					break ;
+					//break ;
 				}
+				this.engine?.leave(msg.client_id);
 			}
 		}
-		this._connections = this._connections.filter(c => c.id != msg.client_id && c.id != msg.client_id * -1);
+		if (!this.engine) {
+			this._connections = this._connections.filter(c => c.id != msg.client_id && c.id != msg.client_id * -1);
+		}
 		this._update_lobby();
 	}
+
 
 	public recv(ws: WebSocket, msg: ClientToMatch) {
 		if (msg.type == 'connect') {
@@ -311,10 +330,65 @@ export class GameLobby {
 
 	public ws_close_handler(ws: WebSocket) {
 		for (const connection of this._connections) {
-			if (connection.sock && connection.sock.ws === ws) {
+			if (connection.sock?.ws === ws) {
+				connection.sock = undefined;
+				if (!this.engine) {
+					this._arm_timeout(connection, GameLobby.RECONNECT_GRACE_MS, 'reconnect');
+				}
 				this.loaded_player_count--;
 				this._update_lobby();
 			}
 		}
 	}
+
+	//called if the game did not start yet and a client exceeded the time limit to
+	// establish a connection
+	// (so other players can join)
+	private _remove_timed_out_client(client_id: number) {
+		if (this.lobby_type == LobbyType.TOURNAMENT_GAME) {
+			// todo: think of how this should behaive for tournament games 
+			//  (since there can not be a different player but also everyone is 
+			// waiting AND there must be a winner=> maybe skip the match and set 
+			// a connected player as winner?)
+		}
+		const i = this._connections.findIndex(c => c.id === client_id);
+		if (i === -1) {
+			return;
+		}
+		if (this._connections[i].sock?.ws.readyState == WebSocket.OPEN) {
+			console.log(`Warning: Tried to time out client ${client_id}, but client was actually connected!`);
+			this._clear_timeout(this._connections[i]);
+			return ;
+		}
+		this._connections.splice(i, 1);
+		GameServer.remove_client_lobby_participation(client_id, this.id);
+	}
+
+	private _arm_timeout(connection: GameConnection, ms: number, reason: 'pending'|'reconnect') {
+		this._clear_timeout(connection);
+		connection.timeout = setTimeout(() => {
+			if (this.engine) {
+				return ;
+			}
+			console.log(`GameLobby: Timing out client ${connection.id} (${reason}) in lobby ${this.id}`);
+			this._remove_timed_out_client(connection.id);
+			this._update_lobby();
+		}, ms);
+	}
+
+	private _clear_timeout(connection: GameConnection) {
+		if (connection.timeout) {
+			clearTimeout(connection.timeout);
+			connection.timeout = undefined;
+		}
+	}
+
+	public display_name_of(client_id: number): string {
+		const client: GameConnection | undefined = this._connections.find(c => c.id == client_id);
+		if (!client) {
+			return ('');
+		}
+		return (client.display_name);
+	}
+
 };

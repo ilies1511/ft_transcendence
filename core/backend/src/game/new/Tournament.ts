@@ -3,15 +3,15 @@ import { GameLobby } from './lobby/GameLobby.ts';
 import { GameServer } from './GameServer.ts';
 
 import type {
-	TournamentState,
-} from '../game_shared/TournamentApiTypes.ts';
-
-import type {
 	ClientToTournament,
 	TournamentToClient,
 	Update,
 	NewGame,
 	Finish,
+	BracketRound,
+	BracketMatch,
+	BracketPlayer,
+	TournamentState,
 } from '../game_shared/TournamentMsg.ts';
 
 import type {
@@ -95,6 +95,7 @@ export class Tournament {
 			placement: -1,
 		});
 		this.active_players.push(user_id);
+		GameServer.add_client_tournament_participation(user_id, this._id);
 		return ("");
 	}
 
@@ -103,6 +104,7 @@ export class Tournament {
 			return ("Not Found");
 		}
 		this.active_players = this.active_players.filter(id => id != client_id);
+		GameServer.remove_client_tournament_participation(client_id, this._id);
 		if (!this._started) {
 			this._rounds[0].players = this._rounds[0].players.filter(
 				player => player.client_id != client_id);
@@ -122,18 +124,35 @@ export class Tournament {
 		this._rounds[0].active_players = 0;
 		this._rounds[0].looking_for_game = this._total_player_count;
 		this._next_placement = this._total_player_count;
+	
+		let players_per_round: number = this._total_player_count - Math.trunc(this._total_player_count / 2);
+		while (players_per_round) {
+			const empty_round: Round = {
+				players: [],
+				game_ids: [],
+				active_players: 0,
+				looking_for_game: 0,
+			}
+			this._rounds.push(empty_round);
+			players_per_round -= Math.trunc(players_per_round / 2);
+			if (players_per_round == 1) {
+				// winner
+				break ;
+			}
+		}
+	
 		if (this._total_player_count <= 0) {
 			this._finish();
 		}
 		this._started = true;
-		this._start_round(0);
-
+		this._start_round(0)
 		return ("");
 	}
 
 	private async _start_round(round_idx: number): Promise<void> {
+		console.log(`Tournament: starting round ${round_idx}`);
 		const round: Round = this._rounds[round_idx];
-		if (round.players.length == 1) {
+		if (round_idx == this._rounds.length - 1) {
 			round.players[0].placement = this._next_placement--;
 			if (this._next_placement != 0) {
 				console.log("tournament: next placement in the end != 0: ", this._next_placement);
@@ -142,13 +161,6 @@ export class Tournament {
 			this._finish();
 			return ;
 		}
-		const next_round: Round = {
-			players: [],
-			game_ids: [],
-			active_players: 0,
-			looking_for_game: 0,
-		};
-		this._rounds.push(next_round);
 		let player_idx = 0;
 		while (player_idx < round.players.length - 1) {
 			const lobby_id: number = await GameServer.create_lobby(
@@ -191,12 +203,14 @@ export class Tournament {
 			console.log("looking for game in round after starting round, round: ", round);
 			throw ("looking for game in round after starting round ");
 		}
-	}
-
-	public get_state(client_id: number): TournamentState {
-		const ret: TournamentState = {
-		};
-		return (ret);
+		this._broadcast_update();
+		if (round_idx == this._rounds.length - 2 && round.game_ids.length == 0) {
+			//todo: test this with 3 players 
+			// fix for tournament with only 1 player:
+			// this was the final round but there is still the 'winner' round
+			// there was never a game created that could call to start the 'winner' round
+			this._start_round(round_idx + 1);
+		}
 	}
 
 	private _advance_player_to_round(player: TournamentPlayer, round_idx: number) {
@@ -229,6 +243,7 @@ export class Tournament {
 						player_1.placement = this._next_placement--;
 					}
 					this._rounds[round_idx].active_players -= 2;
+					this._broadcast_update();
 					if (this._rounds[round_idx].active_players < 2) {
 						this._start_round(round_idx + 1);
 					}
@@ -242,6 +257,7 @@ export class Tournament {
 	}
 
 	private _finish() {
+		console.log(`Tournament ${this._id} finished`);
 		this._completion_callback(this._id);
 		if (this._total_player_count <= 0) {
 			return ;
@@ -252,7 +268,7 @@ export class Tournament {
 			return ;
 		}
 		if (last_round.players.length != 1) {
-			console.log("Warning: Finished tournament with != 1 plate count:", last_round.players);
+			console.log("Warning: Finished tournament with != 1 players count:", last_round.players);
 			return ;
 		}
 		//console.log("winner: ", last_round.players[0]);
@@ -262,6 +278,9 @@ export class Tournament {
 		for (const player of this._rounds[0].players) {
 			player.ws?.send(JSON.stringify(msg));
 			player.ws?.close();
+		}
+		for (const id of this.active_players) {
+			GameServer.remove_client_tournament_participation(id, this._id);
 		}
 	}
 
@@ -286,6 +305,72 @@ export class Tournament {
 					}
 				}
 				break ;
+		}
+	}
+
+	private _get_state(): TournamentState {
+		const rounds: BracketRound[] = this._rounds.map((round, round_idx) => {
+			const matches: Array<{
+				game_id: number | null;
+				p1: { id: number; name: string; placement: number } | null;
+				p2: { id: number; name: string; placement: number } | null;
+				status: 'pending' | 'active' | 'finished' | 'bye';
+			}> = [];
+
+			const bye_player_ids: number[] = [];
+
+			for (let i = 0; i < round.players.length; i += 2) {
+				const p1 = round.players[i] ?? undefined;
+				const p2 = round.players[i + 1] ?? undefined;
+				const game_id = round.game_ids[Math.floor(i / 2)] ?? null;
+
+				const p1s = p1 ? { id: p1.client_id, name: p1.display_name, placement: p1.placement } : null;
+				const p2s = p2 ? { id: p2.client_id, name: p2.display_name, placement: p2.placement } : null;
+
+				let status: 'pending' | 'active' | 'finished' | 'bye';
+				if (!p2) {
+					status = 'bye';
+					if (p1) {
+						bye_player_ids.push(p1.client_id);
+					}
+				} else if ((p1 && p1.placement !== -1) || (p2 && p2.placement !== -1)) {
+					status = 'finished';
+				} else if (this._started && game_id !== null) {
+					status = 'active';
+				} else {
+					status = 'pending';
+				}
+
+				matches.push({ game_id, p1: p1s, p2: p2s, status });
+			}
+
+			return { index: round_idx, matches, bye_player_ids };
+		});
+
+		const state: TournamentState = {
+			tournament_id: this._id,
+			map_name: this._map_name,
+			started: this._started,
+			total_players: this._total_player_count,
+			next_placement: this._next_placement,
+			active_players: [...this.active_players],
+			rounds,
+		};
+
+		return state;
+	}
+
+	private _broadcast_update(): void {
+		const msg: Update = {
+			type: 'update',
+			state: this._get_state(),
+		};
+		for (const player of this._rounds[0].players) {
+			try {
+				player.ws?.send(JSON.stringify(msg));
+			} catch (e) {
+				console.log('broadcast_update fail for player ', player.client_id, e);
+			}
 		}
 	}
 };

@@ -106,9 +106,16 @@ const reconnect_schema = {
 	}
 };
 
+
+export type ClientParticipation = {
+	lobby_id?: number;
+	tournament_id?: number;
+};
+
 export class GameServer {
 	public static lobbies: Map<number, GameLobby> = new Map<number, GameLobby>;
 	public static tournaments: Map<number, Tournament> = new Map<number, Tournament>;
+	public static client_participations: Map<number, ClientParticipation> = new Map<number, ClientParticipation>;
 	private static _fastify: FastifyInstance;
 
 	private constructor(){}
@@ -204,7 +211,46 @@ export class GameServer {
 				//GameServer._close_socket_lobby_handler(game_id, socket);
 			});
 		});
+	}
 
+	public static add_client_lobby_participation(client_id: number, lobby_id: number) {
+		if (!this.client_participations.get(client_id)) {
+			const parti: ClientParticipation = {
+			};
+			this.client_participations.set(client_id, parti);
+		}
+		this.client_participations.get(client_id).lobby_id = lobby_id;
+	}
+
+	public static remove_client_lobby_participation(client_id: number, lobby_id: number) {
+		const parti: ClientParticipation | undefined = this.client_participations.get(client_id)
+		if (!parti) {
+			return ;
+		}
+		parti.lobby_id = undefined;
+		if (!parti.tournament_id) {
+			this.client_participations.delete(client_id);
+		}
+	}
+
+	public static add_client_tournament_participation(client_id: number, tournament_id: number) {
+		if (!this.client_participations.get(client_id)) {
+			const parti: ClientParticipation = {
+			};
+			this.client_participations.set(client_id, parti);
+		}
+		this.client_participations.get(client_id).tournament_id = tournament_id;
+	}
+
+	public static remove_client_tournament_participation(client_id: number, tournament_id: number) {
+		const parti: ClientParticipation | undefined = this.client_participations.get(client_id)
+		if (!parti) {
+			return ;
+		}
+		parti.tournament_id = undefined;
+		if (!parti.lobby_id) {
+			this.client_participations.delete(client_id);
+		}
 	}
 
 	private static _close_socket_lobby_handler(lobby_id_str: string, ws: WebSocket) {
@@ -297,6 +343,12 @@ export class GameServer {
 	{
 		const { lobby_id, user_id, password, display_name } = request.body;
 
+		const parti: ClientParticipation | undefined = this.client_participations.get(user_id);
+
+		if (parti?.lobby_id && parti?.lobby_id != lobby_id) {
+			return ("Allready in game");
+		}
+
 		const lobby: GameLobby | undefined = GameServer.lobbies.get(lobby_id);
 		if (!lobby) {
 			return ("Not Found");
@@ -305,7 +357,10 @@ export class GameServer {
 		return (msg);
 	}
 
-	private static _connections_of(client_id: number): ReconnectResp {
+	private static async _reconnect_api(request: FastifyRequest<{Body: ReconnectReq}>)
+		: Promise<ReconnectResp>
+	{
+		const { client_id } = request.body;
 		const response: ReconnectResp = {
 			match_id: -1,
 			match_has_password: false,
@@ -313,34 +368,32 @@ export class GameServer {
 			lobby_type: LobbyType.INVALID,
 		};
 
-		for (const [id, lobby] of GameServer.lobbies) {
-			if (lobby.can_reconnect(client_id)) {
-				response.match_id = id;
-				response.lobby_type = lobby.lobby_type;
-				if (lobby.password != '') {
-					response.match_has_password = true;
-				}
-				break ;
-				//return (response);
+		const parti: ClientParticipation | undefined = GameServer.client_participations.get(client_id);
+		if (!parti) {
+			return (response);
+		}
+		if (parti.lobby_id) {
+			const lobby: GameLobby | undefined = GameServer.lobbies.get(parti.lobby_id);
+			if (!lobby) {
+				console.log(`Error: client had participation ${parti}, but match ${parti.lobby_id} was not found!`);
+				return (response);
+			}
+			response.match_id = parti.lobby_id;
+			response.lobby_type = lobby.lobby_type;
+			if (lobby.password != '') {
+				response.match_has_password = true;
 			}
 		}
-		for (const [tournament_id, tournament] of this.tournaments) {
-			for (const tournament_player_id of tournament.active_players) {
-				if (tournament_player_id == client_id) {
-					response.tournament_id = tournament_id;
-					break ;
-				}
+		if (parti.tournament_id) {
+			const tournament: Tournament | undefined = GameServer.tournaments.get(parti.tournament_id);
+			if (!tournament) {
+				console.log(`Error: client had participation ${parti}, but tournament ${parti.tournament_id} was not found!`);
+				return (response);
 			}
+			response.tournament_id = parti.tournament_id;
 		}
+
 		return (response);
-	}
-
-	private static async _reconnect_api(request: FastifyRequest<{Body: ReconnectReq}>)
-		: Promise<ReconnectResp>
-	{
-
-		const { client_id } = request.body;
-		return (GameServer._connections_of(client_id));
 	}
 
 	private static async _display_names_api(game_id_str: string)

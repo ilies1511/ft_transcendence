@@ -109,6 +109,7 @@ export class Game {
 		this.password = password;
 		this.map_name = map_name;
 		this.container = container;
+		container.innerHTML = '';
 		this.lobby_type = lobby_type;
 		this.game_id = game_id;
 		this._process_msg = this._process_msg.bind(this);
@@ -179,6 +180,7 @@ export class Game {
 			this._local_player.disconnect();
 		}
 		this._cleanup();
+		globalThis.tournament?.render_tournament_state();
 	}
 
 	private _cleanup() {
@@ -211,7 +213,9 @@ export class Game {
 				return ;
 			}
 			console.log("game id: ", this.game_id);
-			const route: string = `ws://localhost:5173/game/${this.game_id}`;
+const wsBase =
+  (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
+			const route: string = `${wsBase}/game/${this.game_id}`;
 			this._socket = new WebSocket(route)
 			this._socket.binaryType = "arraybuffer";
 
@@ -385,6 +389,10 @@ export class Game {
 					break ;
 				case ('finish'):
 					this._finish_game(json);
+					break ;
+				case ('info'):
+					console.log(json.text);
+					//todo: make a small temporary popup for the user to read this data
 					break ;
 				default:
 					throw ("Got not implemented msg type from server: ", msg);

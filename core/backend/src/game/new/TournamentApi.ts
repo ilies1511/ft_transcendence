@@ -10,6 +10,7 @@ import { WebsocketConnection } from './WebsocketConnection.ts';
 import { createMatchMeta, completeMatch, } from '../../functions/match.ts';
 import type { NewMatch } from '../../functions/match.ts';
 import { GameServer } from './GameServer.ts';
+import type { ClientParticipation } from './GameServer.ts';
 
 import type {
 	LeaveReq,
@@ -177,6 +178,12 @@ export class TournamentApi {
 			type: 'default',
 		};
 		const { lobby_id, user_id, password, display_name } = request.body;
+		const parti: ClientParticipation | undefined = GameServer.client_participations.get(user_id);
+		if (parti && parti.tournament_id != lobby_id) {
+			msg.error = 'Allready in game'
+			return (msg);
+		}
+
 		const tournament: Tournament | undefined = GameServer.tournaments.get(lobby_id);
 		if (!tournament) {
 			console.log("join_tournament api: Not Found");

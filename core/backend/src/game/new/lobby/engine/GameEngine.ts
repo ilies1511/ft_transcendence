@@ -9,13 +9,15 @@ import type { WebSocket } from '@fastify/websocket';
 import { LobbyType, type ClientToGame } from './../../../game_shared/message_types.ts';
 import type {
 	GameOptions,
-	GameStartInfo,
 	LobbyToClientJson,
 	ServerToClientMessage,
 	GameToClientFinish,
 	ClientToGameInput,
+	GameToClientInfo,
 } from './../../../game_shared/message_types.ts';
 import { SharedVec2 } from './../../../game_shared/objects/SharedVec2.ts';
+
+import { GameLobby} from '../GameLobby.ts';
 
 
 import { MapFile } from './../maps/Map.ts';
@@ -36,7 +38,6 @@ const EPSILON: number = 1e-6;
 
 let i: number = 0;
 
-//todo: split this into smaller classes
 export class GameEngine {
 	private _next_obj_id: number = 1;//has to start at 1
 	private _interval: NodeJS.Timeout | null = null;
@@ -52,12 +53,15 @@ export class GameEngine {
 	private _duration: number = 0;
 	public timer?: number;//seconds left of the game
 	public lobby_type: LobbyType;
+	private _game_lobby: GameLobby;
 
 	constructor(map_name: string,
 		lobby_type: LobbyType,
+		game_lobby: GameLobby,
 		finish_callback: (end_data: GameToClientFinish) => undefined,
 		duration?: number,
 	) {
+		this._game_lobby = game_lobby;
 		this.update = this.update.bind(this);
 		this._finish_callback = finish_callback;
 		this.lobby_type = lobby_type;
@@ -76,19 +80,9 @@ export class GameEngine {
 		this.balls = map.balls;
 		this.clients = map.clients;
 
-		//const ball: ServerBall = new ServerBall();
-		//ball.speed.x = -1;
-		//ball.speed.y = -3;
-		//ball.pos.x = 0;
-		//ball.obj_id = this._next_obj_id++;
-		//this.balls.push(ball);
-		//console.log(this.walls);
-		//console.log(this.balls);
-		//this.start_loop();
 	}
 
 	//for debugging callable by the client
-	//todo
 	private _reset() {
 		for (const ball of this.balls) {
 			ball.reset();
@@ -100,7 +94,6 @@ export class GameEngine {
 
 	private serialize_game_state(): ArrayBuffer {
 		const state = new GameState(this);
-		//logGameState(state);
 		//console.log(state);
 		return state.serialize();
 	}
@@ -261,7 +254,6 @@ export class GameEngine {
 						goaled_client.loose();
 						goaled_client.final_placement = this._alive_player_count;
 						this._alive_player_count--;
-						//todo: later chage this to 1 so the game is over when 1 player is alive
 						if (this._alive_player_count == 1) {
 							this._finish_game();
 						}
@@ -300,27 +292,7 @@ export class GameEngine {
 		}
 	}
 
-	private rotate_wall(wall: ServerWall, angle: number, delta_time: number) {
-		const theta = angle * delta_time;
-
-		// grab the old normal
-		const n = wall.normal;
-
-		// compute the rotated components
-		const cos = Math.cos(theta);
-		const sin = Math.sin(theta);
-		const newX = n.x * cos - n.y * sin;
-		const newY = n.x * sin + n.y * cos;
-
-		wall.normal.x = newX;
-		wall.normal.y = newY;
-		wall.normal.unit();
-		wall.update();
-		wall.angular_vel = angle;
-	}
-
 	private update_walls(delta_time: number) {
-		//this.walls[4].rotate(Math.PI / 2, delta_time);
 		for (const wall of this.walls) {
 			wall.rotate(wall.rotation * Math.PI / 2, delta_time);
 		}
@@ -360,7 +332,7 @@ export class GameEngine {
 					this._finish_game();
 					return ;
 				} else {
-					console.log("Tournament not ending since players are tied..");
+					//console.log("Tournament not ending since players are tied..");
 				}
 			}
 		}
@@ -417,8 +389,31 @@ export class GameEngine {
 		}
 	}
 
-	// does nothing, the player simply dosn't give any inputs anymore
 	public leave(client_id: number) {
+		console.log(`GameEngine: client ${client_id} left`);
+		const msg: GameToClientInfo = {
+			type: 'info',
+			text: `player ${this._game_lobby.display_name_of(client_id)} left the game`,
+		};
+		for (const client of this.clients) {
+			if (client.global_id == client_id || client.global_id == client_id * -1) {
+				client.loose();
+				client.final_placement = this._alive_player_count;
+				this._alive_player_count--;
+				console.log(`GameEngine: clinet ${client.global_id} lost duo to leaving`);
+				continue ;
+			}
+			if (client.global_id <= 0) {
+				continue ;
+			}
+			if (client.socket && client.socket.readyState === client.socket.OPEN) {
+				console.log(`sending ${msg}`);
+				client.socket.send(JSON.stringify(msg));
+			}
+		}
+		if (this._alive_player_count == 1) {
+			this._finish_game();
+		}
 	}
 
 	public process_input(input: ClientToGameInput) {

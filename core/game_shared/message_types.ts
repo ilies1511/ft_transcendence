@@ -113,6 +113,9 @@ export type ServerError =
 	| 'Internal Error'
 	| 'Not Found'
 	| 'Invalid Map'
+	| 'Allready started'
+	| 'Allready in game'
+	| 'Allready in tournament'
 	| ''
 ;
 
@@ -131,7 +134,10 @@ export function is_ServerError(data: unknown): ServerError | undefined {
 		 'Full',
 		 'Internal Error',
 		 'Not Found',
+		 'Allready started',
 		 'Invalid Map',
+		'Allready in game',
+		'Allready in tournament',
 		 '',
 		].includes(data)
 	) {
@@ -156,11 +162,17 @@ export type GameToClientFinish = {
 	}[];
 };
 
+export type GameToClientInfo = {
+	type: 'info',
+	text: string,
+};
+
 //	| GameLobbyUpdate
 export type LobbyToClientJson =
 	ServerToClientError
 	| GameLobbyUpdate
 	| GameToClientFinish
+	| GameToClientInfo
 ;
 
 export type LobbyToClient = LobbyToClientJson | ArrayBuffer;

@@ -144,10 +144,14 @@ const template = /*html*/`
 `
 
 declare global { var game: Game | undefined }
-globalThis.game = undefined
+globalThis.game = undefined;
 
 declare global { var tournament: Tournament | undefined }
-globalThis.tournament = undefined
+globalThis.tournament = undefined;
+
+declare global { var last_invite: LobbyInvite | undefined }
+globalThis.game = undefined;
+
 
 function wireLocalPlayerButton(game: Game): void {
 	const btn = document.getElementById('btn-add-local-player') as HTMLButtonElement | null
@@ -272,12 +276,14 @@ function setupGameModes(root: HTMLElement): void {
 	const btnStartTournament = root.querySelector<HTMLButtonElement>('#btn-start_tournament')
 	btnLeave?.addEventListener('click', () => {
 		globalThis.game?.leave()
+		globalThis.tournament?.leave()
 	})
 	btnDisconnect?.addEventListener('click', () => {
 		globalThis.game?.disconnect()
 	})
 	btnStartTournament?.addEventListener('click', () => {
-		globalThis.tournament?.start()
+		globalThis.tournament?.start();
+		console.log("tournament when start tournament was pressed: ", globalThis.tournament);
 	})
 	/* pre-fill & lock field when we already know the user */
 	void (async () => {

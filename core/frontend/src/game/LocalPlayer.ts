@@ -84,7 +84,9 @@ export class LocalPlayer {
 
 	public open_socket() {
 		try {
-			const route: string = `ws://localhost:5173/game/${this.game_id}`;
+const wsBase =
+  (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
+			const route: string = `${wsBase}/game/${this.game_id}`;
 			this._socket = new WebSocket(route)
 
 			this._socket.addEventListener("open", (event) => {

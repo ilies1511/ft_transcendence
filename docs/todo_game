@@ -1,6 +1,24 @@
 
 
-refactor game backend:
+[x] - game engine: handle player leave better:
+	[x] - broadcast msg to other players that this player left
+	[x] - set leaving player to loose as the next positon
+	[x] - potentially end game if only 1 player is left
+
+[x] - server side lobby invite check if the sender is actually in the lobby
+	(needed if I want to remove password from lobbies so not just anyone can invite)
+[ ] - remove password from lobbies (invite system makes that not needed)
+[ ] - improved invite popup
+[ ] - game should not need to be disconnected when switching side
+	 -> notification when game starts
+[x] - server crash when a game finishes while a player left with the engine running
+[x] - game server: tournamet needs to use new client participation map
+[ ] - Tournament leaving support
+[x] - frontend tournamet cleanup
+
+[ ] - game backend: think of what should happen with timeouts in a tournamet lobby
+
+[not sure] - matchmaking bug: connections counting to infinity
 
 [ ] - delete empty lobbies after some time in the backend
 [x] - update GameLobby.loaded_player_count on websocket close event
@@ -35,7 +53,7 @@ websocket endpoints:
 
 [ ]: send tournament upates to frontend
 
-[ ]: render tournament state
+[~]: render tournament state
 [ ]: render game result
 [ ]: render tournament result
 
@@ -52,7 +70,7 @@ websocket endpoints:
 [x]: frontend: adjust websocket communication
 
 [x]: backend: handle clients that leave the game(during game dosnt matter, but pre game start)
-[ ]: backend: in the lobby pre game not connected clients need to be timed out so others can join
+[x]: backend: in the lobby pre game not connected clients need to be timed out so others can join
 
 
 [x]: serilize player scores
