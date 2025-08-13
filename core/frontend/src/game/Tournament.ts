@@ -8,7 +8,7 @@ import { is_unloading } from './globals.ts';
 import { LobbyType } from './game_shared/message_types.ts';
 
 import { TournamentApi } from './TournamentApi.ts';
-// import { createBracket } from 'bracketry';
+import { createBracket } from 'bracketry';
 
 import type {
 	Update,
@@ -165,10 +165,10 @@ export class Tournament {
 				//todo: render result or smth and cleanup
 				console.log("Tournament: got finish msg");
 				this.finished = true;
+				this.leave();
 				if (!globalThis.game) {
 					this.render_tournament_state();
 				}
-				this.leave();
 				break ;
 			case ('update'):
 				this.latest_tournament_state = msg.state;
@@ -217,6 +217,7 @@ export class Tournament {
 
 	public leave() {
 		this.finished = true;
+		globalThis.game?.leave();
 		TournamentApi.leave_tournament(this.user_id, this.tournament_id);
 		this._cleanup();
 	}
