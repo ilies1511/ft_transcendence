@@ -192,6 +192,11 @@ export class GameLobby {
 			}
 			this.loaded_player_count++;
 			this._update_lobby();
+			if (this._ai_count + this.loaded_player_count >= this._map_file.clients.length
+				&& this._connections.length + this._ai_count == this._map_file.clients.length
+			) {
+				this._start_game();
+			}
 		}
 
 		console.log("Game: client ", connection.id, " reconnected to lobby, ", this.id);
@@ -240,7 +245,7 @@ export class GameLobby {
 		// remove local player websocket and player from game
 		for (const connection of this._connections) {
 			if (connection.id == msg.client_id * -1) {
-				this.loaded_player_count--;
+				//this.loaded_player_count--;
 				if (connection.sock) {
 					connection.sock.ws.close();
 					if (this.engine) {

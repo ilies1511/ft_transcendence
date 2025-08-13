@@ -23,6 +23,7 @@ export function gameInviteToast(fromName:string) {
 		from : fromName,
 
 		onAccept: async (): Promise<boolean> => {
+			//TODO: switch to game page so the container is reachable
 			console.log('[GameInvite TOAST] accepted');
 			if (!globalThis.last_invite) {
 				console.log("Error: accepted invite but there was no invite");
