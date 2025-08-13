@@ -4,6 +4,8 @@ refactor game backend:
 
 [ ] - Tournament leaving support
 
+[ ] - game backend: think of what should happen with timeouts in a tournamet lobby
+
 [ ] - matchmaking bug: connections counting to infinity
 
 [ ] - delete empty lobbies after some time in the backend
@@ -56,7 +58,7 @@ websocket endpoints:
 [x]: frontend: adjust websocket communication
 
 [x]: backend: handle clients that leave the game(during game dosnt matter, but pre game start)
-[ ]: backend: in the lobby pre game not connected clients need to be timed out so others can join
+[x]: backend: in the lobby pre game not connected clients need to be timed out so others can join
 
 
 [x]: serilize player scores
