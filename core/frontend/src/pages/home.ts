@@ -101,7 +101,7 @@ const HomePage:PageModule = {
 			})
 			.join('');
 		root.innerHTML = /*html*/`
-		<div class="min-h-screen bg-[#221116] flex flex-col items-center p-6 space-y-10">
+		<div class="min-h-screen bg-[#221116] flex flex-col items-center p-6 pt-[70px] space-y-10">
 			<div class="w-full max-w-6xl mx-auto space-y-10">
 				<h1 class="text-6xl text-white font-semibold text-center">
 					Welcome to Ping-Pong Revolution
