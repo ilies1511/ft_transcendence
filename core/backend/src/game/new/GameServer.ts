@@ -324,6 +324,7 @@ export class GameServer {
 				//return (response);
 			}
 		}
+		console.log("tournaments: ", this.tournaments);
 		for (const [tournament_id, tournament] of this.tournaments) {
 			for (const tournament_player_id of tournament.active_players) {
 				if (tournament_player_id == client_id) {

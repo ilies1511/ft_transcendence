@@ -188,6 +188,8 @@ export class Tournament {
 		invite: LobbyInvite,
 		match_container: HTMLElement,
 	): Promise<Tournament | undefined> {
+
+		console.log("accepting tournament invite..");
 		if (globalThis.tournament) {
 			console.log("Allready in a tournament!");
 			return ;

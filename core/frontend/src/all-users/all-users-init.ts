@@ -33,48 +33,14 @@ export async function initAllUsersUI() {
 	wsEvents.addEventListener('lobby_invite', handleLobbyInvite);
 }
 
-//todo: currently the ivite gets automatically accepted
 async function handleLobbyInvite(ev: Event) {
 	const { from, content } = (ev as CustomEvent).detail;
+	globalThis.last_invite = content as LobbyInvite;
 	const invite: LobbyInvite = content as LobbyInvite;
 
-	inviteToast(`User #${from} invited you to play`);
+	await inviteToast(`User #${from} invited you to play`);
 
 	console.log('[LobbyInvite] from user', from, content);
-
-	const me           = await getSession();
-	const container    = document.querySelector<HTMLElement>('#game-container');
-
-	if (!me || !container) {
-		return;
-	}
-	const user_id      = me.id;
-	const display_name = me.nickname ?? `player_${user_id}`;
-
-	switch (invite.lobby_type) {
-		case (LobbyType.INVALID):
-			return ;
-		case (LobbyType.CUSTOM):
-		case (LobbyType.MATCHMAKING):
-		case (LobbyType.TOURNAMENT_GAME):
-			const game: Game | ServerError = await accept_lobby_invite(
-				user_id,
-				container,
-				invite,
-				display_name,
-			);
-			if (game == '') {
-				//game should be running
-				return ;
-			} else {
-				console.log("Error with lobby invite: ", game);
-			}
-			return ;
-		case (LobbyType.TOURNAMENT):
-			const tournament: Tournament | undefined = await
-				Tournament.accept_tournament_invite(user_id, display_name, invite, container);
-			return ;
-	}
 }
 
 export function destroyAllUsersUI() {
