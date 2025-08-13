@@ -4,6 +4,7 @@ import type { fastifyWebsocket } from '@fastify/websocket';
 import websocketPlugin from '@fastify/websocket';
 import type { WebSocket } from '@fastify/websocket';
 import { WebsocketConnection } from '../WebsocketConnection.ts';
+import { GameServer } from '../GameServer.ts';
 
 import type {
 	ServerToClientError,
@@ -101,6 +102,9 @@ export class GameLobby {
 	}
 
 	private _game_engine_finish_callback(msg: GameToClientFinish): undefined {
+		for (const connection of this._connections) {
+			GameServer.remove_client_lobby_participation(connection.id, this.id);
+		}
 		if (this._first_completion_callback) {
 			this._first_completion_callback(this.id, msg);
 		}
@@ -147,6 +151,7 @@ export class GameLobby {
 			display_name: display_name,
 		};
 		this._connections.push(connection);
+		GameServer.add_client_lobby_participation(user_id, this.id);
 		this._arm_timeout(connection, GameLobby.PENDING_CONNECT_TIMEOUT_MS, 'pending');
 		return ("");
 	}
@@ -250,27 +255,31 @@ export class GameLobby {
 		// remove local player websocket and player from game
 		for (const connection of this._connections) {
 			if (connection.id == msg.client_id * -1) {
-				//this.loaded_player_count--;
+				this.loaded_player_count--;
+				GameServer.remove_client_lobby_participation(msg.client_id * -1, this.id);
 				if (connection.sock) {
 					connection.sock.ws.close();
 					if (this.engine) {
 						this.engine.leave(msg.client_id * -1);
 					}
-					break ;
+					//break ;
 				}
 			}
 			if (connection.id == msg.client_id) {
+				GameServer.remove_client_lobby_participation(msg.client_id, this.id);
 				this.loaded_player_count--;
 				if (connection.sock && connection.sock.ws !== ws) {
 					connection.sock.ws.close();
 					if (this.engine) {
 						this.engine.leave(msg.client_id);
 					}
-					break ;
+					//break ;
 				}
 			}
 		}
-		this._connections = this._connections.filter(c => c.id != msg.client_id && c.id != msg.client_id * -1);
+		if (!this.engine) {
+			this._connections = this._connections.filter(c => c.id != msg.client_id && c.id != msg.client_id * -1);
+		}
 		this._update_lobby();
 	}
 
@@ -355,6 +364,7 @@ export class GameLobby {
 			return ;
 		}
 		this._connections.splice(i, 1);
+		GameServer.remove_client_lobby_participation(client_id, this.id);
 	}
 
 	private _arm_timeout(connection: GameConnection, ms: number, reason: 'pending'|'reconnect') {

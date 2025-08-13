@@ -114,6 +114,7 @@ export type ServerError =
 	| 'Not Found'
 	| 'Invalid Map'
 	| 'Allready started'
+	| 'Allready in game'
 	| ''
 ;
 

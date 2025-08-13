@@ -95,6 +95,7 @@ export class Tournament {
 			placement: -1,
 		});
 		this.active_players.push(user_id);
+		GameServer.add_client_tournament_participation(user_id, this._id);
 		return ("");
 	}
 
@@ -103,6 +104,7 @@ export class Tournament {
 			return ("Not Found");
 		}
 		this.active_players = this.active_players.filter(id => id != client_id);
+		GameServer.remove_client_tournament_participation(client_id, this._id);
 		if (!this._started) {
 			this._rounds[0].players = this._rounds[0].players.filter(
 				player => player.client_id != client_id);
@@ -122,6 +124,23 @@ export class Tournament {
 		this._rounds[0].active_players = 0;
 		this._rounds[0].looking_for_game = this._total_player_count;
 		this._next_placement = this._total_player_count;
+	
+		let players_per_round: number = this._total_player_count - Math.trunc(this._total_player_count / 2);
+		while (players_per_round) {
+			const empty_round: Round = {
+				players: [],
+				game_ids: [],
+				active_players: 0,
+				looking_for_game: 0,
+			}
+			this._rounds.push(empty_round);
+			players_per_round -= Math.trunc(players_per_round / 2);
+			if (players_per_round == 1) {
+				// winner
+				break ;
+			}
+		}
+	
 		if (this._total_player_count <= 0) {
 			this._finish();
 		}
@@ -141,13 +160,13 @@ export class Tournament {
 			this._finish();
 			return ;
 		}
-		const next_round: Round = {
-			players: [],
-			game_ids: [],
-			active_players: 0,
-			looking_for_game: 0,
-		};
-		this._rounds.push(next_round);
+		//const next_round: Round = {
+		//	players: [],
+		//	game_ids: [],
+		//	active_players: 0,
+		//	looking_for_game: 0,
+		//};
+		//this._rounds.push(next_round);
 		let player_idx = 0;
 		while (player_idx < round.players.length - 1) {
 			const lobby_id: number = await GameServer.create_lobby(
@@ -257,6 +276,9 @@ export class Tournament {
 		for (const player of this._rounds[0].players) {
 			player.ws?.send(JSON.stringify(msg));
 			player.ws?.close();
+		}
+		for (const id of this.active_players) {
+			GameServer.remove_client_tournament_participation(id, this._id);
 		}
 	}
 
