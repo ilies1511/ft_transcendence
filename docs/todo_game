@@ -1,9 +1,9 @@
 
 
-[ ] - game engine: handle player leave better:
+[x] - game engine: handle player leave better:
 	[x] - broadcast msg to other players that this player left
-	[ ] - set leaving player to loose as the next positon
-	[ ] - potentially end game if only 1 player is left
+	[x] - set leaving player to loose as the next positon
+	[x] - potentially end game if only 1 player is left
 
 [x] - server side lobby invite check if the sender is actually in the lobby
 	(needed if I want to remove password from lobbies so not just anyone can invite)

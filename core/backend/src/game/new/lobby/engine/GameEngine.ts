@@ -267,7 +267,6 @@ export class GameEngine {
 						goaled_client.loose();
 						goaled_client.final_placement = this._alive_player_count;
 						this._alive_player_count--;
-						//todo: later chage this to 1 so the game is over when 1 player is alive
 						if (this._alive_player_count == 1) {
 							this._finish_game();
 						}
@@ -426,14 +425,19 @@ export class GameEngine {
 	public leave(client_id: number) {
 		console.log(`GameEngine: client ${client_id} left`);
 		//todo: to make tournament leave handling easier and games less chore to continue without players
-		// set this player to loose as the next positon
 		// potentially end game if only 1 player is left
 		const msg: GameToClientInfo = {
 			type: 'info',
 			text: `player ${this._game_lobby.display_name_of(client_id)} left the game`,
 		};
 		for (const client of this.clients) {
-			// invalid or local client
+			if (client.global_id == client_id || client.global_id == client_id * -1) {
+				client.loose();
+				client.final_placement = this._alive_player_count;
+				this._alive_player_count--;
+				console.log(`GameEngine: clinet ${client.global_id} lost duo to leaving`);
+				continue ;
+			}
 			if (client.global_id <= 0) {
 				continue ;
 			}
@@ -442,6 +446,10 @@ export class GameEngine {
 				client.socket.send(JSON.stringify(msg));
 			}
 		}
+		if (this._alive_player_count == 1) {
+			this._finish_game();
+		}
+
 	}
 
 	public process_input(input: ClientToGameInput) {
