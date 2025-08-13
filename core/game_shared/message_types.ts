@@ -113,6 +113,7 @@ export type ServerError =
 	| 'Internal Error'
 	| 'Not Found'
 	| 'Invalid Map'
+	| 'Allready started'
 	| ''
 ;
 
@@ -131,6 +132,7 @@ export function is_ServerError(data: unknown): ServerError | undefined {
 		 'Full',
 		 'Internal Error',
 		 'Not Found',
+		 'Allready started',
 		 'Invalid Map',
 		 '',
 		].includes(data)

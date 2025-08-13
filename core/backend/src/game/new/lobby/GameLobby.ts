@@ -121,11 +121,13 @@ export class GameLobby {
 		this.engine.start_loop();
 	}
 
-	// returns false if player can not join
 	// this does not setup the connection, without this the client tring to connect will be denied
 	public join(user_id: number, display_name: string, password?: string
 		): ServerError
 	{
+		if (this.engine) {
+			return ('Allready started');
+		}
 		if (this._ai_count + this._connections.length >= this._map_file.clients.length) {
 			return ("Full");
 		}

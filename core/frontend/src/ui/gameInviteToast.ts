@@ -29,7 +29,7 @@ export function gameInviteToast(fromName:string) {
 				return true;
 			}
 			const invite: LobbyInvite = globalThis.last_invite;
-
+			globalThis.last_invite = undefined;
 			const me           = await getSession();
 			const container    = document.querySelector<HTMLElement>('#game-container');
 
@@ -72,6 +72,7 @@ export function gameInviteToast(fromName:string) {
 
 		onReject: async (): Promise<boolean> => {
 			console.log('[GameInvite TOAST] declined');
+			globalThis.last_invite = undefined;
 			return true;
 		}
 	});
