@@ -2,6 +2,8 @@ import type { FastifyInstance } from 'fastify'
 
 export async function runMigrations(fastify: FastifyInstance): Promise<void> {
 
+	await fastify.db.exec('PRAGMA foreign_keys = ON;')
+
 	const alters = [
 		`ALTER TABLE users ADD COLUMN twofa_secret TEXT;`,
 		`ALTER TABLE users ADD COLUMN twofa_enabled INTEGER NOT NULL DEFAULT 0;`
@@ -64,7 +66,7 @@ export async function runMigrations(fastify: FastifyInstance): Promise<void> {
 		friend_id  INTEGER NOT NULL,
 		PRIMARY KEY(user_id, friend_id),
 		FOREIGN KEY(user_id)   REFERENCES users(id) ON DELETE CASCADE,
-		FOREIGN KEY(friend_id) REFERENCES users(id)
+		FOREIGN KEY(friend_id) REFERENCES users(id) ON DELETE CASCADE
 		);`
 	)
 
