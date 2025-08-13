@@ -163,10 +163,12 @@ export class Tournament {
 		switch (msg.type) {
 			case ('finish'):
 				//todo: render result or smth and cleanup
+				console.log("Tournament: got finish msg");
 				this.finished = true;
 				if (!globalThis.game) {
 					this.render_tournament_state();
 				}
+				this.leave();
 				break ;
 			case ('update'):
 				this.latest_tournament_state = msg.state;
@@ -214,12 +216,23 @@ export class Tournament {
 	}
 
 	public leave() {
+		this.finished = true;
 		TournamentApi.leave_tournament(this.user_id, this.tournament_id);
 		this._cleanup();
 	}
 
 	private _cleanup() {
-		globalThis.tournament = undefined;
+		console.log("Tournament: cleanup");
+		this._socket.close();
+		if (globalThis.tournament != this) {
+			if (globalThis.tournament) {
+				console.log("Warning: tournament cleanup but globalThis.tournament was a different tournament");
+			} else {
+				console.log("Warning: tournament cleanup but globalThis.tournament was undefined");
+			}
+		} else {
+			globalThis.tournament = undefined;
+		}
 	}
 
 	public async start() {

@@ -1,7 +1,8 @@
 
 
-refactor game backend:
 
+[ ] - server side lobby invite check if the sender is actually in the lobby
+	(needed if I want to remove password from lobbies so not just anyone can invite)
 [ ] - remove password from lobbies (invite system makes that not needed)
 [ ] - improved invite popup
 [ ] - game should not need to be disconnected when switching side
@@ -9,7 +10,7 @@ refactor game backend:
 [x] - server crash when a game finishes while a player left with the engine running
 [x] - game server: tournamet needs to use new client participation map
 [ ] - Tournament leaving support
-[ ] - frontend tournamet cleanup
+[x] - frontend tournamet cleanup
 
 [ ] - game backend: think of what should happen with timeouts in a tournamet lobby
 
@@ -48,7 +49,7 @@ websocket endpoints:
 
 [ ]: send tournament upates to frontend
 
-[ ]: render tournament state
+[~]: render tournament state
 [ ]: render game result
 [ ]: render tournament result
 

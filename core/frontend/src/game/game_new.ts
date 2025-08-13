@@ -180,9 +180,7 @@ export class Game {
 			this._local_player.disconnect();
 		}
 		this._cleanup();
-		if (globalThis.tournament) {
-			globalThis.tournament.render_tournament_state();
-		}
+		globalThis.tournament?.render_tournament_state();
 	}
 
 	private _cleanup() {

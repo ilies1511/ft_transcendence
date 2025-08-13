@@ -276,6 +276,7 @@ function setupGameModes(root: HTMLElement): void {
 	const btnStartTournament = root.querySelector<HTMLButtonElement>('#btn-start_tournament')
 	btnLeave?.addEventListener('click', () => {
 		globalThis.game?.leave()
+		globalThis.tournament?.leave()
 	})
 	btnDisconnect?.addEventListener('click', () => {
 		globalThis.game?.disconnect()
