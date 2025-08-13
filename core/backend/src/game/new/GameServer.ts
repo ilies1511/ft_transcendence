@@ -106,9 +106,16 @@ const reconnect_schema = {
 	}
 };
 
+
+export type ClientParticipation = {
+	lobby_id?: number;
+	tournament_id?: number;
+};
+
 export class GameServer {
 	public static lobbies: Map<number, GameLobby> = new Map<number, GameLobby>;
 	public static tournaments: Map<number, Tournament> = new Map<number, Tournament>;
+	public static client_participations: Map<number, ClientParticipation> = new Map<number, ClientParticipation>;
 	private static _fastify: FastifyInstance;
 
 	private constructor(){}
@@ -204,7 +211,46 @@ export class GameServer {
 				//GameServer._close_socket_lobby_handler(game_id, socket);
 			});
 		});
+	}
 
+	public static add_client_lobby_participation(client_id: number, lobby_id: number) {
+		if (!this.client_participations.get(client_id)) {
+			const parti: ClientParticipation = {
+			};
+			this.client_participations.set(client_id, parti);
+		}
+		this.client_participations.get(client_id).lobby_id = lobby_id;
+	}
+
+	public static remove_client_lobby_participation(client_id: number, lobby_id: number) {
+		const parti: ClientParticipation | undefined = this.client_participations.get(client_id)
+		if (!parti) {
+			return ;
+		}
+		parti.lobby_id = undefined;
+		if (!parti.tournament_id) {
+			this.client_participations.delete(client_id);
+		}
+	}
+
+	public static add_client_tournament_participation(client_id: number, tournament_id: number) {
+		if (!this.client_participations.get(client_id)) {
+			const parti: ClientParticipation = {
+			};
+			this.client_participations.set(client_id, parti);
+		}
+		this.client_participations.get(client_id).tournament_id = tournament_id;
+	}
+
+	public static remove_client_tournament_participation(client_id: number, tournament_id: number) {
+		const parti: ClientParticipation | undefined = this.client_participations.get(client_id)
+		if (!parti) {
+			return ;
+		}
+		parti.tournament_id = undefined;
+		if (!parti.lobby_id) {
+			this.client_participations.delete(client_id);
+		}
 	}
 
 	private static _close_socket_lobby_handler(lobby_id_str: string, ws: WebSocket) {
@@ -296,6 +342,12 @@ export class GameServer {
 		: Promise<ServerError>
 	{
 		const { lobby_id, user_id, password, display_name } = request.body;
+
+		const parti: ClientParticipation | undefined = this.client_participations.get(user_id);
+
+		if (parti?.lobby_id && parti?.lobby_id != lobby_id) {
+			return ("Allready in game");
+		}
 
 		const lobby: GameLobby | undefined = GameServer.lobbies.get(lobby_id);
 		if (!lobby) {
