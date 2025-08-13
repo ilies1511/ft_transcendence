@@ -162,11 +162,17 @@ export type GameToClientFinish = {
 	}[];
 };
 
+export type GameToClientInfo = {
+	type: 'info',
+	text: string,
+};
+
 //	| GameLobbyUpdate
 export type LobbyToClientJson =
 	ServerToClientError
 	| GameLobbyUpdate
 	| GameToClientFinish
+	| GameToClientInfo
 ;
 
 export type LobbyToClient = LobbyToClientJson | ArrayBuffer;

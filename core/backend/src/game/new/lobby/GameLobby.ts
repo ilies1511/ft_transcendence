@@ -114,7 +114,7 @@ export class GameLobby {
 	private _start_game() {
 		console.log("starting game..");
 		this._game_engine_finish_callback = this._game_engine_finish_callback.bind(this);
-		this.engine = new GameEngine(this._map_name, this.lobby_type,
+		this.engine = new GameEngine(this._map_name, this.lobby_type, this,
 			this._game_engine_finish_callback, 1000 /* todo: hardcoded 1000 sec */);
 		let i = 0;
 		while (i < this._connections.length) {
@@ -247,6 +247,7 @@ export class GameLobby {
 	// removes player from lobby
 	// also givs the game engine the option to take actions if needed
 	private _leave_game(ws: WebSocket, msg: ClientToMatchLeave) {
+		console.log(`GameLobby: ${msg.client_id} tries to leave lobby ${this.id}`);
 		ws.close();
 		if (msg.password != this.password) {
 			console.log("Game: Invalid password for leave() request, ignoring it..");
@@ -259,22 +260,18 @@ export class GameLobby {
 				GameServer.remove_client_lobby_participation(msg.client_id * -1, this.id);
 				if (connection.sock) {
 					connection.sock.ws.close();
-					if (this.engine) {
-						this.engine.leave(msg.client_id * -1);
-					}
 					//break ;
 				}
+				this.engine?.leave(msg.client_id * -1);
 			}
 			if (connection.id == msg.client_id) {
 				GameServer.remove_client_lobby_participation(msg.client_id, this.id);
 				this.loaded_player_count--;
 				if (connection.sock && connection.sock.ws !== ws) {
 					connection.sock.ws.close();
-					if (this.engine) {
-						this.engine.leave(msg.client_id);
-					}
 					//break ;
 				}
+				this.engine?.leave(msg.client_id);
 			}
 		}
 		if (!this.engine) {
@@ -384,6 +381,14 @@ export class GameLobby {
 			clearTimeout(connection.timeout);
 			connection.timeout = undefined;
 		}
+	}
+
+	public display_name_of(client_id: number): string {
+		const client: GameConnection | undefined = this._connections.find(c => c.id == client_id);
+		if (!client) {
+			return ('');
+		}
+		return (client.display_name);
 	}
 
 };

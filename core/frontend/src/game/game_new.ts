@@ -390,6 +390,10 @@ const wsBase =
 				case ('finish'):
 					this._finish_game(json);
 					break ;
+				case ('info'):
+					console.log(json.text);
+					//todo: make a small temporary popup for the user to read this data
+					break ;
 				default:
 					throw ("Got not implemented msg type from server: ", msg);
 			}

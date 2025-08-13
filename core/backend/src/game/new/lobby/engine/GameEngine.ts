@@ -14,8 +14,11 @@ import type {
 	ServerToClientMessage,
 	GameToClientFinish,
 	ClientToGameInput,
+	GameToClientInfo,
 } from './../../../game_shared/message_types.ts';
 import { SharedVec2 } from './../../../game_shared/objects/SharedVec2.ts';
+
+import { GameLobby} from '../GameLobby.ts';
 
 
 import { MapFile } from './../maps/Map.ts';
@@ -52,12 +55,15 @@ export class GameEngine {
 	private _duration: number = 0;
 	public timer?: number;//seconds left of the game
 	public lobby_type: LobbyType;
+	private _game_lobby: GameLobby;
 
 	constructor(map_name: string,
 		lobby_type: LobbyType,
+		game_lobby: GameLobby,
 		finish_callback: (end_data: GameToClientFinish) => undefined,
 		duration?: number,
 	) {
+		this._game_lobby = game_lobby;
 		this.update = this.update.bind(this);
 		this._finish_callback = finish_callback;
 		this.lobby_type = lobby_type;
@@ -418,10 +424,24 @@ export class GameEngine {
 	}
 
 	public leave(client_id: number) {
+		console.log(`GameEngine: client ${client_id} left`);
 		//todo: to make tournament leave handling easier and games less chore to continue without players
-		// broadcast msg to other players that this player left
 		// set this player to loose as the next positon
 		// potentially end game if only 1 player is left
+		const msg: GameToClientInfo = {
+			type: 'info',
+			text: `player ${this._game_lobby.display_name_of(client_id)} left the game`,
+		};
+		for (const client of this.clients) {
+			// invalid or local client
+			if (client.global_id <= 0) {
+				continue ;
+			}
+			if (client.socket && client.socket.readyState === client.socket.OPEN) {
+				console.log(`sending ${msg}`);
+				client.socket.send(JSON.stringify(msg));
+			}
+		}
 	}
 
 	public process_input(input: ClientToGameInput) {

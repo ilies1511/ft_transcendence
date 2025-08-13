@@ -1,7 +1,7 @@
 
 
 [ ] - game engine: handle player leave better:
-	[ ] - broadcast msg to other players that this player left
+	[x] - broadcast msg to other players that this player left
 	[ ] - set leaving player to loose as the next positon
 	[ ] - potentially end game if only 1 player is left
 
