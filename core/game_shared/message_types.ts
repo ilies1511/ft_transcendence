@@ -115,6 +115,7 @@ export type ServerError =
 	| 'Invalid Map'
 	| 'Allready started'
 	| 'Allready in game'
+	| 'Allready in tournament'
 	| ''
 ;
 
@@ -135,6 +136,8 @@ export function is_ServerError(data: unknown): ServerError | undefined {
 		 'Not Found',
 		 'Allready started',
 		 'Invalid Map',
+		'Allready in game',
+		'Allready in tournament',
 		 '',
 		].includes(data)
 	) {

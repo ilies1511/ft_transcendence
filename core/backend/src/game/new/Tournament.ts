@@ -150,8 +150,9 @@ export class Tournament {
 	}
 
 	private async _start_round(round_idx: number): Promise<void> {
+		console.log(`Tournament: starting round ${round_idx}`);
 		const round: Round = this._rounds[round_idx];
-		if (round.players.length == 1) {
+		if (round_idx == this._rounds.length - 1) {
 			round.players[0].placement = this._next_placement--;
 			if (this._next_placement != 0) {
 				console.log("tournament: next placement in the end != 0: ", this._next_placement);
@@ -160,13 +161,6 @@ export class Tournament {
 			this._finish();
 			return ;
 		}
-		//const next_round: Round = {
-		//	players: [],
-		//	game_ids: [],
-		//	active_players: 0,
-		//	looking_for_game: 0,
-		//};
-		//this._rounds.push(next_round);
 		let player_idx = 0;
 		while (player_idx < round.players.length - 1) {
 			const lobby_id: number = await GameServer.create_lobby(
@@ -210,6 +204,13 @@ export class Tournament {
 			throw ("looking for game in round after starting round ");
 		}
 		this._broadcast_update();
+		if (round_idx == this._rounds.length - 2 && round.game_ids.length == 0) {
+			//todo: test this with 3 players 
+			// fix for tournament with only 1 player:
+			// this was the final round but there is still the 'winner' round
+			// there was never a game created that could call to start the 'winner' round
+			this._start_round(round_idx + 1);
+		}
 	}
 
 	private _advance_player_to_round(player: TournamentPlayer, round_idx: number) {
@@ -256,6 +257,7 @@ export class Tournament {
 	}
 
 	private _finish() {
+		console.log(`Tournament ${this._id} finished`);
 		this._completion_callback(this._id);
 		if (this._total_player_count <= 0) {
 			return ;
@@ -266,7 +268,7 @@ export class Tournament {
 			return ;
 		}
 		if (last_round.players.length != 1) {
-			console.log("Warning: Finished tournament with != 1 plate count:", last_round.players);
+			console.log("Warning: Finished tournament with != 1 players count:", last_round.players);
 			return ;
 		}
 		//console.log("winner: ", last_round.players[0]);
