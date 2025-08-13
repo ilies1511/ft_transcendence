@@ -2,7 +2,7 @@
 
 refactor game backend:
 
-[ ] - server crash when a game finishes while a player left with the engine running
+[x] - server crash when a game finishes while a player left with the engine running
 [ ] - game server: tournamet needs to use new client participation map
 [ ] - Tournament leaving support
 

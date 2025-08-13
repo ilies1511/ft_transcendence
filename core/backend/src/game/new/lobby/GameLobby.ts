@@ -277,7 +277,9 @@ export class GameLobby {
 				}
 			}
 		}
-		this._connections = this._connections.filter(c => c.id != msg.client_id && c.id != msg.client_id * -1);
+		if (!this.engine) {
+			this._connections = this._connections.filter(c => c.id != msg.client_id && c.id != msg.client_id * -1);
+		}
 		this._update_lobby();
 	}
 
