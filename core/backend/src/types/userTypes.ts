@@ -10,6 +10,7 @@ export interface UserRow {
 	avatar: string
 	twofa_secret?: string;
 	twofa_enabled: 0 | 1;
+	is_oauth: 0 | 1;              // Distinguishes OAuth accounts (e.g. Google)
 	created_at: number
 }
 
