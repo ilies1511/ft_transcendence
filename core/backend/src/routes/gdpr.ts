@@ -1,6 +1,9 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { anonymizeUser, deleteUserAndData, getUserData } from '../functions/gdpr.ts';
 import { type UpdateProfile, updateMyProfile } from '../functions/gdpr.ts';
+import { collectUserExport } from '../functions/gdpr.ts';
+import { Readable } from 'node:stream';
+import { createGzip } from 'node:zlib';
 
 export const gdprRoutes: FastifyPluginAsync = async fastify => {
 
@@ -60,11 +63,11 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 			try {
 				// await deleteUserAndData(fastify, userId)
 				reply.clearCookie('token', {
-						path: '/',
-						httpOnly: true,
-						sameSite: 'lax',
-						secure: false
-					})
+					path: '/',
+					httpOnly: true,
+					sameSite: 'lax',
+					secure: false
+				})
 				await deleteUserAndData(fastify, userId);
 				return reply.send({ message: 'Your account and all associated data have been permanently deleted.' })
 			} catch (error: any) {
@@ -108,6 +111,47 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 			const ok = await updateMyProfile(fastify, userId, req.body)
 			if (!ok) return reply.code(400).send({ error: 'No valid fields to update' })
 			return { ok: true }
+		}
+	)
+
+	fastify.get('/api/me/export',
+		{
+			preHandler: [fastify.auth],
+			schema: {
+				tags: ['gdpr'],
+				querystring: {
+					type: 'object',
+					properties: {
+						format: { type: 'string', enum: ['json', 'json.gz'], default: 'json' },
+						includeOtherUsers: { type: 'boolean', default: false },
+						includeMedia: { type: 'boolean', default: false }
+					}
+				}
+			}
+		},
+		async (req, reply) => {
+			const userId = (req.user as any).id
+			const { format = 'json', includeOtherUsers = false, includeMedia = false } = req.query as any
+
+			const data = await collectUserExport(fastify, userId, { includeOtherUsers, includeMedia })
+			const pretty = JSON.stringify(data, null, 2)
+			const ts = new Date().toISOString().replace(/[:.]/g, '_')
+
+			if (format === 'json') {
+				reply
+					.header('Content-Type', 'application/json; charset=utf-8')
+					.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.json"`)
+				return reply.send(pretty)
+			}
+			reply
+				.header('Content-Type', 'application/gzip')
+				.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.json.gz"`)
+
+			const stream = Readable.from(pretty)
+			await new Promise<void>((resolve, reject) => {
+				stream.pipe(createGzip()).pipe(reply.raw).on('finish', () => resolve()).on('error', reject)
+			})
+			return reply
 		}
 	)
 };
