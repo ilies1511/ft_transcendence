@@ -81,20 +81,3 @@ users to exercise their data privacy rights. Key features and objectives include
 
 []	Maintain clear and transparent communication with users regarding their data
 	privacy rights, with easily accessible options to exercise these rights.
-
-
-#### Major module: Implement WAF/ModSecurity with Hardened Configuration and HashiCorp Vault for Secrets Management.
-The objective of this major module is to enhance the security infrastructure of the
-project by implementing several key components. Key features and goals include:
-
-[ ]	Configure and deploy a Web Application Firewall (WAF) and ModSecurity
-	with a strict and secure configuration to protect against web-based attacks.
-
-[ ]	Integrate HashiCorp Vault to securely manage and store sensitive information,
-	such as API keys, credentials, and environment variables, ensuring that these
-	secrets are properly encrypted and isolated.
-
-This major module aims to bolster the project’s security infrastructure by imple-
-menting robust security measures, including WAF/ModSecurity for web application
-protection and HashiCorp Vault for secrets management to ensure a safe and secure
-environment.

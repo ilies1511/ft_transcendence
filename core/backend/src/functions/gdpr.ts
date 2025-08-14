@@ -9,7 +9,8 @@ export async function getUserData(fastify: FastifyInstance, userId: number) {
 }
 
 export async function anonymizeUser(fastify: FastifyInstance, userId: number) {
-	const pseudo = `deleted_user_${userId}`;
+	const pseudo = `anonymous_user_${userId}`;
+	// const pseudo = `deleted_user_${userId}`;
 	await fastify.db.run(
 		`UPDATE users SET
 		username	= ?,
@@ -23,12 +24,49 @@ export async function anonymizeUser(fastify: FastifyInstance, userId: number) {
 	);
 
 }
+//// Old
+// export async function deleteUserAndData(fastify: FastifyInstance, userId: number) {
+// 	await fastify.db.run(
+// 		`DELETE FROM users WHERE id = ?`,
+// 		userId
+// 	);
+// }
+
+//// NEWWW: Refined with ROLLBACK
+// export async function deleteUserAndData(fastify: FastifyInstance, userId: number) {
+// 	await fastify.db.exec('BEGIN;')
+// 	try {
+// 		await fastify.db.run(`DELETE FROM users WHERE id = ?`, userId)
+// 		await fastify.db.exec('COMMIT;')
+// 	} catch (e) {
+// 		await fastify.db.exec('ROLLBACK;')
+// 		throw e
+// 	}
+// }
 
 export async function deleteUserAndData(fastify: FastifyInstance, userId: number) {
-	await fastify.db.run(
-		`DELETE FROM users WHERE id = ?`,
-		userId
-	);
+	await fastify.db.exec('SAVEPOINT delete_user;')
+	try {
+		const info = await fastify.db.run(`DELETE FROM users WHERE id = ?`, userId)
+		if ((info.changes ?? 0) === 0) {
+			await fastify.db.exec('ROLLBACK TO SAVEPOINT delete_user;')
+			await fastify.db.exec('RELEASE SAVEPOINT delete_user;')
+			const err: any = new Error('User not found')
+			err.statusCode = 404
+			throw err
+		}
+		await fastify.db.exec('RELEASE SAVEPOINT delete_user;')
+	}
+	catch (e: any) {
+		try { await fastify.db.exec('ROLLBACK TO SAVEPOINT delete_user;') } catch { }
+		try { await fastify.db.exec('RELEASE SAVEPOINT delete_user;') } catch { }
+
+		if (e?.code === 'SQLITE_CONSTRAINT') {
+			e.statusCode = e.statusCode ?? 409
+			e.message = e.message ?? 'Foreign key constraint failed'
+		}
+		throw e
+	}
 }
 
 export interface UpdateProfile {

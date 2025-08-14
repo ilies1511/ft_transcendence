@@ -10,19 +10,71 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 		return reply.send(data);
 	});
 
-	fastify.post('/api/me/anonymize', { preHandler: [fastify.auth] },
+	// fastify.get('/api/me', { preHandler: [fastify.auth] }, async (req, reply) => {
+	// 	const userId = (req.user as any).id;
+	// 	const data = await getUserData(fastify, userId);
+	// 	return reply.send(data);
+	// });
+
+	// fastify.post('/api/me/anonymize', { preHandler: [fastify.auth] },
+	fastify.post('/api/me/anonymize',
+		{
+			schema: {
+				tags: ['gdpr'],
+			}
+		},
 		async (req, reply) => {
 			const userId = (req.user as any).id;
 			await anonymizeUser(fastify, userId);
 			return reply.send({ message: 'Your personal data has been anonymized.' });
 		});
 
-	fastify.delete('/api/me', { preHandler: [fastify.auth] }, async (req, reply) => {
-		const userId = (req.user as any).id;
-		await deleteUserAndData(fastify, userId);
-		reply.clearCookie('token', { path: '/' });
-		return reply.send({ message: 'Your account and all associated data have been permanently deleted.' });
-	});
+	// fastify.delete('/api/me',
+	// 	{
+	// 		preHandler: [fastify.auth],
+	// 		schema: {
+	// 			tags: ['gdpr'],
+	// 		}
+	// 	},
+	// 	async (req, reply) => {
+	// 		const userId = (req.user as any).id;
+	// 		await deleteUserAndData(fastify, userId);
+	// 		reply.clearCookie('token', { path: '/' });
+	// 		return reply.send({ message: 'Your account and all associated data have been permanently deleted.' });
+	// 	});
+
+	fastify.delete('/api/me',
+		{
+			// preHandler: [fastify.auth],
+			schema: {
+				tags: ['gdpr'],
+				response: {
+					200: { type: 'object', properties: { message: { type: 'string' } } },
+					404: { type: 'object', properties: { error: { type: 'string' } } },
+					409: { type: 'object', properties: { error: { type: 'string' } } }
+				}
+			}
+		},
+		async (req, reply) => {
+			const userId = (req.user as any).id
+			try {
+				// await deleteUserAndData(fastify, userId)
+				reply.clearCookie('token', {
+						path: '/',
+						httpOnly: true,
+						sameSite: 'lax',
+						secure: false
+					})
+				await deleteUserAndData(fastify, userId);
+				return reply.send({ message: 'Your account and all associated data have been permanently deleted.' })
+			} catch (error: any) {
+				if (error?.statusCode) {
+					return reply.code(error.statusCode).send({ error: error.message ?? 'Error' })
+				}
+				throw error
+			}
+		}
+	)
 
 	//TODO: edit user Profile --> Add Endpoints for single changes + one for global change
 	// fastify.patch('/api/me', async(req, reply)=> {
