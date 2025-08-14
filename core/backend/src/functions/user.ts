@@ -1,7 +1,6 @@
-import type { FastifyInstance } from 'fastify'
 import bcrypt from 'bcrypt'
-import { Interface } from 'readline'
-import type { UserRow, UserWithFriends, FriendInfo} from '../types/userTypes.ts'
+import type { FastifyInstance } from 'fastify'
+import type { FriendInfo, UserRow, UserWithFriends } from '../types/userTypes.ts'
 // import { DEFAULT_AVATARS } from '../constants/avatars.ts'
 // import { DEFAULT_AVATARS } from '../../constants/avatars.ts'
 import { DEFAULT_AVATARS } from '../constants/avatars.ts'
@@ -22,8 +21,8 @@ export async function createUser(
 	//Insert Part
 	try {
 		const info = await fastify.db.run(
-			`INSERT INTO users (username, nickname, password, email, live, avatar, created_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?)`,
+			`INSERT INTO users (username, nickname, password, email, live, avatar, is_oauth, created_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 			// `INSERT INTO users (username, password, email, live, created_at)
 			// VALUES (?, ?, ?, ?, ?)`,
 			username,
@@ -32,6 +31,7 @@ export async function createUser(
 			email ?? null,
 			false,
 			avatar,
+			0,                 // is_oauth = 0 (local account)
 			Date.now()
 		)
 		return info.lastID!

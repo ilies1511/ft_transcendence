@@ -1,6 +1,7 @@
-import { type FastifyInstance, type FastifyRequest, type FastifyReply, type FastifyPluginAsync, fastify } from "fastify";
-import QRCode from 'qrcode'
-import { Disable2FAResponse, init2FA, verify2FA, disable2FA} from "../functions/2fa.ts";
+import { type FastifyInstance, type FastifyPluginAsync } from "fastify";
+import QRCode from 'qrcode';
+import { Disable2FAResponse, disable2FA, init2FA, verify2FA } from "../functions/2fa.ts";
+import { type UserRow } from "../types/userTypes.ts";
 
 export const twoFaRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 	fastify.post(
@@ -49,11 +50,11 @@ export const twoFaRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) 
 		async (req, reply) => {
 			const userId = (req.user as any).id
 			console.log("USER ID 2FA:" + userId);
-			const { otpAuthUrl } = await init2FA(fastify, userId);
+			const { otpAuthUrl, base32 } = await init2FA(fastify, userId);
 
 			const qrDataUrl = await QRCode.toDataURL(otpAuthUrl)
 
-			return reply.send({ qr: qrDataUrl })
+			return reply.send({ qr: qrDataUrl, secret: base32 })
 		}
 	)
 
@@ -117,12 +118,34 @@ export const twoFaRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) 
 			const userId = (req.user as any).id
 			const res = await disable2FA(fastify, userId)
 			if (res === Disable2FAResponse.UserNotFound) {
-				return reply.code(404).send({ error: res})
+				return reply.code(404).send({ error: res })
 			}
 			if (res === Disable2FAResponse.NotEnabled) {
-				return reply.code(400).send({ error: res})
+				return reply.code(400).send({ error: res })
 			}
 			return reply.send({ success: true })
+		}
+	)
+
+	// Endpoint to check 2FA status
+	fastify.get(
+		'/api/2fa/status',
+		{ preHandler: [fastify.auth] },
+		async (req, reply) => {
+			const userId = (req.user as any).id
+
+			const user = await fastify.db.get<UserRow>(
+				'SELECT twofa_enabled FROM users WHERE id = ?',
+				userId
+			)
+
+			if (!user) {
+				return reply.code(404).send({ error: 'User not found' })
+			}
+
+			return reply.send({
+				enabled: user.twofa_enabled === 1
+			})
 		}
 	)
 }

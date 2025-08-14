@@ -1,9 +1,9 @@
-import { type FastifyPluginAsync } from 'fastify'
-import { createUser, /* Vielleicht updateUser */ } from '../functions/user.js'
-import { DEFAULT_AVATARS } from '../constants/avatars.ts'
-import { setUserLive } from '../functions/user.ts'
-import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcrypt';
+import { type FastifyPluginAsync } from 'fastify';
+import { v4 as uuidv4 } from 'uuid';
+import { DEFAULT_AVATARS } from '../constants/avatars.ts';
+import { setUserLive } from '../functions/user.ts';
+// import { createUser, /* Vielleicht updateUser */ } from '../functions/user.js'
 
 export const googleAuthRoutes: FastifyPluginAsync = async fastify => {
 	// 1 /api/auth/google -> automatic redirect to GOogle (Plugin)
@@ -34,8 +34,8 @@ export const googleAuthRoutes: FastifyPluginAsync = async fastify => {
 			try {
 				const info = await fastify.db.run(
 					`INSERT INTO users
-					(email, password, username, nickname, avatar, live)
-					VALUES (?, ?, ?, ?, ?, ?)`,
+					(email, password, username, nickname, avatar, live, is_oauth)
+					VALUES (?, ?, ?, ?, ?, ?, ?)`,
 					profile.email,
 					// null, // no password to set since google sign in but will cause problems since in user table, column password not NULL
 					// 'null', // TODO: no password to set since google sign in but will cause problems since in user table, column password not NULL
@@ -44,9 +44,10 @@ export const googleAuthRoutes: FastifyPluginAsync = async fastify => {
 					profile.name,
 					// profile.picture, // or default avatar
 					avatar,
-					0
+					0,
+					1                 // set OAuth to 1 because it is a Google account
 				)
-				user = { id: info.lastID, username: profile.name, email: profile.email }
+				user = { id: info.lastID, username: profile.name, email: profile.email, twofa_enabled: 0, is_oauth: 1 }
 			} catch (err: any) {
 				console.error('INSERT-ERROR:', {
 					code: err.code, // 'SQLITE_CONSTRAINT'
@@ -65,6 +66,14 @@ export const googleAuthRoutes: FastifyPluginAsync = async fastify => {
 				throw err
 			}
 		}
+
+		// Check if 2FA is enabled for the existing user
+		if (user.twofa_enabled) {
+			const email = encodeURIComponent(user.email);
+			// Redirect to login page to complete 2FA
+			return reply.redirect(`http://localhost:5173/login?2fa_required=true&email=${email}`);
+		}
+
 		const idToken = tokenSet.token.id_token! // TODO: JWT from Google --> later
 		const token = await reply.jwtSign({ id: user.id, name: user.username })
 		setUserLive(fastify, user.id, true);
