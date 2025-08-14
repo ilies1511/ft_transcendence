@@ -68,6 +68,8 @@ export const googleAuthRoutes: FastifyPluginAsync = async fastify => {
 		const idToken = tokenSet.token.id_token! // TODO: JWT from Google --> later
 		const token = await reply.jwtSign({ id: user.id, name: user.username })
 		setUserLive(fastify, user.id, true);
+		//TODO: 14.08 2FA for google Users --> add if condtions to check if 2Fa is om
+
 		return reply
 			.setCookie('token', token, {
 				path: '/',
