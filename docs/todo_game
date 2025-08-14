@@ -64,6 +64,20 @@ s":{"missingProperty":"lobby_id"},"message":"must have required property 'lobby_
 	[x] - set leaving player to loose as the next positon
 	[x] - potentially end game if only 1 player is left
 
+
+[ ] - when 'leaving' from the frontend and there is no game request from the server
+	if the client is in a game (same from the tournament), like this the client can leave without
+	an active connection
+
+[ ] - leaving a tournamet:
+	[ ] - case 1: player is currently connected to a lobby: should be handled by the lobby
+	[x] - case 1.1: game is running
+	[x] - case 1.2: game is not running yet
+	[ ] - case 1.2: needs testing: not testable with the current frontend since game is automatically joined
+	[ ] - case 2: player is currently assiged to a lobby but not connected: tell lobby to treat this like case 1
+	[ ] - case 3: the player is currently waiting for the next match
+
+
 [x] - server side lobby invite check if the sender is actually in the lobby
 	(needed if I want to remove password from lobbies so not just anyone can invite)
 [ ] - remove password from lobbies (invite system makes that not needed)
@@ -72,7 +86,6 @@ s":{"missingProperty":"lobby_id"},"message":"must have required property 'lobby_
 	 -> notification when game starts
 [x] - server crash when a game finishes while a player left with the engine running
 [x] - game server: tournamet needs to use new client participation map
-[ ] - Tournament leaving support
 [x] - frontend tournamet cleanup
 
 [ ] - game backend: think of what should happen with timeouts in a tournamet lobby

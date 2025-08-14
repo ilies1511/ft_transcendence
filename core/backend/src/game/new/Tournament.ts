@@ -112,8 +112,12 @@ export class Tournament {
 			this._next_placement = this._rounds[0].players.length;
 			return ("");
 		}
-		//todo: player looses and leaves running game or if no game is running has to
-		// be set to loose as the next placement
+		//todo:
+		//case 1: player is currently connected to a lobby: should be handled by the lobby
+		//case 1.1: game is running: implemented
+		//case 1.2: game is not running yet, not implemented
+		//case 2: player is currently assiged to a lobby but not connected: tell lobby to treat this like case 1
+		//case 3: the player is currently waiting for the next match
 		return ("");
 	}
 
@@ -166,7 +170,6 @@ export class Tournament {
 		if (round_idx == this._rounds.length - 1) {
 			round.players[0].placement = this._next_placement--;
 			if (this._next_placement != 0) {
-				//todo this triggers after the first game with a 3 player tournament
 				console.log("tournament: next placement in the end != 0: ", this._next_placement);
 				throw ("tournament: next placement in the end != 0");
 			}
@@ -184,9 +187,7 @@ export class Tournament {
 			);
 			const game_lobby: GameLobby | undefined = GameServer.lobbies.get(lobby_id);
 			if (!game_lobby) {
-				//todo:
-				console.log("ERROR: game lobby not found");
-				return ;
+				throw ("ERROR: Tournament: game lobby not found right after creating it");
 			}
 			round.game_ids[player_idx / 2] = lobby_id;
 			//const invite: LobbyInvite = {
@@ -218,7 +219,6 @@ export class Tournament {
 		}
 		this._broadcast_update();
 		if (round_idx == this._rounds.length - 2 && round.game_ids.length == 0) {
-			//todo: test this with 3 players 
 			// fix for tournament with only 1 player:
 			// this was the final round but there is still the 'winner' round
 			// there was never a game created that could call to start the 'winner' round

@@ -17,6 +17,7 @@ import type {
 	LobbyDisplaynameResp,
 	GameToClientFinish,
 	ClientToMatchLeave,
+	GameToClientInfo,
 } from '../../game_shared/message_types.ts';
 
 import { LobbyType } from '../../game_shared/message_types.ts';
@@ -253,7 +254,16 @@ export class GameLobby {
 			console.log("Game: Invalid password for leave() request, ignoring it..");
 			return ;
 		}
-		// remove local player websocket and player from game
+		let result: GameToClientFinish | undefined;
+		
+		if (!this.engine && this.lobby_type == LobbyType.TOURNAMENT_GAME) {
+			result = {
+				type: 'finish',
+				duration: 0,
+				mode: LobbyType.TOURNAMENT_GAME,
+				placements: [],
+			};
+		}
 		for (const connection of this._connections) {
 			if (connection.id == msg.client_id * -1) {
 				this.loaded_player_count--;
@@ -273,9 +283,34 @@ export class GameLobby {
 				}
 				this.engine?.leave(msg.client_id);
 			}
+			if (!this.engine && this.lobby_type == LobbyType.TOURNAMENT_GAME) {
+				//pretend the game is allready finished
+				if (connection.id != msg.client_id) {
+					const notification: GameToClientInfo = {
+						type: 'info',
+						text: `Player ${this.display_name_of(msg.client_id)} left the tournament, automatically advancing`,
+					};
+					connection.sock?.send(notification);
+					result?.placements.push({
+						id: connection.id,
+						final_placement: 1,
+					});
+				} else {
+					result?.placements.push({
+						id: connection.id,
+						final_placement: 2,
+					});
+				}
+			}
 		}
 		if (!this.engine) {
 			this._connections = this._connections.filter(c => c.id != msg.client_id && c.id != msg.client_id * -1);
+		}
+		if (result) {
+			for (const connection of this._connections) {
+				connection.sock?.send(result);
+			}
+			this._game_engine_finish_callback(result);
 		}
 		this._update_lobby();
 	}

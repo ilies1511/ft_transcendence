@@ -154,8 +154,8 @@ export type ServerToClientError = {
 //todo: include display_names
 export type GameToClientFinish = {
 	type: 'finish',
-	duration: number, //unused atm
-	mode: number, // unused atm
+	duration: number,
+	mode: number,
 	placements: {
 		id: number,
 		final_placement: number,
