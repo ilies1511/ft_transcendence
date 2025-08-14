@@ -1,4 +1,63 @@
 
+[0]   placements: [ { id: 1, final_placement: 2 }, { id: 2, final_placement: 1 } ]
+[0] }
+[0] Tournament: starting round 1
+[0] Tournament 1 finished
+[0] removing tournament with id:  1
+[0] removing lobby  283 : 
+[0] {"level":30,"time":1755070370013,"pid":13237,"hostname":"2976a1943b36","reqId":"req-1q","req":{"method":"GET","url":"/game/283","host":"localhost:3000","remoteAddress":"127.0.0.1","remotePort":4
+7806},"msg":"incoming request"}
+[0] {"level":30,"time":1755070370016,"pid":13237,"hostname":"2976a1943b36","reqId":"req-1r","req":{"method":"POST","url":"/api/leave_tournament","host":"localhost:3000","remoteAddress":"127.0.0.1","
+remotePort":47810},"msg":"incoming request"}
+[0] {"level":30,"time":1755070370018,"pid":13237,"hostname":"2976a1943b36","reqId":"req-1r","res":{"statusCode":400},"err":{"type":"Error","message":"body must have required property 'lobby_id'","st
+ack":"Error: body must have required property 'lobby_id'\n    at defaultSchemaErrorFormatter (/home/frapp/app/core/backend/node_modules/fastify/lib/context.js:92:10)\n    at wrapValidationError (/ho
+me/frapp/app/core/backend/node_modules/fastify/lib/validation.js:249:17)\n    at validate (/home/frapp/app/core/backend/node_modules/fastify/lib/validation.js:167:16)\n    at preValidationCallback (
+/home/frapp/app/core/backend/node_modules/fastify/lib/handleRequest.js:89:25)\n    at handler (/home/frapp/app/core/backend/node_modules/fastify/lib/handleRequest.js:73:7)\n    at /home/frapp/app/co
+re/backend/node_modules/fastify/lib/contentTypeParser.js:214:9\n    at AsyncResource.runInAsyncScope (node:async_hooks:214:14)\n    at done (/home/frapp/app/core/backend/node_modules/fastify/lib/con
+tentTypeParser.js:207:14)\n    at Parser.defaultJsonParser [as fn] (/home/frapp/app/core/backend/node_modules/fastify/lib/contentTypeParser.js:312:7)\n    at IncomingMessage.onEnd (/home/frapp/app/c
+ore/backend/node_modules/fastify/lib/contentTypeParser.js:296:27)","statusCode":400,"code":"FST_ERR_VALIDATION","validation":[{"instancePath":"","schemaPath":"#/required","keyword":"required","param
+s":{"missingProperty":"lobby_id"},"message":"must have required property 'lobby_id'"}],"validationContext":"body"},"msg":"body must have required property 'lobby_id'"}
+[0] {"level":30,"time":1755070370019,"pid":13237,"hostname":"2976a1943b36","reqId":"req-1r","res":{"statusCode":400},"responseTime":3.0440969988703728,"msg":"request completed"}
+[0] {"level":30,"time":1755070370023,"pid":13237,"hostname":"2976a1943b36","reqId":"req-1s","req":{"method":"POST","url":"/api/leave_tournament","host":"localhost:3000","remoteAddress":"127.0.0.1","
+remotePort":47814},"msg":"incoming request"}
+[0] {"level":30,"time":1755070370024,"pid":13237,"hostname":"2976a1943b36","reqId":"req-1s","res":{"statusCode":400},"err":{"type":"Error","message":"body must have required property 'lobby_id'","st
+ack":"Error: body must have required property 'lobby_id'\n    at defaultSchemaErrorFormatter (/home/frapp/app/core/backend/node_modules/fastify/lib/context.js:92:10)\n    at wrapValidationError (/ho
+me/frapp/app/core/backend/node_modules/fastify/lib/validation.js:249:17)\n    at validate (/home/frapp/app/core/backend/node_modules/fastify/lib/validation.js:167:16)\n    at preValidationCallback (
+/home/frapp/app/core/backend/node_modules/fastify/lib/handleRequest.js:89:25)\n    at handler (/home/frapp/app/core/backend/node_modules/fastify/lib/handleRequest.js:73:7)\n    at /home/frapp/app/co
+re/backend/node_modules/fastify/lib/contentTypeParser.js:214:9\n    at AsyncResource.runInAsyncScope (node:async_hooks:214:14)\n    at done (/home/frapp/app/core/backend/node_modules/fastify/lib/con
+tentTypeParser.js:207:14)\n    at Parser.defaultJsonParser [as fn] (/home/frapp/app/core/backend/node_modules/fastify/lib/contentTypeParser.js:312:7)\n    at IncomingMessage.onEnd (/home/frapp/app/c
+ore/backend/node_modules/fastify/lib/contentTypeParser.js:296:27)","statusCode":400,"code":"FST_ERR_VALIDATION","validation":[{"instancePath":"","schemaPath":"#/required","keyword":"required","param
+s":{"missingProperty":"lobby_id"},"message":"must have required property 'lobby_id'"}],"validationContext":"body"},"msg":"body must have required property 'lobby_id'"}
+[0] {"level":30,"time":1755070370024,"pid":13237,"hostname":"2976a1943b36","reqId":"req-1s","res":{"statusCode":400},"responseTime":0.6684649996459484,"msg":"request completed"}
+[0] client  1  points:  0
+[0] Client  1  lost
+[0] ServerWall {
+[0]   center: SharedVec2 { x: -10.1, y: 0 },
+[0]   normal: SharedVec2 { x: 1, y: 0 },
+[0]   length: 10,
+[0]   width: 1,
+[0]   effects: [],
+[0]   obj_id: 2,
+[0]   dispose: false,
+[0]   _direct: SharedVec2 { x: 0, y: 1 },
+[0]   _endpoint1: SharedVec2 { x: -10.1, y: 5 },
+[0]   _endpoint2: SharedVec2 { x: -10.1, y: -50 },
+[0]   angular_vel: 0,
+[0]   next_normal: undefined,
+[0]   interp_normal: undefined,
+[0]   rotation: 0
+[0] }
+[0] Finishing game engine..
+[0] game update error: TypeError: Cannot read properties of undefined (reading 'players')
+[0]     at Tournament._advance_player_to_round (/home/frapp/app/core/backend/src/game/new/Tournament.ts:217:27)
+[0]     at Tournament._finish_game_callback (/home/frapp/app/core/backend/src/game/new/Tournament.ts:242:12)
+[0]     at GameLobby._game_engine_finish_callback (/home/frapp/app/core/backend/src/game/new/lobby/GameLobby.ts:109:9)
+[0]     at GameEngine._finish_game (/home/frapp/app/core/backend/src/game/new/lobby/engine/GameEngine.ts:185:8)
+[0]     at GameEngine.update_balls (/home/frapp/app/core/backend/src/game/new/lobby/engine/GameEngine.ts:258:13)
+[0]     at GameEngine.update (/home/frapp/app/core/backend/src/game/new/lobby/engine/GameEngine.ts:341:8)
+[0]     at Timeout.<anonymous> (/home/frapp/app/core/backend/src/game/new/lobby/engine/GameEngine.ts:358:10)
+[0]     at listOnTimeout (node:internal/timers:588:17)
+[0]     at process.processTimers (node:internal/timers:523:7)
 
 [x] - game engine: handle player leave better:
 	[x] - broadcast msg to other players that this player left

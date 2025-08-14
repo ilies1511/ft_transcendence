@@ -213,8 +213,8 @@ export class Game {
 				return ;
 			}
 			console.log("game id: ", this.game_id);
-const wsBase =
-  (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
+			const wsBase =
+				(location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
 			const route: string = `${wsBase}/game/${this.game_id}`;
 			this._socket = new WebSocket(route)
 			this._socket.binaryType = "arraybuffer";
