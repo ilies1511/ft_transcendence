@@ -9,6 +9,7 @@ import {
 	invite_user_to_lobby_skeleton,
 	recv_lobby_invite_skeleton,
 } from '../game/frontend_interface_examples/custom_lobbies.ts';
+import { router } from '../main.ts'
 
 
 // src/ui/gameInviteToast.ts
@@ -17,13 +18,13 @@ import { showToast } from './toast-interface';
 export function gameInviteToast(fromName:string) {
 	// const acceptURL = `/api/requests/${requestId}/accept`;
 	// const rejectURL = `/api/requests/${requestId}/reject`;
-	
 	showToast({
 		title : 'Game invite',
 		from : fromName,
 
 		onAccept: async (): Promise<boolean> => {
 			//TODO: switch to game page so the container is reachable
+			await router.go('/modes'); //move to he game path
 			console.log('[GameInvite TOAST] accepted');
 			if (!globalThis.last_invite) {
 				console.log("Error: accepted invite but there was no invite");
