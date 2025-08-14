@@ -135,7 +135,7 @@ export class Tournament {
 		players_per_round += last_bye_count;
 		//console.log("rounds len: ", this._rounds.length);
 		//console.log(`players_per_round: ${players_per_round}`);
-		while (players_per_round) {
+		while (players_per_round > 1) {
 			const empty_round: Round = {
 				players: [],
 				game_ids: [],
@@ -143,11 +143,11 @@ export class Tournament {
 				looking_for_game: 0,
 			}
 			this._rounds.push(empty_round);
-			if (players_per_round == 1) {
-				//console.log("break");
-				// winner
-				break ;
-			}
+			//if (players_per_round == 1) {
+			//	//console.log("break");
+			//	// winner
+			//	break ;
+			//}
 			last_bye_count = players_per_round % 2;
 			players_per_round = Math.trunc(players_per_round / 2);
 			players_per_round += last_bye_count;
@@ -167,9 +167,9 @@ export class Tournament {
 	private async _start_round(round_idx: number): Promise<void> {
 		console.log(`Tournament: starting round ${round_idx}`);
 		const round: Round = this._rounds[round_idx];
-		if (round_idx == this._rounds.length - 1) {
-			round.players[0].placement = this._next_placement--;
-			if (this._next_placement != 0) {
+		if (round_idx == this._rounds.length /* - 1 */) {
+			//round.players[0].placement = this._next_placement--;
+			if (this._next_placement != 1 /*0*/) {
 				console.log("tournament: next placement in the end != 0: ", this._next_placement);
 				throw ("tournament: next placement in the end != 0");
 			}
@@ -228,6 +228,9 @@ export class Tournament {
 
 	private _advance_player_to_round(player: TournamentPlayer, round_idx: number) {
 		if (round_idx == this._rounds.length) {
+			console.log("advanced player to round after last round, if this is not the winner it's a bug: ",
+				player, "; skipping advancement");
+				return ;
 			//throw ('round_idx == rounds length when advancing to it');
 		}
 		this._rounds[round_idx].players.push(player);
@@ -237,6 +240,7 @@ export class Tournament {
 	private _finish_game_callback(match_id: number, end_data: GameToClientFinish
 	): undefined
 	{
+		console.log("Tournament: Callback from when game finishes");
 		if (!end_data) {
 			throw ("game error: tournament game eneded without passing end_data");
 		}
@@ -274,6 +278,14 @@ export class Tournament {
 
 	private _finish() {
 		console.log(`Tournament ${this._id} finished`);
+		if (this._rounds[this._rounds.length - 1].players[0].placement == -1) {
+			this._rounds[this._rounds.length - 1].players[0].placement = 1;
+		}
+		if (this._rounds[this._rounds.length - 1].players.length > 1
+			&& this._rounds[this._rounds.length - 1].players[1].placement == -1
+		) {
+			this._rounds[this._rounds.length - 1].players[1].placement = 1;
+		}
 		this._completion_callback(this._id);
 		if (this._total_player_count <= 0) {
 			return ;
