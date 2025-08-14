@@ -29,10 +29,27 @@ export default fp(async (app: FastifyInstance) => {
 		try {
 			await req.jwtVerify()
 		} catch {
-			reply.code(401).send({ error: 'login required' })
+			// reply.code(401).send({ error: 'login required' })
+			reply.code(401).send({ error: 'Not authenticated' })
 		}
 	}),
 	{
 		dependencies: ['@fastify/cookie']
 	}
+	app.addHook('preHandler', async (req: FastifyRequest, reply: FastifyReply) => {
+		const openPrefixes = [
+			'/api/register',
+			'/api/login',
+			'/api/auth/google',
+			'/api/auth/google/callback',
+			'/api/matches',
+			'/documentation'
+		]
+		const path = req.url.split('?')[0]
+
+		if (openPrefixes.some(p => path.startsWith(p))) {
+			return
+		}
+		await req.jwtVerify()
+	})
 })

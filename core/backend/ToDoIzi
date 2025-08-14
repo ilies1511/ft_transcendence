@@ -22,8 +22,9 @@ interface. --> Already given through Endpoints
 [x] Obtain the necessary credentials and permissions from the authority to enable
 secure login.
 
-[] Implement user-friendly login and authorization flows that adhere to best prac-
+[~] Implement user-friendly login and authorization flows that adhere to best prac-
 tices and security standards.
+	[x] On top off QR, add Raw Secret --> provides both
 
 [] Ensure the secure exchange of authentication tokens and user information
 between the web application and the authentication provider.
@@ -58,20 +59,20 @@ use of JSON Web Tokens (JWT).
 - [x]	disable 2FA
 
 ### Nice to have after Google Sign In
-- []	Add Blocked User List --> protects user from receiving further friend requests & game invites (to be discussed with Fabi) + live chat
-- []	Add Unblock User endpoint
-- []	Add deleteUserAccount Endpoint --> deletes entire User-Account: (GDPR compliance Module)
+- [x]	Add Blocked User List --> protects user from receiving further friend requests & game invites (to be discussed with Fabi) + live chat
+- [x]	Add Unblock User endpoint
+- [x]	Add deleteUserAccount Endpoint --> deletes entire User-Account: (GDPR compliance Module)
 			() after deletion, data related to this account shows 'deleted Account' instead of his old $username$
 
 #### Minor module: GDPR compliance options with user anonymization, local data management, and account deletion.
 The goal of this minor module is to introduce GDPR compliance options that allow
 users to exercise their data privacy rights. Key features and objectives include:
 
-[]	Implement GDPR-compliant features that enable users to request anonymiza-
+[x]	Implement GDPR-compliant features that enable users to request anonymiza-
 	tion of their personal data, ensuring that their identity and sensitive informa-
 	tion are protected.
 
-[]	Provide tools for users to manage their local data, including the ability to
+[x]	Provide tools for users to manage their local data, including the ability to
 	view, edit, or delete their personal information stored within the system.
 
 []	Offer a streamlined process for users to request the permanent deletion of
@@ -80,20 +81,3 @@ users to exercise their data privacy rights. Key features and objectives include
 
 []	Maintain clear and transparent communication with users regarding their data
 	privacy rights, with easily accessible options to exercise these rights.
-
-
-#### Major module: Implement WAF/ModSecurity with Hardened Configuration and HashiCorp Vault for Secrets Management.
-The objective of this major module is to enhance the security infrastructure of the
-project by implementing several key components. Key features and goals include:
-
-[ ]	Configure and deploy a Web Application Firewall (WAF) and ModSecurity
-	with a strict and secure configuration to protect against web-based attacks.
-
-[ ]	Integrate HashiCorp Vault to securely manage and store sensitive information,
-	such as API keys, credentials, and environment variables, ensuring that these
-	secrets are properly encrypted and isolated.
-
-This major module aims to bolster the project’s security infrastructure by imple-
-menting robust security measures, including WAF/ModSecurity for web application
-protection and HashiCorp Vault for secrets management to ensure a safe and secure
-environment.

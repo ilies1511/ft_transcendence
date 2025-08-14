@@ -1,17 +1,8 @@
 import type { FastifyInstance } from 'fastify';
 
-/**
- * Führt beim Serverstart alle notwendigen CREATE-TABLE-Statements aus.
- */
 export async function runMigrations(fastify: FastifyInstance): Promise<void> {
-	// await fastify.db.exec(`
-	// 	ALTER TABLE users
-	// 	ADD COLUMN live INTEGER NOT NULL DEFAULT 0;
-	// 	ADD COLUMN avatar TEXT NOT NULL '' ;
-	// 	ALTER TABLE users ADD COLUMN twofa_secret TEXT;
-	// 	ALTER TABLE users ADD COLUMN twofa_enabled INTEGER NOT NULL DEFAULT 0;
-	// 	`).catch(() => {
-	// })
+
+	await fastify.db.exec('PRAGMA foreign_keys = ON;')
 
 	const alters = [
 		`ALTER TABLE users ADD COLUMN twofa_secret TEXT;`,
@@ -38,14 +29,10 @@ export async function runMigrations(fastify: FastifyInstance): Promise<void> {
 		twofa_secret TEXT NOT NULL DEFAULT '0',
 		twofa_enabled INTEGER NOT NULL DEFAULT 0,
 		is_oauth    INTEGER NOT NULL DEFAULT 0,
+		is_deleted INTEGER NOT NULL DEFAULT 0,
 		created_at  INTEGER NOT NULL DEFAULT (strftime('%s','now'))
 	);
 	`)
-
-	// created_at DATETIME DEFAULT CURRENT_TIMESTAMP (Thats how it should look like.)
-	// more tables:
-	// await fastify.db.exec(`CREATE TABLE IF NOT EXISTS games ( … );`)
-
 	// vor created_at // status         TEXT    NOT NULL DEFAULT 'pending',  -- 'pending' now only option
 	await fastify.db.exec(`
 		CREATE TABLE IF NOT EXISTS friend_requests (
@@ -81,7 +68,7 @@ export async function runMigrations(fastify: FastifyInstance): Promise<void> {
 		friend_id  INTEGER NOT NULL,
 		PRIMARY KEY(user_id, friend_id),
 		FOREIGN KEY(user_id)   REFERENCES users(id) ON DELETE CASCADE,
-		FOREIGN KEY(friend_id) REFERENCES users(id)
+		FOREIGN KEY(friend_id) REFERENCES users(id) ON DELETE CASCADE
 		);`
 	)
 

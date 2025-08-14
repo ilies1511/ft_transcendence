@@ -21,47 +21,47 @@ const __dirname = path.dirname(__filename)
 
 export const userRoutes: FastifyPluginAsync = async (fastify) => {
 	// POST -- BEGIN
-	fastify.post<{
-		Body: { username: string; password: string; email?: string };
-		Reply: { id: number | undefined } | { error: string };
-	}>(
-		"/api/users",
-		{
-			schema: {
-				body: {
-					type: "object",
-					required: ["username", "password"],
-					properties: {
-						username: { type: "string", minLength: 1 },
-						password: { type: "string", minLength: 1 },
-						email: { type: "string", nullable: true },
-					},
-				},
-				response: {
-					201: {
-						type: "object",
-						properties: { id: { type: "integer" } },
-					},
-					409: {
-						type: "object",
-						properties: { error: { type: "string" } },
-					},
-				},
-			},
-		},
-		async (request, reply) => {
-			const { username, password, email } = request.body;
-			const hash = await bcrypt.hash(password, 10);
-			try {
-				const id = await createUser(fastify, request.body);
-				return reply.code(201).send({ id });
-			} catch {
-				return reply
-					.code(409)
-					.send({ error: "Username or email already exists" });
-			}
-		}
-	);
+	// fastify.post<{
+	// 	Body: { username: string; password: string; email?: string };
+	// 	Reply: { id: number | undefined } | { error: string };
+	// }>(
+	// 	"/api/users",
+	// 	{
+	// 		schema: {
+	// 			body: {
+	// 				type: "object",
+	// 				required: ["username", "password"],
+	// 				properties: {
+	// 					username: { type: "string", minLength: 1 },
+	// 					password: { type: "string", minLength: 1 },
+	// 					email: { type: "string", nullable: true },
+	// 				},
+	// 			},
+	// 			response: {
+	// 				201: {
+	// 					type: "object",
+	// 					properties: { id: { type: "integer" } },
+	// 				},
+	// 				409: {
+	// 					type: "object",
+	// 					properties: { error: { type: "string" } },
+	// 				},
+	// 			},
+	// 		},
+	// 	},
+	// 	async (request, reply) => {
+	// 		const { username, password, email } = request.body;
+	// 		const hash = await bcrypt.hash(password, 10);
+	// 		try {
+	// 			const id = await createUser(fastify, request.body);
+	// 			return reply.code(201).send({ id });
+	// 		} catch {
+	// 			return reply
+	// 				.code(409)
+	// 				.send({ error: "Username or email already exists" });
+	// 		}
+	// 	}
+	// );
 	//POST -- END
 
 	// GET -- BEGIN

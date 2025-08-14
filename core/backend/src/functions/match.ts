@@ -111,35 +111,36 @@ export interface NewMatch {
 	}>;
 }
 
-////Testing Route for Match
-// export async function createMatch(
-// 	fastify: FastifyInstance,
-// 	data: NewMatch
-// ): Promise<number> {
-// 	await fastify.db.exec('BEGIN')
+// BEGIN -- Testing Route for Match (to be removed)
+export async function createMatch(
+	fastify: FastifyInstance,
+	data: NewMatch
+): Promise<number> {
+	await fastify.db.exec('BEGIN')
 
-// 	const info = await fastify.db.run(
-// 		`INSERT INTO matches (mode, duration)
-// 		VALUES (?, ?)`,
-// 		data.mode,
-// 		data.duration
-// 	)
-// 	const matchId = info.lastID;
-// 	for (const p of data.participants) {
-// 		await fastify.db.run(
-// 			`INSERT INTO match_participants (match_id, user_id, score, result)
-// 			VALUES (?, ?, ?, ?)`,
-// 			matchId,
-// 			p.user_id,
-// 			p.score,
-// 			p.result
-// 		)
-// 	}
-// 	await fastify.db.exec('COMMIT')
-// 	if (matchId === undefined)
-// 		return (0);
-// 	return matchId
-// }
+	const info = await fastify.db.run(
+		`INSERT INTO matches (mode, duration)
+		VALUES (?, ?)`,
+		data.mode,
+		data.duration
+	)
+	const matchId = info.lastID;
+	for (const p of data.participants) {
+		await fastify.db.run(
+			`INSERT INTO match_participants (match_id, user_id, score, result)
+			VALUES (?, ?, ?, ?)`,
+			matchId,
+			p.user_id,
+			p.score,
+			p.result
+		)
+	}
+	await fastify.db.exec('COMMIT')
+	if (matchId === undefined)
+		return (0);
+	return matchId
+}
+// END -- Testing Route for Match
 
 // for Fabi to get MatchID to enable clients to connect via ws (using the MatchID)
 export async function createMatchMeta(
@@ -162,9 +163,7 @@ export async function completeMatch(
 	await fastify.db.exec('BEGIN')
 
 	await fastify.db.run(
-		`UPDATE matches
-		   SET duration = ?
-		 WHERE id = ?`,
+		`UPDATE matches SET duration = ? WHERE id = ?`,
 		data.duration,
 		matchId
 	)
