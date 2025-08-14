@@ -1,8 +1,9 @@
 // frontend/src/pages/settings.ts
-import { router } from '../main'
-import type { PageModule } from '../router'
-import { currentUser } from '../services/auth'
-import { showMsg } from '../utils/showMsg'
+import { router } from '../main';
+import type { PageModule } from '../router';
+import { currentUser } from '../services/auth';
+import { clearSession } from '../services/session';
+import { showMsg } from '../utils/showMsg';
 
 const SettingsPage: PageModule & { renderWithParams?: Function } = {
 	render(root) {
@@ -134,6 +135,34 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 
 					<p id="twofa-msg" class="form-msg"></p>
 				</div>
+			</section>
+
+			<!-- Account & Data Management -->
+			<section class="w-full max-w-[400px] p-8 shadow-md rounded-[25px] bg-[#2b171e] space-y-4">
+				<h2 class="text-center text-white text-xl font-bold mb-4">Account & Data</h2>
+
+				<button id="delete-account-btn"
+					class="w-full h-10 rounded-xl bg-red-800 text-white font-bold tracking-wide
+						hover:bg-red-700 active:bg-red-600"
+					type="button">
+					Delete Account
+				</button>
+
+				<button id="anonymize-data-btn"
+					class="w-full h-10 rounded-xl bg-[#824155] text-white font-bold tracking-wide
+						hover:bg-[#6c3543] active:bg-[#582a36]"
+					type="button">
+					Anonymize Data
+				</button>
+
+				<button id="export-data-btn"
+					class="w-full h-10 rounded-xl bg-gray-600 text-white font-bold tracking-wide
+						hover:bg-gray-500 active:bg-gray-400"
+					type="button" disabled>
+					Export Data (coming soon)
+				</button>
+
+				<p id="account-msg" class="form-msg"></p>
 			</section>
 		</div>
 	`
@@ -436,6 +465,63 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 
 		// Initialize 2FA status check
 		check2FAStatus()
+
+		// Account & Data buttons
+		const deleteBtn = root.querySelector('#delete-account-btn') as HTMLButtonElement
+		const anonymizeBtn = root.querySelector('#anonymize-data-btn') as HTMLButtonElement
+		const exportBtn = root.querySelector('#export-data-btn') as HTMLButtonElement
+		const accountMsg = root.querySelector('#account-msg') as HTMLParagraphElement
+
+		anonymizeBtn.onclick = async () => {
+			if (!confirm('Anonymize your personal data? This action cannot be undone.')) return
+			showMsg(accountMsg, 'Processing...')
+			try {
+				const r = await fetch('/api/me/anonymize', {
+					method: 'POST',
+					credentials: 'include'
+				})
+				if (r.ok) {
+					showMsg(accountMsg, 'Data anonymized.', true)
+					document.dispatchEvent(new Event('settings-update'))
+				} else {
+					const { error } = await r.json().catch(() => ({ error: 'Failed' }))
+					showMsg(accountMsg, error || 'Failed')
+				}
+			} catch {
+				showMsg(accountMsg, 'Network error')
+			}
+		}
+
+	deleteBtn.onclick = async () => {
+		if (!confirm('Delete your account permanently? This cannot be undone.')) return
+		const confirmText = prompt('Type DELETE to confirm permanent deletion of your account:')
+		if (confirmText !== 'DELETE') {
+			showMsg(accountMsg, 'Deletion cancelled')
+			return
+		}
+		showMsg(accountMsg, 'Deleting account...')
+		try {
+			const r = await fetch('/api/me', {
+				method: 'DELETE',
+				credentials: 'include'
+			})
+		if (r.ok) {
+			showMsg(accountMsg, 'Account deleted. Redirecting...', true)
+			clearSession()
+			document.dispatchEvent(new Event('auth-change'))
+			setTimeout(() => {
+				router.go('/login')
+			}, 1200)
+		} else {
+			const { error } = await r.json().catch(() => ({ error: 'Delete failed' }))
+			showMsg(accountMsg, error || 'Delete failed')
+		}
+		} catch {
+			showMsg(accountMsg, 'Network error')
+		}
+	}
+
+		// exportBtn does nothing for now until Ilies has implemented the export API
 	}
 }
 

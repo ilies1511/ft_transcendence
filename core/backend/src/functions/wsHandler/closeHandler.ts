@@ -1,7 +1,6 @@
+import { type FastifyInstance } from 'fastify';
 import type { ExtendedWebSocket } from '../../types/wsTypes.ts';
-import { type FastifyInstance } from 'fastify'
-import { setUserLive } from '../user.ts';
-import { findUserWithFriends } from '../user.ts';
+import { findUserWithFriends, setUserLive } from '../user.ts';
 
 export async function handleClose(
 	app: FastifyInstance,
@@ -17,8 +16,9 @@ export async function handleClose(
 	const friends = await findUserWithFriends(app, extSocket.userId!)
 	console.log(friends);
 	if (!friends) {
-		// throw error(friends);
-		throw new Error(`findUserWithFriends returned null for user ${extSocket.userId}`)
+		// User may have been deleted (e.g. GDPR delete) -> skip notifying friends
+		app.log?.debug?.(`closeHandler: user ${extSocket.userId} not found (probably deleted); skipping notifications`)
+		return;
 	}
 	console.log("ALoo0");
 	for (const client of app.websocketServer.clients) {
