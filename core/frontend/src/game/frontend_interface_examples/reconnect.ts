@@ -35,7 +35,7 @@ export async function attempt_reconnect(match_container: HTMLElement, user_id: n
 {
 	if (globalThis.game !== undefined) {
 		console.log("WARNING: Game: attempt_reconnect() was called while game object existed.",
-			"\n\tIt simply returned right way!");
+			"\n\tIt simply returned right way!\n\tGame id: ", globalThis.game.game_id);
 		return ;
 	}
 

@@ -80,6 +80,7 @@ export class Tournament {
 	private _socket: WebSocket;
 	public finished: boolean = false;
 	private _match_container: HTMLElement;
+	public bracket: any | undefined = undefined;
 
 	public latest_tournament_state?: TournamentState;
 
@@ -269,16 +270,7 @@ export class Tournament {
 				}
 			}
 		}
-		// OUTDATED: backend will will this with the winner, not an actual round
-		//const winner_round: BracketRound = this.latest_tournament_state.rounds[this.latest_tournament_state.rounds.length - 1];
-		//if (winner_round.matches.length) {
-		//	//todo: display winner somehow
-		//	console.log(`Winner: ${winner_round.matches[0].p1?.name || winner_round.matches[0].p2?.name}`);
-		//}
 		for (const round of this.latest_tournament_state.rounds) {
-			//if (round === winner_round) {
-			//	break ;
-			//}
 			data.rounds.push({name: `Round ${round.index}`});
 			let order: number = 0;
 			for (const my_match of round.matches) {
@@ -324,6 +316,10 @@ export class Tournament {
 			}
 		}
 		console.log('data: ', data);
-		const bracket = createBracket(data, this._match_container);
+		if (!this.bracket) {
+			this.bracket = createBracket(data, this._match_container);
+		} else {
+			this.bracket.replaceData(data);
+		}
 	}
 };

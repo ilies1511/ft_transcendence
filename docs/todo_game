@@ -69,7 +69,8 @@ s":{"missingProperty":"lobby_id"},"message":"must have required property 'lobby_
 	if the client is in a game (same from the tournament), like this the client can leave without
 	an active connection
 
-[ ] - leaving a tournamet:
+
+!!![ ] - leaving a tournamet: implement this before fixing the tournamet brackets; way to buggy right now
 	[ ] - case 1: player is currently connected to a lobby: should be handled by the lobby
 	[x] - case 1.1: game is running
 	[x] - case 1.2: game is not running yet
@@ -77,10 +78,13 @@ s":{"missingProperty":"lobby_id"},"message":"must have required property 'lobby_
 	[ ] - case 2: player is currently assiged to a lobby but not connected: tell lobby to treat this like case 1
 	[ ] - case 3: the player is currently waiting for the next match
 
+[ ] - craeting a tournament api succeeds even though user is in a running tournamet
+	-> check if fixed after leave is fully implemented
 
 [x] - server side lobby invite check if the sender is actually in the lobby
 	(needed if I want to remove password from lobbies so not just anyone can invite)
 [ ] - remove password from lobbies (invite system makes that not needed)
+	-> [ ] - autogenerate passwords for private lobbies and tournament games
 [ ] - improved invite popup
 [ ] - game should not need to be disconnected when switching side
 	 -> notification when game starts

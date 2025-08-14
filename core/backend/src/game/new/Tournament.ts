@@ -214,7 +214,7 @@ export class Tournament {
 		}
 		console.log(`rounds: ${this._rounds}`);
 		if (round.looking_for_game) {
-			console.log("looking for game in round after starting round, round: ", round);
+			console.log(`looking for game in round after starting round, round: ${round}`);
 			throw ("looking for game in round after starting round ");
 		}
 		this._broadcast_update();
@@ -228,10 +228,9 @@ export class Tournament {
 
 	private _advance_player_to_round(player: TournamentPlayer, round_idx: number) {
 		if (round_idx == this._rounds.length) {
-			console.log("advanced player to round after last round, if this is not the winner it's a bug: ",
-				player, "; skipping advancement");
-				return ;
-			//throw ('round_idx == rounds length when advancing to it');
+			//console.log("advanced player to round after last round, if this is not the winner it's a bug: ",
+			//	player, "; skipping advancement");
+			return ;
 		}
 		this._rounds[round_idx].players.push(player);
 		this._rounds[round_idx].looking_for_game++;
@@ -299,7 +298,6 @@ export class Tournament {
 			console.log("Warning: Finished tournament with != 1 players count:", last_round.players);
 			return ;
 		}
-		//console.log("winner: ", last_round.players[0]);
 		const msg: Finish = {
 			type: 'finish',
 		};

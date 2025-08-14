@@ -404,7 +404,7 @@ export class Game {
 	}
 
 	private _finish_game(msg: GameToClientFinish) {
-		console.log("Game: _finish_game()");
+		console.log("Game: _finish_game() of game ", this.game_id);
 		this.finished = true;
 		this.disconnect();
 		console.log(msg);
