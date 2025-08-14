@@ -172,6 +172,7 @@ export class Tournament {
 				break ;
 			case ('update'):
 				this.latest_tournament_state = msg.state;
+				//console.log(this.latest_tournament_state);
 				if (!globalThis.game) {
 					this.render_tournament_state();
 				}

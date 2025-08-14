@@ -124,8 +124,13 @@ export class Tournament {
 		this._rounds[0].active_players = 0;
 		this._rounds[0].looking_for_game = this._total_player_count;
 		this._next_placement = this._total_player_count;
-	
-		let players_per_round: number = this._total_player_count - Math.trunc(this._total_player_count / 2);
+
+		let last_bye_count: 0 | 1 = this._total_player_count % 2;
+		let players_per_round: number = Math.trunc(this._total_player_count / 2);
+		//console.log(`last_bye_count: ${last_bye_count}`);
+		players_per_round += last_bye_count;
+		//console.log("rounds len: ", this._rounds.length);
+		//console.log(`players_per_round: ${players_per_round}`);
 		while (players_per_round) {
 			const empty_round: Round = {
 				players: [],
@@ -134,13 +139,19 @@ export class Tournament {
 				looking_for_game: 0,
 			}
 			this._rounds.push(empty_round);
-			players_per_round -= Math.trunc(players_per_round / 2);
 			if (players_per_round == 1) {
+				//console.log("break");
 				// winner
 				break ;
 			}
+			last_bye_count = players_per_round % 2;
+			players_per_round = Math.trunc(players_per_round / 2);
+			players_per_round += last_bye_count;
+			//console.log(`players_per_round: ${players_per_round}`);
+			//console.log(`last_bye_count: ${last_bye_count}`);
+
 		}
-	
+		//console.log("rounds len: ", this._rounds.length);
 		if (this._total_player_count <= 0) {
 			this._finish();
 		}
@@ -155,6 +166,7 @@ export class Tournament {
 		if (round_idx == this._rounds.length - 1) {
 			round.players[0].placement = this._next_placement--;
 			if (this._next_placement != 0) {
+				//todo this triggers after the first game with a 3 player tournament
 				console.log("tournament: next placement in the end != 0: ", this._next_placement);
 				throw ("tournament: next placement in the end != 0");
 			}
@@ -177,13 +189,13 @@ export class Tournament {
 				return ;
 			}
 			round.game_ids[player_idx / 2] = lobby_id;
-			const invite: LobbyInvite = {
-				lobby_password: this._password,
-				lobby_id: lobby_id,
-				valid: true,
-				map_name: this._map_name,
-				lobby_type: LobbyType.TOURNAMENT,
-			};
+			//const invite: LobbyInvite = {
+			//	lobby_password: this._password,
+			//	lobby_id: lobby_id,
+			//	valid: true,
+			//	map_name: this._map_name,
+			//	lobby_type: LobbyType.TOURNAMENT,
+			//};
 			game_lobby.join(round.players[player_idx].client_id, round.players[player_idx].display_name, this._password);
 			game_lobby.join(round.players[player_idx + 1].client_id, round.players[player_idx + 1].display_name, this._password);
 			const msg: NewGame = {
@@ -199,6 +211,7 @@ export class Tournament {
 			this._advance_player_to_round(round.players[player_idx], round_idx + 1);
 			round.looking_for_game--;
 		}
+		console.log(`rounds: ${this._rounds}`);
 		if (round.looking_for_game) {
 			console.log("looking for game in round after starting round, round: ", round);
 			throw ("looking for game in round after starting round ");
@@ -214,6 +227,9 @@ export class Tournament {
 	}
 
 	private _advance_player_to_round(player: TournamentPlayer, round_idx: number) {
+		if (round_idx == this._rounds.length) {
+			//throw ('round_idx == rounds length when advancing to it');
+		}
 		this._rounds[round_idx].players.push(player);
 		this._rounds[round_idx].looking_for_game++;
 	}

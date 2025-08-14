@@ -91,7 +91,7 @@ export class TournamentApi {
 	{
 		const req: LeaveReq = {
 			client_id: user_id,
-			tournament_id: tournament_id,
+			lobby_id: tournament_id,
 		};
 		const response = await fetch('/api/leave_tournament', {
 			method: 'POST',
