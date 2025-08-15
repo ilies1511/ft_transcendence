@@ -52,21 +52,58 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 				<span id="avatar-upload-msg" class="form-msg"></span>
 			</section>
 
-			<!-- Nickname update form -->
+			<!-- Profile update form -->
 			<form id="settings-form" class="w-full max-w-[400px] p-8 space-y-6 shadow-md rounded-[25px] bg-[#2b171e]">
-				<h2 class="text-center text-white text-2xl font-bold">Update your nickname</h2>
+				<h2 class="text-center text-white text-2xl font-bold">Update your profile</h2>
 
 				<label class="block">
+					<span class="text-sm font-medium text-[#b99da6]">Username</span>
+					<input name="username" type="text" placeholder="Username (for login)" value="${user.username ?? ''}"
+						   class="mt-1 w-full h-12 rounded-xl bg-[#48232f] p-4 text-white placeholder:text-[#ca91a3] focus:outline-none" />
+				</label>
+
+				<label class="block">
+					<span class="text-sm font-medium text-[#b99da6]">Nickname</span>
 					<input name="nickname" type="text" placeholder="Nickname (public)" value="${user.nickname ?? ''}"
+						   class="mt-1 w-full h-12 rounded-xl bg-[#48232f] p-4 text-white placeholder:text-[#ca91a3] focus:outline-none" />
+				</label>
+
+				<label class="block">
+					<span class="text-sm font-medium text-[#b99da6]">Email</span>
+					<input name="email" type="email" placeholder="Email" value="${user.email ?? ''}"
+						   class="mt-1 w-full h-12 rounded-xl bg-[#48232f] p-4 text-white placeholder:text-[#ca91a3] focus:outline-none" />
+				</label>
+
+				<button class="w-full h-10 rounded-xl bg-[#f22667] text-white font-bold tracking-wide
+							   hover:bg-[#d41d59] active:bg-[#b31648]" type="submit">
+					Update Profile
+				</button>
+
+				<p id="msg" class="form-msg"></p>
+			</form>
+
+			<!-- Password update form -->
+			<form id="password-form" class="w-full max-w-[400px] p-8 space-y-6 shadow-md rounded-[25px] bg-[#2b171e]">
+				<h2 class="text-center text-white text-2xl font-bold">Change Password</h2>
+
+				<!-- TODO: We should ask the user to enter their current password. Waiting for Ilies -->
+
+				<label class="block">
+					<input name="password" type="password" placeholder="New Password"
+						   class="w-full h-12 rounded-xl bg-[#48232f] p-4 text-white placeholder:text-[#ca91a3] focus:outline-none" />
+				</label>
+
+				<label class="block">
+					<input name="password_confirm" type="password" placeholder="Confirm New Password"
 						   class="w-full h-12 rounded-xl bg-[#48232f] p-4 text-white placeholder:text-[#ca91a3] focus:outline-none" />
 				</label>
 
 				<button class="w-full h-10 rounded-xl bg-[#f22667] text-white font-bold tracking-wide
 							   hover:bg-[#d41d59] active:bg-[#b31648]" type="submit">
-					Update Nickname
+					Change Password
 				</button>
 
-				<p id="msg" class="form-msg"></p>
+				<p id="password-msg" class="form-msg"></p>
 			</form>
 
 			<!-- 2FA Section -->
@@ -248,29 +285,72 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 			e.preventDefault()
 			showMsg(errorMsg, '')
 
-			const data = Object.fromEntries(new FormData(settingsForm))
-			Object.keys(data).forEach(k => { if (!data[k]) delete data[k] })
+			const formData = new FormData(settingsForm)
+			const data: Record<string, any> = {}
 
-			if (!data.nickname) {
-				showMsg(errorMsg, 'Nickname is required')
+			// Only include fields that have changed from the initial user data
+			if (formData.get('username') !== user.username) data.username = formData.get('username')
+			if (formData.get('nickname') !== user.nickname) data.nickname = formData.get('nickname')
+			if (formData.get('email') !== user.email) data.email = formData.get('email')
+
+			if (Object.keys(data).length === 0) {
+				showMsg(errorMsg, 'No changes to update.', true)
 				return
 			}
 
 			try {
-				const r = await fetch(`/api/users/${me.id}/nickname`, {
-					method : 'PATCH',
+				const r = await fetch(`/api/me`, {
+					method: 'PATCH',
 					headers: { 'Content-Type': 'application/json' },
-					body : JSON.stringify(data)
+					body: JSON.stringify(data)
 				})
 				if (r.ok) {
-					showMsg(errorMsg, 'Nickname updated!', true)
+					showMsg(errorMsg, 'Profile updated!', true)
 					document.dispatchEvent(new Event('settings-update'))
+					// Update user object to reflect changes
+					Object.assign(user, data)
 				} else {
 					const { error } = await r.json()
 					showMsg(errorMsg, error || 'Update failed')
 				}
 			} catch {
 				showMsg(errorMsg, 'Network error')
+			}
+		}
+
+		// Password form logic
+		const passwordForm = root.querySelector<HTMLFormElement>('#password-form')!
+		const passwordMsg = root.querySelector<HTMLParagraphElement>('#password-msg')!
+		passwordForm.onsubmit = async e => {
+			e.preventDefault()
+			showMsg(passwordMsg, '')
+
+			const data = Object.fromEntries(new FormData(passwordForm))
+
+			if (!data.password) {
+				showMsg(passwordMsg, 'Password cannot be empty.')
+				return
+			}
+			if (data.password !== data.password_confirm) {
+				showMsg(passwordMsg, 'Passwords do not match.')
+				return
+			}
+
+			try {
+				const r = await fetch(`/api/me`, {
+					method: 'PATCH',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ password: data.password })
+				})
+				if (r.ok) {
+					showMsg(passwordMsg, 'Password changed successfully!', true)
+					passwordForm.reset()
+				} else {
+					const { error } = await r.json()
+					showMsg(passwordMsg, error || 'Update failed')
+				}
+			} catch {
+				showMsg(passwordMsg, 'Network error')
 			}
 		}
 
@@ -293,15 +373,15 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 		// Check current 2FA status
 		const check2FAStatus = async () => {
 			try {
-				const statusRes = await fetch('/api/2fa/status', { 
+				const statusRes = await fetch('/api/2fa/status', {
 					method: 'GET',
-					credentials: 'include' 
+					credentials: 'include'
 				})
-				
+
 				if (!statusRes.ok) {
 					throw new Error('Failed to get 2FA status')
 				}
-				
+
 				const { enabled } = await statusRes.json()
 
 				twofaStatus.innerHTML = `
@@ -329,7 +409,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 		const generate2FA = async () => {
 			try {
 				showMsg(twofaSetupMsg, 'Generating QR code...')
-				
+
 				const res = await fetch('/api/2fa/generate', {
 					method: 'POST',
 					credentials: 'include'
@@ -341,10 +421,10 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 				}
 
 				const { qr, secret } = await res.json()
-				
+
 				// Display QR code
 				qrContainer.innerHTML = `<img src="${qr}" alt="2FA QR Code" class="max-w-full h-auto" />`
-				
+
 				// Use the secret from the API response for manual entry
 				if (secret) {
 					currentSecret = secret
@@ -384,7 +464,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 				}
 
 				showMsg(twofaSetupMsg, '2FA enabled successfully!', true)
-				
+
 				// Hide setup, show controls
 				setTimeout(() => {
 					twofaSetup.classList.add('hidden')
