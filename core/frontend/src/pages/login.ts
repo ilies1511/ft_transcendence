@@ -65,6 +65,12 @@ const template = /*html*/ `
 
 			<p id="msg"></p>
 
+			<p class="text-center text-xs text-[#b99da6] px-4">
+				By continuing, you agree to our
+				<a href="/terms" data-route class="underline hover:text-white">Terms of Service</a> and
+				<a href="/privacy" data-route class="underline hover:text-white">Privacy Policy</a>.
+			</p>
+
 			<p id="signup-link-container" class="text-center text-sm">
 				<a href="/register" data-route
 					class="text-[#ca91a3] underline hover:text-[#f22667]">

@@ -1,4 +1,4 @@
-import { getSession } from './services/session'
+import { getSession } from './services/session';
 
 const PUBLIC_ROUTES = ['/login', '/register']; // guest-only pages
 const LOGIN_REDIRECT = '/login'; // where guests are sent
@@ -26,6 +26,8 @@ const routes: Record<string, Loader> = {
 	'/profile/:id': () => import('./pages/profile').then(m => m.default),
 	'/settings/:id': () => import('./pages/settings').then(m => m.default),
 	'/friendlist': () => import('./pages/friendlist').then(m => m.default),
+	'/privacy': () => import('./pages/privacy').then(m => m.default),
+	'/terms': () => import('./pages/terms').then(m => m.default),
 }
 
 function matchDynamicRoute(path: string): { route: string, params: Record<string, string> } | null {
