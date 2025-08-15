@@ -84,8 +84,6 @@ import { attempt_reconnect } from '../game/frontend_interface_examples/reconnect
 import {
 	accept_lobby_invite,
 	create_join_lobby,
-	invite_user_to_lobby_skeleton,
-	recv_lobby_invite_skeleton,
 } from '../game/frontend_interface_examples/custom_lobbies.ts'
 import type { CustomLobbyOptions } from '../game/frontend_interface_examples/custom_lobbies.ts'
 
@@ -193,37 +191,24 @@ async function test_enter_matchmaking(
 	}
 }
 
-async function test_lobby(
+async function create_custom_lobby(
 	user_id: number,
 	container: HTMLElement,
 ): Promise<void> {
 	const lobby_password = await get_password_from_user('Game')
 
-	if (user_id === 2) {			/* host */
-		const options: CustomLobbyOptions = {
-			map_name: 'default',
-			lobby_password,
-			ai_count: 0,
-		}
-
-		const gm = await create_join_lobby(user_id, container, options)
-		if (!(gm instanceof Game)) return
-		wireLocalPlayerButton(gm)
-
-		invite_user_to_lobby_skeleton(gm, 2)
-	} else {
-		const lobby_invite = await recv_lobby_invite_skeleton()
-		if (!lobby_invite.valid) return
-
-		const res = await accept_lobby_invite(
-			user_id,
-			container,
-			lobby_invite,
-			`player_${user_id}`,
-		)
-		if (res instanceof Game) wireLocalPlayerButton(res)
+	const options: CustomLobbyOptions = {
+		map_name: 'default',
+		lobby_password,
+		ai_count: 0,
 	}
+
+	const gm = await create_join_lobby(user_id, container, options)
+	if (!(gm instanceof Game)) return
+	//fabi: what does this do, should I use this instead of the other add local player button?
+	wireLocalPlayerButton(gm)
 }
+
 
 async function test_tournament(
 	container: HTMLElement,
@@ -301,7 +286,7 @@ function setupGameModes(root: HTMLElement): void {
 		switch (mode) {
 			case 'match':	await test_enter_matchmaking(container, user_id);	break
 			case 'tournament':	await test_tournament(container, user_id);	break
-			case 'lobby':	await test_lobby(user_id, container);				break
+			case 'lobby':	await create_custom_lobby(user_id, container);				break
 			// case 'reconnect': await attempt_reconnect(container, user_id); break ;
 	 	}
 	}

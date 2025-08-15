@@ -5,9 +5,6 @@ import { Tournament } from '../game/Tournament.ts';
 import { LobbyType } from '../game/game_shared/message_types.ts';
 import {
 	accept_lobby_invite,
-	create_join_lobby,
-	invite_user_to_lobby_skeleton,
-	recv_lobby_invite_skeleton,
 } from '../game/frontend_interface_examples/custom_lobbies.ts';
 import { router } from '../main.ts'
 
