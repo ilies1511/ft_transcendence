@@ -43,7 +43,9 @@ export default fp(async (app: FastifyInstance) => {
 			'/api/auth/google',
 			'/api/auth/google/callback',
 			'/api/matches',
-			'/documentation'
+			'/documentation',
+			'/privacy',
+			'/terms'
 		]
 		const path = req.url.split('?')[0]
 
