@@ -1,6 +1,7 @@
 import { getSession } from './services/session';
 
-const PUBLIC_ROUTES = ['/login', '/register']; // guest-only pages
+const GUEST_ONLY_ROUTES = ['/login', '/register']; // only for logged-out users
+const OPEN_ROUTES = ['/privacy', '/terms'];         // accessible to everyone
 const LOGIN_REDIRECT = '/login'; // where guests are sent
 
 export type PageModule = { // contract every page must fulfil
@@ -55,13 +56,21 @@ export class Router {
 	async go(path: string, pushHistory = true): Promise<void> {
 		// START - Router guard
 		const user = await getSession();
-		const isPublic = PUBLIC_ROUTES.includes(path);
+		const currentUser = user; // For clarity
+		const isGuestOnly = GUEST_ONLY_ROUTES.includes(path);
+		const isOpen = OPEN_ROUTES.includes(path);
 
-		if (!user && !isPublic)
-			return this.go(LOGIN_REDIRECT, true);
+		// If user is logged in and tries to access guest-only page -> redirect (e.g. home)
+		if (currentUser && isGuestOnly) {
+			this.go('/');
+			return;
+		}
 
-		if (user && isPublic)
-			return this.go(`/profile/${user.id}`, true);
+		// If user not logged in and route is neither open nor guest-only -> force login
+		if (!currentUser && !isGuestOnly && !isOpen) {
+			this.go(LOGIN_REDIRECT);
+			return;
+		}
 		// END - Router guard
 
 		if (pushHistory && path !== location.pathname) {
