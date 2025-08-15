@@ -116,7 +116,9 @@
 // export default RegisterPage
 
 // frontend/src/pages/register.ts
-import type { PageModule } from '../router'
+import { router } from '../main';
+import type { PageModule } from '../router';
+import { clearSession } from '../services/session';
 
 const template = /*html*/`
 	<div class="w-full min-h-screen flex items-center justify-center bg-[#221116]">
@@ -221,9 +223,10 @@ const RegisterPage: PageModule = {
 				})
 
 				if (res.ok) {
-					msg.className = 'form-msg msg-ok'
-					msg.textContent = 'Account created successfully!'
-					form.reset()
+					// Auto-login successful
+					clearSession();
+					document.dispatchEvent(new Event('auth-change'));
+					router.go('/');
 				} else {
 					const { error } = await res.json()
 					msg.className = 'form-msg msg-error'

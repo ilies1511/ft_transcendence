@@ -38,8 +38,22 @@ export default async function authRoutes(app: FastifyInstance) {
 				'INSERT INTO users (email, password, username, nickname, avatar, live, is_oauth) VALUES (?, ?, ?, ?, ?, ?, ?)',
 				[email, hash, username, username, avatar, false, 0] // password stored as hash
 			)
-			// reply.code(201).send({ userId: lastID })
-			reply.redirect(`http://localhost:5173/profile/${lastID}`) // TODO: to be decided with Maksim
+
+			if (!lastID) {
+				app.log.error('User creation succeeded but no lastID was returned.');
+				return reply.code(500).send({ error: 'Internal server error during account creation.' });
+			}
+			
+			// Auto-login after registration
+			const token = await reply.jwtSign({ id: lastID, name: username })
+			reply.setCookie('token', token, {
+				path: '/',
+				httpOnly: true,
+				sameSite: 'lax',
+				secure: false // in prod auf true setzen, wenn HTTPS aktiv
+			})
+			await setUserLive(app, lastID, true);
+			return reply.code(201).send({ ok: true, userId: lastID })
 
 		} catch (err: any) {
 			// if (err.code === 'SQLITE_CONSTRAINT') {
