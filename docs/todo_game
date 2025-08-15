@@ -1,3 +1,38 @@
+[x]: {
+	1. A creates custom game
+	2. A invites B
+	3. B accept
+	->game start
+	4. B dissconnect
+	5. B reconnect
+	->game server state corruption
+	->crash after a bit
+	
+	1. A creates custom game
+	2. A invites B
+	3. B accept
+	->game start
+	4. B dissconnect
+	5. B reconnect
+	6. B leave
+	->crash after longer time
+	->looks like 2 games: 1 finishes right away since only 1 player is left
+	->the other continues
+	
+	::: Same thing if A invites B and A does the disconnect/reconnect
+	
+	1. A creates custom game
+	4. B dissconnect
+	5. B reconnect
+	2. A invites B
+	3. B accept
+	->game start
+	
+	->game server seems fine
+}
+
+
+
 
 [0]   placements: [ { id: 1, final_placement: 2 }, { id: 2, final_placement: 1 } ]
 [0] }

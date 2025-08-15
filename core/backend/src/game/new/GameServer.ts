@@ -448,6 +448,7 @@ export class GameServer {
 	}
 
 	private static _remove_lobby(id: number, end_data: GameToClientFinish): undefined {
+		//console.trace(`_remove_lobby called for lobby ${id}`);
 		if (end_data) {
 			const match_data: NewMatch = {
 				duration: end_data.duration,

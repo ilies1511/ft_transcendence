@@ -256,6 +256,7 @@ export class GameEngine {
 						this._alive_player_count--;
 						if (this._alive_player_count == 1) {
 							this._finish_game();
+							return ;
 						}
 					}
 					break ;

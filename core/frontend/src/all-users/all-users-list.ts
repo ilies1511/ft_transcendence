@@ -72,7 +72,7 @@ export async function fetchAndFill(myId: number) {
 				});
 				console.log(`[invite] sent to user ${u.id}`);
 				console.log(JSON.stringify(invite, null, 2));
-				btn.disabled = true;
+				//btn.disabled = true;
 			});
 
 			li.appendChild(btn);
