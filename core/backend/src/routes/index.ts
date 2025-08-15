@@ -8,6 +8,7 @@ import { matchRoutes } from './match.ts';
 import { blockRoutes } from './block.ts';
 import { twoFaRoutes } from './2fa.ts';
 import { googleAuthRoutes } from './auth-google.ts';
+import { gdprRoutes } from './gdpr.ts';
 
 export default fp(async(fastify: FastifyInstance) => {
 	await fastify.register(wsRoute);
@@ -18,4 +19,5 @@ export default fp(async(fastify: FastifyInstance) => {
 	await fastify.register(matchRoutes);
 	await fastify.register(blockRoutes);
 	await fastify.register(twoFaRoutes);
+	await fastify.register(gdprRoutes);
 })

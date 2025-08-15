@@ -1,9 +1,12 @@
 import { router } from '../main';
-import { getSession, clearSession } from '../services/session';
+import { clearSession, getSession } from '../services/session';
 import { closeWs } from './websocket';
 
 const DEFAULT_REDIRECT = '/';
 
+/**
+ * @deprecated This function does not handle the 2FA flow. The logic has been moved to `login.ts`.
+ */
 export async function submitLogin(email: string, password: string) {
 	const res = await fetch('/api/login', {
 		method: 'POST',

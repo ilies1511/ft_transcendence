@@ -1,13 +1,12 @@
 // backend/src/auth.ts
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcrypt';
 // import { fastify, type FastifyInstance } from 'fastify'
 import { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify';
-import { DEFAULT_AVATARS } from '../constants/avatars.ts'
+import { DEFAULT_AVATARS } from '../constants/avatars.ts';
 // backend/src/auth.ts
-import { setUserLive } from '../functions/user.ts'
-import { error } from 'console'
-import { validateCredentials } from '../functions/2fa.ts';
-import { verify2FaToken } from '../functions/2fa.ts';
+import { error } from 'console';
+import { validateCredentials, verify2FaToken } from '../functions/2fa.ts';
+import { setUserLive } from '../functions/user.ts';
 
 const COST = 12  // bcrypt cost factor (2^12 ≈ 400 ms on laptop)
 
@@ -36,11 +35,25 @@ export default async function authRoutes(app: FastifyInstance) {
 		// const avatar = '../../public/default_01.png';
 		try {
 			const { lastID } = await app.db.run(
-				'INSERT INTO users (email, password, username, nickname, avatar, live) VALUES (?, ?, ?, ?, ?, ?)',
-				[email, hash, username, username, avatar, false] // password stored as hash
+				'INSERT INTO users (email, password, username, nickname, avatar, live, is_oauth) VALUES (?, ?, ?, ?, ?, ?, ?)',
+				[email, hash, username, username, avatar, false, 0] // password stored as hash
 			)
-			// reply.code(201).send({ userId: lastID })
-			reply.redirect(`http://localhost:5173/profile/${lastID}`) // TODO: to be decided with Maksim
+
+			if (!lastID) {
+				app.log.error('User creation succeeded but no lastID was returned.');
+				return reply.code(500).send({ error: 'Internal server error during account creation.' });
+			}
+			
+			// Auto-login after registration
+			const token = await reply.jwtSign({ id: lastID, name: username })
+			reply.setCookie('token', token, {
+				path: '/',
+				httpOnly: true,
+				sameSite: 'lax',
+				secure: false // in prod auf true setzen, wenn HTTPS aktiv
+			})
+			await setUserLive(app, lastID, true);
+			return reply.code(201).send({ ok: true, userId: lastID })
 
 		} catch (err: any) {
 			// if (err.code === 'SQLITE_CONSTRAINT') {
@@ -83,10 +96,11 @@ export default async function authRoutes(app: FastifyInstance) {
 				},
 				response: {
 					200: {
-						description: 'Erfolgreicher Login',
+						description: 'Successful login or 2FA required',
 						type: 'object',
 						properties: {
-							ok: { type: 'boolean', const: true }
+							ok: { type: 'boolean', const: true },
+							twofa_required: { type: 'boolean' }
 						}
 					},
 					401: {
@@ -181,7 +195,7 @@ export default async function authRoutes(app: FastifyInstance) {
 	})
 
 	app.post<{
-		Body: { email: string; password: string; token: string }
+		Body: { email: string; password?: string; token: string }
 	}>(
 		'/api/login/2fa',
 		{
@@ -189,7 +203,7 @@ export default async function authRoutes(app: FastifyInstance) {
 				tags: ['auth'],
 				body: {
 					type: 'object',
-					required: ['email', 'password', 'token'],
+					required: ['email', 'token'],
 					properties: {
 						email: { type: 'string', format: 'email' },
 						password: { type: 'string' },
@@ -200,9 +214,15 @@ export default async function authRoutes(app: FastifyInstance) {
 		},
 		async (req, reply) => {
 			const { email, password, token } = req.body
+
+			// Explicit empty string must be rejected early
+			if (password === '') {
+				return reply.code(401).send({ error: 'Invalid credentials' })
+			}
+
 			const user = await validateCredentials(app, email, password)
 			if (!user) {
-				return reply.code(401).send({ error: 'Invalid credentials' })
+				return reply.code(401).send({ error: 'Invalid credentials or user not found' })
 			}
 			try {
 				const ok = verify2FaToken(user, token)

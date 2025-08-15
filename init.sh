@@ -16,7 +16,8 @@ done
 
 if $none_exist; then
   echo "Kein node_modules-Ordner gefunden. Führe make run aus."
-  make run2
+#   make run2
+  make run
 #   exit 0
 fi
 
@@ -32,6 +33,7 @@ done
 
 # 3) Sonst → make run
 echo "Alle node_modules-Ordner sind vorhanden und gefüllt. Führe make run aus."
-make run2
+make run
+# make run2
 
 exec bash

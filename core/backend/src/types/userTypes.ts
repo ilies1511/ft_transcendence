@@ -1,4 +1,3 @@
-// src/db/types.ts
 export interface UserRow {
 	// nickname:	string
 	id: number
@@ -10,6 +9,7 @@ export interface UserRow {
 	avatar: string
 	twofa_secret?: string;
 	twofa_enabled: 0 | 1;
+	is_oauth: 0 | 1;              // Distinguishes OAuth accounts (e.g. Google)
 	created_at: number
 }
 
@@ -28,15 +28,6 @@ export interface FriendRequestRow {
 	created_at: number
 	responded_at: number | null
 }
-
-// export interface UserWithFriends {
-// 	id: number
-// 	username: string
-// 	email: string | null
-// 	live: number
-// 	created_at: number
-// 	friends: number[]  // zusätzlich: Liste von Freundes-IDs
-// }
 
 export interface FriendInfo {
 	id: number
@@ -91,23 +82,3 @@ export interface UserStats {
 	}>;
 }
 // END -- Match History and User Statistics
-
-/*
-	TODO: Websocket for Live status of friend + Live chat (store in tmp array
-		and not db)
-	//IF player live --> live: true
-	//IF player off --> live: false
-
-	Websocket checkt diese Daten in regelmaessigen Abstaenden
-*/
-
-// export interface Game {
-// 	id: [number, number];
-// 	result: string;
-// 	scores: [number, number];
-// 	password: string
-// 	email: string | null
-// 	start: number
-// 	end: number
-// }
-

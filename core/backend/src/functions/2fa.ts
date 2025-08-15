@@ -1,7 +1,7 @@
-import { fastify, type FastifyInstance } from "fastify";
-import speakeasy from 'speakeasy'
+import bcrypt from 'bcrypt';
+import { type FastifyInstance } from "fastify";
+import speakeasy from 'speakeasy';
 import { type UserRow } from "../types/userTypes.ts";
-import bcrypt from 'bcrypt'
 
 /*
 	for '/api/2fa/generate', --> if user wants 2FA
@@ -30,8 +30,7 @@ export async function init2FA(
 export async function verify2FA(
 	fastify: FastifyInstance,
 	userId: number,
-	token: string): Promise<boolean>
-{
+	token: string): Promise<boolean> {
 	const row = await fastify.db.get<UserRow>(
 		'SELECT twofa_secret FROM users WHERE id = ?',
 		userId
@@ -74,32 +73,42 @@ export function verify2FaToken(
 export async function validateCredentials(
 	fastify: FastifyInstance,
 	email: string,
-	password: string
+	password?: string
 ): Promise<UserRow | null> {
 	const user = await fastify.db.get<UserRow>(
-		`SELECT id, password, twofa_secret, twofa_enabled FROM users
-		WHERE email = ?`,
+		`SELECT id, password, username, twofa_secret, twofa_enabled, is_oauth FROM users
+		 WHERE email = ?`,
 		email
 	)
 	if (!user) return null
-	const ok = await bcrypt.compare(password, user.password)
-	return ok ? user : null
+
+	// If password explicitly provided (even empty string), enforce proper verification.
+	if (password !== undefined) {
+		if (password.trim() === '') return null           // reject empty password bypass
+		const ok = await bcrypt.compare(password, user.password)
+		return ok ? user : null
+	}
+
+	// No password supplied -> only allow for OAuth accounts
+	if (user.is_oauth === 1) return user
+
+	return null
 }
 // END -- '/api/login/2fa'
 
 
 export enum Disable2FAResponse {
-	UserNotFound	= 'User not found',
-	NotEnabled		= '2FA not enabled',
-	Success			= '2FA successfully disabled',
+	UserNotFound = 'User not found',
+	NotEnabled = '2FA not enabled',
+	Success = '2FA successfully disabled',
+	Error = 'An error occurred while disabling 2FA'
 }
 
 export async function disable2FA(
 	fastify: FastifyInstance,
 	userId: number
-	): Promise<Disable2FAResponse>
-{
-	const user = await fastify.db.get<{ twofa_enabled : number}>(
+): Promise<Disable2FAResponse> {
+	const user = await fastify.db.get<{ twofa_enabled: number }>(
 		'SELECT twofa_enabled FROM users WHERE id = ?', userId);
 	if (!user) {
 		return Disable2FAResponse.UserNotFound;
@@ -107,21 +116,14 @@ export async function disable2FA(
 	if (user.twofa_enabled === 0) {
 		return Disable2FAResponse.NotEnabled
 	}
-	await fastify.db.run(
-		`UPDATE users SET twofa_enabled = 0, twofa_secret = NULL WHERE id = ?`,
-		userId
-	)
-	return Disable2FAResponse.Success
+	try {
+		await fastify.db.run(
+			`UPDATE users SET twofa_enabled = 0, twofa_secret = '' WHERE id = ?`,
+			userId
+		)
+		return Disable2FAResponse.Success
+	} catch (error) {
+		console.error('Error disabling 2FA:', error)
+		return Disable2FAResponse.Error
+	}
 }
-
-//// Old Version
-// export async function disable2FA(
-// 	fastify: FastifyInstance,
-// 	userId: number
-// 	): Promise<void>
-// {
-// 	await fastify.db.run(
-// 		`UPDATE users SET twofa_enabled = 0, twofa_secret = NULL WHERE id = ?`,
-// 		userId
-// 	)
-// }

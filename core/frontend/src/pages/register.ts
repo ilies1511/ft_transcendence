@@ -116,7 +116,9 @@
 // export default RegisterPage
 
 // frontend/src/pages/register.ts
-import type { PageModule } from '../router'
+import { router } from '../main';
+import type { PageModule } from '../router';
+import { clearSession } from '../services/session';
 
 const template = /*html*/`
 	<div class="w-full min-h-screen flex items-center justify-center bg-[#221116]">
@@ -179,6 +181,12 @@ const template = /*html*/`
 
 			<p id="msg"></p>
 
+			<p class="text-center text-xs text-[#b99da6] px-4">
+				By continuing, you agree to our
+				<a href="/terms" data-route class="underline hover:text-white">Terms of Service</a> and
+				<a href="/privacy" data-route class="underline hover:text-white">Privacy Policy</a>.
+			</p>
+
 			<p class="text-center text-sm">
 				<a href="/login" data-route
 					class="text-[#ca91a3] underline hover:text-[#f22667]">
@@ -221,9 +229,10 @@ const RegisterPage: PageModule = {
 				})
 
 				if (res.ok) {
-					msg.className = 'form-msg msg-ok'
-					msg.textContent = 'Account created successfully!'
-					form.reset()
+					// Auto-login successful
+					clearSession();
+					document.dispatchEvent(new Event('auth-change'));
+					router.go('/');
 				} else {
 					const { error } = await res.json()
 					msg.className = 'form-msg msg-error'

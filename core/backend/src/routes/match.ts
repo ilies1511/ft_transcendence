@@ -3,6 +3,11 @@ import { getMatchHistory, getUserStats, createMatchMeta, completeMatch,
 	getParticipantsForMatch } from '../functions/match.ts'
 import { type UserStats } from '../types/userTypes.ts'
 
+// BEGIN -- TESTING
+import { type NewMatch } from '../functions/match.ts'
+import { createMatch } from '../functions/match.ts'
+// END -- TESTING
+
 export const matchRoutes: FastifyPluginAsync = async fastify => {
 	// BEGIN -- GET
 	fastify.get<{
@@ -87,65 +92,66 @@ export const matchRoutes: FastifyPluginAsync = async fastify => {
 	// END -- GET
 
 	// BEGIN -- POST
-	////TESTING ROUTE for getters
-	// fastify.post<{
-	// 	Body: NewMatch;
-	// 	Reply: { matchId: number } | { error: string }
-	// }>(
-	// 	'/api/matches',
-	// 	{
-	// 		schema: {
-	// 			tags: ['match'],
-	// 			body: {
-	// 				type: 'object',
-	// 				required: ['mode', 'duration', 'participants'],
-	// 				properties: {
-	// 					mode: { type: 'integer' },
-	// 					duration: { type: 'integer' },
-	// 					participants: {
-	// 						type: 'array',
-	// 						items: {
-	// 							type: 'object',
-	// 							required: ['user_id', 'score', 'result'],
-	// 							properties: {
-	// 								user_id: { type: 'integer' },
-	// 								score: { type: 'integer' },
-	// 								result: { type: 'string', enum: ['win', 'loss'] }
-	// 							}
-	// 						}
-	// 					}
-	// 				}
-	// 			},
-	// 			response: {
-	// 				201: {
-	// 					type: 'object',
-	// 					properties: { matchId: { type: 'integer' } }
-	// 				},
-	// 				400: {
-	// 					type: 'object',
-	// 					properties: { error: { type: 'string' } }
-	// 				}
-	// 			}
-	// 		}
-	// 	},
-	// 	async (request, reply) => {
-	// 		try {
-	// 			const id = await createMatchMeta(fastify, request.body.mode);
-	// 			// const id = await createMatch(fastify, request.body)
-	// 			return reply.code(201).send({ matchId: id })
-	// 		} catch (err: any) {
-	// 			fastify.log.error(err)
-	// 			return reply.code(400).send({ error: err.message })
-	// 		}
-	// 		// try {
-	// 		// 	const id = await createMatch(fastify, request.body)
-	// 		// 	return reply.code(201).send({ matchId: id })
-	// 		// } catch (err: any) {
-	// 		// 	fastify.log.error(err)
-	// 		// 	return reply.code(400).send({ error: err.message })
-	// 		// }
-	// 	}
-	// )
+	//// BEGIN -- TESTING ROUTE for getters (to be removed)
+	fastify.post<{
+		Body: NewMatch;
+		Reply: { matchId: number } | { error: string }
+	}>(
+		'/api/matches_test',
+		{
+			schema: {
+				tags: ['match'],
+				body: {
+					type: 'object',
+					required: ['mode', 'duration', 'participants'],
+					properties: {
+						mode: { type: 'integer' },
+						duration: { type: 'integer' },
+						participants: {
+							type: 'array',
+							items: {
+								type: 'object',
+								required: ['user_id', 'score', 'result'],
+								properties: {
+									user_id: { type: 'integer' },
+									score: { type: 'integer' },
+									result: { type: 'string', enum: ['win', 'loss'] }
+								}
+							}
+						}
+					}
+				},
+				response: {
+					201: {
+						type: 'object',
+						properties: { matchId: { type: 'integer' } }
+					},
+					400: {
+						type: 'object',
+						properties: { error: { type: 'string' } }
+					}
+				}
+			}
+		},
+		async (request, reply) => {
+			// try {
+			// 	const id = await createMatchMeta(fastify, request.body.mode);
+			// 	// const id = await createMatch(fastify, request.body)
+			// 	return reply.code(201).send({ matchId: id })
+			// } catch (err: any) {
+			// 	fastify.log.error(err)
+			// 	return reply.code(400).send({ error: err.message })
+			// }
+			try {
+				const id = await createMatch(fastify, request.body)
+				return reply.code(201).send({ matchId: id })
+			} catch (err: any) {
+				fastify.log.error(err)
+				return reply.code(400).send({ error: err.message })
+			}
+		}
+	)
+	//// END -- TESTING ROUTE for getters
 
 	// for Fabi's part -- BEGIN
 
@@ -156,6 +162,11 @@ export const matchRoutes: FastifyPluginAsync = async fastify => {
 	*/
 	fastify.post<{ Body: { mode: number } }>(
 		'/api/matches',
+		{
+			schema: {
+				tags: ['match']
+			}
+		},
 		async (req, reply) => {
 			const matchId = await createMatchMeta(fastify, req.body.mode)
 			return reply.code(201).send({ matchId })
@@ -188,6 +199,11 @@ export const matchRoutes: FastifyPluginAsync = async fastify => {
 		Body: { duration: number; participants: Array<{ user_id: number; score: number; result: 'win' | 'loss' | 'draw' }> }
 	}>(
 		'/api/matches/:matchId/complete',
+		{
+			schema: {
+				tags: ['match']
+			}
+		},
 		async (req, reply) => {
 			await completeMatch(
 				fastify,
@@ -212,6 +228,17 @@ curl -i -X POST http://localhost:3000/api/matches \
 	  { "user_id": 2, "score": 12, "result": "loss" },
 	  { "user_id": 3, "score":  8, "result": "loss" },
 	  { "user_id": 4, "score": 10, "result": "loss" }
+	]
+  }'
+
+curl -i -X POST http://localhost:3000/api/matches_test \
+  -H "Content-Type: application/json" \
+  -d '{
+	"mode": 2,
+	"duration": 120,
+	"participants": [
+	  { "user_id": 1, "score": 15, "result": "win" },
+	  { "user_id": 2, "score": 12, "result": "loss" }
 	]
   }'
  */
