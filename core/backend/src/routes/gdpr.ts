@@ -1,6 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { anonymizeUser, deleteUserAndData, getUserData } from '../functions/gdpr.ts';
-import { type UpdateProfile, updateMyProfile } from '../functions/gdpr.ts';
+import { type UpdateProfile, anonymizeUser, deleteUserAndData, getUserData, updateMyProfile } from '../functions/gdpr.ts';
 
 export const gdprRoutes: FastifyPluginAsync = async fastify => {
 
@@ -105,9 +104,18 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 		},
 		async (req, reply) => {
 			const userId = (req.user as any).id
-			const ok = await updateMyProfile(fastify, userId, req.body)
-			if (!ok) return reply.code(400).send({ error: 'No valid fields to update' })
-			return { ok: true }
+			try {
+				const ok = await updateMyProfile(fastify, userId, req.body)
+				if (!ok) return reply.code(400).send({ error: 'No valid fields to update or user not found' })
+				return { ok: true }
+			} catch (err: any) {
+				if (err.code === 'SQLITE_CONSTRAINT' && err.message.includes('users.username')) {
+					return reply.code(409).send({ error: 'Username is already taken.' })
+				}
+				// For other potential errors, fall back to a generic 500
+				fastify.log.error(err, 'Error updating profile for user ' + userId)
+				return reply.code(500).send({ error: 'An internal server error occurred.' })
+			}
 		}
 	)
 };
