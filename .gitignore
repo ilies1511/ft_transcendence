@@ -37,3 +37,5 @@ core/backend/stash.ts
 fs2.txt
 *.png
 core/backend/client_google.json
+core/backend/data/user_1_2025-08-15T12_18_00_523Z.json
+core/backend/data/user_1_2025-08-15T12_18_30_511Z_false_false.json
