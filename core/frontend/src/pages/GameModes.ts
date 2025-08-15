@@ -124,7 +124,7 @@ const template = /*html*/`
 				<button id="btn-lobby"
 					class="rounded bg-[#b99da6] px-4 py-2 text-white cursor-pointer">Custom Lobby</button>
 				<button id="btn-local"
-					class="rounded bg-[#543b43] px-4 py-2 text-white cursor-pointer">Local Game</button>
+					class="rounded bg-[#543b43] px-4 py-2 text-white cursor-pointer">Add local player</button>
 				<!-- leave button -->
 				<button id="btn-leave" class="rounded bg-[#D22B2B] px-4 py-2 text-white cursor-pointer">Leave Match</button>
 				<button id="btn-disconnect" class="rounded bg-[#D22B2B] px-4 py-2 text-white cursor-pointer">Disconnect</button>
@@ -225,27 +225,6 @@ async function test_lobby(
 	}
 }
 
-async function test_local_player(
-	user_id: number,
-	container: HTMLElement,
-): Promise<void> {
-	const lobby_password = await get_password_from_user('Game')
-
-	const options: CustomLobbyOptions = {
-		map_name: 'default',
-		lobby_password,
-		ai_count: 0,
-	}
-
-	const gm = await create_join_lobby(user_id, container, options)
-	if (!(gm instanceof Game)) return
-	wireLocalPlayerButton(gm)
-
-	/* immediately ask for the 2nd player’s name */
-	const name = prompt('Display name for local player', 'Player 2')?.trim()
-	if (name) gm.add_local_player(name)
-}
-
 async function test_tournament(
 	container: HTMLElement,
 	user_id: number,
@@ -268,6 +247,7 @@ function setupGameModes(root: HTMLElement): void {
 	const btnMatch = root.querySelector<HTMLButtonElement>('#btn-matchmaking')
 	const btnCreateTournament = root.querySelector<HTMLButtonElement>('#btn-create-tournament')
 	const btnLobby = root.querySelector<HTMLButtonElement>('#btn-lobby')
+
 	const btnLocal = root.querySelector<HTMLButtonElement>('#btn-local')
 
 	const btnLeave = root.querySelector<HTMLButtonElement>('#btn-leave')
@@ -280,6 +260,13 @@ function setupGameModes(root: HTMLElement): void {
 	})
 	btnDisconnect?.addEventListener('click', () => {
 		globalThis.game?.disconnect()
+	})
+	btnLocal?.addEventListener('click', () => {
+		const name: string | undefined = prompt('Display name for local player', 'Player 2')?.trim()
+		if (!name) {
+			return ;
+		}
+		globalThis.game?.add_local_player(name)
 	})
 	btnStartTournament?.addEventListener('click', () => {
 		globalThis.tournament?.start();
@@ -300,7 +287,7 @@ function setupGameModes(root: HTMLElement): void {
 		return isNaN(n) ? null : n
 	}
 
-	const run = async (mode: 'match' | 'lobby' | 'local' | 'tournament'
+	const run = async (mode: 'match' | 'lobby' | 'tournament'
 		| 'reconnect'): Promise<void> => {
 		const user = await getSession()
 		const user_id = user?.id ?? getUserId()
@@ -315,14 +302,12 @@ function setupGameModes(root: HTMLElement): void {
 			case 'match':	await test_enter_matchmaking(container, user_id);	break
 			case 'tournament':	await test_tournament(container, user_id);	break
 			case 'lobby':	await test_lobby(user_id, container);				break
-			case 'local':	await test_local_player(user_id, container);		break
 			// case 'reconnect': await attempt_reconnect(container, user_id); break ;
 	 	}
 	}
 
 	btnMatch?.addEventListener('click', () => run('match'))
 	btnLobby?.addEventListener('click', () => run('lobby'))
-	btnLocal?.addEventListener('click', () => run('local'))
 	btnCreateTournament?.addEventListener('click', () => run('tournament'))
 	btnReconnect?.addEventListener('click', () => run('reconnect'))
 }

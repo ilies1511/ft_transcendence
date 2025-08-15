@@ -442,6 +442,10 @@ export class Game {
 
 	public async add_local_player(display_name: string): Promise<void> {
 		console.log("Game: add_local_player()");
+		if (this._active_scene !== this._lobby_scene) {
+			console.log("Game error: tried to add local player with lobby scene not active, returning..");
+			return ;
+		}
 		if (this._local_player) {
 			console.log("Error: Game allready has local player!");
 			return ;

@@ -132,6 +132,9 @@ export class GameLobby {
 	public join(user_id: number, display_name: string, password?: string
 		): ServerError
 	{
+		if (user_id <= 0 && this.lobby_type == LobbyType.TOURNAMENT_GAME) {
+			return ('Invalid Request');
+		}
 		if (this.engine) {
 			return ('Allready started');
 		}
