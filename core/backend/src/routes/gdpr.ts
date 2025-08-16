@@ -91,6 +91,31 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 	}>(
 		'/api/me',
 		{
+			// schema: {
+			// 	tags: ['gdpr'],
+			// 	body: {
+			// 		type: 'object',
+			// 		minProperties: 1,
+			// 		properties: {
+			// 			username: { type: 'string', minLength: 1 },
+			// 			nickname: { type: 'string', minLength: 1 },
+			// 			email: { type: 'string', format: 'email' },
+			// 			password: { type: 'string', minLength: 8 },
+			// 			currentPassword: { type: 'string', minLength: 8 }
+
+			// 		},
+			// 		allOf: [
+			// 			{
+			// 				if: { required: ['password'] },
+			// 				then: { required: ['currentPassword'] }
+			// 			}
+			// 		]
+			// 	},
+			// 	response: {
+			// 		200: { type: 'object', properties: { ok: { type: 'boolean' } } },
+			// 		400: { type: 'object', properties: { error: { type: 'string' } } }
+			// 	}
+			// }
 			schema: {
 				tags: ['gdpr'],
 				body: {
@@ -100,14 +125,23 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 						username: { type: 'string', minLength: 1 },
 						nickname: { type: 'string', minLength: 1 },
 						email: { type: 'string', format: 'email' },
-						password: { type: 'string', minLength: 8 }
-					}
+						password: { type: 'string', minLength: 1 },
+						currentPassword: { type: 'string', minLength: 1 }
+					},
+					allOf: [
+						{ if: { required: ['password'] }, then: { required: ['currentPassword'] } },
+						{ if: { required: ['currentPassword'] }, then: { required: ['password'] } }
+					]
 				},
 				response: {
 					200: { type: 'object', properties: { ok: { type: 'boolean' } } },
-					400: { type: 'object', properties: { error: { type: 'string' } } }
+					400: { type: 'object', properties: { error: { type: 'string' } } },
+					401: { type: 'object', properties: { error: { type: 'string' } } },
+					409: { type: 'object', properties: { error: { type: 'string' } } },
+					500: { type: 'object', properties: { error: { type: 'string' } } }
 				}
 			}
+
 		},
 		async (req, reply) => {
 			const userId = (req.user as any).id

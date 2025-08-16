@@ -74,7 +74,50 @@ export interface UpdateProfile {
 	nickname?: string
 	email?: string
 	password?: string
+	currentPassword?: string
 }
+
+// // BEGIN -- pre 16.08 Version
+// export async function updateMyProfile(
+// 	fastify: FastifyInstance,
+// 	userId: number,
+// 	data: UpdateProfile
+// ): Promise<boolean> {
+// 	const updates: string[] = []
+// 	const values: unknown[] = []
+
+// 	if (data.username) {
+// 		updates.push('username = ?')
+// 		values.push(data.username)
+// 	}
+// 	if (data.nickname) {
+// 		updates.push('nickname = ?')
+// 		values.push(data.nickname)
+// 	}
+// 	if (data.email) {
+// 		updates.push('email = ?')
+// 		values.push(data.email)
+// 	}
+// 	//TODO: 15.08 Add additional check
+// 	if (data.password) {
+// 		if ((await bcrypt.compare(data.password, user.password))) {
+// 			// return reply.code(401).send({ error: 'invalid credentials' })
+// 			const hash = await bcrypt.hash(data.password, 12)
+// 			updates.push('password = ?')
+// 			values.push(hash)
+// 		}
+// 	}
+
+// 	if (updates.length === 0) {
+// 		return false
+// 	}
+
+// 	values.push(userId)
+// 	const sql = `UPDATE users SET ${updates.join(', ')} WHERE id = ? AND is_deleted = 0`
+// 	const info = await fastify.db.run(sql, ...values)
+// 	return (info.changes ?? 0) > 0
+// }
+// // END -- pre 16.08 Version
 
 export async function updateMyProfile(
 	fastify: FastifyInstance,
@@ -84,22 +127,37 @@ export async function updateMyProfile(
 	const updates: string[] = []
 	const values: unknown[] = []
 
-	if (data.username) {
-		updates.push('username = ?')
-		values.push(data.username)
-	}
-	if (data.nickname) {
-		updates.push('nickname = ?')
-		values.push(data.nickname)
-	}
-	if (data.email) {
-		updates.push('email = ?')
-		values.push(data.email)
-	}
-	if (data.password) {
+	const user = await fastify.db.get<{ password: string | null; is_oauth?: number }>(
+		'SELECT password, is_oauth FROM users WHERE id = ? AND is_deleted = 0',
+		userId
+	)
+	if (!user) return false
+
+	if (data.username) { updates.push('username = ?'); values.push(data.username) }
+	if (data.nickname) { updates.push('nickname = ?'); values.push(data.nickname) }
+	if (data.email) { updates.push('email = ?'); values.push(data.email) }
+
+	if (typeof data.password === 'string') {
+		if (!data.currentPassword) {
+			const e: any = new Error('current password required'); e.code = 'CURRENT_PASSWORD_REQUIRED'; throw e
+		}
+		if (!user.password) {
+			const e: any = new Error('no local password'); e.code = 'NO_LOCAL_PASSWORD'; throw e
+		}
+		const currentOk = await bcrypt.compare(data.currentPassword, user.password)
+		if (!currentOk) {
+			const e: any = new Error('invalid current password'); e.code = 'INVALID_CURRENT_PASSWORD'; throw e
+		}
+		const sameAsOld = await bcrypt.compare(data.password, user.password)
+		if (sameAsOld) {
+			const e: any = new Error('new password equals old'); e.code = 'PASSWORD_UNCHANGED'; throw e
+		}
 		const hash = await bcrypt.hash(data.password, 12)
-		updates.push('password = ?')
-		values.push(hash)
+		updates.push('password = ?'); values.push(hash)
+		// optional: Passwortwechselzeitpunkt speichern, wenn Spalte vorhanden ist
+		// updates.push('password_changed_at = ?'); values.push(Date.now())
+		// optional: Sessions invalidieren, wenn Spalte vorhanden ist
+		// updates.push('token_version = COALESCE(token_version, 0) + 1')
 	}
 
 	if (updates.length === 0) {
