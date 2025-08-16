@@ -112,11 +112,14 @@ export class GameLobby {
 		this._completion_callback(this.id, msg);
 	}
 
+	// HACK: this is not only called to start the game but also on reconnects to fix the sockets of the game engine
 	private _start_game() {
-		console.log("starting game..");
 		this._game_engine_finish_callback = this._game_engine_finish_callback.bind(this);
-		this.engine = new GameEngine(this._map_name, this.lobby_type, this,
-			this._game_engine_finish_callback, 1000 /* todo: hardcoded 1000 sec */);
+		if (!this.engine) {
+			this.engine = new GameEngine(this._map_name, this.lobby_type, this,
+				this._game_engine_finish_callback, 1000 /* todo: hardcoded 1000 sec */);
+		}
+		console.log("starting game..");
 		let i = 0;
 		while (i < this._connections.length) {
 			this._clear_timeout(this._connections[i]);
@@ -430,3 +433,4 @@ export class GameLobby {
 	}
 
 };
+

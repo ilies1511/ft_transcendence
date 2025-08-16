@@ -8,7 +8,7 @@ const PUBLIC_LINKS = [
 const PRIVATE_LINKS = [
 	{ href:'/', text:'Home', inMenu:true },
 	{ href:'/profile', text:'Profile', inMenu:false },
-	{ href:'/users', text:'All users', inMenu:true },
+	{ href:'/users', text:'All Users', inMenu:true },
 	{ href:'/settings', text:'Settings', inMenu:false },
 	{ href:'/modes', text:'Game Modes', inMenu:true },
 	{ href:'/friendlist', text:'Friend list',inMenu:false }
