@@ -8,33 +8,26 @@ import { LocalPlayer } from './LocalPlayer.ts';
 
 //import * as BABYLON from 'babylonjs';
 import type {
-	ServerToClientMessage,
-	LobbyToClient,
-	LobbyToClientJson,
-	ClientToMatch,
-	ClientToMatchConnect,
 	ClientToGame,
+	ClientToMatchConnect,
 	ClientToMatchLeave,
 	GameToClientFinish,
-	ServerError,
-	GameOptions,
-	EnterMatchmakingReq,
-	EnterMatchmakingResp,
-	LobbyInvite,
 	LobbyDisplaynameResp,
+	LobbyInvite,
+	LobbyToClient,
+	LobbyToClientJson,
 	ReconnectResp,
+	ServerError
 } from './game_shared/message_types.ts';
 
 
-import { Effects, GameState }
-	from '../../../game_shared/serialization.ts';
-import { LobbyType }
-	from '../../../game_shared/message_types.ts';
+import { LobbyType } from '../../../game_shared/message_types.ts';
+import { GameState } from '../../../game_shared/serialization.ts';
 
 
 import { BaseScene } from './scenes/base.ts';
-import { LobbyScene } from './scenes/LobbyScene.ts';
 import { GameScene } from './scenes/game_scene.ts';
+import { LobbyScene } from './scenes/LobbyScene.ts';
 
 type KeySet = {
 	case: string;
@@ -315,7 +308,7 @@ export class Game {
 		this._generate_key_handler(key_hook_generator_args);
 	}
 
-	private  _start_game() {
+	private	_start_game() {
 		const display_names_promise: Promise<LobbyDisplaynameResp> =
 			GameApi.get_display_names(this.game_id);
 		display_names_promise.then(names => {
@@ -418,26 +411,16 @@ export class Game {
 	}
 
 	private _createCanvas(): HTMLCanvasElement {
-		//Commented out for development
-		document.documentElement.style["overflow"] = "hidden";
-		document.documentElement.style.overflow = "hidden";
-		document.documentElement.style.width = "100%";
-		document.documentElement.style.height = "100%";
-		document.documentElement.style.margin = "0";
-		document.documentElement.style.padding = "0";
-		document.body.style.overflow = "hidden";
-		document.body.style.width = "100%";
-		document.body.style.height = "100%";
-		document.body.style.margin = "0";
-		document.body.style.padding = "0";
-
-		//create the canvas html element and attach it to the webpage
+		// Keep page layout; do NOT force body to fullscreen here.
 		this._canvas = document.createElement("canvas");
+		this._canvas.id = "gameCanvas";
 		this._canvas.style.width = "100%";
 		this._canvas.style.height = "100%";
-		this._canvas.id = "gameCanvas";
-		document.body.appendChild(this._canvas);
-		return (this._canvas);
+		this._canvas.style.display = "block";
+		// Ensure container can size the canvas
+		this.container.style.position = this.container.style.position || 'relative';
+		this.container.appendChild(this._canvas);
+		return this._canvas;
 	}
 
 	public async add_local_player(display_name: string): Promise<void> {

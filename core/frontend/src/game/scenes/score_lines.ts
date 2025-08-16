@@ -1,5 +1,5 @@
-import * as GUI from "@babylonjs/gui";
 import * as BABYLON from "@babylonjs/core/Legacy/legacy";
+import * as GUI from "@babylonjs/gui";
 
 class ScoreLine {
 	public id: number;
@@ -35,7 +35,8 @@ export class ScorePanel {
 		this.panel = new GUI.StackPanel();
 		this.panel.width = "2200px";
 		this.panel.isVertical = true;
-		this.panel.top = "0px";
+		this.panel.top = "10px";
+		this.panel.left = "10px";
 		this.panel.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
 		this.panel.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
 		gui.addControl(this.panel);
