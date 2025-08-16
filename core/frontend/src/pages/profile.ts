@@ -1,13 +1,11 @@
 // frontend/src/pages/profile.ts
 import type { PageModule } from '../router';
-import type { ApiUser }       from '../types/api'
+import type { ApiUser } from '../types/api';
 // import { getSession } from '../services/auth'
-import { router } from '../main'
-import { updateDot } from '../utils/statusDot'
-import { isFriend } from '../utils/isFriend'
-import { presence } from '../services/presence';
-import type { FriendStatusMsg } from '../types/ws';
+import { router } from '../main';
 import { getSession } from '../services/session';
+import { isFriend } from '../utils/isFriend';
+import { updateDot } from '../utils/statusDot';
 
 
 const template = /*html*/ `
@@ -26,6 +24,8 @@ const template = /*html*/ `
 			</div>
 			<p id="profileHandle" class="text-[#b99da6]"></p>
 			</div>
+			<!-- actions -->
+			<div id="profileActions" class="mt-2 flex gap-3"></div>
 		</header>
 
 		<!-- stats -->
@@ -162,6 +162,56 @@ async function renderProfile(root: HTMLElement, user: ApiUser) {
 	// (root as any).onDestroy = () => {
 	// 	presence.removeEventListener('friend-status', onStatus)
 	// }
+
+	// Block / Unblock button
+	if (!isMe && me) {
+		const actions = root.querySelector<HTMLDivElement>('#profileActions')!;
+		const applyState = (blocked: boolean, loading = false) => {
+			actions.innerHTML = '';
+			const btn = document.createElement('button');
+			btn.className = `px-4 py-2 rounded-md text-sm font-semibold ${
+				blocked ? 'bg-yellow-700 hover:bg-yellow-600' : 'bg-red-800 hover:bg-red-700'
+			} text-white disabled:opacity-60`;
+			btn.textContent = loading
+				? (blocked ? 'Unblocking…' : 'Blocking…')
+				: (blocked ? 'Unblock User' : 'Block User');
+			btn.disabled = loading;
+			btn.id = 'blockToggleBtn';
+			actions.appendChild(btn);
+			return btn;
+		};
+
+		let isBlocked = false;
+		try {
+			const r = await fetch(`/api/users/${me.id}/block`);
+			if (r.ok) {
+				const ids = await r.json() as number[];
+				isBlocked = ids.includes(user.id);
+			}
+		} catch { /* ignore */ }
+
+		let btn = applyState(isBlocked);
+
+		btn.addEventListener('click', async () => {
+			btn = applyState(isBlocked, true);
+			try {
+				const method = isBlocked ? 'DELETE' : 'POST';
+				const r = await fetch(`/api/users/${me.id}/block/${user.id}`, { method });
+				if (!r.ok) throw new Error(await r.text());
+				isBlocked = !isBlocked;
+				// If just blocked, hide status dot
+				if (isBlocked) {
+					dot.classList.add('hidden');
+					document.dispatchEvent(new Event('friends-changed'));
+				}
+				document.dispatchEvent(new Event('block-changed'));
+			} catch {
+				// revert loading state
+			} finally {
+				applyState(isBlocked);
+			}
+		});
+	}
 
 	// TESTING USER STATS AND MACHES
 	const stats = await fetchUserStats(user.id);
