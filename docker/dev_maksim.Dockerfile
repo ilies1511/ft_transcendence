@@ -1,32 +1,10 @@
-FROM debian:latest
+FROM node:22-alpine
 
+RUN apk add --no-cache bash make
 
-# basic tools
-RUN apt-get update && apt-get install -y \
-  git curl build-essential cmake sudo
+WORKDIR /app
 
-#install node
-#RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-RUN curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash -
-RUN apt install nodejs -y
-#RUN npm install -g typescript --save-dev
+COPY docker/maksim_dev_init.sh /usr/local/bin/maksim_dev_init.sh
+RUN chmod +x /usr/local/bin/maksim_dev_init.sh
 
-
-
-#RUN npm install -g typescript typescript-language-server
-
-ARG USERNAME=mvolkman
-ARG UID=1000
-ARG GID=1000
-RUN groupadd -g $GID $USERNAME
-RUN useradd  -u $UID -g $GID -m $USERNAME
-RUN echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USERNAME
-RUN chown -R $UID:$GID /usr/local /opt /home/$USERNAME
-
-
-
-USER $USERNAME
-ENV HOME=/home/$USERNAME
-WORKDIR /home/$USERNAME/app
-CMD ["bash"]
-
+ENTRYPOINT ["maksim_dev_init.sh"]

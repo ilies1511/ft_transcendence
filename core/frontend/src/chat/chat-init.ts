@@ -12,6 +12,12 @@ export const chatState = {
 	myUsername: ''
 };
 
+//refresh friendlist helper
+const refreshFriends = () => {
+	if (chatState.myUserId)
+		fetchFriendsAndPopulate(chatState.myUserId);
+};
+
 export async function initFriendUI() {
 	const root = document.getElementById('friend-ui-root')!;
 
@@ -32,6 +38,11 @@ export async function initFriendUI() {
 
 	wsEvents.addEventListener('direct_message', handleDirectMessage);
 	wsEvents.addEventListener('error', handleChatError);
+	wsEvents.addEventListener('new_friend_request', refreshFriends);
+	wsEvents.addEventListener('friend_accepted', refreshFriends);
+	wsEvents.addEventListener('friend_rejected', refreshFriends);
+	wsEvents.addEventListener('friend_removed', refreshFriends);
+	document.addEventListener('friends-changed', refreshFriends);
 
 	wireEvents(root);
 }
@@ -45,4 +56,9 @@ export function destroyFriendUI() {
 
 	wsEvents.removeEventListener('direct_message', handleDirectMessage);
 	wsEvents.removeEventListener('error', handleChatError);
+	wsEvents.removeEventListener('new_friend_request', refreshFriends);
+	wsEvents.removeEventListener('friend_accepted', refreshFriends);
+	wsEvents.removeEventListener('friend_rejected', refreshFriends);
+	wsEvents.removeEventListener('friend_removed', refreshFriends);
+	document.removeEventListener('friends-changed', refreshFriends);
 }

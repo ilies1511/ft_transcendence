@@ -139,12 +139,14 @@ const UsersPage: PageModule = {
 		wsEvents.addEventListener('new_friend_request', onChange);
 		wsEvents.addEventListener('friend_accepted', onChange);
 		wsEvents.addEventListener('friend_rejected', onChange);
+		wsEvents.addEventListener('user_registered', onChange);
 
 		(root as any).onDestroy = () => {
 			document.removeEventListener('friends-changed', onChange);
 			wsEvents.removeEventListener('new_friend_request', onChange);
 			wsEvents.removeEventListener('friend_accepted', onChange);
 			wsEvents.removeEventListener('friend_rejected', onChange);
+			wsEvents.removeEventListener('user_registered',onChange);
 		};
 	}
 };

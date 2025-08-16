@@ -23,13 +23,16 @@ services:
       context: .
       dockerfile: docker/dev_maksim.Dockerfile
     container_name: dev_maksim
-    tty: true
     volumes:
-      - .:/home/$USER/app
+      - ./:/app
+    working_dir: /app/core
+    tty: true
+    stdin_open: true
     ports:
       - "3000:3000"
       - "3001:3001"
       - "5173:5173"
+
 
   dev_fabi:
     build:

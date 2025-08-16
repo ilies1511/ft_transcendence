@@ -11,6 +11,10 @@ export default defineConfig({
 	},
 	server: {
 		// host: "0.0.0.0",
+		headers: {
+			// never cache anything during dev
+			'Cache-Control': 'no-store',
+		},
 		host: true,
 		port: 5173,
 		allowedHosts: ['2-h-5.42heilbronn.de'],
