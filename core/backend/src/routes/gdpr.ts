@@ -171,8 +171,20 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 				if (err.code === 'SQLITE_CONSTRAINT' && String(err.message).includes('users.username')) {
 					return reply.code(409).send({ error: 'Username is already taken.' })
 				}
-				if (err.code === 'SQLITE_CONSTRAINT' && String(err.message).includes('users.email')) {
-					return reply.code(409).send({ error: 'Email is already taken.' })
+				// if (err.code === 'SQLITE_CONSTRAINT' && String(err.message).includes('users.email')) {
+				// 	return reply.code(409).send({ error: 'Email is already taken.' })
+				// }
+				// if (err.code === 'SQLITE_CONSTRAINT' && String(err.message).includes('users.username')) {
+				// 	return reply.code(409).send({ error: 'Username is already taken.' })
+				// }
+				if (err.code === 'SQLITE_CONSTRAINT')
+				{
+					if (String(err.message).includes('users.email')) {
+						return reply.code(409).send({ error: 'Email is already taken.' })
+					}
+					else if (String(err.message).includes('users.username')) {
+						return reply.code(409).send({ error: 'Username is already taken.' })
+					}
 				}
 				req.log.error(err, 'Error updating profile for user ' + userId)
 				return reply.code(500).send({ error: 'An internal server error occurred.' })
