@@ -1,7 +1,7 @@
 import { getSession } from './services/session';
 
 const GUEST_ONLY_ROUTES = ['/login', '/register']; // only for logged-out users
-const OPEN_ROUTES = ['/privacy', '/terms'];         // accessible to everyone
+const OPEN_ROUTES = ['/terms', '/privacy'];         // accessible to everyone
 const LOGIN_REDIRECT = '/login'; // where guests are sent
 
 export type PageModule = { // contract every page must fulfil
@@ -27,8 +27,8 @@ const routes: Record<string, Loader> = {
 	'/profile/:id': () => import('./pages/profile').then(m => m.default),
 	'/settings/:id': () => import('./pages/settings').then(m => m.default),
 	'/friendlist': () => import('./pages/friendlist').then(m => m.default),
-	'/privacy': () => import('./pages/privacy').then(m => m.default),
 	'/terms': () => import('./pages/terms').then(m => m.default),
+	'/privacy': () => import('./pages/privacy').then(m => m.default)
 }
 
 function matchDynamicRoute(path: string): { route: string, params: Record<string, string> } | null {

@@ -1,5 +1,5 @@
+import { router } from '../main'
 import { currentUser, logout } from '../services/auth'
-import { router }from '../main'
 
 export async function refreshHeader() {
 	const span = document.getElementById('user-indicator')
@@ -29,7 +29,7 @@ export async function refreshHeader() {
 					Profile</a></li>
 				<li><a data-route href="/friendlist"
 						class="cursor-pointer block px-4 py-2 hover:bg-[#41222b]">
-					Friend list</a></li>
+					Friends</a></li>
 				<li><a data-route href="/settings"
 						class="cursor-pointer block px-4 py-2 hover:bg-[#41222b]">
 					Settings</a></li>

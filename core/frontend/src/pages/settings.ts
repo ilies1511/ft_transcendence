@@ -30,7 +30,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 
 			<!-- Avatar upload section -->
 			<section class="w-full max-w-[400px] p-8 shadow-md rounded-[25px] bg-[#2b171e] flex flex-col items-center space-y-4">
-				<h2 class="text-center text-white text-xl font-bold mb-2">Change your avatar</h2>
+				<h2 class="text-center text-white text-xl font-bold mb-2">Change Avatar</h2>
 
 				<div id="avatar-wrapper" class="relative group h-20 w-20 rounded-full overflow-hidden cursor-pointer">
 					<img id="avatar-preview" src="/avatars/${user.avatar}" alt="avatar"
@@ -46,7 +46,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 						class="w-full h-10 rounded-xl bg-[#f22667] text-white font-bold tracking-wide
 							   hover:bg-[#d41d59] active:bg-[#b31648]"
 						type="button" disabled>
-					Upload Avatar
+					Upload
 				</button>
 
 				<span id="avatar-upload-msg" class="form-msg"></span>
@@ -54,7 +54,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 
 			<!-- Profile update form -->
 			<form id="settings-form" class="w-full max-w-[400px] p-8 space-y-6 shadow-md rounded-[25px] bg-[#2b171e]">
-				<h2 class="text-center text-white text-2xl font-bold">Update your profile</h2>
+				<h2 class="text-center text-white text-2xl font-bold">Update Profile</h2>
 
 				<label class="block">
 					<span class="text-sm font-medium text-[#b99da6]">Username</span>
@@ -76,7 +76,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 
 				<button class="w-full h-10 rounded-xl bg-[#f22667] text-white font-bold tracking-wide
 							   hover:bg-[#d41d59] active:bg-[#b31648]" type="submit">
-					Update Profile
+					Update
 				</button>
 
 				<p id="msg" class="form-msg"></p>
@@ -100,7 +100,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 
 				<button class="w-full h-10 rounded-xl bg-[#f22667] text-white font-bold tracking-wide
 							   hover:bg-[#d41d59] active:bg-[#b31648]" type="submit">
-					Change Password
+					Change
 				</button>
 
 				<p id="password-msg" class="form-msg"></p>
