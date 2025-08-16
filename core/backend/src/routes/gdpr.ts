@@ -143,16 +143,47 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 			}
 
 		},
+		// async (req, reply) => {
+		// 	const userId = (req.user as any).id
+		// 	const ok = await updateMyProfile(fastify, userId, req.body)
+		// 	if (!ok) return reply.code(400).send({ error: 'No valid fields to update' })
+		// 	return { ok: true }
+		// }
 		async (req, reply) => {
 			const userId = (req.user as any).id
-			const ok = await updateMyProfile(fastify, userId, req.body)
-			if (!ok) return reply.code(400).send({ error: 'No valid fields to update' })
-			return { ok: true }
+			try {
+				const ok = await updateMyProfile(fastify, userId, req.body)
+				if (!ok) return reply.code(400).send({ error: 'Nothing to update or user not found.' })
+				return { ok: true }
+			} catch (err: any) {
+				if (err.code === 'INVALID_CURRENT_PASSWORD') {
+					return reply.code(401).send({ error: 'Current password is incorrect.' })
+				}
+				if (err.code === 'CURRENT_PASSWORD_REQUIRED') {
+					return reply.code(400).send({ error: 'Current password is required to change your password' })
+				}
+				if (err.code === 'PASSWORD_UNCHANGED') {
+					return reply.code(400).send({ error: 'New password must be different from the current one' })
+				}
+				if (err.code === 'NO_LOCAL_PASSWORD') {
+					return reply.code(400).send({ error: 'Your account has no local password. Use the set password flow.' })
+				}
+				if (err.code === 'SQLITE_CONSTRAINT' && String(err.message).includes('users.username')) {
+					return reply.code(409).send({ error: 'Username is already taken.' })
+				}
+				if (err.code === 'SQLITE_CONSTRAINT' && String(err.message).includes('users.email')) {
+					return reply.code(409).send({ error: 'Email is already taken.' })
+				}
+				req.log.error(err, 'Error updating profile for user ' + userId)
+				return reply.code(500).send({ error: 'An internal server error occurred.' })
+			}
 		}
 	)
 
 
-//// Works but no media
+
+
+	//// Works but no media
 	// 	fastify.get('/api/me/export',
 	// 		{
 	// 			// preHandler: [fastify.auth],
