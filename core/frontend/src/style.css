@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 @import "tailwindcss";
 
@@ -53,5 +52,10 @@ h1{
 	/* font-weight: 400; */
 	/* font-style: normal; */
 	/* font-family: "VT323", monospace; */
+}
+
+#game-container canvas {
+    object-fit: contain;
+    background: #331a21; /* match scene clearColor to avoid flicker */
 }
 

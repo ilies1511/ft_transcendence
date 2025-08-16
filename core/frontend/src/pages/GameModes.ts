@@ -75,30 +75,23 @@
 import type { PageModule } from '../router'
 
 import { Game } from '../game/game_new.ts'
-import { Tournament } from '../game/Tournament.ts'
-import { TournamentApi } from '../game/TournamentApi.ts'
 import { get_password_from_user } from '../game/placeholder_globals.ts'
+import { Tournament } from '../game/Tournament.ts'
 
 import { attempt_reconnect } from '../game/frontend_interface_examples/reconnect.ts'
 
-import {
-	accept_lobby_invite,
-	create_join_lobby,
-} from '../game/frontend_interface_examples/custom_lobbies.ts'
 import type { CustomLobbyOptions } from '../game/frontend_interface_examples/custom_lobbies.ts'
+import {
+	create_join_lobby
+} from '../game/frontend_interface_examples/custom_lobbies.ts'
 
 import type { MatchmakingOptions } from '../game/frontend_interface_examples/matchmaking.ts'
 import { enter_matchmaking } from '../game/frontend_interface_examples/matchmaking.ts'
 
 import type {
-	JoinReq,
-	CreateTournamentReq,
-	CreateTournamentResp,
-	DefaultResp,
-	ServerError,
-	LobbyInvite
+	LobbyInvite,
+	ServerError
 } from '../game/game_shared/message_types.ts'
-import { LobbyType } from '../game/game_shared/message_types.ts'
 
 import { getSession } from '../services/session'
 
@@ -136,7 +129,7 @@ const template = /*html*/`
 
 		<!-- game canvas / iframe / whatever -->
 		<div id="game-container"
-			class="mt-6 w-full min-h-[600px] rounded-lg border border-[#543b43] overflow-hidden">
+			class="mt-6 w-full h-[clamp(500px,70vh,900px)] rounded-lg border border-[#543b43] overflow-hidden">
 		</div>
 	</div>
 `

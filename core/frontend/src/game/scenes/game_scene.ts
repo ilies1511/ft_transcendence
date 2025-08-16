@@ -1,25 +1,11 @@
 import * as BABYLON from '@babylonjs/core/Legacy/legacy';
-import type {
-	ServerToClientMessage,
-	GameStartInfo,
-	ClientToServerMessage,
-	GameOptions
-} from '../game_shared/message_types.ts';
 
 import { ScorePanel } from './score_lines.ts';
 
-import { FireProceduralTexture } from '@babylonjs/procedural-textures/fire';
 import * as GUI from '@babylonjs/gui';
+import { GridMaterial } from '@babylonjs/materials/grid';
 
-// import { Effects, GameState }
-// 	from '../game_shared/serialization.ts';
-import { Effects, GameState }
-	from '../../../../game_shared/serialization.ts';
-
-import { ClientVec2 } from '../objects/ClientVec2.ts';
-import { ClientWall } from '../objects/ClientWall.ts';
-import { ClientBall } from '../objects/ClientBall.ts';
-import { ClientClient } from '../objects/ClientClient.ts';
+import type { ClientBall, ClientClient, ClientWall, GameState } from '../objects/index.ts';
 
 import { BaseScene } from './base.ts';
 
@@ -61,8 +47,7 @@ class PlayerColors {
 	constructor(scene: BABYLON.Scene,
 		major_color?: BABYLON.Color3,
 		minor_color?: BABYLON.Color3,
-		name?: string)
-	{
+		name?: string) {
 		this.scene = scene;
 		if (name == undefined) {
 			name = "undefined_color_scheme";
@@ -80,8 +65,8 @@ class PlayerColors {
 
 export class GameScene extends BaseScene {
 	private _camera: BABYLON.ArcRotateCamera;
-	private _light: BABYLON.PointLight;
-	private _ground: BABYLON.Mesh;
+	private _light: BABYLON.HemisphericLight;
+	private _background: BABYLON.Mesh;
 
 	private _meshes: Map<number, BABYLON.Mesh> = new Map<number, BABYLON.Mesh>;
 	//private _score_text: GUI.TextBlock;
@@ -92,11 +77,14 @@ export class GameScene extends BaseScene {
 
 	constructor(engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
 		super(engine, canvas);
+
+		this.clearColor = BABYLON.Color4.FromHexString("#331a21FF");
+
 		this._camera = new BABYLON.ArcRotateCamera(
 			"Camera",
 			-Math.PI / 2,
-			Math.PI / 2,
-			70,
+			Math.PI / 3,
+			35,
 			BABYLON.Vector3.Zero(),
 			this
 		);
@@ -104,22 +92,24 @@ export class GameScene extends BaseScene {
 		this._camera.attachControl(this._canvas, true);
 		this._camera.inputs.removeByType("ArcRotateCameraKeyboardMoveInput")
 
-		this._light = new BABYLON.PointLight(
-				"pointLight", new BABYLON.Vector3(10, 10, -5), this);
+		// Use a HemisphericLight for softer/even lighting
+		this._light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), this);
+		this._light.intensity = 0.8;
 
-		this._ground = BABYLON.MeshBuilder.CreateGround("ground", {
-			width: 50,
-			height: 50
-			}, this
-		);
+		// Keep the sky sphere for a 360 background
+		this._background = BABYLON.MeshBuilder.CreateSphere("background", {
+			diameter: 1000,
+			segments: 64
+		}, this);
 
-		this._ground.material = new BABYLON.StandardMaterial("fireMat", this);
-		this._ground.material.ambientTexture = new FireProceduralTexture(
-			"fireTex",
-			256,
-			this
-		);
-		this._ground.rotate(BABYLON.Axis.X, -Math.PI / 2, BABYLON.Space.LOCAL);
+		const backgroundMaterial = new GridMaterial("backgroundMat", this);
+		backgroundMaterial.backFaceCulling = false; // Render the inside of the sphere
+		backgroundMaterial.mainColor = BABYLON.Color3.FromHexString("#331a21");
+		backgroundMaterial.lineColor = BABYLON.Color3.FromHexString("#8B0000");
+		backgroundMaterial.gridRatio = 25; // Adjust grid density
+		backgroundMaterial.opacity = 0.98; // Almost opaque
+		this._background.material = backgroundMaterial;
+		this._background.isPickable = false;
 
 		const gui = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this);
 		this.score_panel = new ScorePanel(gui);
@@ -149,7 +139,7 @@ export class GameScene extends BaseScene {
 				}
 			} else {
 				const ball: BABYLON.Mesh = BABYLON.MeshBuilder.CreateSphere(
-					`sphere_${b.obj_id}`, {diameter: 0.5}, this);
+					`sphere_${b.obj_id}`, { diameter: 0.5 }, this);
 				ball.position.x = b.pos.x;
 				ball.position.y = b.pos.y;
 				this._meshes.set(b.obj_id, ball);
@@ -163,29 +153,11 @@ export class GameScene extends BaseScene {
 				const wall: BABYLON.Mesh = this._meshes.get(w.obj_id);
 				wall.position.x = w.center.x;
 				wall.position.y = w.center.y;
-				const default_normal: ClientVec2 = new ClientVec2(0, 1);
-				default_normal.unit();
-				//todo: rotation
-				const normal: ClientVec2 = w.normal;
-				normal.unit();
-				const dot: number = default_normal.x * normal.x
-					+ default_normal.y * normal.y;
-				const rot: number = Math.acos(dot);
-				//wall.rotation.z = -rot;
 
-				const angle1 = Math.atan2(wall.normal.y, wall.normal.x)
-				let angle2 = Math.atan2(w.normal.y, w.normal.x)
-				angle2 += Math.PI / 2;
+				// Correctly calculate rotation from the wall's normal vector
+				const angle = Math.atan2(w.normal.y, w.normal.x) - Math.PI / 2;
+				wall.rotation.z = angle;
 
-				const new_angle = angle2;// - angle1;
-
-				wall.rotation.z = new_angle;
-				wall.rotation.x = 0;
-				wall.rotation.y = 0;
-				wall.normal = w.normal;
-
-				//this._meshes.set(w.obj_id, wall);
-				//console.log(wall);
 			} else {
 				const wall: BABYLON.Mesh = BABYLON.MeshBuilder.CreateBox(
 					`wall_${w.obj_id}`,
@@ -200,15 +172,10 @@ export class GameScene extends BaseScene {
 				wall.position.x = w.center.x;
 				wall.position.y = w.center.y;
 				wall.position.z = 0;
-				const default_normal: ClientVec2 = new ClientVec2(0, 1);
-				default_normal.unit();
-				const normal: ClientVec2 = w.normal;
-				normal.unit();
-				const dot: number = default_normal.x * normal.x
-					+ default_normal.y * normal.y;
-				const rot: number = Math.acos(dot);
-				wall.rotation.z = -rot;
-				wall.normal = normal;
+
+				const angle = Math.atan2(w.normal.y, w.normal.x) - Math.PI / 2;
+				wall.rotation.z = angle;
+
 				this._meshes.set(w.obj_id, wall);
 			}
 		});
@@ -218,13 +185,12 @@ export class GameScene extends BaseScene {
 	private _init_color_schemes(clients: ClientClient[]) {
 		clients.forEach((c: ClientClient) => {
 			if (this._color_schemes.has(c.obj_id)) {
-				return ;
+				return;
 			}
 			this._color_schemes.set(c.obj_id, new PlayerColors(this, rnd_col(), rnd_col(), `player_${c.obj_id}`));
 			const color_scheme: PlayerColors = this._color_schemes.get(c.obj_id);
 			if (this._meshes.has(c.paddle.obj_id) == undefined
-				|| this._meshes.has(c.base.obj_id) == undefined)
-			{
+				|| this._meshes.has(c.base.obj_id) == undefined) {
 				console.log("game error: paddle or base not in meshes");
 				process.exit(1);
 			}
