@@ -45,12 +45,8 @@ ff_clean_docker:
 
 
 dev_maksim:
-	docker compose build dev_maksim \
-		--build-arg UID=$(shell id -u) \
-		--build-arg GID=$(shell id -g) \
-		--build-arg USERNAME=$(shell id -un) \
-	&& docker compose up -d dev_maksim \
-	&& docker exec -it dev_maksim bash
+	docker compose up --build -d dev_maksim
+	docker exec -it dev_maksim bash
 
 dev_fabi:
 	docker compose build dev_fabi \

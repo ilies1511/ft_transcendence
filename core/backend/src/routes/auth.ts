@@ -43,6 +43,21 @@ export default async function authRoutes(app: FastifyInstance) {
 				app.log.error('User creation succeeded but no lastID was returned.');
 				return reply.code(500).send({ error: 'Internal server error during account creation.' });
 			}
+
+			//NEW REGISTERED USERS WS NOTIFICATON
+			const payload = {
+				type: 'user_registered',
+				user: {
+					id: lastID,
+					username: username,
+					avatar: avatar
+				}
+			};
+			for (const client of app.websocketServer.clients) {
+				if (client.readyState === WebSocket.OPEN) {
+					client.send(JSON.stringify(payload));
+				}
+			}
 			
 			// Auto-login after registration
 			const token = await reply.jwtSign({ id: lastID, name: username })

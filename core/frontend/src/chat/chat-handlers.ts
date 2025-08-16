@@ -1,10 +1,9 @@
 // src/features/chat/chat-handlers.ts
 import { showChat } from './chat-ui';
 import { unreadCounts, friendUsernames, loadHistory, 
-	saveUnreadCounts, updateUnreadBadge } from './chat-state';
+	saveUnreadCounts, updateUnreadBadge, updateMainBadge } from './chat-state';
 import { chatState } from './chat-init';
 import { appendMessage, saveToHistory } from './chat-state'; // for handleDirectMessage
-import { updateMainBadge } from './chat-state'; // for fetchFriendsAndPopulate
 
 // get friends list
 export async function fetchFriendsAndPopulate(userId: number) {

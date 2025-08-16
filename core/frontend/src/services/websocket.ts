@@ -1,4 +1,4 @@
-// frontend/src/websocket.ts  (updated: uses native EventTarget for modern browsers; no shim or custom class needed)
+// frontend/src/websocket.ts
 import type { LobbyInvite } from '../../src/game/game_shared/message_types.ts'; 
 
 //TODO: should be moved?
@@ -6,9 +6,10 @@ type WsMessage =
 	| { type: 'direct_message'; to: number; content: string }
 	| { type: 'lobby_invite'; to: number; content: LobbyInvite }
 	| { type: 'new_friend_request'; requestId:number; from:string }
-	| { type:'friend_accepted'; friendId:number }
-	| { type:'friend_rejected'; friendId:number }
-	| { type:'friend_removed';  friendId:number }; 
+	| { type: 'friend_accepted'; friendId:number }
+	| { type: 'friend_rejected'; friendId:number }
+	| { type: 'friend_removed'; friendId:number }
+	| { type: 'user_registered'; user:any };
 	//TODO: add more messages for other ws things
 
 
