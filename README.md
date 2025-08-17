@@ -88,3 +88,8 @@ Clean makefile, compose file,
 
 ## Problem 13
 All the console logs should be in english.
+
+
+# Maksim Notes
+1. Avatar insta update via ws for other users.
+2. Main page text update.
