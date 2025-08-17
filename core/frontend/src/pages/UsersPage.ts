@@ -53,25 +53,50 @@ function renderUserRow(
 		}
 	}
 
+	// Ensure my own row always shows online (green) while I am on the site
+	const online = isSelf ? true : !!u.live;
+
 	return /*html*/`
-		<li class="bg-[#2b171e] rounded-xl p-5 sm:px-6 sm:py-5 text-lg text-white flex flex-col sm:flex-row sm:items-center justify-between gap-5"
-			data-uid="${u.id}">
-			<span class="font-medium truncate flex items-center gap-2">
-				<img src="${u.avatar}" alt="avatar" class="h-6 w-6 rounded-full object-cover" />
-				<a href="/profile/${u.id}" data-route class="hover:underline">${u.username}</a>
-			</span>
-			<span class="text-[#ca91a3] break-all sm:text-right sm:flex-shrink-0">${u.email}</span>
-			${action}
+		<li class="user-row group" data-uid="${u.id}">
+			<a href="/profile/${u.id}" data-route
+				class="flex items-center gap-3 min-w-0 flex-1 pr-6 focus:outline-none"
+				aria-label="View profile of ${u.username}">
+					<img src="${u.avatar}" alt="avatar of ${u.username}"
+						class="h-10 w-10 rounded-xl object-cover ring-2 ring-[#3a2229] group-hover:ring-[#f22667] transition shrink-0" />
+					<div class="min-w-0">
+						<span
+							class="font-semibold text-white group-hover:text-[#f22667] transition block truncate">
+							${u.username}
+						</span>
+						<span
+							class="text-xs text-[#b99da6] break-all truncate group-hover:text-[#f22667] transition">
+							${u.email ?? ''}
+						</span>
+					</div>
+			</a>
+				<div class="hidden sm:flex items-center justify-center">
+					<span class="status-dot ${online ? 'online' : 'offline'}"></span>
+				</div>
+				<div class="flex items-center justify-end gap-2 shrink-0 w-[150px]">
+					${action}
+				</div>
 		</li>`;
 }
 
 const UsersPage: PageModule = {
 	render(root) {
 		root.innerHTML = `
-			<div class="min-h-screen bg-[#221116] flex flex-col items-center p-10">
-				<h2 class="text-4xl text-white mb-8 font-semibold">Registered Users</h2>
-				<ul id="users-list" class="space-y-4 w-full max-w-2xl"></ul>
-				<p id="empty-msg" class="text-[#ca91a3]">Loading...</p>
+			<div class="min-h-screen bg-[#221116] flex flex-col items-center px-4 py-10">
+				<h2 class="text-4xl text-white mb-8 font-semibold tracking-wide">Registered Users</h2>
+				<div class="w-full max-w-4xl rounded-2xl overflow-hidden shadow-lg users-card-wrapper">
+					<div class="users-header hidden sm:grid" role="row">
+						<div class="col-user">User</div>
+						<div class="col-status">Status</div>
+						<div class="col-actions">Actions</div>
+					</div>
+					<ul id="users-list" class="divide-y divide-[#3a2229]/70"></ul>
+					<p id="empty-msg" class="text-center text-[#ca91a3] py-6">Loading...</p>
+				</div>
 			</div>`;
 	},
 
@@ -206,7 +231,7 @@ const UsersPage: PageModule = {
 			wsEvents.removeEventListener('new_friend_request', onChange);
 			wsEvents.removeEventListener('friend_accepted', onChange);
 			wsEvents.removeEventListener('friend_rejected', onChange);
-			wsEvents.removeEventListener('user_registered',onChange);
+			wsEvents.removeEventListener('user_registered', onChange);
 			wsEvents.removeEventListener('friend_removed', onChange);
 		};
 	}
