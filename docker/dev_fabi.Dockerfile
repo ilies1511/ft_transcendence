@@ -34,22 +34,22 @@ RUN npm install -g typescript typescript-language-server
 #RUN npm install -g express
 
 ARG USERNAME=frapp
-#ARG UID=1000
-#ARG GID=1000
-#RUN groupadd -g $GID $USERNAME
-#RUN useradd  -u $UID -g $GID -m $USERNAME
-#RUN echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USERNAME
-#RUN chown -R $UID:$GID /usr/local /opt /home/$USERNAME
-
-ARG USERNAME=frapp
 ARG UID=1000
 ARG GID=1000
+RUN groupadd -g $GID $USERNAME
+RUN useradd  -u $UID -g $GID -m $USERNAME
+RUN echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USERNAME
+RUN chown -R $UID:$GID /usr/local /opt /home/$USERNAME
 
-RUN groupadd -g $GID $USERNAME \
- && useradd -m -u $UID -g $GID -s /bin/bash $USERNAME \
- && echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USERNAME \
- && mkdir -p /home/$USERNAME/app /home/$USERNAME/.config/nvim \
- && chown -R $UID:$GID /home/$USERNAME
+#ARG USERNAME=frapp
+#ARG UID=1000
+#ARG GID=1000
+#
+#RUN groupadd -g $GID $USERNAME \
+# && useradd -m -u $UID -g $GID -s /bin/bash $USERNAME \
+# && echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USERNAME \
+# && mkdir -p /home/$USERNAME/app /home/$USERNAME/.config/nvim \
+# && chown -R $UID:$GID /home/$USERNAME
 
 
 USER $USERNAME

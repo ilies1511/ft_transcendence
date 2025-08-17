@@ -50,11 +50,12 @@ dev_maksim:
 
 dev_fabi:
 	docker compose build dev_fabi \
+		--build-arg UID=$(shell id -u) \
+		--build-arg GID=$(shell id -g) \
+		--build-arg USERNAME=$(shell id -un) \
 	&& docker compose up -d dev_fabi \
 	&& docker exec -it dev_fabi bash
-#		--build-arg UID=$(shell id -u) \
-#		--build-arg GID=$(shell id -g) \
-#		--build-arg USERNAME=$(shell id -un) \
+
 
 
 game_shared:
