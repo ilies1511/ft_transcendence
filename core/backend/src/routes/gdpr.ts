@@ -5,8 +5,17 @@ import { collectUserExport } from '../functions/gdpr.ts';
 import { Readable } from 'node:stream';
 import { createGzip } from 'node:zlib';
 import archiver from 'archiver'
-import fs from 'node:fs'
 import path from 'node:path'
+import fs from "fs";
+import { fileURLToPath } from 'node:url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+const BACKEND_ROOT = path.resolve(__dirname, '../..')
+export const PUBLIC_DIR = process.env.PUBLIC_DIR ?? path.resolve(BACKEND_ROOT, '../frontend/public')
+export const AVATAR_SUBDIR = process.env.AVATAR_SUBDIR ?? 'avatars'
+
 
 export const gdprRoutes: FastifyPluginAsync = async fastify => {
 
@@ -177,8 +186,7 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 				// if (err.code === 'SQLITE_CONSTRAINT' && String(err.message).includes('users.username')) {
 				// 	return reply.code(409).send({ error: 'Username is already taken.' })
 				// }
-				if (err.code === 'SQLITE_CONSTRAINT')
-				{
+				if (err.code === 'SQLITE_CONSTRAINT') {
 					if (String(err.message).includes('users.email')) {
 						return reply.code(409).send({ error: 'Email is already taken.' })
 					}
@@ -300,29 +308,96 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 			// END -- JSON Handler
 
 			// BEGIN -- ZIP Handler
-			reply
-				.header('Content-Type', 'application/zip')
-				.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.zip"`)
+			if (format === 'zip') {
+				reply
+					.type('application/zip')
+					.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.zip"`)
+				reply.hijack()
 
-			const archive = archiver('zip', { zlib: { level: 9 } })
-			archive.on('error', (err) => reply.send(err))
-			archive.pipe(reply.raw)
+				const archive = archiver('zip', { zlib: { level: 9 } })
+				archive.on('error', (err) => {
+					fastify.log.error({ err }, 'zip stream error')
+					if (!reply.raw.destroyed) reply.raw.destroy(err)
+				})
 
-			archive.append(JSON.stringify(data, null, 2), { name: 'data.json' })
+				archive.pipe(reply.raw)
+				archive.append(JSON.stringify(data, null, 2), { name: 'data.json' })
 
-			if (includeMedia && data?.profile?.avatar) {
-				const p = data.profile.avatar as string
-				const abs = path.isAbsolute(p) ? p : path.join(process.cwd(), p) // TODO: still wrong
-				if (fs.existsSync(abs)) {
+				// const abs = resolveAvatarFsPath(data.profile?.avatar)
+				// const abs = '/app/core/frontend/public/default_03.png' // Im Container
+
+				console.log('Pre resolvePublicPath fnc: ' + data.profile?.avatar!)
+				console.log('data.profile?.avatar: ' + data.profile?.avatar);
+				const abs2 = extractFilename(data.profile?.avatar);
+				console.log('POST extract FIlename fnc: ' + abs2)
+				// const abs = resolvePublicPath(data.profile?.avatar!);
+				const abs = resolvePublicPath(abs2!);
+				// const abs = resolvePublicPath('default_03.png');
+				console.log('POST resolvePublicPath fnc: ' + abs)
+				console.log('PUBLIC_DIR: ' + { PUBLIC_DIR })
+				console.log({ abs, exists: fs.existsSync(abs) })
+				console.log('BACKEND_ROOT: ' + BACKEND_ROOT);
+				if (includeMedia && abs && fs.existsSync(abs)) {
+					console.log('Avatar there !!!!!');
 					archive.file(abs, { name: 'avatar.png' })
-				} else {
-					archive.append(`Avatar not found at ${abs}\n`, { name: 'avatar_missing.txt' })
+				} else if (includeMedia) {
+					console.log('Avatar MISSSSSING !!!!!');
+					archive.append(`Avatar not found at ${abs ?? 'n/a'}\n`, { name: 'avatar_missing.txt' })
 				}
-			}
 
-			await archive.finalize()
-			return reply
+				await archive.finalize()
+				return
+			}
 		}
-		// BEGIN -- ZIP Handler
+		// END -- ZIP Handler
 	)
+}
+
+export function resolvePublicPath(webPath: string) {
+	const rel = webPath.startsWith('/') ? webPath.slice(1) : webPath
+	console.log('relative: ' + rel);
+	console.log('PUBLIC_DIR: ' + PUBLIC_DIR);
+	const target = path.join(PUBLIC_DIR, rel)
+	console.log('Joined: ' + target);
+	return target
+}
+
+export function resolveAvatarFsPath(filename?: string | null): string | null {
+	if (!filename) {
+		return null
+	}
+	const base = path.basename(filename)
+	console.log('In resolveAvatarFsPath: \n');
+	console.log('base: ' + base);
+	const target = path.resolve(PUBLIC_DIR, AVATAR_SUBDIR, base)
+	console.log('target: ' + target);
+
+	const root = path.resolve(PUBLIC_DIR, AVATAR_SUBDIR) + path.sep
+	console.log('root: ' + root);
+	if (!target.startsWith(root)) {
+		throw new Error('Invalid avatar path')
+	}
+	return target
+}
+
+
+export function extractFilename(input?: string | null): string | null {
+	if (!input) return null;
+
+	let p = input;
+
+	if (/^[a-z]+:\/\//i.test(p)) {
+		try { p = new URL(p).pathname } catch { }
+	}
+
+	p = p.replace(/\\/g, '/');
+	p = p.split('?')[0].split('#')[0];
+
+	const j = p.lastIndexOf('/public/');
+	if (j !== -1) p = p.slice(j + '/public/'.length);
+
+	const filename = p.substring(p.lastIndexOf('/') + 1);
+
+	const ok = /^[A-Za-z0-9._-]+$/.test(filename);
+	return ok ? filename : null;
 }
