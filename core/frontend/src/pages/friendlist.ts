@@ -15,7 +15,7 @@ const row = (u:UserPreview, right = '') => /*html*/`
 		flex flex-col sm:flex-row sm:items-center justify-between gap-5"
 		data-uid="${u.id}">
 		<span class="font-medium truncate flex items-center gap-2">
-			<img src="/avatars/${u.avatar}" class="h-6 w-6 rounded-full object-cover">
+			<img src="${u.avatar}" class="h-6 w-6 rounded-full object-cover">
 			<a href="/profile/${u.id}" data-route class="hover:underline">${u.username}</a>
 		</span>
 		${right}
