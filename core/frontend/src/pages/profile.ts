@@ -167,17 +167,19 @@ async function renderProfile(root: HTMLElement, user: ApiUser) {
 	if (!isMe && me) {
 		const actions = root.querySelector<HTMLDivElement>('#profileActions')!;
 		const applyState = (blocked: boolean, loading = false) => {
-			actions.innerHTML = '';
-			const btn = document.createElement('button');
-			btn.className = `px-4 py-2 rounded-md text-sm font-semibold ${
-				blocked ? 'bg-yellow-700 hover:bg-yellow-600' : 'bg-red-800 hover:bg-red-700'
-			} text-white disabled:opacity-60`;
+			// Reuse existing button so the click handler is preserved
+			let btn = actions.querySelector<HTMLButtonElement>('#blockToggleBtn');
+			if (!btn) {
+				btn = document.createElement('button');
+				btn.id = 'blockToggleBtn';
+				actions.appendChild(btn);
+			}
+			btn.className = `px-4 py-2 rounded-md text-sm font-semibold ${blocked ? 'bg-yellow-700 hover:bg-yellow-600' : 'bg-red-800 hover:bg-red-700'
+				} text-white disabled:opacity-60`;
 			btn.textContent = loading
 				? (blocked ? 'Unblocking…' : 'Blocking…')
 				: (blocked ? 'Unblock User' : 'Block User');
 			btn.disabled = loading;
-			btn.id = 'blockToggleBtn';
-			actions.appendChild(btn);
 			return btn;
 		};
 
@@ -263,7 +265,7 @@ const onFriendsChanged = async () => {
 	}
 };
 
-document.addEventListener('friends-changed', onFriendsChanged, { once:true });
+document.addEventListener('friends-changed', onFriendsChanged, { once: true });
 
 const ProfilePage: PageModule & { renderWithParams?: Function } = {
 	render(root) {
