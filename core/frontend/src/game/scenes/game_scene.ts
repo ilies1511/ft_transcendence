@@ -196,8 +196,8 @@ export class GameScene extends BaseScene {
 			}
 			const paddle_mesh: BABYLON.Mesh = this._meshes.get(c.paddle.obj_id);
 			paddle_mesh.material = color_scheme.major;
-			const base_mesh: BABYLON.Mesh = this._meshes.get(c.base.obj_id);
-			base_mesh.material = color_scheme.minor;
+			// const base_mesh: BABYLON.Mesh = this._meshes.get(c.base.obj_id);
+			// base_mesh.material = color_scheme.minor;
 		});
 	}
 
