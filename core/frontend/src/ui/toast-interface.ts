@@ -24,20 +24,24 @@ export function showToast(toast: ToastOptions):HTMLDivElement {
 			leading-none cursor-pointer">
 				${icons.closeX_micro}
 			</button>
-		</div>
-
-		<div class="flex justify-end gap-3">
-			<button class="t-accept flex items-center justify-center h-8 w-8
-				rounded-md bg-green-800 hover:bg-green-700 text-lg
-				cursor-pointer">
-					${icons.accept}
-				</button>
-			<button class="t-reject flex items-center justify-center h-8 w-8
-				rounded-md bg-red-800 hover:bg-red-700 text-lg
-				cursor-pointer">
-					${icons.decline}
-				</button>
 		</div>`;
+
+	if (toast.onAccept || toast.onReject) {
+		box.insertAdjacentHTML('beforeend', /*html*/`
+			<div class="flex justify-end gap-3">
+				${toast.onAccept ? `
+					<button class="t-accept flex items-center justify-center h-8 w-8
+					rounded-md bg-green-800 hover:bg-green-700 text-lg cursor-pointer">
+						${icons.accept}
+					</button>` : ''}
+
+				${toast.onReject ? `
+					<button class="t-reject flex items-center justify-center h-8 w-8
+					rounded-md bg-red-800 hover:bg-red-700 text-lg cursor-pointer">
+						${icons.decline}
+					</button>` : ''}
+			</div>`);
+	}
 
 	document.body.append(box);
 
@@ -60,7 +64,7 @@ export function showToast(toast: ToastOptions):HTMLDivElement {
 			close();
 		});
 
-	setTimeout(close, 10000000);
+	setTimeout(close, 5000);
 
 	return box;
 }
