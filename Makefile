@@ -45,6 +45,7 @@ ff_clean_docker:
 
 
 dev_maksim:
+	docker compose down dev_maksim || true
 	docker compose up --build -d dev_maksim
 	docker exec -it dev_maksim bash
 

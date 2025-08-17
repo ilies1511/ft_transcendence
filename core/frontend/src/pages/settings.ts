@@ -33,7 +33,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 				<h2 class="text-center text-white text-xl font-bold mb-2">Change Avatar</h2>
 
 				<div id="avatar-wrapper" class="relative group h-20 w-20 rounded-full overflow-hidden cursor-pointer">
-					<img id="avatar-preview" src="/avatars/${user.avatar}" alt="avatar"
+					<img id="avatar-preview" src="${user.avatar}" alt="avatar"
 						 class="absolute inset-0 h-full w-full object-cover" />
 					<div class="absolute inset-0 bg-black/0 group-hover:bg-black/50 flex items-center justify-center
 								text-white text-xs font-semibold tracking-wide transition-colors duration-150 select-none">
@@ -249,7 +249,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 				const r = await fetch(`/api/users/${me.id}/avatar`, { method: 'POST', body: fd })
 				if (r.ok) {
 					const { avatar } = await r.json()
-					avatarPreview.src = `/avatars/${avatar}?t=${Date.now()}`
+					avatarPreview.src = `${avatar}?t=${Date.now()}`
 					showMsg(avatarMsg, 'Avatar updated!', true)
 					document.dispatchEvent(new Event('settings-update'))
 				} else {

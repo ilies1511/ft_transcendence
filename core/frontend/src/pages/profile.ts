@@ -132,7 +132,7 @@ async function renderProfile(root: HTMLElement, user: ApiUser) {
 		'@' + user.username.toLowerCase().replace(/\s+/g, '_')
 
 	root.querySelector<HTMLImageElement>('#profileAvatar')!.src =
-		`/avatars/${user.avatar}`
+		`${user.avatar}`
 
 	const dot = root.querySelector<HTMLSpanElement>('#profileStatus')!
 	dot.dataset.userId = String(user.id)
