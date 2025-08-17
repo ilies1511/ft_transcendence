@@ -1,3 +1,4 @@
+import chalk from 'chalk'; // FOR MAKING COLORS IN CONSOLE SO I CAN SEE BETTER THE LOGS
 import Fastify from 'fastify';
 //import websocketPlugin, { SocketStream } from '@fastify/websocket'
 import type { fastifyWebsocket } from '@fastify/websocket';
@@ -391,7 +392,8 @@ export class GameEngine {
 	}
 
 	public leave(client_id: number) {
-		console.log(`GameEngine: client ${client_id} left`);
+		console.log(chalk.bgRedBright.bold(`GameEngine: Client id:${client_id} left the game! `))
+		// console.log(`GameEngine: client ${client_id} left`);
 		const msg: GameToClientInfo = {
 			type: 'info',
 			text: `player ${this._game_lobby.display_name_of(client_id)} left the game`,
