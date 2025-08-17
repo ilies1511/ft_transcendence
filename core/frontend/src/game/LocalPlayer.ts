@@ -1,18 +1,13 @@
 import { Game } from './game_new.ts';
 
 import type {
-	ClientToMatchConnect,
 	ClientToGame,
+	ClientToMatchConnect,
 	ClientToMatchLeave,
 } from './game_shared/message_types.ts';
 
 
-import { Effects, GameState }
-	from '../../../game_shared/serialization.ts';
 
-import { BaseScene } from './scenes/base.ts';
-import { LobbyScene } from './scenes/LobbyScene.ts';
-import { GameScene } from './scenes/game_scene.ts';
 
 type KeySet = {
 	case: string;
@@ -68,7 +63,7 @@ export class LocalPlayer {
 			};
 			try {
 				this._socket.send(JSON.stringify(msg));
-			} catch {}
+			} catch { }
 		}
 		this._cleanup();
 	}
@@ -84,8 +79,8 @@ export class LocalPlayer {
 
 	public open_socket() {
 		try {
-const wsBase =
-  (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
+			const wsBase =
+				(location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
 			const route: string = `${wsBase}/game/${this.game_id}`;
 			this._socket = new WebSocket(route)
 
@@ -110,7 +105,7 @@ const wsBase =
 
 	private _cleanup_key_hooks() {
 		if (!this._key_hooks)
-			return ;
+			return;
 		for (const { type, handler } of this._key_hooks) {
 			window.removeEventListener(type, handler);
 		}
@@ -123,12 +118,17 @@ const wsBase =
 			handler:
 				(event: KeyboardEvent) => {
 					if (!this._socket) {
-						return ;
+						return;
 					}
 
 					const match = args.key_set.find(k => k.case === event.code);
 					if (!match) {
-						return ;
+						return;
+					}
+
+					/* Prevent page from scrolling when using arrow keys */
+					if (event.code.startsWith('Arrow')) {
+						event.preventDefault();
 					}
 
 					const msg: ClientToGame = {
@@ -151,13 +151,17 @@ const wsBase =
 		const movement_key_sets: KeySet[] = [];
 		movement_key_sets.push(
 			[
-				{ case: 'ArrowUp', key: 'w' },
-				{ case: 'ArrowDown', key: 's' },
+				/* Inverted vertical mapping for right player:
+					ArrowUp should move paddle up (server key 's'),
+					ArrowDown should move paddle down (server key 'w')
+				*/
+				{ case: 'ArrowUp', key: 's' },
+				{ case: 'ArrowDown', key: 'w' },
 				{ case: 'ArrowLeft', key: 'a' },
 				{ case: 'ArrowRight', key: 'd' },
 			]
 		);
-		const types: KeyType [] = [ 'up', 'down'];
+		const types: KeyType[] = ['up', 'down'];
 		for (const type of types) {
 			for (const movement_key_set of movement_key_sets) {
 				const key_hook_generator_args: KeyHookGeneratorArgs = {
