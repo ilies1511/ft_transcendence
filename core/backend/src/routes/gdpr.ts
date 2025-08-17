@@ -255,7 +255,7 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 					type: 'object',
 					properties: {
 						format: { type: 'string', enum: ['json', 'json.gz', 'zip'], default: 'json' },
-						includeOtherUsers: { type: 'boolean', default: false },
+						// includeOtherUsers: { type: 'boolean', default: false },
 						includeMedia: { type: 'boolean', default: false }
 					}
 				},
@@ -273,14 +273,18 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 		},
 		async (req, reply) => {
 			const userId = (req.user as any).id
-			const { format = 'json', includeOtherUsers = false, includeMedia = false } = req.query as any
+			// const { format = 'json', includeOtherUsers = false, includeMedia = false } = req.query as any
+			const { format = 'json', includeMedia = false } = req.query as any
 
 			if (format !== 'zip' && includeMedia) {
 				return reply.code(400).send({ error: 'includeMedia only with format=zip possible' })
 			}
 
+			// const data = await collectUserExport(fastify, userId, {
+			// 	includeOtherUsers, includeMedia: format === 'zip' && includeMedia
+			// })
 			const data = await collectUserExport(fastify, userId, {
-				includeOtherUsers, includeMedia: format === 'zip' && includeMedia
+				includeMedia: format === 'zip' && includeMedia
 			})
 
 			const ts = new Date().toISOString().replace(/[:.]/g, '_')
@@ -328,14 +332,15 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 
 				console.log('Pre resolvePublicPath fnc: ' + data.profile?.avatar!)
 				console.log('data.profile?.avatar: ' + data.profile?.avatar);
-				const abs2 = extractFilename(data.profile?.avatar);
-				console.log('POST extract FIlename fnc: ' + abs2)
+				const extrFN = extractFilename(data.profile?.avatar);
+				console.log('POST extract FIlename fnc: ' + extrFN)
 				// const abs = resolvePublicPath(data.profile?.avatar!);
-				const abs = resolvePublicPath(abs2!);
+				// const abs = resolvePublicPath(extrFN!);
+				const abs = resolveAvatarFsPath(extrFN);
 				// const abs = resolvePublicPath('default_03.png');
 				console.log('POST resolvePublicPath fnc: ' + abs)
 				console.log('PUBLIC_DIR: ' + { PUBLIC_DIR })
-				console.log({ abs, exists: fs.existsSync(abs) })
+				console.log({ abs, exists: fs.existsSync(abs!) })
 				console.log('BACKEND_ROOT: ' + BACKEND_ROOT);
 				if (includeMedia && abs && fs.existsSync(abs)) {
 					console.log('Avatar there !!!!!');
@@ -357,6 +362,7 @@ export function resolvePublicPath(webPath: string) {
 	const rel = webPath.startsWith('/') ? webPath.slice(1) : webPath
 	console.log('relative: ' + rel);
 	console.log('PUBLIC_DIR: ' + PUBLIC_DIR);
+	// const target = path.join(PUBLIC_DIR, 'avatars', rel)
 	const target = path.join(PUBLIC_DIR, rel)
 	console.log('Joined: ' + target);
 	return target

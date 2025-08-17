@@ -174,7 +174,8 @@ export async function updateMyProfile(
 export type UserExport = {
 	generated_at: string
 	user: any
-	privacy: { includeOtherUsers: boolean, includeMedia: boolean }
+	// privacy: { includeOtherUsers: boolean, includeMedia: boolean }
+	privacy: { includeMedia: boolean }
 	profile: {
 		id: number
 		username: string
@@ -207,10 +208,11 @@ export type UserExport = {
 export async function collectUserExport(
 	fastify: FastifyInstance,
 	userId: number,
-	opts: { includeOtherUsers?: boolean; includeMedia?: boolean } = {}
+	// opts: { includeOtherUsers?: boolean; includeMedia?: boolean } = {}
+	opts: { includeMedia?: boolean } = {}
 ): Promise<UserExport> {
 
-	const includeOtherUsers = !!opts.includeOtherUsers
+	// const includeOtherUsers = !!opts.includeOtherUsers
 	const includeMedia = !!opts.includeMedia
 
 	await fastify.db.exec('SAVEPOINT export_user;')
@@ -245,7 +247,8 @@ export async function collectUserExport(
 		return {
 			generated_at: new Date().toISOString(),
 			user: { id: userId },
-			privacy: { includeOtherUsers, includeMedia },
+			// privacy: { includeOtherUsers, includeMedia },
+			privacy: { includeMedia },
 			profile: profile || null,
 			friendships: { friend_ids: friends.map(f => f.friend_id) },
 			friend_requests: { sent, received },
