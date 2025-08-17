@@ -204,8 +204,8 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 		</div>
 	`
 
-		const wrapper	= root.querySelector('#avatar-wrapper') as HTMLDivElement
-		const avatarInput	= root.querySelector('#avatar-input') as HTMLInputElement
+		const wrapper = root.querySelector('#avatar-wrapper') as HTMLDivElement
+		const avatarInput = root.querySelector('#avatar-input') as HTMLInputElement
 		const avatarPreview	= root.querySelector('#avatar-preview') as HTMLImageElement
 		const avatarMsg	= root.querySelector('#avatar-upload-msg') as HTMLSpanElement
 		const avatarBtn	= root.querySelector('#avatar-upload-btn') as HTMLButtonElement
@@ -246,14 +246,15 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 			fd.append('avatar', avatarFile)
 
 			try {
-				const r = await fetch(`/api/users/${me.id}/avatar`, { method: 'POST', body: fd })
-				if (r.ok) {
-					const { avatar } = await r.json()
-					avatarPreview.src = `${avatar}?t=${Date.now()}`
+				const uploadResponse = await fetch(`/api/users/${me.id}/avatar`, { method: 'POST', body: fd })
+				if (uploadResponse.ok) {
+					const userResponse = await fetch(`/api/users/${me.id}`);
+					const updatedUser = await userResponse.json();
+					avatarPreview.src = updatedUser.avatar + `?t=${Date.now()}`;
 					showMsg(avatarMsg, 'Avatar updated!', true)
 					document.dispatchEvent(new Event('settings-update'))
 				} else {
-					const { error } = await r.json()
+					const { error } = await uploadResponse.json()
 					showMsg(avatarMsg, error || 'Upload failed')
 				}
 			} catch {
