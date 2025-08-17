@@ -50,13 +50,14 @@ export class Tournament {
 	private _completion_callback: (id: number) => undefined;
 
 	private _started: boolean = false;
-
-	private _rounds: Round[] = [{
-		players: [],
-		game_ids: [],
-		active_players: 0,
-		looking_for_game: 0,
-	}];
+	private _all_players: TournamentPlayer[] = [];
+	//private _rounds: Round[] = [{
+	//	players: [],
+	//	game_ids: [],
+	//	active_players: 0,
+	//	looking_for_game: 0,
+	//}];
+	private _rounds: Round[] = [];
 
 	public active_players: number[] = [];
 
@@ -89,7 +90,8 @@ export class Tournament {
 		if (password != this._password) {
 			return ("Invalid Password");
 		}
-		this._rounds[0].players.push({
+		//this._rounds[0].players.push({
+		this._all_players.push({
 			client_id: user_id,
 			display_name: display_name,
 			placement: -1,
@@ -106,10 +108,13 @@ export class Tournament {
 		this.active_players = this.active_players.filter(id => id != client_id);
 		GameServer.remove_client_tournament_participation(client_id, this._id);
 		if (!this._started) {
-			this._rounds[0].players = this._rounds[0].players.filter(
+			//this._rounds[0].players = this._rounds[0].players.filter(
+			this._all_players = this._all_players.filter(
 				player => player.client_id != client_id);
-			this._total_player_count = this._rounds[0].players.length;
-			this._next_placement = this._rounds[0].players.length;
+			//this._total_player_count = this._rounds[0].players.length;
+			this._total_player_count = this._all_players.length;
+			//this._next_placement = this._rounds[0].players.length;
+			this._next_placement = this._all_players.length;
 			return ("");
 		}
 		//todo:
@@ -124,13 +129,12 @@ export class Tournament {
 	public start(client_id: number): ServerError {
 		console.log("Starting tournament..");
 		console.log(this.active_players);
-		this._total_player_count = this._rounds[0].players.length;
-		this._rounds[0].active_players = 0;
-		this._rounds[0].looking_for_game = this._total_player_count;
+		this._total_player_count = this._all_players.length;
 		this._next_placement = this._total_player_count;
 
-		let last_bye_count: 0 | 1 = this._total_player_count % 2;
-		let players_per_round: number = Math.trunc(this._total_player_count / 2);
+		let last_bye_count: 0 | 1 = 0;
+		//let players_per_round: number = Math.trunc(this._total_player_count / 2);
+		let players_per_round: number = this._total_player_count;
 		//console.log(`last_bye_count: ${last_bye_count}`);
 		players_per_round += last_bye_count;
 		//console.log("rounds len: ", this._rounds.length);
@@ -155,12 +159,19 @@ export class Tournament {
 			//console.log(`last_bye_count: ${last_bye_count}`);
 
 		}
-		//console.log("rounds len: ", this._rounds.length);
+		if (this._rounds.length > 0) {
+			this._rounds[0].active_players = 0;
+			this._rounds[0].looking_for_game = this._total_player_count;
+			this._rounds[0].players = this._all_players;
+		}
+		console.log("rounds len: ", this._rounds.length);
+		console.log("total player count tournament: ", this._total_player_count);
 		if (this._total_player_count <= 0) {
 			this._finish();
 		}
 		this._started = true;
-		this._start_round(0)
+		console.log(`starting tournament with ${this._rounds.length} rounds and ${this.active_players.length} players`);
+		this._start_round(0);
 		return ("");
 	}
 
@@ -277,6 +288,23 @@ export class Tournament {
 
 	private _finish() {
 		console.log(`Tournament ${this._id} finished`);
+		if (this._all_players.length == 0) {
+			console.log("Finished an empty tournament");
+			this._completion_callback(this._id);
+			return ;
+		} else if (this._all_players.length == 1) {
+			//todo: tell that single player he won or don't care for tournament of 1 player?
+			this._all_players[0].placement = 1;
+			const msg: Finish = {
+				type: 'finish',
+			};
+			this._all_players[0].ws?.send(JSON.stringify(msg));
+			this._all_players[0].ws?.close();
+			GameServer.remove_client_tournament_participation(this._all_players[0].client_id, this._id);
+			this._completion_callback(this._id);
+			return ;
+		}
+
 		if (this._rounds[this._rounds.length - 1].players[0].placement == -1) {
 			this._rounds[this._rounds.length - 1].players[0].placement = 1;
 		}
@@ -285,29 +313,41 @@ export class Tournament {
 		) {
 			this._rounds[this._rounds.length - 1].players[1].placement = 1;
 		}
-		this._completion_callback(this._id);
 		if (this._total_player_count <= 0) {
 			return ;
 		}
+		//todo: cleanup this old code to work with new logic
 		const last_round: Round | undefined = this._rounds.pop();
+		if (last_round) {
+			this._rounds.push(last_round);
+		}
 		if (!last_round) {
 			console.log("Warning: Finished tournament without rounds!");
-			return ;
+			//return ;
 		}
-		if (last_round.players.length != 1) {
-			console.log("Warning: Finished tournament with != 1 players count:", last_round.players);
-			return ;
+		if (last_round && last_round.players.length > 2) {
+			console.log("Warning: Finished tournament with > 2 players count:", last_round.players);
+			//return ;
+		}
+		if (last_round && last_round.players.length <= 0) {
+			console.log("Warning: Finished tournament with <= 0 players count:", last_round.players);
+			//return ;
 		}
 		const msg: Finish = {
 			type: 'finish',
 		};
-		for (const player of this._rounds[0].players) {
+		//console.log(`first round: ${this._rounds[0]}`);
+		for (const player of this._all_players) {
 			player.ws?.send(JSON.stringify(msg));
+			//if (player.ws) {
+			//	console.log(`sending ${msg}`);
+			//}
 			player.ws?.close();
 		}
 		for (const id of this.active_players) {
 			GameServer.remove_client_tournament_participation(id, this._id);
 		}
+		this._completion_callback(this._id);
 	}
 
 	public rcv_msg(data: string, ws: WebSocket) {
@@ -322,7 +362,7 @@ export class Tournament {
 		console.log("tournament received msg: ", msg);
 		switch (msg.type) {
 			case ('reconnect'):
-				for (const player of this._rounds[0].players) {
+				for (const player of this._all_players) {
 					if (player.client_id == msg.client_id) {
 						if (player.ws) {
 							player.ws.close();
@@ -391,7 +431,7 @@ export class Tournament {
 			type: 'update',
 			state: this._get_state(),
 		};
-		for (const player of this._rounds[0].players) {
+		for (const player of this._all_players) {
 			try {
 				player.ws?.send(JSON.stringify(msg));
 			} catch (e) {

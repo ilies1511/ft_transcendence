@@ -166,10 +166,11 @@ export class Tournament {
 				//todo: render result or smth and cleanup
 				console.log("Tournament: got finish msg");
 				this.finished = true;
-				this.leave();
+				globalThis.game?.leave();
 				if (!globalThis.game) {
 					this.render_tournament_state();
 				}
+				//this.leave(); //not needed anymore
 				break ;
 			case ('update'):
 				this.latest_tournament_state = msg.state;
@@ -251,7 +252,7 @@ export class Tournament {
 		if (!this.latest_tournament_state) {
 			return ;
 		}
-		console.log(this.latest_tournament_state);
+		console.log("rendering tournament state: ", this.latest_tournament_state);
 		const data: Data = {
 			rounds: [],
 			matches: [],
