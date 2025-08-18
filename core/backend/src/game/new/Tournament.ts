@@ -29,6 +29,7 @@ type TournamentPlayer = {
 	client_id: number;
 	display_name: string;
 	placement: number;
+	loose_next: boolean;
 	ws?: WebSocket;
 };
 
@@ -98,6 +99,7 @@ export class Tournament {
 			client_id: user_id,
 			display_name: display_name,
 			placement: -1,
+			loose_next: false,
 		});
 		this.active_players.push(user_id);
 		GameServer.add_client_tournament_participation(user_id, this._id);
@@ -129,14 +131,21 @@ export class Tournament {
 			this._next_placement = this._all_players.length;
 			return ("");
 		}
-		//todo:
 		//case 1; done: player is currently connected to a lobby: should be handled by the lobby
 		//case 1.1; done: game is running
 		//case 1.2; done: game is not running yet
 		//case 2; done: player is currently assiged to a lobby but not connected: tell lobby to treat this like case 1
-		//case 3; todo: the player is currently waiting for the next match
+		//case 3; done; needs testing: the player is currently waiting for the next match
 		if (!parti.lobby_id) {
-			//todo
+			//Since just taking out the player out of the tournament can mess up the pre set up brackets
+			// the player is marked to loose his next game.
+			// Then once he would be put into a new game he gets the next placement and the other auto advances.
+			const player: TournamentPlayer | undefined = this._all_players.find(p => p.client_id == client_id);
+			if (!player) {
+				return ("Not Found");
+			}
+			player.loose_next = true;
+			return ("");
 		} else {
 			//lobby will handle this
 			const lobby: GameLobby | undefined = GameServer.lobbies.get(parti.lobby_id);
@@ -237,13 +246,19 @@ export class Tournament {
 			//	map_name: this._map_name,
 			//	lobby_type: LobbyType.TOURNAMENT,
 			//};
-			game_lobby.join(round.players[player_idx].client_id, round.players[player_idx].display_name, this._password);
-			game_lobby.join(round.players[player_idx + 1].client_id, round.players[player_idx + 1].display_name, this._password);
-			const msg: NewGame = {
-				type: 'new_game',
-			};
-			round.players[player_idx].ws?.send(JSON.stringify(msg));
-			round.players[player_idx + 1].ws?.send(JSON.stringify(msg));
+			if (round.players[player_idx].loose_next) {
+				this._advance_player_to_round(round.players[player_idx + 1], this._round_idx + 1);
+			} else if (round.players[player_idx + 1].loose_next) {
+				this._advance_player_to_round(round.players[player_idx], this._round_idx + 1);
+			} else {
+				game_lobby.join(round.players[player_idx].client_id, round.players[player_idx].display_name, this._password);
+				game_lobby.join(round.players[player_idx + 1].client_id, round.players[player_idx + 1].display_name, this._password);
+				const msg: NewGame = {
+					type: 'new_game',
+				};
+				round.players[player_idx].ws?.send(JSON.stringify(msg));
+				round.players[player_idx + 1].ws?.send(JSON.stringify(msg));
+			}
 			round.looking_for_game -= 2;
 			round.active_players += 2;
 			player_idx += 2;
