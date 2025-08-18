@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { anonymizeUser, deleteUserAndData, getUserData, jsonGZHandler, zipHandler } from '../functions/gdpr.ts';
+import { anonymizeUser, deleteUserAndData, getUserData, jsonGZHandler, jsonHandler, zipHandler } from '../functions/gdpr.ts';
 import { type UpdateProfile, updateMyProfile } from '../functions/gdpr.ts';
 import { collectUserExport } from '../functions/gdpr.ts';
 import { Readable } from 'node:stream';
@@ -291,11 +291,12 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 
 			// BEGIN -- JSON Handler
 			if (format === 'json') {
-				const body = JSON.stringify(data, null, 2)
-				reply
-					.header('Content-Type', 'application/json; charset=utf-8')
-					.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.json"`)
-				return reply.send(body)
+				// const body = JSON.stringify(data, null, 2)
+				// reply
+				// 	.header('Content-Type', 'application/json; charset=utf-8')
+				// 	.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.json"`)
+				// return reply.send(body)
+				return await jsonHandler(fastify,reply, data, userId, ts);
 			}
 
 			if (format === 'json.gz') {

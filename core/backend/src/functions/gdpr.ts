@@ -284,6 +284,20 @@ export async function collectUserExport(
 	}
 }
 
+export async function jsonHandler(
+	fastify: FastifyInstance,
+	reply: FastifyReply,
+	data: UserExport,
+	userId: number,
+	ts: string)
+{
+	const body = JSON.stringify(data, null, 2)
+	reply
+		.header('Content-Type', 'application/json; charset=utf-8')
+		.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.json"`)
+	return reply.send(body)
+}
+
 export async function jsonGZHandler(
 	fastify: FastifyInstance,
 	reply: FastifyReply,
