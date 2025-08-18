@@ -440,13 +440,12 @@ export class Game {
 					break;
 
 				case 'info':
-					const toastBox = showToast({
+					showToast({
 						title: json.text,
-						from: 'Match server',
 					});
-					console.log('toastBox added', toastBox);
-					setTimeout(() =>
-						console.log('still there?', document.body.contains(toastBox)), 50);
+					// console.log('SOME PLAYER LEFT THE GAME');
+					// setTimeout(() =>
+					// 	console.log('still there?', document.body.contains(toastBox)), 50);
 					break;
 
 				default:

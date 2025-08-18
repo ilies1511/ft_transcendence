@@ -3,22 +3,25 @@ import { icons } from './icons';
 
 interface ToastOptions {
 	title: string;
-	from: string;
+	from?: string;
 	onAccept?: ()=>Promise<boolean> | boolean;
 	onReject?: ()=>Promise<boolean> | boolean;
 }
 
 export function showToast(toast: ToastOptions):HTMLDivElement {
 	const box = document.createElement('div');
-	box.className =
-		`fixed top-6 right-6 z-[9999] w-60 rounded-xl border border-[#543b43]
+	box.className = `fixed top-6 right-6 z-[9999] w-60 rounded-xl border border-[#543b43]
 		bg-[#2b171e] shadow-lg text-white text-sm px-6 py-5 space-y-4`;
+
+	const fromLine = toast.from
+		? `<p class="text-[#b99da6]">from <span class="italic">${toast.from}</span></p>`
+		: '';
 
 	box.innerHTML = /*html*/`
 		<div class="flex items-start gap-4">
 			<div class="flex-1">
 				<h3 class="text-base font-semibold">${toast.title}</h3>
-				<p class="text-[#b99da6]">from <span class="italic">${toast.from}</span></p>
+				${fromLine}
 			</div>
 			<button class="t-close text-[#b99da6] hover:text-white text-lg
 			leading-none cursor-pointer">
@@ -49,22 +52,25 @@ export function showToast(toast: ToastOptions):HTMLDivElement {
 	box.querySelector<HTMLButtonElement>('.t-close')!
 		.addEventListener('click', close);
 
-	const fireFriendsChanged = () => document.dispatchEvent(new Event('friends-changed'));
-	box.querySelector<HTMLButtonElement>('.t-accept')!
-		.addEventListener('click', async () => {
+	const btnAccept = box.querySelector<HTMLButtonElement>('.t-accept');
+	if (btnAccept) {
+		btnAccept.addEventListener('click', async () => {
 			const ok = await toast.onAccept?.();
-			if (ok) fireFriendsChanged();
+			if (ok) document.dispatchEvent(new Event('friends-changed'));
 			close();
 		});
+	}
 
-	box.querySelector<HTMLButtonElement>('.t-reject')!
-		.addEventListener('click', async () => {
+	const btnReject = box.querySelector<HTMLButtonElement>('.t-reject');
+	if (btnReject) {
+		btnReject.addEventListener('click', async () => {
 			const ok = await toast.onReject?.();
-			if (ok) fireFriendsChanged();
+			if (ok) document.dispatchEvent(new Event('friends-changed'));
 			close();
 		});
+	}
 
-	setTimeout(close, 5000);
+	setTimeout(close, 50000);
 
 	return box;
 }
