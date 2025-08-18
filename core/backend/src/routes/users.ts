@@ -319,15 +319,17 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 			if (!data.filename.toLowerCase().endsWith('.png')) {
 				return reply.code(400).send({ error: 'Only .png allowed' })
 			}
-			// const filename = "NewUploadedAvatar.png";
-			const filename = "NewUploadedAvatar" + `_${userId}`;
+			const filename = `NewUploadedAvatar_${userId}.png`;
 			const destPath = path.join(
 				__dirname,
 				'../../../frontend/public/',
 				filename
 			)
+			console.log(destPath);
 			await pipeline(data.file, createWriteStream(destPath));
-			const avatar = `../../${filename}`
+			// const avatar = `../../${filename}`
+			const avatar = `/${filename}`;
+			console.log(avatar);
 			const ok = await updateUserAvatar(fastify, userId, avatar)
 			if (!ok) {
 				return reply.code(404).send({ error: 'User not found' })

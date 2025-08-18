@@ -33,7 +33,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 				<h2 class="text-center text-white text-xl font-bold mb-2">Change Avatar</h2>
 
 				<div id="avatar-wrapper" class="relative group h-20 w-20 rounded-full overflow-hidden cursor-pointer">
-					<img id="avatar-preview" src="/avatars/${user.avatar}" alt="avatar"
+					<img id="avatar-preview" src="${user.avatar}" alt="avatar"
 						 class="absolute inset-0 h-full w-full object-cover" />
 					<div class="absolute inset-0 bg-black/0 group-hover:bg-black/50 flex items-center justify-center
 								text-white text-xs font-semibold tracking-wide transition-colors duration-150 select-none">
@@ -204,8 +204,8 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 		</div>
 	`
 
-		const wrapper	= root.querySelector('#avatar-wrapper') as HTMLDivElement
-		const avatarInput	= root.querySelector('#avatar-input') as HTMLInputElement
+		const wrapper = root.querySelector('#avatar-wrapper') as HTMLDivElement
+		const avatarInput = root.querySelector('#avatar-input') as HTMLInputElement
 		const avatarPreview	= root.querySelector('#avatar-preview') as HTMLImageElement
 		const avatarMsg	= root.querySelector('#avatar-upload-msg') as HTMLSpanElement
 		const avatarBtn	= root.querySelector('#avatar-upload-btn') as HTMLButtonElement
@@ -246,14 +246,15 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 			fd.append('avatar', avatarFile)
 
 			try {
-				const r = await fetch(`/api/users/${me.id}/avatar`, { method: 'POST', body: fd })
-				if (r.ok) {
-					const { avatar } = await r.json()
-					avatarPreview.src = `/avatars/${avatar}?t=${Date.now()}`
+				const uploadResponse = await fetch(`/api/users/${me.id}/avatar`, { method: 'POST', body: fd })
+				if (uploadResponse.ok) {
+					const userResponse = await fetch(`/api/users/${me.id}`);
+					const updatedUser = await userResponse.json();
+					avatarPreview.src = updatedUser.avatar + `?t=${Date.now()}`;
 					showMsg(avatarMsg, 'Avatar updated!', true)
 					document.dispatchEvent(new Event('settings-update'))
 				} else {
-					const { error } = await r.json()
+					const { error } = await uploadResponse.json()
 					showMsg(avatarMsg, error || 'Upload failed')
 				}
 			} catch {

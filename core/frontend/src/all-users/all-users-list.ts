@@ -28,7 +28,7 @@ export async function fetchAndFill(myId: number) {
 			// left part
 			li.innerHTML = `
 				<span class="truncate flex items-center gap-2">
-					<img src="/avatars/${u.avatar}" class="h-5 w-5 rounded-full object-cover">
+					<img src="${u.avatar}" class="h-5 w-5 rounded-full object-cover">
 					<a href="/profile/${u.id}" data-route class="hover:underline">${u.username}</a>
 				</span>
 			`;

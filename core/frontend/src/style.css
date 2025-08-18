@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 @import "tailwindcss";
 
@@ -53,5 +52,109 @@ h1{
 	/* font-weight: 400; */
 	/* font-style: normal; */
 	/* font-family: "VT323", monospace; */
+}
+
+#game-container canvas {
+    object-fit: contain;
+    background: #331a21; /* match scene clearColor to avoid flicker */
+}
+
+/* Users list enhancements */
+.users-card-wrapper {
+    background: linear-gradient(145deg,#2b171e 0%,#201014 60%,#1a0d11 100%);
+    border: 1px solid #3a2229;
+}
+
+.users-header {
+    grid-template-columns: 1fr 60px 160px; /* match row widths so header centers over dots */
+    background: #311920;
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: #ca91a3;
+    padding: .9rem 1.25rem;
+}
+
+.users-header .col-user { grid-column: 1; }
+.users-header .col-status { grid-column: 2; text-align:center; }
+.users-header .col-actions { grid-column: 3; text-align:right; }
+
+#users-list {
+    list-style:none;
+    margin:0;
+    padding:0;
+}
+
+.user-row {
+    display:grid;
+    grid-template-columns: 1fr 60px 160px;
+    align-items:center;
+    gap:1rem;
+    padding: .85rem 1.1rem;
+    background: #27141a;
+    transition: background .18s, transform .18s;
+}
+
+.user-row:nth-child(2n){
+    background:#2d171f;
+}
+
+.user-row:hover {
+    background:#361c25;
+}
+
+.user-row:active {
+    transform: translateY(1px);
+}
+
+.status-dot {
+    width:.75rem;
+    height:.75rem;
+    border-radius:50%;
+    display:inline-block;
+    box-shadow:0 0 0 2px #221116, 0 0 4px 0 rgba(0,0,0,.4) inset;
+}
+.status-dot.online {
+    background:radial-gradient(circle at 30% 30%, #4dffb3, #0bda8e);
+}
+.status-dot.offline {
+    background:radial-gradient(circle at 30% 30%, #ff8282, #D22B2B);
+    filter:grayscale(.2);
+}
+
+.user-row button {
+    min-width: 70px;
+    font-size:.70rem;
+    font-weight:600;
+    letter-spacing:.02em;
+    padding:.45rem .65rem;
+    border-radius:.65rem;
+    transition: background .15s, opacity .15s;
+}
+
+.user-row .invite-btn { background:#0f7a46; }
+.user-row .invite-btn:hover { background:#119454; }
+.user-row .accept-btn { background:#1d4ed8; }
+.user-row .accept-btn:hover { background:#255eea; }
+.user-row .block-btn { background:#b11f3e; }
+.user-row .block-btn:hover { background:#d3254a; }
+.user-row .unblock-btn { background:#925d17; }
+.user-row .unblock-btn:hover { background:#b7741f; }
+
+.user-row button[disabled] {
+    opacity:.55;
+    cursor:not-allowed;
+}
+
+/* Extra spacing after user column */
+.user-row > :first-child {
+    padding-right:1.25rem; /* adds space before status dot */
+}
+
+@media (max-width: 639px){
+    .user-row > :first-child {
+        padding-right:.75rem; /* slightly smaller on mobile */
+    }
 }
 
