@@ -201,52 +201,6 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 		}
 	)
 
-
-
-
-	//// Works but no media
-	// 	fastify.get('/api/me/export',
-	// 		{
-	// 			// preHandler: [fastify.auth],
-	// 			schema: {
-	// 				tags: ['gdpr'],
-	// 				querystring: {
-	// 					type: 'object',
-	// 					properties: {
-	// 						format: { type: 'string', enum: ['json', 'json.gz'], default: 'json' },
-	// 						includeOtherUsers: { type: 'boolean', default: false },
-	// 						includeMedia: { type: 'boolean', default: false }
-	// 					}
-	// 				}
-	// 			}
-	// 		},
-	// 		async (req, reply) => {
-	// 			const userId = (req.user as any).id
-	// 			const { format = 'json', includeOtherUsers = false, includeMedia = false } = req.query as any
-
-	// 			const data = await collectUserExport(fastify, userId, { includeOtherUsers, includeMedia })
-	// 			const pretty = JSON.stringify(data, null, 2)
-	// 			const ts = new Date().toISOString().replace(/[:.]/g, '_')
-
-	// 			if (format === 'json') {
-	// 				reply
-	// 					.header('Content-Type', 'application/json; charset=utf-8')
-	// 					.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.json"`)
-	// 				return reply.send(pretty)
-	// 			}
-	// 			reply
-	// 				.header('Content-Type', 'application/gzip')
-	// 				.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.json.gz"`)
-
-	// 			const stream = Readable.from(pretty)
-	// 			await new Promise<void>((resolve, reject) => {
-	// 				stream.pipe(createGzip()).pipe(reply.raw).on('finish', () => resolve()).on('error', reject)
-	// 			})
-	// 			return reply
-	// 		}
-	// 	)
-	// };
-
 	fastify.get('/api/me/export',
 		{
 			preHandler: [fastify.auth],
@@ -274,52 +228,30 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 		},
 		async (req, reply) => {
 			const userId = (req.user as any).id
-			// const { format = 'json', includeOtherUsers = false, includeMedia = false } = req.query as any
 			const { format = 'json', includeMedia = false } = req.query as any
 
 			if (format !== 'zip' && includeMedia) {
 				return reply.code(400).send({ error: 'includeMedia only with format=zip possible' })
 			}
-
-			// const data = await collectUserExport(fastify, userId, {
-			// 	includeOtherUsers, includeMedia: format === 'zip' && includeMedia
-			// })
 			const data = await collectUserExport(fastify, userId, {
 				includeMedia: format === 'zip' && includeMedia
 			})
 			const ts = new Date().toISOString().replace(/[:.]/g, '_')
 
-			// BEGIN -- JSON Handler
+			// BEGIN -- HANDLERS
 			if (format === 'json') {
-				// const body = JSON.stringify(data, null, 2)
-				// reply
-				// 	.header('Content-Type', 'application/json; charset=utf-8')
-				// 	.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.json"`)
-				// return reply.send(body)
-				return await jsonHandler(fastify,reply, data, userId, ts);
+				return jsonHandler(fastify,reply, data, userId, ts);
 			}
-
 			if (format === 'json.gz') {
-				// const body = JSON.stringify(data, null, 2)
-				// reply
-				// 	.header('Content-Type', 'application/gzip')
-				// 	.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.json.gz"`)
-				// const stream = Readable.from(body)
-				// await new Promise<void>((resolve, reject) => {
-				// 	stream.pipe(createGzip()).pipe(reply.raw).on('finish', () => resolve()).on('error', reject)
-				// })
-				// return reply
-				return await jsonGZHandler(fastify,reply, data, userId, ts);
+				return jsonGZHandler(fastify,reply, data, userId, ts);
 			}
-			// END -- JSON Handler
-
-			// BEGIN -- ZIP Handler
 			if (format === 'zip') {
-				return await zipHandler(fastify, reply, data, includeMedia, userId, ts);
+				await zipHandler(fastify, reply, data, includeMedia, userId, ts);
+				return
 			}
-			return;
+			// END -- HANDLERS
+			return reply.code(400).send({ error: 'Unsupported format' })
 		}
-		// END -- ZIP Handler
 	)
 }
 
@@ -367,3 +299,47 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 // 	// return zipHandler(fastify, reply, data, includeMedia, userId, ts);
 // }
 // BEGIN -- Backup Zip Handler
+
+
+	//// Works but no media
+	// 	fastify.get('/api/me/export',
+	// 		{
+	// 			// preHandler: [fastify.auth],
+	// 			schema: {
+	// 				tags: ['gdpr'],
+	// 				querystring: {
+	// 					type: 'object',
+	// 					properties: {
+	// 						format: { type: 'string', enum: ['json', 'json.gz'], default: 'json' },
+	// 						includeOtherUsers: { type: 'boolean', default: false },
+	// 						includeMedia: { type: 'boolean', default: false }
+	// 					}
+	// 				}
+	// 			}
+	// 		},
+	// 		async (req, reply) => {
+	// 			const userId = (req.user as any).id
+	// 			const { format = 'json', includeOtherUsers = false, includeMedia = false } = req.query as any
+
+	// 			const data = await collectUserExport(fastify, userId, { includeOtherUsers, includeMedia })
+	// 			const pretty = JSON.stringify(data, null, 2)
+	// 			const ts = new Date().toISOString().replace(/[:.]/g, '_')
+
+	// 			if (format === 'json') {
+	// 				reply
+	// 					.header('Content-Type', 'application/json; charset=utf-8')
+	// 					.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.json"`)
+	// 				return reply.send(pretty)
+	// 			}
+	// 			reply
+	// 				.header('Content-Type', 'application/gzip')
+	// 				.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.json.gz"`)
+
+	// 			const stream = Readable.from(pretty)
+	// 			await new Promise<void>((resolve, reject) => {
+	// 				stream.pipe(createGzip()).pipe(reply.raw).on('finish', () => resolve()).on('error', reject)
+	// 			})
+	// 			return reply
+	// 		}
+	// 	)
+	// };
