@@ -31,7 +31,8 @@ export interface LobbyDisplaynameResp {
 	error: ServerError,
 	data: {
 		name: string;
-		id: number;
+		global_id: number;
+		ingame_id: number;
 	}[];
 };
 
@@ -155,7 +156,7 @@ export type ServerToClientError = {
 export type GameToClientFinish = {
 	type: 'finish',
 	duration: number,
-	mode: number,
+	mode: LobbyType,
 	placements: {
 		id: number,
 		final_placement: number,

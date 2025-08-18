@@ -213,23 +213,37 @@ export class GameServer {
 		});
 	}
 
+
 	public static add_client_lobby_participation(client_id: number, lobby_id: number) {
 		if (!this.client_participations.get(client_id)) {
 			const parti: ClientParticipation = {
 			};
 			this.client_participations.set(client_id, parti);
+			console.log(`[participation] created new participation record for client ${client_id}`);
 		}
+		const prev = this.client_participations.get(client_id).lobby_id;
 		this.client_participations.get(client_id).lobby_id = lobby_id;
+		console.log(`[participation] lobby set: client=${client_id}, from=${prev ?? "none"} to=${lobby_id}`);
 	}
 
 	public static remove_client_lobby_participation(client_id: number, lobby_id: number) {
+		console.log(`[participation] remove lobby: client=${client_id}, lobby=${lobby_id}`);
 		const parti: ClientParticipation | undefined = this.client_participations.get(client_id)
 		if (!parti) {
+			console.log(`[participation] error: no participation found for client ${client_id}`);
 			return ;
 		}
-		parti.lobby_id = undefined;
-		if (!parti.tournament_id) {
-			this.client_participations.delete(client_id);
+		if (parti.lobby_id == lobby_id) {
+			console.log(`[participation] clearing lobby for client ${client_id} (was ${parti.lobby_id})`);
+			parti.lobby_id = undefined;
+			if (!parti.tournament_id) {
+				this.client_participations.delete(client_id);
+				console.log(`[participation] removed empty participation record for client ${client_id}`);
+			} else {
+				console.log(`[participation] kept participation record for client ${client_id} (tournament_id=${parti.tournament_id})`);
+			}
+		} else {
+			console.log(`[participation] error: tried to remove client ${client_id} from lobby ${lobby_id}, but client was in lobby ${parti.lobby_id}`);
 		}
 	}
 
@@ -238,18 +252,32 @@ export class GameServer {
 			const parti: ClientParticipation = {
 			};
 			this.client_participations.set(client_id, parti);
+			console.log(`[participation] created new participation record for client ${client_id}`);
 		}
-		this.client_participations.get(client_id).tournament_id = tournament_id;
+		const parti: ClientParticipation = this.client_participations.get(client_id) as ClientParticipation;
+		if (parti.tournament_id) {
+			console.log(`[participation] error: setting client ${client_id} tournament, but it was already ${parti.tournament_id}`);
+		}
+		const prev = parti.tournament_id;
+		parti.tournament_id = tournament_id;
+		console.log(`[participation] tournament set: client=${client_id}, from=${prev ?? "none"} to=${tournament_id}`);
 	}
 
 	public static remove_client_tournament_participation(client_id: number, tournament_id: number) {
 		const parti: ClientParticipation | undefined = this.client_participations.get(client_id)
 		if (!parti) {
+			console.log(`[participation] error: no participation found for client ${client_id}`);
 			return ;
 		}
+		if (parti.tournament_id !== undefined && parti.tournament_id !== tournament_id) {
+			console.log(`[participation] warn: removing tournament ${tournament_id} but client had ${parti.tournament_id}`);
+		}
 		parti.tournament_id = undefined;
+		console.log(`[participation] cleared tournament for client ${client_id}`);
 		if (!parti.lobby_id) {
 			this.client_participations.delete(client_id);
+			console.log(`[participation] removed empty participation record for client ${client_id}`);
+		} else {
 		}
 	}
 
@@ -375,7 +403,7 @@ export class GameServer {
 		if (parti.lobby_id) {
 			const lobby: GameLobby | undefined = GameServer.lobbies.get(parti.lobby_id);
 			if (!lobby) {
-				console.log(`Error: client had participation ${parti}, but match ${parti.lobby_id} was not found!`);
+				console.log(`Error: client had lobby participation ${parti}, but match ${parti.lobby_id} was not found!`);
 				return (response);
 			}
 			response.match_id = parti.lobby_id;
@@ -387,7 +415,7 @@ export class GameServer {
 		if (parti.tournament_id) {
 			const tournament: Tournament | undefined = GameServer.tournaments.get(parti.tournament_id);
 			if (!tournament) {
-				console.log(`Error: client had participation ${parti}, but tournament ${parti.tournament_id} was not found!`);
+				console.log(`Error: client had tournament participation ${parti}, but tournament ${parti.tournament_id} was not found!`);
 				return (response);
 			}
 			response.tournament_id = parti.tournament_id;

@@ -78,7 +78,7 @@ export class Game {
 
 	public game_id: number;
 	public password: string = '';
-	public container: HTMLElement;
+	public container: HTMLElement | null;
 
 	public map_name: string;
 
@@ -88,6 +88,9 @@ export class Game {
 
 	public lobby_type: LobbyType;
 
+	public container_selector: string = '#game-container';
+
+	private _display_names: Map<number, string> | undefined = undefined;
 
 	constructor(
 		id: number, //some number that is unique for each client, ideally bound to the account
@@ -117,7 +120,7 @@ export class Game {
 		this.client_id = id;
 
 		this._canvas = this._createCanvas();
-		container.appendChild(this._canvas);
+		//container.appendChild(this._canvas);
 
 		this._engine = new BABYLON.Engine(this._canvas, true);
 
@@ -128,12 +131,47 @@ export class Game {
 		this._engine.runRenderLoop(() => {
 			if (this.finished) return; //prevents ghost loops
 			this._process_msg();
-			this._active_scene.render();
+			if (this._ensure_attached() && !this.finished) {
+				this._active_scene.render();
+			}
 		});
 		this._open_socket = this._open_socket.bind(this);
 		this._open_socket();
 		globalThis.game = this;
 	}
+
+	private _ensure_attached(): boolean {
+		if (this.finished) {
+			return (this._get_container() !== null);
+		}
+		const container: HTMLElement | null = this._get_container();
+
+		if (!container) {
+			return false;
+		}
+	
+		if (this._canvas && !document.contains(this._canvas)) {
+			container.appendChild(this._canvas);
+		}
+		if (!this._canvas || !container.contains(this._canvas)) {
+			this._canvas = this._createCanvas();
+		}
+		return (true);
+	}
+
+	private _get_container(): HTMLElement | null {
+		if (this.container && document.contains(this.container)) {
+			console.log("game container unchanged");
+			return (this.container);
+		}
+		this.container = document.querySelector(this.container_selector);
+		if (!this.container) {
+			console.log("Warning: could not get game container");
+			return (null);
+		}
+		return (this.container);
+	}
+
 
 	public lobby_invite_data(): LobbyInvite {
 		const invite: LobbyInvite = {
@@ -192,11 +230,18 @@ export class Game {
 		this._lobby_scene.cleanup();
 		this._engine.stopRenderLoop();
 		this._engine.dispose();
-		this.container.removeChild(this._canvas);
+		if (this._canvas?.parentElement) {
+			try {
+				this._canvas.parentElement.removeChild(this._canvas);
+			} catch {}
+		}
+		this._engine.stopRenderLoop();
 		if (this._socket) {
 			this._socket.close();
 		}
-		this.container.innerHTML = '';
+		if (this.container) {
+			this.container.innerHTML = '';
+		}
 		if (globalThis.game === this) {
 			globalThis.game = undefined;
 		} else {
@@ -317,12 +362,14 @@ export class Game {
 		const display_names_promise: Promise<LobbyDisplaynameResp> =
 			GameApi.get_display_names(this.game_id);
 		display_names_promise.then(names => {
-			console.log("got names: ", names);
+			console.log("Game: got names: ", names);
 			if (names.error != '') {
 				return ;
 			}
+			this._display_names = new Map<number, string>;
 			for (const player of names.data) {
-				this._game_scene.score_panel.update_display_name(player.id, player.name);
+				this._display_names.set(player.global_id, player.name);
+				this._game_scene.score_panel.update_display_name(player.ingame_id, player.name);
 			}
 		});
 		this._setup_key_hooks();
@@ -458,7 +505,85 @@ export class Game {
 	private _finish_game(msg: GameToClientFinish) {
 		console.log("Game: _finish_game() of game ", this.game_id);
 		this.finished = true;
+	
 		this.disconnect();
+
+		if (this._ensure_attached()) {
+			this.container.replaceChildren();
+	
+			const formatDuration = (sec: number) => {
+				const m = Math.floor(sec / 60);
+				const s = Math.floor(sec % 60);
+				return `${m}:${s.toString().padStart(2, "0")}`;
+			};
+			const modeLabel = (mode: LobbyType) => {
+				switch (mode) {
+					case (LobbyType.MATCHMAKING):
+						return ('Matchmaking Game');
+					case (LobbyType.CUSTOM):
+						return ('Private Lobby');
+					case (LobbyType.TOURNAMENT_GAME):
+						return ('Tournament Game');
+					case (LobbyType.TOURNAMENT):
+					case (LobbyType.INVALID):
+						return ('');
+				}
+			};
+			const nameFor = (id: number) =>
+				this._display_names?.get(id) ?? `Player ${id}`;
+	
+			const header = document.createElement("div");
+			header.className = "game-finish-header";
+			header.innerHTML = `
+				<h2 class="game-finish-title" style="margin:0 0 6px;">Game Over</h2>
+				<div class="game-finish-meta" style="opacity:.8;">
+					<span>${modeLabel(msg.mode)}</span>
+					<span aria-hidden="true"> • </span>
+					<span>Duration: ${formatDuration(msg.duration)}</span>
+				</div>
+			`;
+			this.container.appendChild(header);
+	
+			const table = document.createElement("table");
+			table.className = "game-finish-table";
+			table.style.width = "100%";
+			table.style.borderCollapse = "collapse";
+			table.style.marginTop = "12px";
+	
+			const thead = document.createElement("thead");
+			thead.innerHTML = `
+				<tr>
+					<th style="text-align:left; padding:8px 6px; border-bottom:1px solid #ddd;">#</th>
+					<th style="text-align:left; padding:8px 6px; border-bottom:1px solid #ddd;">Player</th>
+					<th style="text-align:left; padding:8px 6px; border-bottom:1px solid #ddd;">Placement</th>
+				</tr>
+			`;
+			table.appendChild(thead);
+	
+			const tbody = document.createElement("tbody");
+			const placements = [...msg.placements].sort(
+				(a, b) => a.final_placement - b.final_placement
+			);
+	
+			const medal = (place: number) =>
+				place === 1 ? "🥇" : place === 2 ? "🥈" : place === 3 ? "🥉" : "";
+	
+			for (let i = 0; i < placements.length; i++) {
+				const p = placements[i];
+				const tr = document.createElement("tr");
+				tr.innerHTML = `
+					<td style="padding:8px 6px; border-bottom:1px solid #f0f0f0;">${i + 1}</td>
+					<td style="padding:8px 6px; border-bottom:1px solid #f0f0f0;">${nameFor(p.id)}</td>
+					<td style="padding:8px 6px; border-bottom:1px solid #f0f0f0;">${p.final_placement} ${medal(p.final_placement)}</td>
+				`;
+				tbody.appendChild(tr);
+			}
+			table.appendChild(tbody);
+			this.container.appendChild(table);
+		}
+
+		globalThis.tournament?.render_tournament_state();
+
 		console.log(msg);
 	}
 
@@ -482,8 +607,15 @@ export class Game {
 		this._canvas.style.height = "100%";
 		this._canvas.style.display = "block";
 		// Ensure container can size the canvas
-		this.container.style.position = this.container.style.position || 'relative';
-		this.container.appendChild(this._canvas);
+	
+	
+		const container: HTMLElement | null = this._get_container();
+		if (!container) {
+			console.log("Warning: _createCanvas() called without a valid container");
+			return this._canvas;
+		}
+		container.style.position = container.style.position || 'relative';
+		container.appendChild(this._canvas);
 		return this._canvas;
 	}
 

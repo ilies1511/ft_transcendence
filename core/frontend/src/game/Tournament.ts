@@ -20,56 +20,57 @@ import type {
 	BracketMatch,
 	BracketPlayer,
 	TournamentState,
+	TournamentPlayerList,
 } from './game_shared/TournamentMsg.ts';
 
 import { attempt_reconnect } from './frontend_interface_examples/reconnect.ts';
 
 
 export type Data = {
-    rounds: Round[],
-    matches?: Match[],
-    contestants?: {
-        [contestantId: string]: Contestant
-    }
+		rounds: Round[],
+		matches?: Match[],
+		contestants?: {
+				[contestantId: string]: Contestant
+		}
 }
 
 export type Round = {
-    name?: string,
+		name?: string,
 }
 
 export type Match = {
-    roundIndex: number, // 0-based
-    order: number, // 0-based
-    sides?: Side[],
-    matchStatus?: string,
-    isLive?: boolean
-    isBronzeMatch?: string,
+		roundIndex: number, // 0-based
+		order: number, // 0-based
+		sides?: Side[],
+		matchStatus?: string,
+		isLive?: boolean
+		isBronzeMatch?: string,
 }
 
 export type Contestant = {
-    entryStatus?: string,
-    players: Player[]
+		entryStatus?: string,
+		players: Player[]
 }
 
 export type Side = {
-    title?: string,
-    contestantId?: string,
-    scores?: Score[],
-    currentScore?: number | string,
-    isServing?: boolean,
-    isWinner?: boolean
+		title?: string,
+		contestantId?: string,
+		scores?: Score[],
+		currentScore?: number | string,
+		isServing?: boolean,
+		isWinner?: boolean
 }
 
 type Score = {
-    mainScore: number | string,
-    subscore?: number | string,
-    isWinner?: boolean
+		mainScore: number | string,
+		subscore?: number | string,
+		isWinner?: boolean
 }
 
 
 export type Player = {
-    title: string,
-    nationality?: string
+		title: string,
+		nationality?: string
 }
 
 
@@ -79,16 +80,20 @@ export class Tournament {
 	public user_id: number;
 	private _socket: WebSocket;
 	public finished: boolean = false;
-	private _match_container: HTMLElement;
+	private _match_container: HTMLElement | null;
 	public bracket: any | undefined = undefined;
 
 	public latest_tournament_state?: TournamentState;
+	public container_selector: string;
+
+	private _player_list: {display_name: string, id: number}[] = [];
 
 	public constructor(user_id: number,
 		tournament_id: number,
 		password: string,
 		match_container: HTMLElement,
 	) {
+		this.container_selector = '#game-container';
 		this._match_container = match_container;
 		this.user_id = user_id;
 		this.password = password;
@@ -158,6 +163,14 @@ export class Tournament {
 		}
 	}
 
+	private _rcv_player_list(msg: TournamentPlayerList) {
+		this._player_list = msg.data;
+		if (this.latest_tournament_state) {
+			return ;
+		}
+		this._render_player_list();
+	}
+
 	private _rcv_msg(event: MessageEvent<TournamentToClient>): undefined {
 		console.log("got tournament msg: ", event.data);
 		const msg: TournamentToClient = JSON.parse(event.data) as TournamentToClient;
@@ -166,10 +179,13 @@ export class Tournament {
 				//todo: render result or smth and cleanup
 				console.log("Tournament: got finish msg");
 				this.finished = true;
-				this.leave();
+				globalThis.game?.leave();
 				if (!globalThis.game) {
 					this.render_tournament_state();
+				} else {
+					console.log("Error: globalThis.game was defined when wanting to render tournament state after tournament");
 				}
+				this._cleanup();
 				break ;
 			case ('update'):
 				this.latest_tournament_state = msg.state;
@@ -181,6 +197,9 @@ export class Tournament {
 			case ('new_game'):
 				//todo: let user know next game is ready and don't just instantly attempt connecting
 				attempt_reconnect(this._match_container, this.user_id);
+				break ;
+			case ('player_list'):
+				this._rcv_player_list(msg);
 				break ;
 		}
 	}
@@ -220,6 +239,7 @@ export class Tournament {
 	public leave() {
 		this.finished = true;
 		globalThis.game?.leave();
+		this.render_tournament_state();
 		TournamentApi.leave_tournament(this.user_id, this.tournament_id);
 		this._cleanup();
 	}
@@ -247,26 +267,53 @@ export class Tournament {
 		console.log("started tournament");
 	}
 
+	private _get_container(): HTMLElement | null {
+		if (this._match_container && document.contains(this._match_container)) {
+			console.log("game container unchanged");
+			return (this._match_container);
+		}
+		this._match_container = document.querySelector(this.container_selector);
+		if (!this._match_container) {
+			console.log("Warning: could not get game container");
+			return (null);
+		}
+
+		if (this.latest_tournament_state) {
+			try {
+				this.bracket?.uninstall();
+				this.bracket = undefined;
+			} catch {}
+			//this.bracket = createBracket(this.latest_tournament_state, this._match_container);
+		}
+		return (this._match_container);
+	}
+
+
 	public render_tournament_state() {
 		if (!this.latest_tournament_state) {
+			console.log("Warning: No latest_tournament_state when tring to render it, either only 1 player tournament or bug");
 			return ;
 		}
-		console.log(this.latest_tournament_state);
+		this._get_container();
+		if (!this._match_container) {
+			return ;
+		}
+		console.log("rendering tournament state: ", this.latest_tournament_state);
 		const data: Data = {
 			rounds: [],
 			matches: [],
 			contestants: {}
 		};
 
-		for (const my_match of this.latest_tournament_state.rounds[0].matches) {
-			if (my_match.p1) {
-				data.contestants[`${my_match.p1.id}`] = {
-					players: [{title: my_match.p1.name}]
+		for (const my_match_type of this.latest_tournament_state.rounds[0].matches) {
+			if (my_match_type.p1) {
+				data.contestants[`${my_match_type.p1.id}`] = {
+					players: [{title: my_match_type.p1.name}]
 				}
 			}
-			if (my_match.p2) {
-				data.contestants[`${my_match.p2.id}`] = {
-					players: [{title: my_match.p2.name}]
+			if (my_match_type.p2) {
+				data.contestants[`${my_match_type.p2.id}`] = {
+					players: [{title: my_match_type.p2.name}]
 				}
 			}
 		}
@@ -278,9 +325,9 @@ export class Tournament {
 					roundIndex: round.index,
 					order: order, // 0-based
 					sides: [],
-    				//matchStatus?: string,
-    				//isLive?: boolean
-    				//isBronzeMatch?: string,
+						//matchStatus?: string,
+						//isLive?: boolean
+						//isBronzeMatch?: string,
 				};
 				const get_side = (player: BracketPlayer | null): Side | undefined => {
 					if (!player) {
@@ -319,7 +366,36 @@ export class Tournament {
 		if (!this.bracket) {
 			this.bracket = createBracket(data, this._match_container);
 		} else {
-			this.bracket.replaceData(data);
+			this.bracket.uninstall();
+			this.bracket = createBracket(data, this._match_container);
+			//this.bracket.replaceData(data);
 		}
 	}
+
+	private _render_player_list() {
+		const container = this._get_container();
+		if (!container) {
+			return ;
+		}
+		const esc = (s?: string): string => {
+			const d = document.createElement('div');
+			d.textContent = s ?? '';
+			return (d.innerHTML);
+		}
+		const items =
+			this._player_list.map(
+				(p) =>
+					`<li data-id="${p.id}">${esc(p.display_name)}${
+						p.id === this.user_id ? ' (you)' : ''
+						}</li>`
+			).join('');
+	
+		container.innerHTML = `
+			<div id="tournament-player-list">
+				<h3>Tournament Players</h3>
+				<ul>${items}</ul>
+			</div>
+		`;
+	}
 };
+

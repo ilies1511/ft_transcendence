@@ -43,6 +43,8 @@ export default fp(async (app: FastifyInstance) => {
 			'/api/auth/google',
 			'/api/auth/google/callback',
 			'/api/matches',
+			'/api/matches_test',
+			'/api/me',
 			'/documentation',
 			'/terms',
 			'/privacy'

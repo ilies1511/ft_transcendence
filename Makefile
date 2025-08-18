@@ -57,6 +57,8 @@ dev_fabi:
 	&& docker compose up -d dev_fabi \
 	&& docker exec -it dev_fabi bash
 
+
+
 game_shared:
 	rm -rf client/game/shared_game
 	cp -r game_shared client/game

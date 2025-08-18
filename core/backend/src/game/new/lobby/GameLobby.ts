@@ -322,6 +322,22 @@ export class GameLobby {
 	}
 
 
+	// intended to be called from the server but from other classes
+	public leave(client_id: number) {
+		const dummyWs = {
+			close: () => {},
+		} as unknown as WebSocket;
+	
+		const msg = {
+			type: 'leave',
+			client_id,
+			password: this.password,
+		} as ClientToMatchLeave;
+		this._leave_game(dummyWs, msg);
+	}
+
+
+
 	public recv(ws: WebSocket, msg: ClientToMatch) {
 		if (msg.type == 'connect') {
 			this._connect(msg.client_id, ws, msg.password);
@@ -360,7 +376,7 @@ export class GameLobby {
 		};
 		for (const connection of this._connections) {
 			if (connection.ingame_id) {
-				resp.data.push({name: connection.display_name, id: connection.ingame_id});
+				resp.data.push({name: connection.display_name, global_id: connection.id, ingame_id: connection.ingame_id});
 			} else {
 				console.log("Game: Error: Missing ingame_id in client ",
 					"connection in lobby when get_lobby_displaynames was called");
@@ -385,13 +401,8 @@ export class GameLobby {
 	//called if the game did not start yet and a client exceeded the time limit to
 	// establish a connection
 	// (so other players can join)
+	// todo: add info message for other players
 	private _remove_timed_out_client(client_id: number) {
-		if (this.lobby_type == LobbyType.TOURNAMENT_GAME) {
-			// todo: think of how this should behaive for tournament games 
-			//  (since there can not be a different player but also everyone is 
-			// waiting AND there must be a winner=> maybe skip the match and set 
-			// a connected player as winner?)
-		}
 		const i = this._connections.findIndex(c => c.id === client_id);
 		if (i === -1) {
 			return;
@@ -408,6 +419,15 @@ export class GameLobby {
 	private _arm_timeout(connection: GameConnection, ms: number, reason: 'pending'|'reconnect') {
 		this._clear_timeout(connection);
 		connection.timeout = setTimeout(() => {
+			if (this.lobby_type == LobbyType.TOURNAMENT_GAME) {
+				// todo: think of how this should behaive for tournament games 
+				//	(since there can not be a different player but also everyone is 
+				// waiting AND there must be a winner=> maybe skip the match and set 
+				// a connected player as winner?)
+
+				//currently no time outs for tournament games
+				return ;
+			}
 			if (this.engine) {
 				return ;
 			}
