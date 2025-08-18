@@ -212,7 +212,7 @@ export class Tournament {
 		let player_idx = 0;
 		while (player_idx < round.players.length - 1) {
 			const lobby_id: number = await GameServer.create_lobby(
-				LobbyType.TOURNAMENT,
+				LobbyType.TOURNAMENT_GAME,
 				this._map_name,
 				0,
 				this._password,
