@@ -356,7 +356,7 @@ export class Game {
 		const display_names_promise: Promise<LobbyDisplaynameResp> =
 			GameApi.get_display_names(this.game_id);
 		display_names_promise.then(names => {
-			console.log("got names: ", names);
+			console.log("Game: got names: ", names);
 			if (names.error != '') {
 				return ;
 			}

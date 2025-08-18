@@ -51,8 +51,17 @@ export type Finish = {
 	type: 'finish';
 };
 
+export type TournamentPlayerList = {
+	type: 'player_list';
+	data: {
+		display_name: string;
+		id: number;
+	}[];
+};
+
 export type TournamentToClient =
 	Update
 	| Finish
 	| NewGame
+	| TournamentPlayerList
 ;

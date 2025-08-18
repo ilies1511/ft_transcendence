@@ -20,6 +20,7 @@ import type {
 	BracketMatch,
 	BracketPlayer,
 	TournamentState,
+	TournamentPlayerList,
 } from './game_shared/TournamentMsg.ts';
 
 import { attempt_reconnect } from './frontend_interface_examples/reconnect.ts';
@@ -84,6 +85,8 @@ export class Tournament {
 
 	public latest_tournament_state?: TournamentState;
 	public container_selector: string;
+
+	private _player_list: {display_name: string, id: number}[] = [];
 
 	public constructor(user_id: number,
 		tournament_id: number,
@@ -160,6 +163,14 @@ export class Tournament {
 		}
 	}
 
+	private _rcv_player_list(msg: TournamentPlayerList) {
+		this._player_list = msg.data;
+		if (this.latest_tournament_state) {
+			return ;
+		}
+		this._render_player_list();
+	}
+
 	private _rcv_msg(event: MessageEvent<TournamentToClient>): undefined {
 		console.log("got tournament msg: ", event.data);
 		const msg: TournamentToClient = JSON.parse(event.data) as TournamentToClient;
@@ -186,6 +197,9 @@ export class Tournament {
 			case ('new_game'):
 				//todo: let user know next game is ready and don't just instantly attempt connecting
 				attempt_reconnect(this._match_container, this.user_id);
+				break ;
+			case ('player_list'):
+				this._rcv_player_list(msg);
 				break ;
 		}
 	}
@@ -357,4 +371,31 @@ export class Tournament {
 			//this.bracket.replaceData(data);
 		}
 	}
+
+	private _render_player_list() {
+		const container = this._get_container();
+		if (!container) {
+			return ;
+		}
+		const esc = (s?: string): string => {
+			const d = document.createElement('div');
+			d.textContent = s ?? '';
+			return (d.innerHTML);
+		}
+		const items =
+			this._player_list.map(
+				(p) =>
+					`<li data-id="${p.id}">${esc(p.display_name)}${
+						p.id === this.user_id ? ' (you)' : ''
+						}</li>`
+			).join('');
+	
+		container.innerHTML = `
+			<div id="tournament-player-list">
+				<h3>Tournament Players</h3>
+				<ul>${items}</ul>
+			</div>
+		`;
+	}
 };
+

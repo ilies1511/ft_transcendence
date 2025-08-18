@@ -13,6 +13,7 @@ import type {
 	BracketMatch,
 	BracketPlayer,
 	TournamentState,
+	TournamentPlayerList,
 } from '../game_shared/TournamentMsg.ts';
 
 import type {
@@ -103,6 +104,17 @@ export class Tournament {
 		});
 		this.active_players.push(user_id);
 		GameServer.add_client_tournament_participation(user_id, this._id);
+
+		const msg: TournamentPlayerList = {
+			type: 'player_list',
+			data: [],
+		};
+		for (const player of this._all_players) {
+			msg.data.push({display_name: player.display_name, id: player.client_id});
+		}
+		for (const player of this._all_players) {
+			player.ws?.send(JSON.stringify(msg));
+		}
 		return ("");
 	}
 
@@ -407,12 +419,30 @@ export class Tournament {
 		console.log("tournament received msg: ", msg);
 		switch (msg.type) {
 			case ('reconnect'):
+				const player_list: TournamentPlayerList = {
+					type: 'player_list',
+					data: [],
+				};
 				for (const player of this._all_players) {
+					player_list.data.push({display_name: player.display_name, id: player.client_id});
 					if (player.client_id == msg.client_id) {
 						if (player.ws) {
 							player.ws.close();
 						}
 						player.ws = ws;
+					}
+				}
+				if (!this._started) {
+
+					for (const player of this._all_players) {
+						player.ws?.send(JSON.stringify(player_list));
+						if (player.ws && player.ws.readyState == WebSocket.OPEN) {
+							console.log("sending ", player_list);
+						} else if (player.ws) {
+							console.log("tried to send ", player_list, ", but ws was not open");
+						} else { 
+							console.log("tried to send ", player_list, ", but there was no ws");
+						}
 					}
 				}
 				break ;
