@@ -140,9 +140,9 @@ export class Tournament {
 		}
 
 		//todo:
-		//case 1; todo half: player is currently connected to a lobby: should be handled by the lobby
+		//case 1; done: player is currently connected to a lobby: should be handled by the lobby
 		//case 1.1; done: game is running
-		//case 1.2; todo: game is not running yet
+		//case 1.2; done: game is not running yet
 		//case 2; done: player is currently assiged to a lobby but not connected: tell lobby to treat this like case 1
 		//case 3; todo: the player is currently waiting for the next match
 		return ("");

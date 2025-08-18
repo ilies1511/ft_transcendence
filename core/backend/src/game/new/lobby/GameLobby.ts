@@ -251,8 +251,6 @@ export class GameLobby {
 		WebsocketConnection.static_send(ws, error);
 	}
 
-
-
 	// removes player from lobby
 	// also givs the game engine the option to take actions if needed
 	private _leave_game(ws: WebSocket, msg: ClientToMatchLeave) {
@@ -403,17 +401,13 @@ export class GameLobby {
 	//called if the game did not start yet and a client exceeded the time limit to
 	// establish a connection
 	// (so other players can join)
+	// todo: add info message for other players
 	private _remove_timed_out_client(client_id: number) {
-		if (this.lobby_type == LobbyType.TOURNAMENT_GAME) {
-			// todo: think of how this should behaive for tournament games 
-			//	(since there can not be a different player but also everyone is 
-			// waiting AND there must be a winner=> maybe skip the match and set 
-			// a connected player as winner?)
-		}
 		const i = this._connections.findIndex(c => c.id === client_id);
 		if (i === -1) {
 			return;
 		}
+		console.log(`removing client from lobby with type ${this.lobby_type}`);
 		if (this._connections[i].sock?.ws.readyState == WebSocket.OPEN) {
 			console.log(`Warning: Tried to time out client ${client_id}, but client was actually connected!`);
 			this._clear_timeout(this._connections[i]);
@@ -426,6 +420,15 @@ export class GameLobby {
 	private _arm_timeout(connection: GameConnection, ms: number, reason: 'pending'|'reconnect') {
 		this._clear_timeout(connection);
 		connection.timeout = setTimeout(() => {
+			if (this.lobby_type == LobbyType.TOURNAMENT_GAME) {
+				// todo: think of how this should behaive for tournament games 
+				//	(since there can not be a different player but also everyone is 
+				// waiting AND there must be a winner=> maybe skip the match and set 
+				// a connected player as winner?)
+
+				//currently no time outs for tournament games
+				return ;
+			}
 			if (this.engine) {
 				return ;
 			}
