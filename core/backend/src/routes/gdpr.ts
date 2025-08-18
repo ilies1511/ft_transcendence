@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { anonymizeUser, deleteUserAndData, getUserData, zipHandler } from '../functions/gdpr.ts';
+import { anonymizeUser, deleteUserAndData, getUserData, jsonGZHandler, zipHandler } from '../functions/gdpr.ts';
 import { type UpdateProfile, updateMyProfile } from '../functions/gdpr.ts';
 import { collectUserExport } from '../functions/gdpr.ts';
 import { Readable } from 'node:stream';
@@ -287,7 +287,6 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 			const data = await collectUserExport(fastify, userId, {
 				includeMedia: format === 'zip' && includeMedia
 			})
-
 			const ts = new Date().toISOString().replace(/[:.]/g, '_')
 
 			// BEGIN -- JSON Handler
@@ -300,15 +299,16 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 			}
 
 			if (format === 'json.gz') {
-				const body = JSON.stringify(data, null, 2)
-				reply
-					.header('Content-Type', 'application/gzip')
-					.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.json.gz"`)
-				const stream = Readable.from(body)
-				await new Promise<void>((resolve, reject) => {
-					stream.pipe(createGzip()).pipe(reply.raw).on('finish', () => resolve()).on('error', reject)
-				})
-				return reply
+				// const body = JSON.stringify(data, null, 2)
+				// reply
+				// 	.header('Content-Type', 'application/gzip')
+				// 	.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.json.gz"`)
+				// const stream = Readable.from(body)
+				// await new Promise<void>((resolve, reject) => {
+				// 	stream.pipe(createGzip()).pipe(reply.raw).on('finish', () => resolve()).on('error', reject)
+				// })
+				// return reply
+				return await jsonGZHandler(fastify,reply, data, userId, ts);
 			}
 			// END -- JSON Handler
 
@@ -316,6 +316,7 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 			if (format === 'zip') {
 				return await zipHandler(fastify, reply, data, includeMedia, userId, ts);
 			}
+			return;
 		}
 		// END -- ZIP Handler
 	)

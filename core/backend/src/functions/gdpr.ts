@@ -4,6 +4,8 @@ import archiver from 'archiver'
 import path from 'node:path'
 import fs from "fs";
 import { fileURLToPath } from 'node:url'
+import { Readable } from 'node:stream';
+import { createGzip } from 'node:zlib';
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -280,6 +282,24 @@ export async function collectUserExport(
 		try { await fastify.db.exec('RELEASE SAVEPOINT export_user;') } catch { }
 		throw e
 	}
+}
+
+export async function jsonGZHandler(
+	fastify: FastifyInstance,
+	reply: FastifyReply,
+	data: UserExport,
+	userId: number,
+	ts: string)
+{
+	const body = JSON.stringify(data, null, 2)
+	reply
+		.header('Content-Type', 'application/gzip')
+		.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.json.gz"`)
+	const stream = Readable.from(body)
+	await new Promise<void>((resolve, reject) => {
+		stream.pipe(createGzip()).pipe(reply.raw).on('finish', () => resolve()).on('error', reject)
+	})
+	return reply
 }
 
 export async function zipHandler(
