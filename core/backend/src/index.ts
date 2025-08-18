@@ -9,8 +9,8 @@ import * as testRoutes from './routes/test_route.ts'
 async function main() {
 
 	// const fastify = Fastify({ logger: true })
-	const fastify = Fastify({ logger: false })
-	// const fastify = Fastify({logger: { level: 'debug' }})
+	// const fastify = Fastify({ logger: false })
+	const fastify = Fastify({logger: { level: 'debug' }})
 	// const fastify = Fastify({logger: { level: 'info' }})
 
 	await fastify.register(plugins);
