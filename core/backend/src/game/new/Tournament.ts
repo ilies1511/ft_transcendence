@@ -65,6 +65,8 @@ export class Tournament {
 	private _total_player_count: number = 0;
 	private _next_placement: number = 0;
 
+	private _round_idx: number = 0;
+
 
 	constructor(
 		map_name: string,
@@ -127,9 +129,16 @@ export class Tournament {
 			this._next_placement = this._all_players.length;
 			return ("");
 		}
+		//todo:
+		//case 1; done: player is currently connected to a lobby: should be handled by the lobby
+		//case 1.1; done: game is running
+		//case 1.2; done: game is not running yet
+		//case 2; done: player is currently assiged to a lobby but not connected: tell lobby to treat this like case 1
+		//case 3; todo: the player is currently waiting for the next match
 		if (!parti.lobby_id) {
 			//todo
 		} else {
+			//lobby will handle this
 			const lobby: GameLobby | undefined = GameServer.lobbies.get(parti.lobby_id);
 			if (!lobby) {
 				console.log(`Error: client ${client_id} wanted to leave tournament ${this.id} but was in a game(${parti.lobby_id}) that does not exists`);
@@ -138,14 +147,6 @@ export class Tournament {
 			lobby.leave(client_id);
 			return ("");
 		}
-
-		//todo:
-		//case 1; done: player is currently connected to a lobby: should be handled by the lobby
-		//case 1.1; done: game is running
-		//case 1.2; done: game is not running yet
-		//case 2; done: player is currently assiged to a lobby but not connected: tell lobby to treat this like case 1
-		//case 3; todo: the player is currently waiting for the next match
-		return ("");
 	}
 
 	public start(client_id: number): ServerError {
@@ -198,14 +199,15 @@ export class Tournament {
 		}
 		this._started = true;
 		console.log(`starting tournament with ${this._rounds.length} rounds and ${this.active_players.length} players`);
-		this._start_round(0);
+		this._start_round();
 		return ("");
 	}
 
-	private async _start_round(round_idx: number): Promise<void> {
-		console.log(`Tournament: starting round ${round_idx}`);
-		const round: Round = this._rounds[round_idx];
-		if (round_idx == this._rounds.length /* - 1 */) {
+	private async _start_round(): Promise<void> {
+
+		console.log(`Tournament: starting round ${this._round_idx}`);
+		const round: Round = this._rounds[this._round_idx];
+		if (this._round_idx == this._rounds.length /* - 1 */) {
 			//round.players[0].placement = this._next_placement--;
 			if (this._next_placement != 1 /*0*/) {
 				console.log("tournament: next placement in the end != 0: ", this._next_placement);
@@ -247,7 +249,7 @@ export class Tournament {
 			player_idx += 2;
 		}
 		if (player_idx < round.players.length) {
-			this._advance_player_to_round(round.players[player_idx], round_idx + 1);
+			this._advance_player_to_round(round.players[player_idx], this._round_idx + 1);
 			round.looking_for_game--;
 		}
 		console.log(`rounds: ${this._rounds}`);
@@ -256,12 +258,12 @@ export class Tournament {
 			throw ("looking for game in round after starting round ");
 		}
 		this._broadcast_update();
-		if (round_idx == this._rounds.length - 2 && round.game_ids.length == 0) {
-			// fix for tournament with only 1 player:
-			// this was the final round but there is still the 'winner' round
-			// there was never a game created that could call to start the 'winner' round
-			this._start_round(round_idx + 1);
-		}
+		//if (this._round_idx == this._rounds.length - 2 && round.game_ids.length == 0) {
+		//	// fix for tournament with only 1 player:
+		//	// this was the final round but there is still the 'winner' round
+		//	// there was never a game created that could call to start the 'winner' round
+		//	this._start_next_round();
+		//}
 	}
 
 	private _advance_player_to_round(player: TournamentPlayer, round_idx: number) {
@@ -302,7 +304,8 @@ export class Tournament {
 					this._rounds[round_idx].active_players -= 2;
 					this._broadcast_update();
 					if (this._rounds[round_idx].active_players < 2) {
-						this._start_round(round_idx + 1);
+						this._round_idx++;
+						this._start_round();
 					}
 					return ;
 				}
