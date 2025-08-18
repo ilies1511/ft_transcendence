@@ -86,6 +86,8 @@ export class Game {
 
 	public container_selector: string = '#game-container';
 
+	private _display_names: Map<number, string> | undefined = undefined;
+
 	constructor(
 		id: number, //some number that is unique for each client, ideally bound to the account
 		container: HTMLElement,
@@ -124,7 +126,7 @@ export class Game {
 		this._active_scene = this._lobby_scene;
 		this._engine.runRenderLoop(() => {
 			this._process_msg();
-			if (this._ensure_attached()) {
+			if (this._ensure_attached() && !this.finished) {
 				this._active_scene.render();
 			}
 		});
@@ -134,7 +136,11 @@ export class Game {
 	}
 
 	private _ensure_attached(): boolean {
+		if (this.finished) {
+			return (this._get_container() !== null);
+		}
 		const container: HTMLElement | null = this._get_container();
+
 		if (!container) {
 			return false;
 		}
@@ -354,8 +360,10 @@ export class Game {
 			if (names.error != '') {
 				return ;
 			}
+			this._display_names = new Map<number, string>;
 			for (const player of names.data) {
-				this._game_scene.score_panel.update_display_name(player.id, player.name);
+				this._display_names.set(player.global_id, player.name);
+				this._game_scene.score_panel.update_display_name(player.ingame_id, player.name);
 			}
 		});
 		this._setup_key_hooks();
@@ -437,7 +445,85 @@ export class Game {
 	private _finish_game(msg: GameToClientFinish) {
 		console.log("Game: _finish_game() of game ", this.game_id);
 		this.finished = true;
+	
 		this.disconnect();
+
+		if (this._ensure_attached()) {
+			this.container.replaceChildren();
+	
+			const formatDuration = (sec: number) => {
+				const m = Math.floor(sec / 60);
+				const s = Math.floor(sec % 60);
+				return `${m}:${s.toString().padStart(2, "0")}`;
+			};
+			const modeLabel = (mode: LobbyType) => {
+				switch (mode) {
+					case (LobbyType.MATCHMAKING):
+						return ('Matchmaking Game');
+					case (LobbyType.CUSTOM):
+						return ('Private Lobby');
+					case (LobbyType.TOURNAMENT_GAME):
+						return ('Tournament Game');
+					case (LobbyType.TOURNAMENT):
+					case (LobbyType.INVALID):
+						return ('');
+				}
+			};
+			const nameFor = (id: number) =>
+				this._display_names?.get(id) ?? `Player ${id}`;
+	
+			const header = document.createElement("div");
+			header.className = "game-finish-header";
+			header.innerHTML = `
+				<h2 class="game-finish-title" style="margin:0 0 6px;">Game Over</h2>
+				<div class="game-finish-meta" style="opacity:.8;">
+					<span>${modeLabel(msg.mode)}</span>
+					<span aria-hidden="true"> • </span>
+					<span>Duration: ${formatDuration(msg.duration)}</span>
+				</div>
+			`;
+			this.container.appendChild(header);
+	
+			const table = document.createElement("table");
+			table.className = "game-finish-table";
+			table.style.width = "100%";
+			table.style.borderCollapse = "collapse";
+			table.style.marginTop = "12px";
+	
+			const thead = document.createElement("thead");
+			thead.innerHTML = `
+				<tr>
+					<th style="text-align:left; padding:8px 6px; border-bottom:1px solid #ddd;">#</th>
+					<th style="text-align:left; padding:8px 6px; border-bottom:1px solid #ddd;">Player</th>
+					<th style="text-align:left; padding:8px 6px; border-bottom:1px solid #ddd;">Placement</th>
+				</tr>
+			`;
+			table.appendChild(thead);
+	
+			const tbody = document.createElement("tbody");
+			const placements = [...msg.placements].sort(
+				(a, b) => a.final_placement - b.final_placement
+			);
+	
+			const medal = (place: number) =>
+				place === 1 ? "🥇" : place === 2 ? "🥈" : place === 3 ? "🥉" : "";
+	
+			for (let i = 0; i < placements.length; i++) {
+				const p = placements[i];
+				const tr = document.createElement("tr");
+				tr.innerHTML = `
+					<td style="padding:8px 6px; border-bottom:1px solid #f0f0f0;">${i + 1}</td>
+					<td style="padding:8px 6px; border-bottom:1px solid #f0f0f0;">${nameFor(p.id)}</td>
+					<td style="padding:8px 6px; border-bottom:1px solid #f0f0f0;">${p.final_placement} ${medal(p.final_placement)}</td>
+				`;
+				tbody.appendChild(tr);
+			}
+			table.appendChild(tbody);
+			this.container.appendChild(table);
+		}
+
+		globalThis.tournament?.render_tournament_state();
+
 		console.log(msg);
 	}
 

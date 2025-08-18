@@ -376,7 +376,7 @@ export class GameLobby {
 		};
 		for (const connection of this._connections) {
 			if (connection.ingame_id) {
-				resp.data.push({name: connection.display_name, id: connection.ingame_id});
+				resp.data.push({name: connection.display_name, global_id: connection.id, ingame_id: connection.ingame_id});
 			} else {
 				console.log("Game: Error: Missing ingame_id in client ",
 					"connection in lobby when get_lobby_displaynames was called");
@@ -407,7 +407,6 @@ export class GameLobby {
 		if (i === -1) {
 			return;
 		}
-		console.log(`removing client from lobby with type ${this.lobby_type}`);
 		if (this._connections[i].sock?.ws.readyState == WebSocket.OPEN) {
 			console.log(`Warning: Tried to time out client ${client_id}, but client was actually connected!`);
 			this._clear_timeout(this._connections[i]);
