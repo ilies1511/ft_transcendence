@@ -192,11 +192,27 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 					Anonymize Data
 				</button>
 
+				<div class="space-y-3">
+						<label class="block">
+								<span class="text-sm font-medium text-[#b99da6]">Export Format</span>
+								<select id="export-format"
+										class="mt-1 w-full h-10 rounded-xl bg-[#48232f] px-3 text-white focus:outline-none">
+										<option value="json">JSON (.json)</option>
+										<option value="json.gz">Compressed JSON (.json.gz)</option>
+										<option value="zip">ZIP (.zip)</option>
+								</select>
+						</label>
+						<label class="flex items-center space-x-2 text-[#b99da6] text-sm">
+								<input id="export-include-media" type="checkbox" class="h-4 w-4" disabled />
+								<span>Include media (only for ZIP)</span>
+						</label>
+				</div>
+
 				<button id="export-data-btn"
 					class="w-full h-10 rounded-xl bg-gray-600 text-white font-bold tracking-wide
 						hover:bg-gray-500 active:bg-gray-400"
-					type="button" disabled>
-					Export Data (coming soon)
+					type="button">
+					Export Data
 				</button>
 
 				<p id="account-msg" class="form-msg"></p>
@@ -552,6 +568,8 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 		const anonymizeBtn = root.querySelector('#anonymize-data-btn') as HTMLButtonElement
 		const exportBtn = root.querySelector('#export-data-btn') as HTMLButtonElement
 		const accountMsg = root.querySelector('#account-msg') as HTMLParagraphElement
+		const formatSelect = root.querySelector('#export-format') as HTMLSelectElement
+		const includeMediaCheckbox = root.querySelector('#export-include-media') as HTMLInputElement
 
 		anonymizeBtn.onclick = async () => {
 			if (!confirm('Anonymize your personal data? This action cannot be undone.')) return
@@ -602,7 +620,53 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 		}
 	}
 
-		// exportBtn does nothing for now until Ilies has implemented the export API
+        const syncMediaCheckbox = () => {
+            if (formatSelect.value === 'zip') {
+                includeMediaCheckbox.disabled = false
+            } else {
+                includeMediaCheckbox.checked = false
+                includeMediaCheckbox.disabled = true
+            }
+        }
+        formatSelect.onchange = syncMediaCheckbox
+        syncMediaCheckbox()
+
+        exportBtn.onclick = async () => {
+            showMsg(accountMsg, 'Preparing export...')
+            const format = formatSelect.value
+            const includeMedia = includeMediaCheckbox.checked
+            let url = `/api/me/export?format=${encodeURIComponent(format)}`
+            if (format === 'zip' && includeMedia) {
+                url += '&includeMedia=true'
+            }
+            try {
+                const r = await fetch(url, { credentials: 'include' })
+                if (!r.ok) {
+                    const { error } = await r.json().catch(() => ({ error: 'Export failed' }))
+                    showMsg(accountMsg, error || 'Export failed')
+                    return
+                }
+                const blob = await r.blob()
+                let filename = 'export.' + (format === 'json' ? 'json' : format === 'json.gz' ? 'json.gz' : 'zip')
+                const cd = r.headers.get('Content-Disposition')
+                if (cd) {
+                    const m = cd.match(/filename="?([^"]+)"?/)
+                    if (m) filename = m[1]
+                }
+                const a = document.createElement('a')
+                a.href = URL.createObjectURL(blob)
+                a.download = filename
+                document.body.appendChild(a)
+                a.click()
+                setTimeout(() => {
+                    URL.revokeObjectURL(a.href)
+                    a.remove()
+                }, 0)
+                showMsg(accountMsg, 'Export downloaded.', true)
+            } catch {
+                showMsg(accountMsg, 'Network error')
+            }
+        }
 	}
 }
 
