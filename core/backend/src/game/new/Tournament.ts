@@ -150,6 +150,11 @@ export class Tournament {
 
 	public start(client_id: number): ServerError {
 		console.log("Starting tournament..");
+		const parti: ClientParticipation | undefined = GameServer.client_participations.get(client_id);
+		if (!parti || parti.tournament_id != this._id) {
+			console.log(`Warning: client ${client_id} tried to start tournament he had no participation of (tournament ${this._id}`);
+			return ('Not Found');
+		}
 		console.log(this.active_players);
 		this._total_player_count = this._all_players.length;
 		this._next_placement = this._total_player_count;
