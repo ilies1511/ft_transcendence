@@ -74,7 +74,7 @@ export class Game {
 
 	public game_id: number;
 	public password: string = '';
-	public container: HTMLElement;
+	public container: HTMLElement | null;
 
 	public map_name: string;
 
@@ -84,6 +84,7 @@ export class Game {
 
 	public lobby_type: LobbyType;
 
+	public container_selector: string = '#game-container';
 
 	constructor(
 		id: number, //some number that is unique for each client, ideally bound to the account
@@ -113,7 +114,7 @@ export class Game {
 		this.client_id = id;
 
 		this._canvas = this._createCanvas();
-		container.appendChild(this._canvas);
+		//container.appendChild(this._canvas);
 
 		this._engine = new BABYLON.Engine(this._canvas, true);
 
@@ -123,12 +124,43 @@ export class Game {
 		this._active_scene = this._lobby_scene;
 		this._engine.runRenderLoop(() => {
 			this._process_msg();
-			this._active_scene.render();
+			if (this._ensure_attached()) {
+				this._active_scene.render();
+			}
 		});
 		this._open_socket = this._open_socket.bind(this);
 		this._open_socket();
 		globalThis.game = this;
 	}
+
+	private _ensure_attached(): boolean {
+		const container: HTMLElement | null = this._get_container();
+		if (!container) {
+			return false;
+		}
+	
+		if (this._canvas && !document.contains(this._canvas)) {
+			container.appendChild(this._canvas);
+		}
+		if (!this._canvas || !container.contains(this._canvas)) {
+			this._canvas = this._createCanvas();
+		}
+		return (true);
+	}
+
+	private _get_container(): HTMLElement | null {
+		if (this.container && document.contains(this.container)) {
+			console.log("game container unchanged");
+			return (this.container);
+		}
+		this.container = document.querySelector(this.container_selector);
+		if (!this.container) {
+			console.log("Warning: could not get game container");
+			return (null);
+		}
+		return (this.container);
+	}
+
 
 	public lobby_invite_data(): LobbyInvite {
 		const invite: LobbyInvite = {
@@ -186,12 +218,18 @@ export class Game {
 		this._game_scene.cleanup();
 		this._lobby_scene.cleanup();
 		this._engine.dispose();
-		this.container.removeChild(this._canvas);
+		if (this._canvas?.parentElement) {
+			try {
+				this._canvas.parentElement.removeChild(this._canvas);
+			} catch {}
+		}
 		this._engine.stopRenderLoop();
 		if (this._socket) {
 			this._socket.close();
 		}
-		this.container.innerHTML = '';
+		if (this.container) {
+			this.container.innerHTML = '';
+		}
 		if (globalThis.game === this) {
 			globalThis.game = undefined;
 		} else {
@@ -418,8 +456,15 @@ export class Game {
 		this._canvas.style.height = "100%";
 		this._canvas.style.display = "block";
 		// Ensure container can size the canvas
-		this.container.style.position = this.container.style.position || 'relative';
-		this.container.appendChild(this._canvas);
+	
+	
+		const container: HTMLElement | null = this._get_container();
+		if (!container) {
+			console.log("Warning: _createCanvas() called without a valid container");
+			return this._canvas;
+		}
+		container.style.position = container.style.position || 'relative';
+		container.appendChild(this._canvas);
 		return this._canvas;
 	}
 
