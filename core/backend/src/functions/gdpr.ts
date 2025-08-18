@@ -289,8 +289,7 @@ export async function jsonHandler(
 	reply: FastifyReply,
 	data: UserExport,
 	userId: number,
-	ts: string)
-{
+	ts: string) {
 	const body = JSON.stringify(data, null, 2)
 	reply
 		.header('Content-Type', 'application/json; charset=utf-8')
@@ -303,8 +302,7 @@ export async function jsonGZHandler(
 	reply: FastifyReply,
 	data: UserExport,
 	userId: number,
-	ts: string)
-{
+	ts: string) {
 	const body = JSON.stringify(data, null, 2)
 	reply
 		.header('Content-Type', 'application/gzip')
@@ -322,8 +320,7 @@ export async function zipHandler(
 	data: UserExport,
 	includeMedia: boolean,
 	userId: number,
-	ts: string)
-{
+	ts: string) {
 	reply
 		.type('application/zip')
 		.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.zip"`)
@@ -341,24 +338,46 @@ export async function zipHandler(
 	// const abs = resolveAvatarFsPath(data.profile?.avatar)
 	// const abs = '/app/core/frontend/public/default_03.png' // Im Container
 
-	console.log('Pre resolvePublicPath fnc: ' + data.profile?.avatar!)
-	console.log('data.profile?.avatar: ' + data.profile?.avatar);
-	const extrFN = extractFilename(data.profile?.avatar);
-	console.log('POST extract FIlename fnc: ' + extrFN)
-	// const abs = resolvePublicPath(data.profile?.avatar!);
-	// const abs = resolvePublicPath(extrFN!);
-	const abs = resolveAvatarFsPath(extrFN);
-	// const abs = resolvePublicPath('default_03.png');
-	console.log('POST resolvePublicPath fnc: ' + abs)
-	console.log('PUBLIC_DIR: ' + { PUBLIC_DIR })
-	console.log({ abs, exists: fs.existsSync(abs!) })
-	console.log('BACKEND_ROOT: ' + BACKEND_ROOT);
-	if (includeMedia && abs && fs.existsSync(abs)) {
-		console.log('Avatar there !!!!!');
-		archive.file(abs, { name: 'avatar.png' })
-	} else if (includeMedia) {
-		console.log('Avatar MISSSSSING !!!!!');
-		archive.append(`Avatar not found at ${abs ?? 'n/a'}\n`, { name: 'avatar_missing.txt' })
+	// console.log('Pre resolvePublicPath fnc: ' + data.profile?.avatar!)
+	// console.log('data.profile?.avatar: ' + data.profile?.avatar);
+	// const extrFN = extractFilename(data.profile?.avatar);
+	// console.log('POST extract FIlename fnc: ' + extrFN)
+	// // const abs = resolvePublicPath(data.profile?.avatar!);
+	// // const abs = resolvePublicPath(extrFN!);
+	// const abs = resolveAvatarFsPath(extrFN);
+	// // const abs = resolvePublicPath('default_03.png');
+	// console.log('POST resolvePublicPath fnc: ' + abs)
+	// console.log('PUBLIC_DIR: ' + { PUBLIC_DIR })
+	// console.log({ abs, exists: fs.existsSync(abs!) })
+	// console.log('BACKEND_ROOT: ' + BACKEND_ROOT);
+	// if (includeMedia && abs && fs.existsSync(abs)) {
+	// 	console.log('Avatar there !!!!!');
+	// 	archive.file(abs, { name: 'avatar.png' })
+	// } else if (includeMedia) {
+	// 	console.log('Avatar MISSSSSING !!!!!');
+	// 	archive.append(`Avatar not found at ${abs ?? 'n/a'}\n`, { name: 'avatar_missing.txt' })
+	// }
+	if (includeMedia) {
+		const name = extractFilename(data.profile?.avatar)
+		console.log('Raw FileName: ' + name);
+		if (name) {
+			const abs = resolveAvatarFsPath(name)
+			console.log('Extr. FileName: ' + abs);
+			const exists = !!abs && fs.existsSync(abs)
+			// fastify.log.info({ abs, exists }, 'avatar path')
+			console.log({ abs, exists }, 'avatar path');
+			if (exists && abs) {
+				console.log('File there !!!!!');
+				archive.file(abs, { name: 'avatar.png' })
+			} else {
+				console.log('File MISSING !!!!!');
+				archive.append(`Avatar not found at ${abs ?? 'n/a'}\n`, { name: 'avatar_missing.txt' })
+			}
+		}
+		else {
+			console.log('File unavailable !!!!!');
+			archive.append('Avatar filename unavailable\n', { name: 'avatar_missing.txt' })
+		}
 	}
 	await archive.finalize()
 }
