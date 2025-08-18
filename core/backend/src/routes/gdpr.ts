@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { anonymizeUser, deleteUserAndData, getUserData } from '../functions/gdpr.ts';
+import { anonymizeUser, deleteUserAndData, getUserData, zipHandler } from '../functions/gdpr.ts';
 import { type UpdateProfile, updateMyProfile } from '../functions/gdpr.ts';
 import { collectUserExport } from '../functions/gdpr.ts';
 import { Readable } from 'node:stream';
@@ -8,6 +8,7 @@ import archiver from 'archiver'
 import path from 'node:path'
 import fs from "fs";
 import { fileURLToPath } from 'node:url'
+import { extractFilename, resolveAvatarFsPath, resolvePublicPath } from '../functions/gdpr.ts';
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -313,97 +314,54 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 
 			// BEGIN -- ZIP Handler
 			if (format === 'zip') {
-				reply
-					.type('application/zip')
-					.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.zip"`)
-				reply.hijack()
-
-				const archive = archiver('zip', { zlib: { level: 9 } })
-				archive.on('error', (err) => {
-					fastify.log.error({ err }, 'zip stream error')
-					if (!reply.raw.destroyed) reply.raw.destroy(err)
-				})
-
-				archive.pipe(reply.raw)
-				archive.append(JSON.stringify(data, null, 2), { name: 'data.json' })
-
-				// const abs = resolveAvatarFsPath(data.profile?.avatar)
-				// const abs = '/app/core/frontend/public/default_03.png' // Im Container
-
-				console.log('Pre resolvePublicPath fnc: ' + data.profile?.avatar!)
-				console.log('data.profile?.avatar: ' + data.profile?.avatar);
-				const extrFN = extractFilename(data.profile?.avatar);
-				console.log('POST extract FIlename fnc: ' + extrFN)
-				// const abs = resolvePublicPath(data.profile?.avatar!);
-				// const abs = resolvePublicPath(extrFN!);
-				const abs = resolveAvatarFsPath(extrFN);
-				// const abs = resolvePublicPath('default_03.png');
-				console.log('POST resolvePublicPath fnc: ' + abs)
-				console.log('PUBLIC_DIR: ' + { PUBLIC_DIR })
-				console.log({ abs, exists: fs.existsSync(abs!) })
-				console.log('BACKEND_ROOT: ' + BACKEND_ROOT);
-				if (includeMedia && abs && fs.existsSync(abs)) {
-					console.log('Avatar there !!!!!');
-					archive.file(abs, { name: 'avatar.png' })
-				} else if (includeMedia) {
-					console.log('Avatar MISSSSSING !!!!!');
-					archive.append(`Avatar not found at ${abs ?? 'n/a'}\n`, { name: 'avatar_missing.txt' })
-				}
-
-				await archive.finalize()
-				return
+				return await zipHandler(fastify, reply, data, includeMedia, userId, ts);
 			}
 		}
 		// END -- ZIP Handler
 	)
 }
 
-export function resolvePublicPath(webPath: string) {
-	const rel = webPath.startsWith('/') ? webPath.slice(1) : webPath
-	console.log('relative: ' + rel);
-	console.log('PUBLIC_DIR: ' + PUBLIC_DIR);
-	// const target = path.join(PUBLIC_DIR, 'avatars', rel)
-	const target = path.join(PUBLIC_DIR, rel)
-	console.log('Joined: ' + target);
-	return target
-}
+// BEGIN -- Backup Zip Handler
+// if (format === 'zip') {
+// 	reply
+// 		.type('application/zip')
+// 		.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.zip"`)
+// 	reply.hijack()
 
-export function resolveAvatarFsPath(filename?: string | null): string | null {
-	if (!filename) {
-		return null
-	}
-	const base = path.basename(filename)
-	console.log('In resolveAvatarFsPath: \n');
-	console.log('base: ' + base);
-	const target = path.resolve(PUBLIC_DIR, AVATAR_SUBDIR, base)
-	console.log('target: ' + target);
+// 	const archive = archiver('zip', { zlib: { level: 9 } })
+// 	archive.on('error', (err) => {
+// 		fastify.log.error({ err }, 'zip stream error')
+// 		if (!reply.raw.destroyed) reply.raw.destroy(err)
+// 	})
 
-	const root = path.resolve(PUBLIC_DIR, AVATAR_SUBDIR) + path.sep
-	console.log('root: ' + root);
-	if (!target.startsWith(root)) {
-		throw new Error('Invalid avatar path')
-	}
-	return target
-}
+// 	archive.pipe(reply.raw)
+// 	archive.append(JSON.stringify(data, null, 2), { name: 'data.json' })
 
+// 	// const abs = resolveAvatarFsPath(data.profile?.avatar)
+// 	// const abs = '/app/core/frontend/public/default_03.png' // Im Container
 
-export function extractFilename(input?: string | null): string | null {
-	if (!input) return null;
+// 	console.log('Pre resolvePublicPath fnc: ' + data.profile?.avatar!)
+// 	console.log('data.profile?.avatar: ' + data.profile?.avatar);
+// 	const extrFN = extractFilename(data.profile?.avatar);
+// 	console.log('POST extract FIlename fnc: ' + extrFN)
+// 	// const abs = resolvePublicPath(data.profile?.avatar!);
+// 	// const abs = resolvePublicPath(extrFN!);
+// 	const abs = resolveAvatarFsPath(extrFN);
+// 	// const abs = resolvePublicPath('default_03.png');
+// 	console.log('POST resolvePublicPath fnc: ' + abs)
+// 	console.log('PUBLIC_DIR: ' + { PUBLIC_DIR })
+// 	console.log({ abs, exists: fs.existsSync(abs!) })
+// 	console.log('BACKEND_ROOT: ' + BACKEND_ROOT);
+// 	if (includeMedia && abs && fs.existsSync(abs)) {
+// 		console.log('Avatar there !!!!!');
+// 		archive.file(abs, { name: 'avatar.png' })
+// 	} else if (includeMedia) {
+// 		console.log('Avatar MISSSSSING !!!!!');
+// 		archive.append(`Avatar not found at ${abs ?? 'n/a'}\n`, { name: 'avatar_missing.txt' })
+// 	}
 
-	let p = input;
-
-	if (/^[a-z]+:\/\//i.test(p)) {
-		try { p = new URL(p).pathname } catch { }
-	}
-
-	p = p.replace(/\\/g, '/');
-	p = p.split('?')[0].split('#')[0];
-
-	const j = p.lastIndexOf('/public/');
-	if (j !== -1) p = p.slice(j + '/public/'.length);
-
-	const filename = p.substring(p.lastIndexOf('/') + 1);
-
-	const ok = /^[A-Za-z0-9._-]+$/.test(filename);
-	return ok ? filename : null;
-}
+// 	await archive.finalize()
+// 	return
+// 	// return zipHandler(fastify, reply, data, includeMedia, userId, ts);
+// }
+// BEGIN -- Backup Zip Handler
