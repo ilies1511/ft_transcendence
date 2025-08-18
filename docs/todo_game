@@ -165,8 +165,8 @@ websocket endpoints:
 [ ]: send tournament upates to frontend
 
 [~]: render tournament state
-[ ]: render game result
-[ ]: render tournament result
+[x]: render game result
+[~]: render tournament result
 
 [x]: backend: game timer
 [x]: serilize game timer
