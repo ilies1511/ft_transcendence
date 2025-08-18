@@ -120,7 +120,7 @@ export async function findUserWithFriends(
 	// 1) Basis-User
 	const row = await fastify.db.get<UserRow>(
 		`SELECT id, username, nickname, email, live, avatar, created_at
-		 FROM users WHERE id = ?`,
+		FROM users WHERE id = ?`,
 		id
 	)
 	if (!row) return null

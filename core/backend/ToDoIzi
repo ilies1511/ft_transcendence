@@ -75,6 +75,8 @@ users to exercise their data privacy rights. Key features and objectives include
 [x]	Provide tools for users to manage their local data, including the ability to
 	view, edit, or delete their personal information stored within the system.
 
+[]	Add EndPoint to Download every stored data as Json
+
 []	Offer a streamlined process for users to request the permanent deletion of
 	their accounts, including all associated data, ensuring compliance with data
 	protection regulations.

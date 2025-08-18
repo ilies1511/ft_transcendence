@@ -1,5 +1,21 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { type UpdateProfile, anonymizeUser, deleteUserAndData, getUserData, updateMyProfile } from '../functions/gdpr.ts';
+import { type UpdateProfile, anonymizeUser, deleteUserAndData, getUserData, jsonGZHandler, jsonHandler, zipHandler, updateMyProfile } from '../functions/gdpr.ts';
+import { collectUserExport } from '../functions/gdpr.ts';
+import { Readable } from 'node:stream';
+import { createGzip } from 'node:zlib';
+import archiver from 'archiver'
+import path from 'node:path'
+import fs from "fs";
+import { fileURLToPath } from 'node:url'
+import { extractFilename, resolveAvatarFsPath, resolvePublicPath } from '../functions/gdpr.ts';
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+const BACKEND_ROOT = path.resolve(__dirname, '../..')
+export const PUBLIC_DIR = process.env.PUBLIC_DIR ?? path.resolve(BACKEND_ROOT, '../frontend/public')
+export const AVATAR_SUBDIR = process.env.AVATAR_SUBDIR ?? 'avatars'
+
 
 export const gdprRoutes: FastifyPluginAsync = async fastify => {
 
@@ -44,7 +60,7 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 
 	fastify.delete('/api/me',
 		{
-			// preHandler: [fastify.auth],
+			preHandler: [fastify.auth],
 			schema: {
 				tags: ['gdpr'],
 				response: {
@@ -58,13 +74,14 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 			const userId = (req.user as any).id
 			try {
 				// await deleteUserAndData(fastify, userId)
-				reply.clearCookie('token', {
-						path: '/',
-						httpOnly: true,
-						sameSite: 'lax',
-						secure: false
-					})
 				await deleteUserAndData(fastify, userId);
+				reply.clearCookie('token', {
+					path: '/',
+					httpOnly: true,
+					sameSite: 'lax',
+					secure: false
+				})
+				// await deleteUserAndData(fastify, userId);
 				return reply.send({ message: 'Your account and all associated data have been permanently deleted.' })
 			} catch (error: any) {
 				if (error?.statusCode) {
@@ -84,6 +101,32 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 	}>(
 		'/api/me',
 		{
+			// schema: {
+			// 	tags: ['gdpr'],
+			// 	body: {
+			// 		type: 'object',
+			// 		minProperties: 1,
+			// 		properties: {
+			// 			username: { type: 'string', minLength: 1 },
+			// 			nickname: { type: 'string', minLength: 1 },
+			// 			email: { type: 'string', format: 'email' },
+			// 			password: { type: 'string', minLength: 8 },
+			// 			currentPassword: { type: 'string', minLength: 8 }
+
+			// 		},
+			// 		allOf: [
+			// 			{
+			// 				if: { required: ['password'] },
+			// 				then: { required: ['currentPassword'] }
+			// 			}
+			// 		]
+			// 	},
+			// 	response: {
+			// 		200: { type: 'object', properties: { ok: { type: 'boolean' } } },
+			// 		400: { type: 'object', properties: { error: { type: 'string' } } }
+			// 	}
+			// }
+			preHandler: [fastify.auth],
 			schema: {
 				tags: ['gdpr'],
 				body: {
@@ -93,29 +136,211 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 						username: { type: 'string', minLength: 1 },
 						nickname: { type: 'string', minLength: 1 },
 						email: { type: 'string', format: 'email' },
-						password: { type: 'string', minLength: 8 }
-					}
+						password: { type: 'string', minLength: 1 },
+						currentPassword: { type: 'string', minLength: 1 }
+					},
+					allOf: [
+						{ if: { required: ['password'] }, then: { required: ['currentPassword'] } },
+						{ if: { required: ['currentPassword'] }, then: { required: ['password'] } }
+					]
 				},
 				response: {
 					200: { type: 'object', properties: { ok: { type: 'boolean' } } },
-					400: { type: 'object', properties: { error: { type: 'string' } } }
+					400: { type: 'object', properties: { error: { type: 'string' } } },
+					401: { type: 'object', properties: { error: { type: 'string' } } },
+					409: { type: 'object', properties: { error: { type: 'string' } } },
+					500: { type: 'object', properties: { error: { type: 'string' } } }
+				}
+			}
+
+		},
+		// async (req, reply) => {
+		// 	const userId = (req.user as any).id
+		// 	const ok = await updateMyProfile(fastify, userId, req.body)
+		// 	if (!ok) return reply.code(400).send({ error: 'No valid fields to update' })
+		// 	return { ok: true }
+		// }
+		async (req, reply) => {
+			const userId = (req.user as any).id
+			try {
+				const ok = await updateMyProfile(fastify, userId, req.body)
+				if (!ok) return reply.code(400).send({ error: 'Nothing to update or user not found.' })
+				return { ok: true }
+			} catch (err: any) {
+				if (err.code === 'INVALID_CURRENT_PASSWORD') {
+					return reply.code(401).send({ error: 'Current password is incorrect.' })
+				}
+				if (err.code === 'CURRENT_PASSWORD_REQUIRED') {
+					return reply.code(400).send({ error: 'Current password is required to change your password' })
+				}
+				if (err.code === 'PASSWORD_UNCHANGED') {
+					return reply.code(400).send({ error: 'New password must be different from the current one' })
+				}
+				if (err.code === 'NO_LOCAL_PASSWORD') {
+					return reply.code(400).send({ error: 'Your account has no local password. Use the set password flow.' })
+				}
+				if (err.code === 'SQLITE_CONSTRAINT' && String(err.message).includes('users.username')) {
+					return reply.code(409).send({ error: 'Username is already taken.' })
+				}
+				// if (err.code === 'SQLITE_CONSTRAINT' && String(err.message).includes('users.email')) {
+				// 	return reply.code(409).send({ error: 'Email is already taken.' })
+				// }
+				// if (err.code === 'SQLITE_CONSTRAINT' && String(err.message).includes('users.username')) {
+				// 	return reply.code(409).send({ error: 'Username is already taken.' })
+				// }
+				if (err.code === 'SQLITE_CONSTRAINT') {
+					if (String(err.message).includes('users.email')) {
+						return reply.code(409).send({ error: 'Email is already taken.' })
+					}
+					else if (String(err.message).includes('users.username')) {
+						return reply.code(409).send({ error: 'Username is already taken.' })
+					}
+				}
+				req.log.error(err, 'Error updating profile for user ' + userId)
+				return reply.code(500).send({ error: 'An internal server error occurred.' })
+			}
+		}
+	)
+
+	fastify.get('/api/me/export',
+		{
+			preHandler: [fastify.auth],
+			schema: {
+				tags: ['gdpr'],
+				querystring: {
+					type: 'object',
+					properties: {
+						format: { type: 'string', enum: ['json', 'json.gz', 'zip'], default: 'json' },
+						// includeOtherUsers: { type: 'boolean', default: false },
+						includeMedia: { type: 'boolean', default: false }
+					}
+				},
+				response: {
+					200: {
+						content: {
+							'application/json': { schema: { type: 'string' } },
+							'application/gzip': { schema: { type: 'string', format: 'binary' } },
+							'application/zip': { schema: { type: 'string', format: 'binary' } }
+						}
+						// type: 'string'
+					}
 				}
 			}
 		},
 		async (req, reply) => {
 			const userId = (req.user as any).id
-			try {
-				const ok = await updateMyProfile(fastify, userId, req.body)
-				if (!ok) return reply.code(400).send({ error: 'No valid fields to update or user not found' })
-				return { ok: true }
-			} catch (err: any) {
-				if (err.code === 'SQLITE_CONSTRAINT' && err.message.includes('users.username')) {
-					return reply.code(409).send({ error: 'Username is already taken.' })
-				}
-				// For other potential errors, fall back to a generic 500
-				fastify.log.error(err, 'Error updating profile for user ' + userId)
-				return reply.code(500).send({ error: 'An internal server error occurred.' })
+			const { format = 'json', includeMedia = false } = req.query as any
+
+			if (format !== 'zip' && includeMedia) {
+				return reply.code(400).send({ error: 'includeMedia only with format=zip possible' })
 			}
+			const data = await collectUserExport(fastify, userId, {
+				includeMedia: format === 'zip' && includeMedia
+			})
+			const ts = new Date().toISOString().replace(/[:.]/g, '_')
+
+			// BEGIN -- HANDLERS
+			if (format === 'json') {
+				return jsonHandler(fastify,reply, data, userId, ts);
+			}
+			if (format === 'json.gz') {
+				return jsonGZHandler(fastify,reply, data, userId, ts);
+			}
+			if (format === 'zip') {
+				await zipHandler(fastify, reply, data, includeMedia, userId, ts);
+				return
+			}
+			// END -- HANDLERS
+			return reply.code(400).send({ error: 'Unsupported format' })
 		}
 	)
-};
+}
+
+// BEGIN -- Backup Zip Handler
+// if (format === 'zip') {
+// 	reply
+// 		.type('application/zip')
+// 		.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.zip"`)
+// 	reply.hijack()
+
+// 	const archive = archiver('zip', { zlib: { level: 9 } })
+// 	archive.on('error', (err) => {
+// 		fastify.log.error({ err }, 'zip stream error')
+// 		if (!reply.raw.destroyed) reply.raw.destroy(err)
+// 	})
+
+// 	archive.pipe(reply.raw)
+// 	archive.append(JSON.stringify(data, null, 2), { name: 'data.json' })
+
+// 	// const abs = resolveAvatarFsPath(data.profile?.avatar)
+// 	// const abs = '/app/core/frontend/public/default_03.png' // Im Container
+
+// 	console.log('Pre resolvePublicPath fnc: ' + data.profile?.avatar!)
+// 	console.log('data.profile?.avatar: ' + data.profile?.avatar);
+// 	const extrFN = extractFilename(data.profile?.avatar);
+// 	console.log('POST extract FIlename fnc: ' + extrFN)
+// 	// const abs = resolvePublicPath(data.profile?.avatar!);
+// 	// const abs = resolvePublicPath(extrFN!);
+// 	const abs = resolveAvatarFsPath(extrFN);
+// 	// const abs = resolvePublicPath('default_03.png');
+// 	console.log('POST resolvePublicPath fnc: ' + abs)
+// 	console.log('PUBLIC_DIR: ' + { PUBLIC_DIR })
+// 	console.log({ abs, exists: fs.existsSync(abs!) })
+// 	console.log('BACKEND_ROOT: ' + BACKEND_ROOT);
+// 	if (includeMedia && abs && fs.existsSync(abs)) {
+// 		console.log('Avatar there !!!!!');
+// 		archive.file(abs, { name: 'avatar.png' })
+// 	} else if (includeMedia) {
+// 		console.log('Avatar MISSSSSING !!!!!');
+// 		archive.append(`Avatar not found at ${abs ?? 'n/a'}\n`, { name: 'avatar_missing.txt' })
+// 	}
+
+// 	await archive.finalize()
+// 	return
+// 	// return zipHandler(fastify, reply, data, includeMedia, userId, ts);
+// }
+// BEGIN -- Backup Zip Handler
+
+
+	//// Works but no media
+	// 	fastify.get('/api/me/export',
+	// 		{
+	// 			// preHandler: [fastify.auth],
+	// 			schema: {
+	// 				tags: ['gdpr'],
+	// 				querystring: {
+	// 					type: 'object',
+	// 					properties: {
+	// 						format: { type: 'string', enum: ['json', 'json.gz'], default: 'json' },
+	// 						includeOtherUsers: { type: 'boolean', default: false },
+	// 						includeMedia: { type: 'boolean', default: false }
+	// 					}
+	// 				}
+	// 			}
+	// 		},
+	// 		async (req, reply) => {
+	// 			const userId = (req.user as any).id
+	// 			const { format = 'json', includeOtherUsers = false, includeMedia = false } = req.query as any
+
+	// 			const data = await collectUserExport(fastify, userId, { includeOtherUsers, includeMedia })
+	// 			const pretty = JSON.stringify(data, null, 2)
+	// 			const ts = new Date().toISOString().replace(/[:.]/g, '_')
+
+	// 			if (format === 'json') {
+	// 				reply
+	// 					.header('Content-Type', 'application/json; charset=utf-8')
+	// 					.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.json"`)
+	// 				return reply.send(pretty)
+	// 			}
+	// 			reply
+	// 				.header('Content-Type', 'application/gzip')
+	// 				.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.json.gz"`)
+
+	// 			const stream = Readable.from(pretty)
+	// 			await new Promise<void>((resolve, reject) => {
+	// 				stream.pipe(createGzip()).pipe(reply.raw).on('finish', () => resolve()).on('error', reject)
+	// 			})
+	// 			return reply
+	// 		}
+	// 	)
+	// };

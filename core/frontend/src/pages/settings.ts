@@ -86,7 +86,10 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 			<form id="password-form" class="w-full max-w-[400px] p-8 space-y-6 shadow-md rounded-[25px] bg-[#2b171e]">
 				<h2 class="text-center text-white text-2xl font-bold">Change Password</h2>
 
-				<!-- TODO: We should ask the user to enter their current password. Waiting for Ilies -->
+				<label class="block">
+						<input name="currentPassword" type="password" placeholder="Current Password"
+										class="w-full h-12 rounded-xl bg-[#48232f] p-4 text-white placeholder:text-[#ca91a3] focus:outline-none" />
+				</label>
 
 				<label class="block">
 					<input name="password" type="password" placeholder="New Password"
@@ -192,11 +195,27 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 					Anonymize Data
 				</button>
 
+				<div class="space-y-3">
+						<label class="block">
+								<span class="text-sm font-medium text-[#b99da6]">Export Format</span>
+								<select id="export-format"
+										class="mt-1 w-full h-10 rounded-xl bg-[#48232f] px-3 text-white focus:outline-none">
+										<option value="json">JSON (.json)</option>
+										<option value="json.gz">Compressed JSON (.json.gz)</option>
+										<option value="zip">ZIP (.zip)</option>
+								</select>
+						</label>
+						<label class="flex items-center space-x-2 text-[#b99da6] text-sm">
+								<input id="export-include-media" type="checkbox" class="h-4 w-4" disabled />
+								<span>Include media (only for ZIP)</span>
+						</label>
+				</div>
+
 				<button id="export-data-btn"
 					class="w-full h-10 rounded-xl bg-gray-600 text-white font-bold tracking-wide
 						hover:bg-gray-500 active:bg-gray-400"
-					type="button" disabled>
-					Export Data (coming soon)
+					type="button">
+					Export Data
 				</button>
 
 				<p id="account-msg" class="form-msg"></p>
@@ -326,10 +345,16 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 			e.preventDefault()
 			showMsg(passwordMsg, '')
 
-			const data = Object.fromEntries(new FormData(passwordForm))
 
+			const formEntries = new FormData(passwordForm)
+			const data: any = Object.fromEntries(formEntries)
+
+			if (!data.currentPassword) {
+				showMsg(passwordMsg, 'Current password is required.')
+				return
+			}
 			if (!data.password) {
-				showMsg(passwordMsg, 'Password cannot be empty.')
+				showMsg(passwordMsg, 'New password cannot be empty.')
 				return
 			}
 			if (data.password !== data.password_confirm) {
@@ -341,13 +366,13 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 				const r = await fetch(`/api/me`, {
 					method: 'PATCH',
 					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ password: data.password })
+					body: JSON.stringify({ password: data.password, currentPassword: data.currentPassword })
 				})
 				if (r.ok) {
 					showMsg(passwordMsg, 'Password changed successfully!', true)
 					passwordForm.reset()
 				} else {
-					const { error } = await r.json()
+					const { error } = await r.json().catch(() => ({ error: 'Update failed' }))
 					showMsg(passwordMsg, error || 'Update failed')
 				}
 			} catch {
@@ -552,6 +577,8 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 		const anonymizeBtn = root.querySelector('#anonymize-data-btn') as HTMLButtonElement
 		const exportBtn = root.querySelector('#export-data-btn') as HTMLButtonElement
 		const accountMsg = root.querySelector('#account-msg') as HTMLParagraphElement
+		const formatSelect = root.querySelector('#export-format') as HTMLSelectElement
+		const includeMediaCheckbox = root.querySelector('#export-include-media') as HTMLInputElement
 
 		anonymizeBtn.onclick = async () => {
 			if (!confirm('Anonymize your personal data? This action cannot be undone.')) return
@@ -602,7 +629,53 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 		}
 	}
 
-		// exportBtn does nothing for now until Ilies has implemented the export API
+        const syncMediaCheckbox = () => {
+            if (formatSelect.value === 'zip') {
+                includeMediaCheckbox.disabled = false
+            } else {
+                includeMediaCheckbox.checked = false
+                includeMediaCheckbox.disabled = true
+            }
+        }
+        formatSelect.onchange = syncMediaCheckbox
+        syncMediaCheckbox()
+
+        exportBtn.onclick = async () => {
+            showMsg(accountMsg, 'Preparing export...')
+            const format = formatSelect.value
+            const includeMedia = includeMediaCheckbox.checked
+            let url = `/api/me/export?format=${encodeURIComponent(format)}`
+            if (format === 'zip' && includeMedia) {
+                url += '&includeMedia=true'
+            }
+            try {
+                const r = await fetch(url, { credentials: 'include' })
+                if (!r.ok) {
+                    const { error } = await r.json().catch(() => ({ error: 'Export failed' }))
+                    showMsg(accountMsg, error || 'Export failed')
+                    return
+                }
+                const blob = await r.blob()
+                let filename = 'export.' + (format === 'json' ? 'json' : format === 'json.gz' ? 'json.gz' : 'zip')
+                const cd = r.headers.get('Content-Disposition')
+                if (cd) {
+                    const m = cd.match(/filename="?([^"]+)"?/)
+                    if (m) filename = m[1]
+                }
+                const a = document.createElement('a')
+                a.href = URL.createObjectURL(blob)
+                a.download = filename
+                document.body.appendChild(a)
+                a.click()
+                setTimeout(() => {
+                    URL.revokeObjectURL(a.href)
+                    a.remove()
+                }, 0)
+                showMsg(accountMsg, 'Export downloaded.', true)
+            } catch {
+                showMsg(accountMsg, 'Network error')
+            }
+        }
 	}
 }
 

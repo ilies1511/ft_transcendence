@@ -38,14 +38,19 @@ export default fp(async (app: FastifyInstance) => {
 	}
 	app.addHook('preHandler', async (req: FastifyRequest, reply: FastifyReply) => {
 		const openPrefixes = [
+			// BEGIN -- prod
 			'/api/register',
 			'/api/login',
 			'/api/auth/google',
 			'/api/auth/google/callback',
-			'/api/matches',
+			// END -- prod
+
+			// BEGIN -- dev
 			'/documentation',
-			'/terms',
-			'/privacy'
+			'/api/matches',
+			'/api/matches_test',
+			// '/api/me',
+			// END -- dev
 		]
 		const path = req.url.split('?')[0]
 

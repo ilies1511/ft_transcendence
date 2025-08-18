@@ -218,16 +218,17 @@ export const matchRoutes: FastifyPluginAsync = async fastify => {
 }
 
 /*
-curl -i -X POST http://localhost:3000/api/matches \
+curl -i -X POST http://localhost:3000/api/matches_test \
   -H "Content-Type: application/json" \
   -d '{
-	"mode": 4,
+	"mode": 5,
 	"duration": 120,
 	"participants": [
 	  { "user_id": 1, "score": 15, "result": "win" },
 	  { "user_id": 2, "score": 12, "result": "loss" },
 	  { "user_id": 3, "score":  8, "result": "loss" },
-	  { "user_id": 4, "score": 10, "result": "loss" }
+	  { "user_id": 4, "score": 10, "result": "loss" },
+	  { "user_id": 5, "score": 10, "result": "loss" }
 	]
   }'
 

@@ -6,6 +6,8 @@ import { GameApi } from './GameApi.ts';
 
 import { LocalPlayer } from './LocalPlayer.ts';
 
+import { showToast } from '../ui/toast-interface.ts';
+
 //import * as BABYLON from 'babylonjs';
 import type {
 	ClientToGame,
@@ -66,8 +68,10 @@ export class Game {
 
 	//private _sphere: BABYLON.Mesh;
 
+	//TODO: update1 for user leave notifications
+	// private _last_server_msg: LobbyToClient | null = null;
+	private _msg_queue: LobbyToClient[] = [];
 
-	private _last_server_msg: LobbyToClient | null = null;
 
 	private _socket?: WebSocket = undefined;
 	public client_id: number;
@@ -125,6 +129,7 @@ export class Game {
 
 		this._active_scene = this._lobby_scene;
 		this._engine.runRenderLoop(() => {
+			if (this.finished) return; //prevents ghost loops
 			this._process_msg();
 			if (this._ensure_attached() && !this.finished) {
 				this._active_scene.render();
@@ -223,6 +228,7 @@ export class Game {
 		console.log("Game: cleanup()");
 		this._game_scene.cleanup();
 		this._lobby_scene.cleanup();
+		this._engine.stopRenderLoop();
 		this._engine.dispose();
 		if (this._canvas?.parentElement) {
 			try {
@@ -398,49 +404,103 @@ export class Game {
 	}
 
 
-	private _process_msg() {
-		//console.log("_process_msg");
-		if (this._last_server_msg == null) {
-			//console.log("GAME: no message to process");
-			return ;
-		}
-		const msg: LobbyToClient = this._last_server_msg;
-		if (msg instanceof ArrayBuffer) {
-			if (this._active_scene !== this._game_scene) {
-				this._start_game();
+	// private _process_msg() {
+	// 	//console.log("_process_msg");
+	// 	if (this._last_server_msg == null) {
+	// 		//console.log("GAME: no message to process");
+	// 		return ;
+	// 	}
+	// 	const msg: LobbyToClient = this._last_server_msg;
+	// 	if (msg instanceof ArrayBuffer) {
+	// 		if (this._active_scene !== this._game_scene) {
+	// 			this._start_game();
+	// 		}
+	// 		/* msg is a game state update */
+	// 		//console.log("GAME: got ArrayBuffer");
+	// 		this._game_scene.update(GameState.deserialize(msg));
+	// 	} else if (typeof msg === 'string') {
+	// 		console.log("GAME: got string: ", msg);
+	// 		const json: LobbyToClientJson = JSON.parse(msg) as LobbyToClientJson;
+	// 		console.log("GAME: got ServerToClientMessage object: ", json);
+	// 		switch (json.type) {
+	// 			case ('game_lobby_update'):
+	// 				if (this._active_scene !== this._lobby_scene) {
+	// 					this._active_scene = this._lobby_scene;
+	// 				}
+	// 				this._lobby_scene.update(json);
+	// 				break ;
+	// 			case ('error'):
+	// 				this._process_server_error(json.msg);
+	// 				break ;
+	// 			case ('finish'):
+	// 				// postpone cleanup so 'info' toast can render
+	// 				setTimeout(() => this._finish_game(json), 200);
+	// 				break;
+	// 			case ('info'):
+	// 				// console.log(json.text);
+	// 				//todo: make a small temporary popup for the user to read this data
+	// 				const toastBox = showToast({
+	// 					title: json.text,
+	// 					from: 'Match server',
+	// 				});
+	// 				console.log('toastBox added', toastBox);
+	// 				setTimeout(() => {
+	// 					console.log('still there?', document.body.contains(toastBox));
+	// 				}, 50);
+	// 				break;
+	// 			default:
+	// 				throw ("Got not implemented msg type from server: ", msg);
+	// 		}
+	// 	} else {
+	// 		console.log("GAME: Error: unknown message type recieved: ", typeof msg);
+	// 	}
+	// 	this._last_server_msg = null;
+	// }
+	//TODO: update2 for user leave notifications
+	private _process_msg(): void {
+		while (this._msg_queue.length) {
+			const raw = this._msg_queue.shift()!; // never undefined here
+
+			if (raw instanceof ArrayBuffer) {
+				if (this._active_scene !== this._game_scene) this._start_game();
+				this._game_scene.update(GameState.deserialize(raw));
+				continue;
 			}
-			/* msg is a game state update */
-			//console.log("GAME: got ArrayBuffer");
-			this._game_scene.update(GameState.deserialize(msg));
-		} else if (typeof msg === 'string') {
-			console.log("GAME: got string: ", msg);
-			const json: LobbyToClientJson = JSON.parse(msg) as LobbyToClientJson;
-			console.log("GAME: got ServerToClientMessage object: ", json);
+
+			const json = JSON.parse(raw as unknown as string) as LobbyToClientJson;
+			console.log("GAME: got", json);
+
 			switch (json.type) {
-				case ('game_lobby_update'):
-					if (this._active_scene !== this._lobby_scene) {
+				case 'game_lobby_update':
+					if (this._active_scene !== this._lobby_scene)
 						this._active_scene = this._lobby_scene;
-					}
 					this._lobby_scene.update(json);
-					break ;
-				case ('error'):
+					break;
+
+				case 'error':
 					this._process_server_error(json.msg);
-					break ;
-				case ('finish'):
-					this._finish_game(json);
-					break ;
-				case ('info'):
-					console.log(json.text);
-					//todo: make a small temporary popup for the user to read this data
-					break ;
+					break;
+
+				case 'finish':
+					// allow any preceding “info” toast to render first
+					setTimeout(() => this._finish_game(json), 200);
+					break;
+
+				case 'info':
+					showToast({
+						title: json.text,
+					});
+					// console.log('SOME PLAYER LEFT THE GAME');
+					// setTimeout(() =>
+					// 	console.log('still there?', document.body.contains(toastBox)), 50);
+					break;
+
 				default:
-					throw ("Got not implemented msg type from server: ", msg);
+					throw new Error('Unhandled message type: ' + (json as any).type);
 			}
-		} else {
-			console.log("GAME: Error: unknown message type recieved: ", typeof msg);
 		}
-		this._last_server_msg = null;
 	}
+
 
 	private _finish_game(msg: GameToClientFinish) {
 		console.log("Game: _finish_game() of game ", this.game_id);
@@ -527,11 +587,16 @@ export class Game {
 		console.log(msg);
 	}
 
-	private _rcv_msg(event: MessageEvent<LobbyToClient>): undefined {
-		//console.log("GAME: recieved msg");
-		const data = event.data;
-		//console.log(data);
-		this._last_server_msg = data;
+	// private _rcv_msg(event: MessageEvent<LobbyToClient>): undefined {
+	// 	//console.log("GAME: recieved msg");
+	// 	const data = event.data;
+	// 	//console.log(data);
+	// 	this._last_server_msg = data;
+	// }
+	//TODO: update3 for user leave notifications
+	private _rcv_msg(event: MessageEvent): void {
+		// store all incoming frames; do NOT overwrite
+		this._msg_queue.push(event.data as LobbyToClient);
 	}
 
 	private _createCanvas(): HTMLCanvasElement {

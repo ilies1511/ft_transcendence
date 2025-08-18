@@ -14,6 +14,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { pipeline } from 'stream/promises'
 import { createWriteStream } from 'fs'
+import { mkdir } from 'node:fs/promises'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -319,22 +320,58 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 			if (!data.filename.toLowerCase().endsWith('.png')) {
 				return reply.code(400).send({ error: 'Only .png allowed' })
 			}
-			const filename = `NewUploadedAvatar_${userId}.png`;
-			const destPath = path.join(
-				__dirname,
-				'../../../frontend/public/',
-				filename
-			)
-			console.log(destPath);
-			await pipeline(data.file, createWriteStream(destPath));
+			// const filename = "NewUploadedAvatar.png";
+
+			// const filename = "NewUploadedAvatar" + `_${userId}`;
+
+			// const destPath = path.join(__dirname, '../../../frontend/public/', filename);
+			// await pipeline(data.file, createWriteStream(destPath));
+
+			// const destPath2 = path.join(process.env.PUBLIC_DIR
+			// 		?? '../../../frontend/public/', process.env.AVATAR_SUBDIR ?? 'avatars');
+			// // console.log('destPath2:' + destPath2);
+			// // console.log('destPath2:' + destPath2);
+			// // console.log('destPath2:' + destPath2);
+			// // console.log('destPath2:' + destPath2);
+			// const PUBLIC_DIR = process.env.PUBLIC_DIR;
+			// const AVATAR_SUBDIR = process.env.AVATAR_SUBDIR;
+
+			// const avatarDir = path.join(PUBLIC_DIR!, AVATAR_SUBDIR!)
+			// await fs.promises.mkdir(avatarDir, { recursive: true })
+
+			// // Sicheren Dateinamen wählen (nur Dateiname, keine Pfade)
+			// // const filename = `avatar_${userId}.png`
+			// // const filename = "NewUploadedAvatar" + `_${userId}`;
+			// const destPath = path.join(avatarDir, filename)
+
+			// await pipeline(data.file, createWriteStream(destPath));
+			// // await pipeline(data.file, createWriteStream(destPath2));
 			// const avatar = `../../${filename}`
-			const avatar = `/${filename}`;
-			console.log(avatar);
-			const ok = await updateUserAvatar(fastify, userId, avatar)
+			// // const ok = await updateUserAvatar(fastify, userId, avatar)
+			// const ok = await updateUserAvatar(fastify, userId, filename)
+			// if (!ok) {
+			// 	return reply.code(404).send({ error: 'User not found' })
+			// }
+			// return reply.code(200).send({ avatar })
+
+
+			const PUBLIC_DIR = process.env.PUBLIC_DIR!;
+			const AVATAR_SUBDIR = process.env.AVATAR_SUBDIR!;
+
+			const avatarDir = path.join(PUBLIC_DIR, AVATAR_SUBDIR)
+			await mkdir(avatarDir, { recursive: true })
+
+			const filename = "NewUploadedAvatar" + `_${userId}.png`;
+			const destPath = path.join(avatarDir, filename)
+
+			await pipeline(data.file, createWriteStream(destPath))
+
+			const ok = await updateUserAvatar(fastify, userId, filename)
 			if (!ok) {
 				return reply.code(404).send({ error: 'User not found' })
 			}
-			return reply.code(200).send({ avatar })
+			const avatarUrl = `/${AVATAR_SUBDIR}/${filename}`
+			return reply.code(200).send({ avatarUrl })
 		}
 	)
 };

@@ -36,7 +36,8 @@ export interface FriendInfo {
 	avatar: string
 }
 
-export interface UserWithFriends extends Omit<UserRow, 'password' | 'twofa_secret'| 'twofa_enabled'> {
+export interface UserWithFriends
+	extends Omit<UserRow, 'password' | 'twofa_secret' | 'twofa_enabled' | 'is_oauth'> {
 	// friends: number[]
 	friends: FriendInfo[]
 }
