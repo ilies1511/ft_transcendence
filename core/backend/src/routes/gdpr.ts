@@ -60,7 +60,7 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 
 	fastify.delete('/api/me',
 		{
-			// preHandler: [fastify.auth],
+			preHandler: [fastify.auth],
 			schema: {
 				tags: ['gdpr'],
 				response: {
@@ -74,13 +74,14 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 			const userId = (req.user as any).id
 			try {
 				// await deleteUserAndData(fastify, userId)
+				await deleteUserAndData(fastify, userId);
 				reply.clearCookie('token', {
 					path: '/',
 					httpOnly: true,
 					sameSite: 'lax',
 					secure: false
 				})
-				await deleteUserAndData(fastify, userId);
+				// await deleteUserAndData(fastify, userId);
 				return reply.send({ message: 'Your account and all associated data have been permanently deleted.' })
 			} catch (error: any) {
 				if (error?.statusCode) {
