@@ -83,7 +83,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 			</form>
 
 			<!-- Password update form -->
-			<form id="password-form" class="w-full max-w-[400px] p-8 space-y-6 shadow-md rounded-[25px] bg-[#2b171e]">
+			<form id="password-form" class="w-full max-w-[400px] p-8 space-y-6 shadow-md rounded-[25px] bg-[#2b171e] ${user.is_oauth ? 'hidden' : ''}">
 				<h2 class="text-center text-white text-2xl font-bold">Change Password</h2>
 
 				<label class="block">
@@ -675,6 +675,11 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
             } catch {
                 showMsg(accountMsg, 'Network error')
             }
+        }
+
+        const pwForm = root.querySelector('#password-form')
+        if (pwForm && user.is_oauth === 1) {
+            pwForm.classList.add('hidden')
         }
 	}
 }

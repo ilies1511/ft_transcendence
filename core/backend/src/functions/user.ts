@@ -105,8 +105,8 @@ export async function getUserById(
 	fastify: FastifyInstance,
 	id: number): Promise<UserRow | null> {
 	const user = await fastify.db.get<UserRow>(
-		"SELECT id, username, nickname, email, live, avatar, created_at FROM users WHERE id = ?", id);
-
+		"SELECT id, username, nickname, email, live, avatar, created_at, is_oauth FROM users WHERE id = ?", id
+	)
 	if (!user) {
 		return (null);
 	}
