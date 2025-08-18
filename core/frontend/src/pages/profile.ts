@@ -205,7 +205,7 @@ async function renderMatchHistory(history: any[], userId: number) {
 				const others = participants.filter((p: any) => p.user_id !== userId);
 				let opponentsLabel: string;
 				if (others.length === 0) {
-						opponentsLabel = '—';
+						opponentsLabel = 'Local Player';
 				} else if (others.length === 1) {
 						opponentsLabel = others[0].username;
 				} else if (others.length <= 3) {
