@@ -251,6 +251,8 @@ export class GameLobby {
 		WebsocketConnection.static_send(ws, error);
 	}
 
+
+
 	// removes player from lobby
 	// also givs the game engine the option to take actions if needed
 	private _leave_game(ws: WebSocket, msg: ClientToMatchLeave) {
@@ -322,6 +324,22 @@ export class GameLobby {
 	}
 
 
+	// intended to be called from the server but from other classes
+	public leave(client_id: number) {
+		const dummyWs = {
+			close: () => {},
+		} as unknown as WebSocket;
+	
+		const msg = {
+			type: 'leave',
+			client_id,
+			password: this.password,
+		} as ClientToMatchLeave;
+		this._leave_game(dummyWs, msg);
+	}
+
+
+
 	public recv(ws: WebSocket, msg: ClientToMatch) {
 		if (msg.type == 'connect') {
 			this._connect(msg.client_id, ws, msg.password);
@@ -388,7 +406,7 @@ export class GameLobby {
 	private _remove_timed_out_client(client_id: number) {
 		if (this.lobby_type == LobbyType.TOURNAMENT_GAME) {
 			// todo: think of how this should behaive for tournament games 
-			//  (since there can not be a different player but also everyone is 
+			//	(since there can not be a different player but also everyone is 
 			// waiting AND there must be a winner=> maybe skip the match and set 
 			// a connected player as winner?)
 		}

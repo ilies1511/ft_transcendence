@@ -1,6 +1,7 @@
 import type { WebSocket } from '@fastify/websocket';
 import { GameLobby } from './lobby/GameLobby.ts';
 import { GameServer } from './GameServer.ts';
+import type { ClientParticipation } from './GameServer.ts';
 
 import type {
 	ClientToTournament,
@@ -105,6 +106,15 @@ export class Tournament {
 		if (!this.active_players.find(client => client == client_id)) {
 			return ("Not Found");
 		}
+		const parti: ClientParticipation | undefined =  GameServer.client_participations.get(client_id);
+		if (!parti || !parti.tournament_id) {
+			console.log(`Waring: client ${client_id} tried to leave tournament ${this._id} but is not part of any tournament`);
+			return ("Not Found");
+		}
+		if (parti.tournament_id != this.id) {
+			console.log(`Waring: client ${client_id} tried to leave tournament ${this._id} but is part of tournament ${parti.tournament_id}`);
+			return ("Not Found");
+		}
 		this.active_players = this.active_players.filter(id => id != client_id);
 		GameServer.remove_client_tournament_participation(client_id, this._id);
 		if (!this._started) {
@@ -117,12 +127,24 @@ export class Tournament {
 			this._next_placement = this._all_players.length;
 			return ("");
 		}
+		if (!parti.lobby_id) {
+			//todo
+		} else {
+			const lobby: GameLobby | undefined = GameServer.lobbies.get(parti.lobby_id);
+			if (!lobby) {
+				console.log(`Error: client ${client_id} wanted to leave tournament ${this.id} but was in a game(${parti.lobby_id}) that does not exists`);
+				return ("Internal Error");
+			}
+			lobby.leave(client_id);
+			return ("");
+		}
+
 		//todo:
-		//case 1: player is currently connected to a lobby: should be handled by the lobby
-		//case 1.1: game is running: implemented
-		//case 1.2: game is not running yet, not implemented
-		//case 2: player is currently assiged to a lobby but not connected: tell lobby to treat this like case 1
-		//case 3: the player is currently waiting for the next match
+		//case 1; todo half: player is currently connected to a lobby: should be handled by the lobby
+		//case 1.1; done: game is running
+		//case 1.2; todo: game is not running yet
+		//case 2; done: player is currently assiged to a lobby but not connected: tell lobby to treat this like case 1
+		//case 3; todo: the player is currently waiting for the next match
 		return ("");
 	}
 
