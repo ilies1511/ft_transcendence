@@ -86,7 +86,10 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 			<form id="password-form" class="w-full max-w-[400px] p-8 space-y-6 shadow-md rounded-[25px] bg-[#2b171e]">
 				<h2 class="text-center text-white text-2xl font-bold">Change Password</h2>
 
-				<!-- TODO: We should ask the user to enter their current password. Waiting for Ilies -->
+				<label class="block">
+						<input name="currentPassword" type="password" placeholder="Current Password"
+										class="w-full h-12 rounded-xl bg-[#48232f] p-4 text-white placeholder:text-[#ca91a3] focus:outline-none" />
+				</label>
 
 				<label class="block">
 					<input name="password" type="password" placeholder="New Password"
@@ -342,10 +345,16 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 			e.preventDefault()
 			showMsg(passwordMsg, '')
 
-			const data = Object.fromEntries(new FormData(passwordForm))
 
+			const formEntries = new FormData(passwordForm)
+			const data: any = Object.fromEntries(formEntries)
+
+			if (!data.currentPassword) {
+				showMsg(passwordMsg, 'Current password is required.')
+				return
+			}
 			if (!data.password) {
-				showMsg(passwordMsg, 'Password cannot be empty.')
+				showMsg(passwordMsg, 'New password cannot be empty.')
 				return
 			}
 			if (data.password !== data.password_confirm) {
@@ -357,13 +366,13 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 				const r = await fetch(`/api/me`, {
 					method: 'PATCH',
 					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ password: data.password })
+					body: JSON.stringify({ password: data.password, currentPassword: data.currentPassword })
 				})
 				if (r.ok) {
 					showMsg(passwordMsg, 'Password changed successfully!', true)
 					passwordForm.reset()
 				} else {
-					const { error } = await r.json()
+					const { error } = await r.json().catch(() => ({ error: 'Update failed' }))
 					showMsg(passwordMsg, error || 'Update failed')
 				}
 			} catch {
