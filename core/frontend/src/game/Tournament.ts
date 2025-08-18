@@ -26,50 +26,50 @@ import { attempt_reconnect } from './frontend_interface_examples/reconnect.ts';
 
 
 export type Data = {
-    rounds: Round[],
-    matches?: Match[],
-    contestants?: {
-        [contestantId: string]: Contestant
-    }
+		rounds: Round[],
+		matches?: Match[],
+		contestants?: {
+				[contestantId: string]: Contestant
+		}
 }
 
 export type Round = {
-    name?: string,
+		name?: string,
 }
 
 export type Match = {
-    roundIndex: number, // 0-based
-    order: number, // 0-based
-    sides?: Side[],
-    matchStatus?: string,
-    isLive?: boolean
-    isBronzeMatch?: string,
+		roundIndex: number, // 0-based
+		order: number, // 0-based
+		sides?: Side[],
+		matchStatus?: string,
+		isLive?: boolean
+		isBronzeMatch?: string,
 }
 
 export type Contestant = {
-    entryStatus?: string,
-    players: Player[]
+		entryStatus?: string,
+		players: Player[]
 }
 
 export type Side = {
-    title?: string,
-    contestantId?: string,
-    scores?: Score[],
-    currentScore?: number | string,
-    isServing?: boolean,
-    isWinner?: boolean
+		title?: string,
+		contestantId?: string,
+		scores?: Score[],
+		currentScore?: number | string,
+		isServing?: boolean,
+		isWinner?: boolean
 }
 
 type Score = {
-    mainScore: number | string,
-    subscore?: number | string,
-    isWinner?: boolean
+		mainScore: number | string,
+		subscore?: number | string,
+		isWinner?: boolean
 }
 
 
 export type Player = {
-    title: string,
-    nationality?: string
+		title: string,
+		nationality?: string
 }
 
 
@@ -79,16 +79,18 @@ export class Tournament {
 	public user_id: number;
 	private _socket: WebSocket;
 	public finished: boolean = false;
-	private _match_container: HTMLElement;
+	private _match_container: HTMLElement | null;
 	public bracket: any | undefined = undefined;
 
 	public latest_tournament_state?: TournamentState;
+	public container_selector: string;
 
 	public constructor(user_id: number,
 		tournament_id: number,
 		password: string,
 		match_container: HTMLElement,
 	) {
+		this.container_selector = '#game-container';
 		this._match_container = match_container;
 		this.user_id = user_id;
 		this.password = password;
@@ -169,8 +171,10 @@ export class Tournament {
 				globalThis.game?.leave();
 				if (!globalThis.game) {
 					this.render_tournament_state();
+				} else {
+					console.log("Error: globalThis.game was defined when wanting to render tournament state after tournament");
 				}
-				//this.leave(); //not needed anymore
+				this._cleanup();
 				break ;
 			case ('update'):
 				this.latest_tournament_state = msg.state;
@@ -221,6 +225,7 @@ export class Tournament {
 	public leave() {
 		this.finished = true;
 		globalThis.game?.leave();
+		this.render_tournament_state();
 		TournamentApi.leave_tournament(this.user_id, this.tournament_id);
 		this._cleanup();
 	}
@@ -248,8 +253,35 @@ export class Tournament {
 		console.log("started tournament");
 	}
 
+	private _get_container(): HTMLElement | null {
+		if (this._match_container && document.contains(this._match_container)) {
+			console.log("game container unchanged");
+			return (this._match_container);
+		}
+		this._match_container = document.querySelector(this.container_selector);
+		if (!this._match_container) {
+			console.log("Warning: could not get game container");
+			return (null);
+		}
+
+		if (this.latest_tournament_state) {
+			try {
+				this.bracket?.uninstall();
+				this.bracket = undefined;
+			} catch {}
+			//this.bracket = createBracket(this.latest_tournament_state, this._match_container);
+		}
+		return (this._match_container);
+	}
+
+
 	public render_tournament_state() {
 		if (!this.latest_tournament_state) {
+			console.log("Warning: No latest_tournament_state when tring to render it, either only 1 player tournament or bug");
+			return ;
+		}
+		this._get_container();
+		if (!this._match_container) {
 			return ;
 		}
 		console.log("rendering tournament state: ", this.latest_tournament_state);
@@ -259,15 +291,15 @@ export class Tournament {
 			contestants: {}
 		};
 
-		for (const my_match of this.latest_tournament_state.rounds[0].matches) {
-			if (my_match.p1) {
-				data.contestants[`${my_match.p1.id}`] = {
-					players: [{title: my_match.p1.name}]
+		for (const my_match_type of this.latest_tournament_state.rounds[0].matches) {
+			if (my_match_type.p1) {
+				data.contestants[`${my_match_type.p1.id}`] = {
+					players: [{title: my_match_type.p1.name}]
 				}
 			}
-			if (my_match.p2) {
-				data.contestants[`${my_match.p2.id}`] = {
-					players: [{title: my_match.p2.name}]
+			if (my_match_type.p2) {
+				data.contestants[`${my_match_type.p2.id}`] = {
+					players: [{title: my_match_type.p2.name}]
 				}
 			}
 		}
@@ -279,9 +311,9 @@ export class Tournament {
 					roundIndex: round.index,
 					order: order, // 0-based
 					sides: [],
-    				//matchStatus?: string,
-    				//isLive?: boolean
-    				//isBronzeMatch?: string,
+						//matchStatus?: string,
+						//isLive?: boolean
+						//isBronzeMatch?: string,
 				};
 				const get_side = (player: BracketPlayer | null): Side | undefined => {
 					if (!player) {
@@ -320,7 +352,9 @@ export class Tournament {
 		if (!this.bracket) {
 			this.bracket = createBracket(data, this._match_container);
 		} else {
-			this.bracket.replaceData(data);
+			this.bracket.uninstall();
+			this.bracket = createBracket(data, this._match_container);
+			//this.bracket.replaceData(data);
 		}
 	}
 };
