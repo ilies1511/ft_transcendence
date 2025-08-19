@@ -1,20 +1,18 @@
 // src/routes/users.ts
 import type { FastifyPluginAsync } from "fastify";
-import bcrypt from "bcrypt";
-import { type UserWithFriends, type FriendRequestRow, type UserRow } from "../types/userTypes.ts";
-import { error, info } from "console";
+import { createWriteStream } from 'fs';
+import { mkdir } from 'node:fs/promises';
+import path from 'path';
+import { pipeline } from 'stream/promises';
+import { fileURLToPath } from 'url';
 import {
-	createUser, updateUser,
-	type UpdateUserData,
-	getUserById, setUserLive, deleteUserById,
-	updateUserAvatar
+	deleteUserById,
+	getUserById, setUserLive,
+	updateUser,
+	updateUserAvatar,
+	type UpdateUserData
 } from "../functions/user.ts";
-import { promises as fs } from 'fs'
-import path from 'path'
-import { fileURLToPath } from 'url'
-import { pipeline } from 'stream/promises'
-import { createWriteStream } from 'fs'
-import { mkdir } from 'node:fs/promises'
+import { type UserRow } from "../types/userTypes.ts";
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -69,7 +67,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 
 	//All
 	fastify.get<{
-		Reply: Array<Pick<UserRow, "id" | "username" | "nickname" | "email" | "live" | "avatar" | "created_at">>;
+		Reply: Array<Pick<UserRow, "id" | "username" | "nickname" | "email" | "live" | "avatar" | "created_at" | "is_oauth">>;
 	}>(
 		"/api/users",
 		{
@@ -87,6 +85,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 								live: { type: "integer" },
 								avatar: { type: "string" },
 								created_at: { type: "integer" },
+								is_oauth: { type: "integer" }
 							},
 						},
 					},
@@ -95,7 +94,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 		},
 		async () => {
 			return fastify.db.all(
-				"SELECT id, username, nickname, live, email, avatar, created_at FROM users"
+				"SELECT id, username, nickname, live, email, avatar, created_at, is_oauth FROM users"
 			);
 		}
 	);
@@ -106,7 +105,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 	fastify.get<{
 		Params: { id: number };
 		Reply:
-		| Pick<UserRow, "id" | "username" | "nickname" | "email" | "live" | "avatar" | "created_at">
+		| Pick<UserRow, "id" | "username" | "nickname" | "email" | "live" | "avatar" | "created_at" | "is_oauth">
 		| { error: string };
 	}>(
 		"/api/users/:id",
@@ -128,6 +127,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 							live: { type: "integer" },
 							avatar: { type: "string" },
 							created_at: { type: "integer" },
+							is_oauth: { type: "integer" }
 						},
 					},
 					404: {

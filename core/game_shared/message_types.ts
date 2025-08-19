@@ -70,8 +70,9 @@ export interface ReconnectReq {
 
 export interface ReconnectResp {
 	match_id: number;
-	match_has_password: boolean;
+	match_password: string;
 	tournament_id: number;
+	tournament_password: string;
 	lobby_type: LobbyType;
 };
 
@@ -203,7 +204,6 @@ export type ClientToGame =
 export type ClientToMatchConnect = {
 	client_id: number,
 	type: 'connect';
-	password: string;
 };
 
 export type ClientToMatch =

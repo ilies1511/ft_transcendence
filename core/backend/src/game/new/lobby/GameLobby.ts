@@ -218,13 +218,14 @@ export class GameLobby {
 		console.log("Game: client ", connection.id, " reconnected to lobby, ", this.id);
 	}
 
-	private _connect(client_id: number, ws: WebSocket, password: string) {
-		if (password != this.password) {
-			WebsocketConnection.static_send_error(ws, 'Invalid Password');
-			console.log("connect: this.password: ", this.password, "; password: ", password);
-			ws.close();
-			return ;
-		}
+	//does not need password anymore since it is allready asked for joining
+	private _connect(client_id: number, ws: WebSocket) {
+		//if (password != this.password) {
+		//	WebsocketConnection.static_send_error(ws, 'Invalid Password');
+		//	console.log("connect: this.password: ", this.password, "; password: ", password);
+		//	ws.close();
+		//	return ;
+		//}
 		for (const connection of this._connections) {
 			if (client_id == connection.id && connection.sock !== undefined) {
 				this._reconnect(ws, connection);
@@ -340,7 +341,7 @@ export class GameLobby {
 
 	public recv(ws: WebSocket, msg: ClientToMatch) {
 		if (msg.type == 'connect') {
-			this._connect(msg.client_id, ws, msg.password);
+			this._connect(msg.client_id, ws);
 			return ;
 		}
 

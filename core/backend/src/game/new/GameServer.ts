@@ -34,11 +34,26 @@ import type {
 import { LobbyType } from '../game_shared/message_types.ts';
 import { is_ServerError } from '../game_shared/message_types.ts';
 
+import { randomBytes } from "crypto";
+
+export function generate_password(length: number = 16): string {
+	const chars =
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+[]{}|;:,.<>?";
+	const bytes = randomBytes(length);
+	let password = "";
+	for (let i = 0; i < length; i++) {
+		password += chars[bytes[i] % chars.length];
+	}
+	
+	return (password);
+}
+
+
 
 /*
 API endpoints:
 	- /enter_matchmaking -> takes the player id and map name; returns match id
-	- /create_lobby ->  like enter_matchmaking but also takes a password; returns match id
+	- /create_lobby ->	like enter_matchmaking but also takes a password; returns match id
 	- /create_tournament -> input playercount, map, password; returns tournament id
 	- /reconnect -> input user id; returns potential tournament and match id the user is currently taking part in
 
@@ -391,8 +406,9 @@ export class GameServer {
 		const { client_id } = request.body;
 		const response: ReconnectResp = {
 			match_id: -1,
-			match_has_password: false,
+			match_password: '',
 			tournament_id: -1,
+			tournament_password: '',
 			lobby_type: LobbyType.INVALID,
 		};
 
@@ -408,9 +424,7 @@ export class GameServer {
 			}
 			response.match_id = parti.lobby_id;
 			response.lobby_type = lobby.lobby_type;
-			if (lobby.password != '') {
-				response.match_has_password = true;
-			}
+			response.match_password = lobby.password;
 		}
 		if (parti.tournament_id) {
 			const tournament: Tournament | undefined = GameServer.tournaments.get(parti.tournament_id);
@@ -419,6 +433,7 @@ export class GameServer {
 				return (response);
 			}
 			response.tournament_id = parti.tournament_id;
+			response.tournament_password = tournament.password;
 		}
 
 		return (response);

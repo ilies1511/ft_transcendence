@@ -48,7 +48,7 @@ type GameIdx = {
 
 export class Tournament {
 	private _map_name: string;
-	private _password: string;
+	public password: string;
 	private _id: number;
 	private _completion_callback: (id: number) => undefined;
 
@@ -76,7 +76,7 @@ export class Tournament {
 		id: number,
 		completion_callback: (id: number) => undefined,
 	) {
-		this._password = password;
+		this.password = password;
 		this._map_name = map_name;
 		this._id = id;
 		this._completion_callback = completion_callback;
@@ -92,7 +92,7 @@ export class Tournament {
 		if (this._started) {
 			return ("Full");
 		}
-		if (password != this._password) {
+		if (password != this.password) {
 			return ("Invalid Password");
 		}
 		//this._rounds[0].players.push({
@@ -243,7 +243,7 @@ export class Tournament {
 				LobbyType.TOURNAMENT_GAME,
 				this._map_name,
 				0,
-				this._password,
+				this.password,
 				this._finish_game_callback
 			);
 			const game_lobby: GameLobby | undefined = GameServer.lobbies.get(lobby_id);
@@ -252,7 +252,7 @@ export class Tournament {
 			}
 			round.game_ids[player_idx / 2] = lobby_id;
 			//const invite: LobbyInvite = {
-			//	lobby_password: this._password,
+			//	lobbypassword: this.password,
 			//	lobby_id: lobby_id,
 			//	valid: true,
 			//	map_name: this._map_name,
@@ -263,8 +263,8 @@ export class Tournament {
 			} else if (round.players[player_idx + 1].loose_next) {
 				this._advance_player_to_round(round.players[player_idx], this._round_idx + 1);
 			} else {
-				game_lobby.join(round.players[player_idx].client_id, round.players[player_idx].display_name, this._password);
-				game_lobby.join(round.players[player_idx + 1].client_id, round.players[player_idx + 1].display_name, this._password);
+				game_lobby.join(round.players[player_idx].client_id, round.players[player_idx].display_name, this.password);
+				game_lobby.join(round.players[player_idx + 1].client_id, round.players[player_idx + 1].display_name, this.password);
 				const msg: NewGame = {
 					type: 'new_game',
 				};

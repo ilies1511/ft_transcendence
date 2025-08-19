@@ -126,6 +126,7 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 			// 		400: { type: 'object', properties: { error: { type: 'string' } } }
 			// 	}
 			// }
+			preHandler: [fastify.auth],
 			schema: {
 				tags: ['gdpr'],
 				body: {

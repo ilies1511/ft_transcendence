@@ -2,7 +2,6 @@
 import type { PageModule } from '../router'
 
 import { Game } from '../game/game_new.ts'
-import { get_password_from_user } from '../game/placeholder_globals.ts'
 import { Tournament } from '../game/Tournament.ts'
 
 import { attempt_reconnect } from '../game/frontend_interface_examples/reconnect.ts'
@@ -14,6 +13,8 @@ import {
 
 import type { MatchmakingOptions } from '../game/frontend_interface_examples/matchmaking.ts'
 import { enter_matchmaking } from '../game/frontend_interface_examples/matchmaking.ts'
+
+import { generate_password } from '../game/globals.ts';
 
 import type {
 	LobbyInvite,
@@ -115,11 +116,9 @@ async function create_custom_lobby(
 	user_id: number,
 	container: HTMLElement,
 ): Promise<void> {
-	const lobby_password = await get_password_from_user('Game')
 
 	const options: CustomLobbyOptions = {
 		map_name: 'default',
-		lobby_password,
 		ai_count: 0,
 	}
 
@@ -137,7 +136,7 @@ async function test_tournament(
 
 	const display_name: string = `placeholder_display_name_${user_id}`;
 	const map_name: string = 'default';
-	const tournament_password = await get_password_from_user('Tournament');
+	const tournament_password = generate_password();
 
 	const tournament: Tournament | undefined = await Tournament.create_tournament(
 		user_id, display_name, map_name, tournament_password, container);

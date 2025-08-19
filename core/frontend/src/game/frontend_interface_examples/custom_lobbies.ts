@@ -1,7 +1,8 @@
 import { Game } from '../game_new.ts';
 import { GameApi } from '../GameApi.ts';
 import { LobbyType } from '../game_shared/message_types.ts';
-import { get_password_from_user } from '../placeholder_globals.ts';
+
+import { generate_password } from '../globals.ts';
 
 import type {
 	ServerError,
@@ -11,7 +12,6 @@ import type {
 
 export type CustomLobbyOptions = {
 	map_name: string;
-	lobby_password: string;
 	ai_count: number;
 };
 
@@ -49,8 +49,9 @@ export async function create_join_lobby(
 	options: CustomLobbyOptions,
 	): Promise<Game | ServerError>
 {
+	const lobby_password: string = generate_password();
 	const resp: CreateLobbyResp = await GameApi.create_lobby(options.map_name,
-		options.ai_count, options.lobby_password,);
+		options.ai_count, lobby_password,);
 	if (resp.error != "") {
 		console.log(resp.error);
 		return (resp.error);
@@ -58,7 +59,7 @@ export async function create_join_lobby(
 	console.log("created lobby with id ", resp.match_id);
 	const lobby_invite: LobbyInvite = {
 		map_name: options.map_name,
-		lobby_password: options.lobby_password,
+		lobby_password: lobby_password,
 		lobby_id: resp.match_id,
 		lobby_type: LobbyType.CUSTOM,
 		valid: true,
