@@ -4,6 +4,13 @@ import type { LobbyInvite,
 	CreateTournamentResp,
 } from './game_shared/message_types.ts';
 import { is_unloading } from './globals.ts';
+/*
+ * tournament_running:
+	* lagging indicatior if a game should render it's result.
+	* Needed since game checks if globalThis.tournament exists for conditional rendering,
+	   but the game websocket might be lagging behind
+*/
+export let tournament_running: number = 0;
 
 import { LobbyType } from './game_shared/message_types.ts';
 
@@ -93,6 +100,7 @@ export class Tournament {
 		password: string,
 		match_container: HTMLElement,
 	) {
+		tournament_running++;
 		this.container_selector = '#game-container';
 		this._match_container = match_container;
 		this.user_id = user_id;
@@ -102,6 +110,7 @@ export class Tournament {
 		this._open_socket = this._open_socket.bind(this);
 		this._open_socket();
 		globalThis.tournament = this;
+
 	};
 
 	static async create_tournament(
@@ -256,6 +265,9 @@ export class Tournament {
 		} else {
 			globalThis.tournament = undefined;
 		}
+		setTimeout(() => {
+			tournament_running--;
+		}, 7_000);
 	}
 
 	public async start() {

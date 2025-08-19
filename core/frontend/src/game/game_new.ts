@@ -2,6 +2,8 @@ import * as BABYLON from '@babylonjs/core/Legacy/legacy';
 
 import { is_unloading } from './globals.ts';
 
+import { tournament_running } from './Tournament.ts';
+
 import { GameApi } from './GameApi.ts';
 
 import { LocalPlayer } from './LocalPlayer.ts';
@@ -500,98 +502,102 @@ export class Game {
 		}
 	}
 
-private _finish_game(msg: GameToClientFinish) {
-	console.log("Game: _finish_game() of game ", this.game_id);
-	this.finished = true;
-
-	this.disconnect();
-
-	if (this._ensure_attached()) {
-		this.container.replaceChildren();
-
-		const formatDuration = (sec: number) => {
-			const m = Math.floor(sec / 60);
-			const s = Math.floor(sec % 60);
-			return `${m}:${s.toString().padStart(2, "0")}`;
-		};
-		const modeLabel = (mode: LobbyType) => {
-			switch (mode) {
-				case LobbyType.MATCHMAKING:
-					return "Matchmaking Game";
-				case LobbyType.CUSTOM:
-					return "Private Lobby";
-				case LobbyType.TOURNAMENT_GAME:
-					return "Tournament Game";
-				case LobbyType.TOURNAMENT:
-				case LobbyType.INVALID:
-					return "";
-			}
-		};
-		const nameFor = (id: number) =>
-			this._display_names?.get(id) ?? `Player ${id}`;
-
-		// header
-		const header = document.createElement("div");
-		header.className = "flex flex-col items-center text-center mb-8 pt-[30px]";
-		header.innerHTML = `
-			<h2 class="text-5xl text-white mb-1 font-bold">Game Over</h2>
-			<div class="text-sm text-[#b99da6] flex items-center gap-1">
-				<span>${modeLabel(msg.mode)}</span>
-				<span aria-hidden="true">•</span>
-				<span class="underline">Duration: ${formatDuration(msg.duration)}</span>
-			</div>
-		`;
-		this.container.appendChild(header);
-
-		// results table
-		const table = document.createElement("table");
-		table.className =
-			"w-full mx-auto table-fixed border-collapse rounded-2xl overflow-hidden shadow-lg bg-[#221116]";
-
-		// head
-		const thead = document.createElement("thead");
-		thead.innerHTML = `
-			<tr class="bg-[#3a2229] text-[#ca91a3] text-base text-center">
-				<th class="w-[33.33%] py-3 px-4 font-medium">#</th>
-				<th class="w-[33.33%] py-3 px-4 font-medium">Player</th>
-				<th class="w-[33.33%] py-3 px-4 font-medium">Placement</th>
-			</tr>
-		`;
-		table.appendChild(thead);
-
-		// body
-		const tbody = document.createElement("tbody");
-		tbody.className = "divide-y divide-[#3a2229]/70";
-
-		const placements = [...msg.placements].sort(
-			(a, b) => a.final_placement - b.final_placement
-		);
-
-		const medal = (place: number) =>
-			place === 1 ? "🥇" : place === 2 ? "🥈" : place === 3 ? "🥉" : "";
-
-		for (let i = 0; i < placements.length; i++) {
-			const p = placements[i];
-			const tr = document.createElement("tr");
-			tr.className = "hover:bg-[#302028]/60 transition h-14 text-center";
-			tr.innerHTML = `
-				<td class="w-[33.33%] py-3 px-4 text-white truncate">${i + 1}</td>
-				<td class="w-[33.33%] py-3 px-4 text-white truncate">${nameFor(p.id)}</td>
-				<td class="w-[33.33%] py-3 px-4 text-white truncate">
-					${p.final_placement} ${medal(p.final_placement)}
-				</td>
-			`;
-			tbody.appendChild(tr);
+	private _finish_game(msg: GameToClientFinish) {
+		console.log("Game: _finish_game() of game ", this.game_id);
+		this.finished = true;
+	
+		this.disconnect();
+		if (tournament_running > 0) {
+			console.log("Game: not showing result since tournament is/was running");
+			return ;
 		}
-
-		table.appendChild(tbody);
-		this.container.appendChild(table);
+	
+		if (this._ensure_attached()) {
+			this.container.replaceChildren();
+	
+			const formatDuration = (sec: number) => {
+				const m = Math.floor(sec / 60);
+				const s = Math.floor(sec % 60);
+				return `${m}:${s.toString().padStart(2, "0")}`;
+			};
+			const modeLabel = (mode: LobbyType) => {
+				switch (mode) {
+					case LobbyType.MATCHMAKING:
+						return "Matchmaking Game";
+					case LobbyType.CUSTOM:
+						return "Private Lobby";
+					case LobbyType.TOURNAMENT_GAME:
+						return "Tournament Game";
+					case LobbyType.TOURNAMENT:
+					case LobbyType.INVALID:
+						return "";
+				}
+			};
+			const nameFor = (id: number) =>
+				this._display_names?.get(id) ?? `Player ${id}`;
+	
+			// header
+			const header = document.createElement("div");
+			header.className = "flex flex-col items-center text-center mb-8 pt-[30px]";
+			header.innerHTML = `
+				<h2 class="text-5xl text-white mb-1 font-bold">Game Over</h2>
+				<div class="text-sm text-[#b99da6] flex items-center gap-1">
+					<span>${modeLabel(msg.mode)}</span>
+					<span aria-hidden="true">•</span>
+					<span class="underline">Duration: ${formatDuration(msg.duration)}</span>
+				</div>
+			`;
+			this.container.appendChild(header);
+	
+			// results table
+			const table = document.createElement("table");
+			table.className =
+				"w-full mx-auto table-fixed border-collapse rounded-2xl overflow-hidden shadow-lg bg-[#221116]";
+	
+			// head
+			const thead = document.createElement("thead");
+			thead.innerHTML = `
+				<tr class="bg-[#3a2229] text-[#ca91a3] text-base text-center">
+					<th class="w-[33.33%] py-3 px-4 font-medium">#</th>
+					<th class="w-[33.33%] py-3 px-4 font-medium">Player</th>
+					<th class="w-[33.33%] py-3 px-4 font-medium">Placement</th>
+				</tr>
+			`;
+			table.appendChild(thead);
+	
+			// body
+			const tbody = document.createElement("tbody");
+			tbody.className = "divide-y divide-[#3a2229]/70";
+	
+			const placements = [...msg.placements].sort(
+				(a, b) => a.final_placement - b.final_placement
+			);
+	
+			const medal = (place: number) =>
+				place === 1 ? "🥇" : place === 2 ? "🥈" : place === 3 ? "🥉" : "";
+	
+			for (let i = 0; i < placements.length; i++) {
+				const p = placements[i];
+				const tr = document.createElement("tr");
+				tr.className = "hover:bg-[#302028]/60 transition h-14 text-center";
+				tr.innerHTML = `
+					<td class="w-[33.33%] py-3 px-4 text-white truncate">${i + 1}</td>
+					<td class="w-[33.33%] py-3 px-4 text-white truncate">${nameFor(p.id)}</td>
+					<td class="w-[33.33%] py-3 px-4 text-white truncate">
+						${p.final_placement} ${medal(p.final_placement)}
+					</td>
+				`;
+				tbody.appendChild(tr);
+			}
+	
+			table.appendChild(tbody);
+			this.container.appendChild(table);
+		}
+	
+		globalThis.tournament?.render_tournament_state();
+	
+		console.log(msg);
 	}
-
-	globalThis.tournament?.render_tournament_state();
-
-	console.log(msg);
-}
 
 	// private _rcv_msg(event: MessageEvent<LobbyToClient>): undefined {
 	// 	//console.log("GAME: recieved msg");
@@ -659,8 +665,6 @@ private _finish_game(msg: GameToClientFinish) {
 			return ;
 		} else if (reconnect.match_id >= 0) {
 			match_id = reconnect.match_id;
-			if (reconnect.match_has_password) {
-			}
 		}
 		if (match_id != -1) {
 			console.log("Game: Reconnecting local player to match with password:" , this.password);
