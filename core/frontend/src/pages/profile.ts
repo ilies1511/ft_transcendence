@@ -72,10 +72,12 @@ const template = /*html*/ `
 							<th class="px-4 py-3">Opponent</th>
 							<th class="px-4 py-3">Result</th>
 							<th class="px-4 py-3">Score</th>
+							<th class="px-4 py-3">Mode</th>
+							<th class="px-4 py-3">Duration</th>
 						</tr>
 					</thead>
 					<tbody id="matchHistoryBody" class="divide-y divide-[#543b43]">
-						<tr><td colspan="4" class="px-4 py-4 text-center text-[#b99da6]">Loading...</td></tr>
+						<tr><td colspan="6" class="px-4 py-4 text-center text-[#b99da6]">Loading...</td></tr>
 					</tbody>
 				</table>
 			</div>
@@ -194,7 +196,7 @@ async function renderMatchHistory(history: any[], userId: number) {
 		const tbody = document.getElementById('matchHistoryBody');
 		if (!tbody) return;
 		if (!history.length) {
-				tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-4 text-center text-[#b99da6]">No matches yet</td></tr>`;
+				tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-4 text-center text-[#b99da6]">No matches yet</td></tr>`;
 				return;
 		}
 		const participantPromises = history.map(h => fetchMatchParticipants(h.match.id));
@@ -231,6 +233,9 @@ async function renderMatchHistory(history: any[], userId: number) {
 						scoreDisplay = `${h.score}`;
 				}
 
+				const modeDisplay = lobbyTypeName(h.match.mode);
+				const durationDisplay = formatDuration(h.match.duration);
+
 				return `
 				<tr>
 						<td class="px-4 py-3 text-[#b99da6]">${formatDate(h.match.created_at)}</td>
@@ -241,6 +246,8 @@ async function renderMatchHistory(history: any[], userId: number) {
 								</span>
 						</td>
 						<td class="px-4 py-3 text-[#b99da6]">${scoreDisplay}</td>
+						<td class="px-4 py-3 text-[#b99da6]">${modeDisplay}</td>
+						<td class="px-4 py-3 text-[#b99da6]">${durationDisplay}</td>
 				</tr>`;
 		}).join('');
 
@@ -350,3 +357,26 @@ const ProfilePage: PageModule & { renderWithParams?: Function } = {
 }
 
 export default ProfilePage
+
+function formatDuration(raw: number) {
+    // raw already in seconds (float). Show mm:ss or s.ms if < 60
+    if (raw == null || isNaN(raw)) return '-';
+    if (raw < 60) {
+        return `${raw.toFixed(2)}s`;
+    }
+    const totalSeconds = Math.floor(raw);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+const LobbyTypeNames: Record<number, string> = {
+    1: 'Matchmaking',
+    2: 'Custom',
+    3: 'Tournament',
+    4: 'Tournament Game'
+};
+
+function lobbyTypeName(mode: number): string {
+    return LobbyTypeNames[mode] ?? `Mode ${mode}`;
+}
