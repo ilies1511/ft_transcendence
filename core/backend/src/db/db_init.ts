@@ -13,7 +13,7 @@ export async function runMigrations(fastify: FastifyInstance): Promise<void> {
 		try {
 			await fastify.db.exec(sql);
 			fastify.log.info(`Migration success: ${sql}`);
-		} catch (err) {
+		} catch (err : any) {
 			fastify.log.warn(`Migration skipped or failed: ${sql}`, err);
 		}
 	}
