@@ -62,8 +62,15 @@ const template = /*html*/ `
 
 		<!-- match history -->
 		<section class="space-y-4">
-			<h2 class="px-4 text-xl font-bold text-white">Match History</h2>
-
+			<div class="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between px-4">
+				<h2 class="text-xl font-bold text-white">Match History</h2>
+				<label class="text-sm text-[#b99da6] flex items-center gap-2">
+					<span>Filter Mode:</span>
+					<select id="modeFilter" class="bg-[#271c1f] border border-[#543b43] rounded px-2 py-1 text-white text-sm">
+						<option value="all">All</option>
+					</select>
+				</label>
+			</div>
 			<div class="mx-4 overflow-x-auto rounded-xl border border-[#543b43] bg-[#181113]">
 				<table class="min-w-[480px] w-full text-left">
 					<thead class="bg-[#271c1f] text-white">
@@ -131,6 +138,8 @@ async function renderProfile(root: HTMLElement, user: ApiUser) {
 		renderStats(stats);
 	}
 	const history = await fetchMatchHistory(user.id);
+	(root as any)._fullHistory = history; // cache
+	initModeFilter(history, user.id, root);
 	await renderMatchHistory(history, user.id);
 	// draw chart after stats
 	if (stats) drawStatsChart(stats);
@@ -200,8 +209,8 @@ async function renderMatchHistory(history: any[], userId: number) {
 				return;
 		}
 		const participantPromises = history.map(h => fetchMatchParticipants(h.match.id));
-		const participantsList = await Promise.all(participantPromises);
 
+		const participantsList = await Promise.all(participantPromises);
 		const rowsHtml = history.map((h, idx) => {
 				const participants = participantsList[idx] || [];
 				const others = participants.filter((p: any) => p.user_id !== userId);
@@ -379,4 +388,25 @@ const LobbyTypeNames: Record<number, string> = {
 
 function lobbyTypeName(mode: number): string {
     return LobbyTypeNames[mode] ?? `Mode ${mode}`;
+}
+
+function initModeFilter(history: any[], userId: number, root: HTMLElement) {
+	const select = root.querySelector<HTMLSelectElement>('#modeFilter');
+	if (!select) return;
+	// Collect unique modes
+	const modes = Array.from(new Set(history.map(h => h.match.mode))).sort((a, b) => a - b);
+	const fragment = document.createDocumentFragment();
+	modes.forEach(mode => {
+		const opt = document.createElement('option');
+		opt.value = String(mode);
+		opt.textContent = lobbyTypeName(mode);
+		fragment.appendChild(opt);
+	});
+	select.appendChild(fragment);
+	select.addEventListener('change', async () => {
+		const full = (root as any)._fullHistory as any[] || [];
+		const val = select.value;
+		const filtered = val === 'all' ? full : full.filter(h => String(h.match.mode) === val);
+		await renderMatchHistory(filtered, userId);
+	});
 }
