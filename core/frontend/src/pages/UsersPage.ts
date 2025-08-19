@@ -32,23 +32,28 @@ function renderUserRow(
                     data-userid="${u.id}">Unblock</button>
             </div>`;
 		} else {
-			// Normal friendship actions + Block button
+			// Normal friendship actions (+ conditional Reject when incoming) + Block button (except when incoming)
 			let friendAction = '';
 			if (!isFriend) {
 				if (sentByMe) {
 					friendAction = `<button disabled class="ml-0 text-sm px-3 py-1 rounded-md cursor-not-allowed">Pending…</button>`;
 				} else if (sentToMe) {
 					friendAction = `<button class="accept-btn bg-blue-800 text-white text-sm px-3 py-1 rounded-md hover:bg-blue-700 cursor-pointer"
-                        data-requestid="${reqIdIn}" data-userid="${u.id}">Accept</button>`;
+                        data-requestid="${reqIdIn}" data-userid="${u.id}">Accept</button>
+                        <button class="reject-btn bg-red-800 text-white text-sm px-3 py-1 rounded-md hover:bg-red-700 cursor-pointer"
+                        data-requestid="${reqIdIn}" data-userid="${u.id}">Reject</button>`;
 				} else {
 					friendAction = `<button class="invite-btn bg-green-800 text-white text-sm px-3 py-1 rounded-md hover:bg-green-700 cursor-pointer"
                         data-username="${u.username}" data-userid="${u.id}">Invite</button>`;
 				}
 			}
+			const maybeBlock = (!sentToMe)
+				? `<button class="block-btn bg-red-800 text-white text-sm px-3 py-1 rounded-md hover:bg-red-700 cursor-pointer"
+                    data-userid="${u.id}">Block</button>`
+				: '';
 			action = `<div class="flex items-center gap-2">
                 ${friendAction}
-                <button class="block-btn bg-red-800 text-white text-sm px-3 py-1 rounded-md hover:bg-red-700 cursor-pointer"
-                    data-userid="${u.id}">Block</button>
+                ${maybeBlock}
             </div>`;
 		}
 	}
@@ -180,6 +185,21 @@ const UsersPage: PageModule = {
 						document.dispatchEvent(new Event('friends-changed'));
 					} catch {
 						btn.disabled = false; btn.textContent = 'Accept';
+					}
+				});
+			});
+
+			// reject request
+			list.querySelectorAll<HTMLButtonElement>('.reject-btn').forEach(btn => {
+				btn.addEventListener('click', async () => {
+					const requestId = btn.dataset.requestid!;
+					btn.disabled = true; btn.textContent = 'Rejecting…';
+					try {
+						const r = await fetch(`/api/requests/${requestId}/reject`, { method: 'POST' });
+						if (!r.ok) throw new Error(await r.text());
+						document.dispatchEvent(new Event('friends-changed'));
+					} catch {
+						btn.disabled = false; btn.textContent = 'Reject';
 					}
 				});
 			});
