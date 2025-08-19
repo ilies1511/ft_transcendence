@@ -267,7 +267,6 @@ export class Game {
 				const msg: ClientToMatchConnect = {
 					client_id: this.client_id,
 					type: 'connect',
-					password: this.password,
 				};
 				console.log("sending: ", JSON.stringify(msg));
 				this._socket.send(JSON.stringify(msg));

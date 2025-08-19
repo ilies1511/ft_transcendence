@@ -2,8 +2,6 @@ import { Game } from '../game_new.ts';
 import { Tournament } from '../Tournament.ts';
 import { GameApi } from '../GameApi.ts';
 
-import { get_password_from_user } from '../placeholder_globals.ts';
-
 import type {
 	ReconnectResp,
 } from '../game_shared/message_types.ts';
@@ -39,14 +37,12 @@ export async function attempt_reconnect(match_container: HTMLElement, user_id: n
 		return ;
 	}
 
-	let lobby_password: string = '';
 
 	const reconnect: ReconnectResp = await GameApi.reconnect(user_id);
 	let match_id: number = -1;
 	if (reconnect.tournament_id >= 0) {
-		lobby_password = await get_password_from_user('Tournament');
 		if (!globalThis.tournament) {
-			new Tournament(user_id, reconnect.tournament_id, lobby_password, match_container);
+			new Tournament(user_id, reconnect.tournament_id, reconnect.tournament_password, match_container);
 		} else {
 			console.log("Error: there is allready a tournament obj");
 		}
@@ -56,14 +52,11 @@ export async function attempt_reconnect(match_container: HTMLElement, user_id: n
 		//todo
 	} else if (reconnect.match_id >= 0) {
 		match_id = reconnect.match_id;
-		if (reconnect.match_has_password) {
-			lobby_password = await get_password_from_user('Game');
-		}
 	}
 	if (match_id != -1) {
-		console.log("Game: Reconnecting to match with password:" , lobby_password);
-		new Game(user_id, match_container, match_id, "default", lobby_password, reconnect.lobby_type);
-		await globalThis.game.reconnect_local_player();
+		console.log("Game: Reconnecting to match with password:" , reconnect.match_password);
+		new Game(user_id, match_container, match_id, "default", reconnect.match_password, reconnect.lobby_type);
+		await globalThis.game!.reconnect_local_player();
 		return ;
 	}
 }
