@@ -62,8 +62,15 @@ const template = /*html*/ `
 
 		<!-- match history -->
 		<section class="space-y-4">
-			<h2 class="px-4 text-xl font-bold text-white">Match History</h2>
-
+			<div class="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between px-4">
+				<h2 class="text-xl font-bold text-white">Match History</h2>
+				<label class="text-sm text-[#b99da6] flex items-center gap-2">
+					<span>Filter Mode:</span>
+					<select id="modeFilter" class="bg-[#271c1f] border border-[#543b43] rounded px-2 py-1 text-white text-sm">
+						<option value="all">All</option>
+					</select>
+				</label>
+			</div>
 			<div class="mx-4 overflow-x-auto rounded-xl border border-[#543b43] bg-[#181113]">
 				<table class="min-w-[480px] w-full text-left">
 					<thead class="bg-[#271c1f] text-white">
@@ -72,10 +79,12 @@ const template = /*html*/ `
 							<th class="px-4 py-3">Opponent</th>
 							<th class="px-4 py-3">Result</th>
 							<th class="px-4 py-3">Score</th>
+							<th class="px-4 py-3">Mode</th>
+							<th class="px-4 py-3">Duration</th>
 						</tr>
 					</thead>
 					<tbody id="matchHistoryBody" class="divide-y divide-[#543b43]">
-						<tr><td colspan="4" class="px-4 py-4 text-center text-[#b99da6]">Loading...</td></tr>
+						<tr><td colspan="6" class="px-4 py-4 text-center text-[#b99da6]">Loading...</td></tr>
 					</tbody>
 				</table>
 			</div>
@@ -129,6 +138,8 @@ async function renderProfile(root: HTMLElement, user: ApiUser) {
 		renderStats(stats);
 	}
 	const history = await fetchMatchHistory(user.id);
+	(root as any)._fullHistory = history; // cache
+	initModeFilter(history, user.id, root);
 	await renderMatchHistory(history, user.id);
 	// draw chart after stats
 	if (stats) drawStatsChart(stats);
@@ -194,12 +205,12 @@ async function renderMatchHistory(history: any[], userId: number) {
 		const tbody = document.getElementById('matchHistoryBody');
 		if (!tbody) return;
 		if (!history.length) {
-				tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-4 text-center text-[#b99da6]">No matches yet</td></tr>`;
+				tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-4 text-center text-[#b99da6]">No matches yet</td></tr>`;
 				return;
 		}
 		const participantPromises = history.map(h => fetchMatchParticipants(h.match.id));
-		const participantsList = await Promise.all(participantPromises);
 
+		const participantsList = await Promise.all(participantPromises);
 		const rowsHtml = history.map((h, idx) => {
 				const participants = participantsList[idx] || [];
 				const others = participants.filter((p: any) => p.user_id !== userId);
@@ -231,6 +242,9 @@ async function renderMatchHistory(history: any[], userId: number) {
 						scoreDisplay = `${h.score}`;
 				}
 
+				const modeDisplay = lobbyTypeName(h.match.mode);
+				const durationDisplay = formatDuration(h.match.duration);
+
 				return `
 				<tr>
 						<td class="px-4 py-3 text-[#b99da6]">${formatDate(h.match.created_at)}</td>
@@ -241,6 +255,8 @@ async function renderMatchHistory(history: any[], userId: number) {
 								</span>
 						</td>
 						<td class="px-4 py-3 text-[#b99da6]">${scoreDisplay}</td>
+						<td class="px-4 py-3 text-[#b99da6]">${modeDisplay}</td>
+						<td class="px-4 py-3 text-[#b99da6]">${durationDisplay}</td>
 				</tr>`;
 		}).join('');
 
@@ -350,3 +366,47 @@ const ProfilePage: PageModule & { renderWithParams?: Function } = {
 }
 
 export default ProfilePage
+
+function formatDuration(raw: number) {
+    // raw already in seconds (float). Show mm:ss or s.ms if < 60
+    if (raw == null || isNaN(raw)) return '-';
+    if (raw < 60) {
+        return `${raw.toFixed(2)}s`;
+    }
+    const totalSeconds = Math.floor(raw);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+const LobbyTypeNames: Record<number, string> = {
+    1: 'Matchmaking',
+    2: 'Custom',
+    3: 'Tournament',
+    4: 'Tournament Game'
+};
+
+function lobbyTypeName(mode: number): string {
+    return LobbyTypeNames[mode] ?? `Mode ${mode}`;
+}
+
+function initModeFilter(history: any[], userId: number, root: HTMLElement) {
+	const select = root.querySelector<HTMLSelectElement>('#modeFilter');
+	if (!select) return;
+	// Collect unique modes
+	const modes = Array.from(new Set(history.map(h => h.match.mode))).sort((a, b) => a - b);
+	const fragment = document.createDocumentFragment();
+	modes.forEach(mode => {
+		const opt = document.createElement('option');
+		opt.value = String(mode);
+		opt.textContent = lobbyTypeName(mode);
+		fragment.appendChild(opt);
+	});
+	select.appendChild(fragment);
+	select.addEventListener('change', async () => {
+		const full = (root as any)._fullHistory as any[] || [];
+		const val = select.value;
+		const filtered = val === 'all' ? full : full.filter(h => String(h.match.mode) === val);
+		await renderMatchHistory(filtered, userId);
+	});
+}
