@@ -71,7 +71,7 @@ export class Game {
 	//private _sphere: BABYLON.Mesh;
 
 	//TODO: update1 for user leave notifications
-	// private _last_server_msg: LobbyToClient | null = null;
+	 private _last_server_msg: ArrayBuffer | null = null;
 	private _msg_queue: LobbyToClient[] = [];
 
 
@@ -459,14 +459,17 @@ export class Game {
 	// }
 	//TODO: update2 for user leave notifications
 	private _process_msg(): void {
+		if (this._last_server_msg) {
+	 		if (this._active_scene !== this._game_scene) {
+	 			this._start_game();
+	 		}
+	 		/* msg is a game state update */
+	 		//console.log("GAME: got ArrayBuffer");
+	 		this._game_scene.update(GameState.deserialize(this._last_server_msg));
+			this._last_server_msg = null;
+		}
 		while (this._msg_queue.length) {
 			const raw = this._msg_queue.shift()!; // never undefined here
-
-			if (raw instanceof ArrayBuffer) {
-				if (this._active_scene !== this._game_scene) this._start_game();
-				this._game_scene.update(GameState.deserialize(raw));
-				continue;
-			}
 
 			const json = JSON.parse(raw as unknown as string) as LobbyToClientJson;
 			console.log("GAME: got", json);
@@ -608,7 +611,11 @@ export class Game {
 	//TODO: update3 for user leave notifications
 	private _rcv_msg(event: MessageEvent): void {
 		// store all incoming frames; do NOT overwrite
-		this._msg_queue.push(event.data as LobbyToClient);
+		if (event.data instanceof ArrayBuffer) {
+			this._last_server_msg = event.data;
+		} else {
+			this._msg_queue.push(event.data as LobbyToClient);
+		}
 	}
 
 	private _createCanvas(): HTMLCanvasElement {
