@@ -92,8 +92,8 @@ All the console logs should be in english.
 
 # Maksim Notes
 - [x] Avatar insta update via ws for other users.
-- [ ] Main page text update from lorem ipsum.
-- [ ] When the game ends, its not possible to click logout button. Need to add z-index.
+- [x] Main page text update from lorem ipsum.
+- [x] When the game ends, its not possible to click logout button. Need to add z-index.
 - [ ] Refactor CSS, have default styles from the styles.css. Make same sizes for different pages.
 - [ ] Check how many modules we have. We have to have 7 major modules.
 - [ ] Update game end page. Fix it a bit, add corners back so it feels better.
