@@ -55,6 +55,7 @@ export class GameEngine {
 	public timer?: number;//seconds left of the game
 	public lobby_type: LobbyType;
 	private _game_lobby: GameLobby;
+	private _frame_count: number = 0;
 
 	constructor(map_name: string,
 		lobby_type: LobbyType,
@@ -189,6 +190,7 @@ export class GameEngine {
 	private update_balls(delta_time: number) {
 		const input_d_time: number = delta_time;
 		for (const ball of this.balls) {
+			ball.changed = true;
 			if (Math.abs(ball.pos.x) > 100 || Math.abs(ball.pos.y) > 100) {
 				ball.reset();
 				continue ;
@@ -296,12 +298,21 @@ export class GameEngine {
 
 	private update_walls(delta_time: number) {
 		for (const wall of this.walls) {
-			wall.rotate(wall.rotation * Math.PI / 2, delta_time);
+			if (wall.rotation != 0) {
+				wall.rotate(wall.rotation * Math.PI / 2, delta_time);
+				wall.changed = true;
+			}
+			if (this._frame_count % 60 == 0) {
+				wall.changed = true;
+			}
 		}
 	}
 
 	private update_paddles(delta_time: number) {
 		for (const client of this.clients) {
+			if (this._frame_count % 60 == 0) {
+				client.changed = true;
+			}
 			client.update(this.balls, delta_time);
 		}
 	}
@@ -342,6 +353,7 @@ export class GameEngine {
 		this.update_walls(delta_time);
 		this.update_balls(delta_time);
 		this.finish_frame(delta_time);
+		this._frame_count++;
 	}
 
 	private finish_frame(delta_time: number) {

@@ -1,7 +1,7 @@
 {
 	"paddle_length": 7,
 	"base_length": 10,
-	"health": 1,
+	"health": 53,
 	"max_time": 60,
 	"players": {
 		"1": {
@@ -41,7 +41,15 @@
 			"length": 5,
 			"effects": [],
 			"rotation": 0.4
+		},
+		"5": {
+			"center": [0, 0],
+			"normal": [0, 1],
+			"length": 20,
+			"effects": [],
+			"rotation": 0
 		}
+
 	},
 	"balls": {
 		"1": {

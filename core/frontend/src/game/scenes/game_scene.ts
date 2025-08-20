@@ -8,6 +8,8 @@ import { GridMaterial } from '@babylonjs/materials/grid';
 import type { ClientBall, ClientClient, ClientWall, GameState } from '../objects/index.ts';
 
 import { BaseScene } from './base.ts';
+import { Effects } from '../game_shared/serialization.ts';
+
 
 let color_idx = 0;
 
@@ -71,7 +73,7 @@ export class GameScene extends BaseScene {
 	private _meshes: Map<number, BABYLON.Mesh> = new Map<number, BABYLON.Mesh>;
 	//private _score_text: GUI.TextBlock;
 
-	private _color_schemes: Map<number, PlayerColors> = new Map<number, PlayerColors>;
+	public _color_schemes: Map<number, PlayerColors> = new Map<number, PlayerColors>;
 
 	public score_panel: ScorePanel;
 
@@ -157,7 +159,14 @@ export class GameScene extends BaseScene {
 				// Correctly calculate rotation from the wall's normal vector
 				const angle = Math.atan2(w.normal.y, w.normal.x) - Math.PI / 2;
 				wall.rotation.z = angle;
-
+				const color: PlayerColors | undefined = this._color_schemes.get(w.obj_id);
+				if (color) {
+					if (w.effects.includes(Effects.BASE)) {
+						wall.material = color.major;
+					} else {
+						wall.material = color.minor;
+					}
+				}
 			} else {
 				const wall: BABYLON.Mesh = BABYLON.MeshBuilder.CreateBox(
 					`wall_${w.obj_id}`,
@@ -175,6 +184,10 @@ export class GameScene extends BaseScene {
 
 				const angle = Math.atan2(w.normal.y, w.normal.x) - Math.PI / 2;
 				wall.rotation.z = angle;
+				const color: PlayerColors | undefined = this._color_schemes.get(w.obj_id);
+				if (color) {
+					wall.material = color.major;
+				}
 
 				this._meshes.set(w.obj_id, wall);
 			}
@@ -185,33 +198,47 @@ export class GameScene extends BaseScene {
 	private _init_color_schemes(clients: ClientClient[]) {
 		clients.forEach((c: ClientClient) => {
 			if (this._color_schemes.has(c.obj_id)) {
-				return;
+				return ;
 			}
 			this._color_schemes.set(c.obj_id, new PlayerColors(this, rnd_col(), rnd_col(), `player_${c.obj_id}`));
-			const color_scheme: PlayerColors = this._color_schemes.get(c.obj_id);
-			if (this._meshes.has(c.paddle.obj_id) == undefined
-				|| this._meshes.has(c.base.obj_id) == undefined) {
-				console.log("game error: paddle or base not in meshes");
-				process.exit(1);
-			}
-			const paddle_mesh: BABYLON.Mesh = this._meshes.get(c.paddle.obj_id);
-			paddle_mesh.material = color_scheme.major;
+			//const color_scheme: PlayerColors = this._color_schemes.get(c.obj_id);
+			//if (this._meshes.has(c.paddle.obj_id) == undefined
+			//	|| this._meshes.has(c.base.obj_id) == undefined) {
+			//	console.log("game error: paddle or base not in meshes");
+			//	process.exit(1);
+			//}
+			//const paddle_mesh: BABYLON.Mesh = this._meshes.get(c.paddle.obj_id);
+			//paddle_mesh.material = color_scheme.major;
 			// const base_mesh: BABYLON.Mesh = this._meshes.get(c.base.obj_id);
 			// base_mesh.material = color_scheme.minor;
 		});
 	}
 
 	update(game_state: GameState): void {
+		//console.log('Game: got GameState: ', game_state);
 		//console.log("game_timer: ", game_state.game_timer);
-		this._update_balls(game_state.balls);
-		this._update_walls(game_state.walls);
-		this._init_color_schemes(game_state.clients);
-
+		//this._init_color_schemes(game_state.clients);
 		game_state.clients.forEach((c: ClientClient) => {
-			const color: BABYLON.Color3 = this._color_schemes.get(c.obj_id).major.diffuseColor;
-			this.score_panel.update_score(c.obj_id, c.score, color, undefined);
+			let color: PlayerColors | undefined = this._color_schemes.get(c.obj_id);
+			if (color) {
+				return ;
+			}
+			color = new PlayerColors(this, rnd_col(), rnd_col(), `player_${c.obj_id}`);
+			this._color_schemes.set(c.obj_id, color);
+			console.log(c.base.obj_id);
+			console.log(c.paddle.obj_id);
+			this._color_schemes.set(c.base.obj_id, color);
+			this._color_schemes.set(c.paddle.obj_id, color);
+
+			//console.log(c);
+			
+			this.score_panel.update_score(c.obj_id, c.score, color.major.diffuseColor, undefined);
 			this.score_panel.update_timer(game_state.game_timer);
 		});
+		this._update_balls(game_state.balls);
+		this._update_walls(game_state.walls);
+
+
 
 	}
 };

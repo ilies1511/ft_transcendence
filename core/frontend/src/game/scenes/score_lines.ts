@@ -7,15 +7,17 @@ class ScoreLine {
 	public display_name: string = "Loading name..";
 
 	constructor(id: number, score: number, color: BABYLON.Color3, display_name?: string) {
+
+		color = new BABYLON.Color3(1, 1, 1);
 		this.id = id;
 		this.textBlock = new GUI.TextBlock();
-		this.update(score, color);
 		this.textBlock.fontSize = 28;
 		this.textBlock.height = "32px";
 		this.textBlock.textHorizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
 		if (display_name) {
 			this.display_name = display_name;
 		}
+		this.update(score, color, display_name);
 	}
 
 	public update(score: number, color: BABYLON.Color3, name?: string) {
@@ -30,6 +32,8 @@ export class ScorePanel {
 	private lines: Map<number, ScoreLine>;
 	private timer_text: GUI.TextBlock;
 	private timer?: number;
+
+	private _display_names: Map<number, string> = new Map<number, string>;
 
 	constructor(gui: GUI.AdvancedDynamicTexture) {
 		this.panel = new GUI.StackPanel();
@@ -53,7 +57,8 @@ export class ScorePanel {
 	}
 
 	public update_display_name(id: number, display_name: string) {
-		const line: ScoreLine | undefined = this.lines.get(id);
+		let line: ScoreLine | undefined = this.lines.get(id);
+		this._display_names.set(id, display_name);
 		if (!line) {
 			return ;
 		}
@@ -64,15 +69,25 @@ export class ScorePanel {
 	}
 
 	public update_score(id: number, score: number, color: BABYLON.Color3, name?: string) {
-		//console.log("Game: update score", id);
+		console.log("Game: update score ", id);
+		if (name) {
+			this._display_names.set(id, name);
+		} else {
+			name = this._display_names.get(id);
+		}
+		if (!name) {
+			name = 'Loading name..';
+		}
 		let line = this.lines.get(id);
 		if (!line) {
+			console.log("no line found");
 			line = new ScoreLine(id, score, color, name);
 			this.lines.set(id, line);
 			this.panel.addControl(line.textBlock);
 		} else {
-			line.update(score, color, name);
+			console.log("line found");
 		}
+		line.update(score, color, name);
 	}
 
 	public remove_score(id: number) {

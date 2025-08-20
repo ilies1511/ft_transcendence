@@ -11,8 +11,7 @@ export class SharedBall {
 	public lifetime: number;
 	public dispose: boolean;
 	public radius: number = 0.5;//hotfix: idk the actual radius is 1 but this seems to fix the calculations
-
-
+	public changed: boolean = true;
 
 	constructor(obj_id?: number, dispose?: boolean) {
 		this.pos = new SharedVec2();
@@ -45,7 +44,11 @@ export class SharedBall {
 	}
 
 	// serializes the pos, effects, lifetime, dispose
-	public serialize(): ArrayBuffer {
+	public serialize(): ArrayBuffer | undefined {
+		if (!this.changed) {
+			return ;
+		}
+		this.changed = false;
 		const effectsCount = this.effects.length;
 		const buffer = new ArrayBuffer(
 			2 // obj_id

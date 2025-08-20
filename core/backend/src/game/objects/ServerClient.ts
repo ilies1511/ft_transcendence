@@ -49,6 +49,7 @@ export class ServerClient extends SharedClient {
 		const new_paddle_pos: ServerVec2 = this.paddle.center.clone();
 		if (this.up) {
 			new_paddle_pos.add(direct.scale(0.12));
+			//this.changed = true;
 		}
 		if (this.down) {
 			new_paddle_pos.add(direct.scale(-0.12));
