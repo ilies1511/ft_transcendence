@@ -44,7 +44,7 @@ export class ServerWall extends SharedWall {
 		//this.normal.y = newY;
 
 		//this.normal.unit();
-		//this.update();
 		this.angular_vel = angle;
+		this.update();
 	}
 };

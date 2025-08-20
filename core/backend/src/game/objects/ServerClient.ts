@@ -78,5 +78,6 @@ export class ServerClient extends SharedClient {
 		} else {
 			this.paddle.rotation = 0;
 		}
+		this.paddle.update();
 	}
 };

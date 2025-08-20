@@ -29,20 +29,6 @@
 			"rotation": 0
 		},
 		"3": {
-			"center": [0, -3.5],
-			"normal": [0, 1],
-			"length": 5,
-			"effects": [],
-			"rotation": 0.4
-		},
-		"4": {
-			"center": [0, 3.5],
-			"normal": [0, 1],
-			"length": 5,
-			"effects": [],
-			"rotation": 0.4
-		},
-		"5": {
 			"center": [0, 0],
 			"normal": [0, 1],
 			"length": 20,
