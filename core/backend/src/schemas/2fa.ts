@@ -1,3 +1,4 @@
+// BEGIN -- '/api/2fa/generate'
 export const Generate2FABodySchema = {
 	type: 'object',
 	additionalProperties: false,
@@ -23,3 +24,19 @@ export const generate2FASchema = {
 		// 401: { $ref: 'common#/Error' }
 	}
 } as const
+// END -- '/api/2fa/generate'
+
+// BEGIN -- '/api/2fa/verify'
+export const verify2FASchema = {
+	tags: ['2fa'],
+	body: {
+		type: 'object',
+		required: ['token'],
+		properties: { token: { type: 'string' } }
+	},
+	response: {
+		200: { type: 'object', properties: { success: { type: 'boolean' } } },
+		400: { type: 'object', properties: { error: { type: 'string' } } }
+	}
+}
+// BEGIN -- '/api/2fa/verify'
