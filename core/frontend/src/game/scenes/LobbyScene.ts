@@ -10,6 +10,8 @@ export class LobbyScene extends BaseScene {
 	private _player_count_text: GUI.TextBlock;
 	private _loaded_player_count_text: GUI.TextBlock;
 	private _header: GUI.TextBlock;
+	private _global_player_count: GUI.TextBlock;
+
 
 	constructor(engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
 		super(engine, canvas);
@@ -53,11 +55,19 @@ export class LobbyScene extends BaseScene {
 		this._loaded_player_count_text.color = "white";
 		this._loaded_player_count_text.height = "30px";
 		panel.addControl(this._loaded_player_count_text);
+
+		this._global_player_count = new GUI.TextBlock();
+		this._global_player_count.color = "white";
+		this._global_player_count.height = "30px";
+		panel.addControl(this._loaded_player_count_text);
+		this._global_player_count.text = '123123213';
 	}
 
 	public update(info: GameLobbyUpdate) {
 		this._player_count_text.text = `Players: ${info.player_count}/${info.target_player_count}`;
 		this._loaded_player_count_text.text = `Loaded: ${info.loaded_player_count}/${info.target_player_count}`;
+
+		this._global_player_count.text = '123123213';
 		
 		if (info.player_count < info.target_player_count) {
 			this._header.text = "Waiting for more players to join...";

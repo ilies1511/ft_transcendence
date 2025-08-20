@@ -543,7 +543,7 @@ export class Game {
 			const header = document.createElement("div");
 			header.className = "flex flex-col items-center text-center mb-8 pt-[30px]";
 			header.innerHTML = `
-				<h2 class="text-5xl text-white mb-1 font-bold">Game Over</h2>
+				<h2 class="text-5xl text-white mb-1 font-bold">Game Finished</h2>
 				<div class="text-sm text-[#b99da6] flex items-center gap-1">
 					<span>${modeLabel(msg.mode)}</span>
 					<span aria-hidden="true">•</span>

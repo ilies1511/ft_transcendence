@@ -32,6 +32,9 @@
 }
 
 
+[ ] - global player count in frontend game lobby scene
+
+
 
 
 [0]   placements: [ { id: 1, final_placement: 2 }, { id: 2, final_placement: 1 } ]
