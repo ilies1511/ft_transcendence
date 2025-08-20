@@ -21,13 +21,13 @@ export default fp(async (app: FastifyInstance) => {
 
 	// POST Cookie PlugIn !
 	await app.register(csrfProtection, {
-		cookieOpts: {
-			signed: false,
-			sameSite: 'lax',
-			path: '/',
-			secure: process.env.NODE_ENV === 'production',
-			httpOnly: true
-		},
+		// cookieOpts: {
+		// 	signed: false,
+		// 	sameSite: 'lax',
+		// 	path: '/',
+		// 	secure: process.env.NODE_ENV === 'production',
+		// 	httpOnly: true
+		// },
 		getToken: (req: FastifyRequest) => req.headers['x-csrf-token'] as string
 	})
 
@@ -46,6 +46,7 @@ export default fp(async (app: FastifyInstance) => {
 		'/api/login',
 		'/api/auth/google',
 		'/api/auth/google/callback',
+		'/api/csrf',
 		// END -- prod
 
 		// BEGIN -- dev
@@ -87,6 +88,7 @@ export default fp(async (app: FastifyInstance) => {
 		}
 		await req.jwtVerify().catch(() => reply.code(401).send({ error: 'Not authenticated' }))
 	})
+
 	app.addHook('onRequest', async (req, reply) => {
 		if (isOpen(req.url)) {
 			return
