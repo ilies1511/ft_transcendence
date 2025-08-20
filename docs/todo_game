@@ -1,3 +1,7 @@
+
+[ ]: same account 2 sessions leads to buggy lobby
+
+
 [x]: {
 	1. A creates custom game
 	2. A invites B
