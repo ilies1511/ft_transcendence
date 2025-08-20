@@ -26,23 +26,23 @@ export async function refreshHeader() {
 				class="absolute right-0 mt-2 w-44 bg-[#2b171e] rounded-md overflow-hidden
 				 shadow-lg text-white divide-y divide-[#41222b] hidden">
 				<li><a data-route href="/profile"
-						class="z-[9999] cursor-pointer block px-4 py-2 hover:bg-[#41222b]">
+						class="cursor-pointer block px-4 py-2 hover:bg-[#41222b]">
 					Profile
 					</a>
 				</li>
 				<li><a data-route href="/friendlist"
-						class="z-[9999] cursor-pointer block px-4 py-2 hover:bg-[#41222b]">
+						class="cursor-pointer block px-4 py-2 hover:bg-[#41222b]">
 					Friends
 					</a>
 				</li>
 				<li><a data-route href="/settings"
-						class="z-[9999] cursor-pointer block px-4 py-2 hover:bg-[#41222b]">
+						class="cursor-pointer block px-4 py-2 hover:bg-[#41222b]">
 					Settings
 					</a>
 				</li>
 				<li>
 					<button id="logout"
-						class="flex items-center gap-2 z-[9999] w-full
+						class="flex items-center gap-2 w-full
 						cursor-pointer text-left px-4 py-2 text-red-500 hover:bg-[#41222b]">
 						${icons.logout}Log out
 					</button>
