@@ -5,7 +5,14 @@ import { ServerClient } from '../../../objects/ServerClient.ts';
 import { Effects } from '../../../game_shared/serialization.ts';
 import type { ServerError } from '../../../game_shared/message_types.ts';
 
-import default_map from './default.json';
+import default_map from './default.json' with { type: "json" };
+import OctaPong2 from './OctaPong2.json' with { type: "json" };
+import OctaPong4 from './OctaPong4.json' with { type: "json" };
+import SimpleSquare4 from './SimpleSquare4.json' with { type: "json" };
+import SimpleSquare2 from './SimpleSquare2.json' with { type: "json" };
+import BigPlus4 from './BigPlus4.json' with { type: "json" };
+import BigPlus2 from './BigPlus2.json' with { type: "json" };
+import Diamond2 from './Diamond2.json' with { type: "json" };
 
 export class MapFile {
 	public walls: ServerWall[] = [];
@@ -18,7 +25,8 @@ export class MapFile {
 	constructor(map_name: string = 'default') {
 		let map_data: any;
 		if (map_name == "default") {
-			map_data = default_map;
+			// set the name here
+			map_data = OctaPong2;
 		} else {
 			throw ('Invalid Map');
 		}
