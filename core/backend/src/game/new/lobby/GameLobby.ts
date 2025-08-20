@@ -55,8 +55,8 @@ export class GameLobby {
 
 	public lobby_type: LobbyType;
 
-	private static readonly PENDING_CONNECT_TIMEOUT_MS = 15_000;
-	private static readonly RECONNECT_GRACE_MS = 30_000;
+	private static readonly PENDING_CONNECT_TIMEOUT_MS = 60_000;
+	private static readonly RECONNECT_GRACE_MS = 60_000;
 
 
 	constructor(

@@ -240,7 +240,7 @@ export class GameEngine {
 					hit_points.push(intersc.p);
 				}
 				delta_time -= first_intersec.time;
-				//delta_time -= EPSILON; /* idk why but without this the ball flys through walls */
+				delta_time -= EPSILON * 10; // protects from very fast balls lagging out the server without effecting gameplay
 
 				const wall = first_intersec.wall;
 				if (wall.effects.indexOf(Effects.BASE) != -1) {

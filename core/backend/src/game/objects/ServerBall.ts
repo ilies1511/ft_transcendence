@@ -80,6 +80,11 @@ export class ServerBall extends SharedBall {
 			}
 			//console.log("intermediate ball speed: ", this.speed);
 		}
+		const max_speed: number = 15;
+		const ball_speed: number = this.speed.length();
+		if (max_speed > ball_speed) {
+			this.speed.scale(max_speed / ball_speed)
+		}
 		//console.log("ball speed after: ", this.speed);
 		//console.log("****************");
 	}
