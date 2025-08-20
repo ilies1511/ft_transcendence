@@ -6,11 +6,13 @@ import routes from './routes/index.ts';
 //Mit namespace
 import * as testRoutes from './routes/test_route.ts'
 
+export const CSRF = false;
+
 async function main() {
 
-	const fastify = Fastify({ logger: false })
 	// const fastify = Fastify({ logger: false })
-	// const fastify = Fastify({logger: { level: 'debug' }})
+	// const fastify = Fastify({ logger: false })
+	const fastify = Fastify({logger: { level: 'debug' }})
 	// const fastify = Fastify({logger: { level: 'info' }})
 
 	await fastify.register(plugins);

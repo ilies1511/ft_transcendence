@@ -5,6 +5,7 @@ import jwt from '@fastify/jwt'
 import 'dotenv/config'                 // loads JWT_SECRET & COOKIE_SECRET from .env
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import csrfProtection from '@fastify/csrf-protection'
+import { CSRF } from '../index.ts'
 
 export default fp(async (app: FastifyInstance) => {
 	// parses & signs cookies
@@ -20,16 +21,18 @@ export default fp(async (app: FastifyInstance) => {
 	})
 
 	// POST Cookie PlugIn !
-	await app.register(csrfProtection, {
-		// cookieOpts: {
-		// 	signed: false,
-		// 	sameSite: 'lax',
-		// 	path: '/',
-		// 	secure: process.env.NODE_ENV === 'production',
-		// 	httpOnly: true
-		// },
-		getToken: (req: FastifyRequest) => req.headers['x-csrf-token'] as string
-	})
+	if (CSRF) {
+		await app.register(csrfProtection, {
+			// cookieOpts: {
+			// 	signed: false,
+			// 	sameSite: 'lax',
+			// 	path: '/',
+			// 	secure: process.env.NODE_ENV === 'production',
+			// 	httpOnly: true
+			// },
+			getToken: (req: FastifyRequest) => req.headers['x-csrf-token'] as string
+		})
+	}
 
 	// adds reply.jwtSign   +   request.jwtVerify
 	await app.register(jwt, {
@@ -95,19 +98,21 @@ export default fp(async (app: FastifyInstance) => {
 		}
 		await req.jwtVerify().catch(() => reply.code(401).send({ error: 'Not authenticated' }))
 	})
-
-	app.addHook('onRequest', (req, reply, done) => {
-		if (isOpen(req.url) || !isUnsafe(req.method)) {
-			return done();
-		}
-		app.csrfProtection(req, reply, done)
-	})
+	if (CSRF) {
+		app.addHook('onRequest', (req, reply, done) => {
+			if (isOpen(req.url) || !isUnsafe(req.method)) {
+				return done();
+			}
+			app.csrfProtection(req, reply, done)
+		})
+	}
 	// END -- global Hooks
-
-	app.get('/api/csrf', async (req, reply) => {
-		const token = await reply.generateCsrf()
-		return { token }
-	})
+	if (CSRF) {
+		app.get('/api/csrf', async (req, reply) => {
+			const token = await reply.generateCsrf()
+			return { token }
+		})
+	}
 })
 
 

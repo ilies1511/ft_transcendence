@@ -2,11 +2,15 @@ import { type FastifyInstance, type FastifyPluginAsync } from "fastify";
 import QRCode from 'qrcode';
 import { Disable2FAResponse, disable2FA, init2FA, verify2FA } from "../functions/2fa.ts";
 import { type UserRow } from "../types/userTypes.ts";
+import { generate2FASchema } from "../schemas/2fa.ts";
 
 export const twoFaRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 	fastify.post(
 		'/api/2fa/generate',
-		{ preHandler: [fastify.auth] }, //Needed ?
+		{
+			schema: generate2FASchema
+		},
+		// { preHandler: [fastify.auth] }, //Needed ?
 		// // {
 		// // 	schema: {
 		// // 		tags: ['auth'],
