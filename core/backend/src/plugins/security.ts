@@ -10,7 +10,7 @@ export default fp(async (fastify: FastifyInstance) => {
 	await fastify.register(helmet)
 
 	await fastify.register(cors, {
-		origin: ['http://localhost:5173'],
+		origin: ['http://localhost:5173', 'http://localhost:3000'],
 		credentials: true,
 		allowedHeaders: ['Content-Type', 'X-CSRF-Token', 'Authorization']
 	})
@@ -20,7 +20,7 @@ export default fp(async (fastify: FastifyInstance) => {
 		timeWindow: '1 minute',
 		ban: 0,
 		hook: 'onRequest',
-		allowList: ['127.0.0.1']
+		allowList: ['127.0.0.1', '::1']
 	})
 
 	// // POST Cookie PlugIn !
