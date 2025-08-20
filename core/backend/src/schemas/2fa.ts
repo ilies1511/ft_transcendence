@@ -39,4 +39,17 @@ export const verify2FASchema = {
 		400: { type: 'object', properties: { error: { type: 'string' } } }
 	}
 }
-// BEGIN -- '/api/2fa/verify'
+// END -- '/api/2fa/verify'
+
+// BEGIN -- '/api/2fa/disable'
+export const disable2FASchema = {
+	tags: ['2fa'],
+	description: 'Disable 2FA for current user',
+	response: {
+		200: {
+			type: 'object',
+			properties: { success: { type: 'boolean' } }
+		}
+	}
+}
+// END -- '/api/2fa/disable'
