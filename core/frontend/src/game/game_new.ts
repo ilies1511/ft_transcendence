@@ -94,6 +94,10 @@ export class Game {
 
 	private _display_names: Map<number, string> | undefined = undefined;
 
+	private _next_socket_timeout: number = 100;
+
+	private _next_close_handler: NodeJS.Timeout | undefined = undefined;
+
 	constructor(
 		id: number, //some number that is unique for each client, ideally bound to the account
 		container: HTMLElement,
@@ -257,6 +261,7 @@ export class Game {
 			if (this.finished) {
 				return ;
 			}
+			console.log("GAME: Attempting (re)connect..");
 			console.log("game id: ", this.game_id);
 			const wsBase =
 				(location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
@@ -279,8 +284,14 @@ export class Game {
 			this._socket.addEventListener("close", () => {
 				console.log("GAME: Disconnected");
 				if (!this.finished && !is_unloading) {
-					console.log("GAME: Attempting reconnect..");
-					this._open_socket();
+					if (this._next_close_handler) {
+						clearTimeout(this._next_socket_timeout);
+					}
+					this._next_close_handler = setTimeout(() => {
+							this._open_socket();
+						}, this._next_socket_timeout
+					);
+					this._next_socket_timeout *= 2;
 				} else {
 				}
 			});
@@ -391,12 +402,22 @@ export class Game {
 				break ;
 			case ('Full'):
 			case ('Invalid Map'):
-			case ('Allready connected in a different session'):
 			case ('Not Found'):
+				this.finished = true;
+				this.disconnect();
+				//todo: this toast is not fully visable on the game page
+				showToast({
+					title: 'Could not run game\n\nasdasdasd\n\nad',
+				});
+				break ;
+			case ('Allready connected in a different session'):
 				this.finished = true;
 				this.disconnect();
 				break ;
 			case ('Internal Error'):
+				showToast({
+					title: 'Could not run game',
+				});
 				this.finished = true;
 				this.leave();
 				break ;
