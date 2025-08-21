@@ -6,51 +6,55 @@ const rows = [
 		title:'Profile',
 		href:'/profile',
 		img:'/home_profile.png',
-		body:`Lorem Ipsum is simply dummy text of the printing and typesetting industry.\
-			Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,\
-			when an unknown printer took a galley of type and scrambled it to make a type specimen book.\
-			It has survived not only five centuries, but also the leap into electronic typesetting,\
-			remaining essentially unchanged.`
+		body:`On the profile page, you can view detailed information about your ping pong matches.
+			This includes the total number of matches you've played, as well as your wins, losses, and draws.
+			You can also check your match history, which shows the date of each match, your opponent,
+			the final score, and whether you won, lost, or drew. All your results are displayed in a clear, organized list,
+			so you can easily track your progress and performance over time.`
 	},
 	{
 		title:'Play the Pong',
 		href:'/modes',
 		img:'/home_play.png',
-		body:`Lorem Ipsum is simply dummy text of the printing and typesetting industry.\
-			Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,\
-			when an unknown printer took a galley of type and scrambled it to make a type specimen book.\
-			It has survived not only five centuries, but also the leap into electronic typesetting,\
-			remaining essentially unchanged.`
+		body:`On the Play page, you can choose between three exciting ways to play: Matchmaking,
+			Custom Lobby, or Tournament. In each mode, you set your preferred game options, like the map
+			and other settings, before entering a match. In Matchmaking, you are automatically placed
+			in a lobby with other players looking for the same game options, or a new lobby is created
+			if none match. In Custom Lobby, you can create your own game and invite friends to join.
+			Tournaments let you set up structured competitions, and everyone who joins can invite
+			other players until the tournament starts!`
 	},
 	{
 		title:'Friends',
 		href:'/friendlist',
 		img:'/home_friend_list.png',
-		body:`Lorem Ipsum is simply dummy text of the printing and typesetting industry.\
-			Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,\
-			when an unknown printer took a galley of type and scrambled it to make a type specimen book.\
-			It has survived not only five centuries, but also the leap into electronic typesetting,\
-			remaining essentially unchanged.`
+		body:`The friends page lets you manage all your friendships in one place.
+			You'll see three sections here: incoming requests, outgoing requests, and your current friends list.
+			At the top, you'll find your incoming friend requests, where you can choose to accept or reject
+			new connection requests from other users. Below that, your outgoing requests show the people you've
+			sent a friend request to-so you'll always know who hasn't replied yet!
+			Finally, you can see all your current friends.`
 	},
 	{
 		title:'All Users',
 		href:'/users',
 		img:'/home_all_users.png',
-		body:`Lorem Ipsum is simply dummy text of the printing and typesetting industry.\
-			Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,\
-			when an unknown printer took a galley of type and scrambled it to make a type specimen book.\
-			It has survived not only five centuries, but also the leap into electronic typesetting,\
-			remaining essentially unchanged.`
+		body:`On the All Users page, you can see a list of all registered users.
+			Here, you can view each user's online status, send them a friend invitation,
+			or see if you have any pending requests. You also have the option to reject
+			invites or block users if needed. This page makes it easy to connect with new
+			people, manage your interactions, and keep your social experience just the way you like it.`
 	},
 	{
 		title:'Settings',
 		href:'/settings',
 		img:'/home_settings.png',
-		body:`Lorem Ipsum is simply dummy text of the printing and typesetting industry.\
-			Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,\
-			when an unknown printer took a galley of type and scrambled it to make a type specimen book.\
-			It has survived not only five centuries, but also the leap into electronic typesetting,\
-			remaining essentially unchanged.`
+		body:`On the settings page, you can manage your personal account information and security preferences.
+			You can update your profile details, such as your username and nickname, or change your avatar by
+			uploading a new image. If you want to improve your security, you can change your password or
+			enable two-factor authentication (2FA) for extra protection. The settings page also lets
+			you manage your account and data. You can delete your account, anonymize your data, or export
+			your match history in different formats.`
 	},
 ] as const
 

@@ -1,5 +1,6 @@
 import { router } from '../main'
 import { currentUser, logout } from '../services/auth'
+import { icons } from '../ui/icons';
 
 export async function refreshHeader() {
 	const span = document.getElementById('user-indicator')
@@ -26,18 +27,26 @@ export async function refreshHeader() {
 				 shadow-lg text-white divide-y divide-[#41222b] hidden">
 				<li><a data-route href="/profile"
 						class="cursor-pointer block px-4 py-2 hover:bg-[#41222b]">
-					Profile</a></li>
+					Profile
+					</a>
+				</li>
 				<li><a data-route href="/friendlist"
 						class="cursor-pointer block px-4 py-2 hover:bg-[#41222b]">
-					Friends</a></li>
+					Friends
+					</a>
+				</li>
 				<li><a data-route href="/settings"
 						class="cursor-pointer block px-4 py-2 hover:bg-[#41222b]">
-					Settings</a></li>
-
-				<li><button id="logout"
-						class="text-red-500 cursor-pointer w-full text-left px-4 py-2 hover:bg-[#41222b]">
-					Log out
-				</button></li>
+					Settings
+					</a>
+				</li>
+				<li>
+					<button id="logout"
+						class="flex items-center gap-2 w-full
+						cursor-pointer text-left px-4 py-2 text-red-500 hover:bg-[#41222b]">
+						${icons.logout}Log out
+					</button>
+				</li>
 			</ul>
 		</div>
 	`
