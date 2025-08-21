@@ -230,18 +230,19 @@ export class GameScene extends BaseScene {
 		//this._init_color_schemes(game_state.clients);
 		game_state.clients.forEach((c: ClientClient) => {
 			let color: PlayerColors | undefined = this._color_schemes.get(c.obj_id);
-			if (color) {
+			if (!color) {
+				color = new PlayerColors(this, rnd_col(), rnd_col(), `player_${c.obj_id}`);
+				this._color_schemes.set(c.obj_id, color);
+				this._color_schemes.set(c.base.obj_id, color);
+				this._color_schemes.set(c.paddle.obj_id, color);
 				return ;
 			}
-			color = new PlayerColors(this, rnd_col(), rnd_col(), `player_${c.obj_id}`);
-			this._color_schemes.set(c.obj_id, color);
+
 			console.log(c.base.obj_id);
 			console.log(c.paddle.obj_id);
-			this._color_schemes.set(c.base.obj_id, color);
-			this._color_schemes.set(c.paddle.obj_id, color);
 
-			//console.log(c);
-			
+
+			console.log(c);
 			this.score_panel.update_score(c.obj_id, c.score, color.major.diffuseColor, undefined);
 			this.score_panel.update_timer(game_state.game_timer);
 		});

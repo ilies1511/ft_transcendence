@@ -259,6 +259,7 @@ export class GameEngine {
 						process.exit(1);
 					}
 					goaled_client.score--;
+					goaled_client.changed = true;
 					console.log("client ", goaled_client.global_id, " points: ", goaled_client.score);
 					if (goaled_client.score == 0) {
 						goaled_client.loose();

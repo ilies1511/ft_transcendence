@@ -1,6 +1,8 @@
 
 [ ]: same account 2 sessions leads to buggy lobby
 [ ]: game : fullscreen
+[ ]: bug: if all players disconnect during the game no one can reconnect unless everyone is connected
+[x]: bug: player score is not updated in frontend
 
 
 [x]: {
