@@ -55,6 +55,7 @@ export class GameEngine {
 	public timer?: number;//seconds left of the game
 	public lobby_type: LobbyType;
 	private _game_lobby: GameLobby;
+	private _frame_count: number = 0;
 
 	constructor(map_name: string,
 		lobby_type: LobbyType,
@@ -189,12 +190,19 @@ export class GameEngine {
 	private update_balls(delta_time: number) {
 		const input_d_time: number = delta_time;
 		for (const ball of this.balls) {
+			ball.changed = true;
 			if (Math.abs(ball.pos.x) > 100 || Math.abs(ball.pos.y) > 100) {
 				ball.reset();
 				continue ;
 			}
 			delta_time = input_d_time;
 			//console.log(ball);
+			/* Testing without loop to see if physics still feel good.
+			 * This would make balls that bounce more than once a frame wrong,
+			 * should not be noticable by humans?
+			 * -> Balls become bugged out, if neededed needs more testing
+			*/
+			// {
 			while (delta_time > EPSILON) {
 				//console.log("delta time: ", delta_time);
 				const intersecs: ft_math.intersection_point[] = [];
@@ -238,7 +246,8 @@ export class GameEngine {
 					hit_points.push(intersc.p);
 				}
 				delta_time -= first_intersec.time;
-				//delta_time -= EPSILON; /* idk why but without this the ball flys through walls */
+				//add this line if performance is an issues
+				//delta_time -= EPSILON * 10; // protects from very fast balls lagging out the server without effecting gameplay
 
 				const wall = first_intersec.wall;
 				if (wall.effects.indexOf(Effects.BASE) != -1) {
@@ -250,6 +259,7 @@ export class GameEngine {
 						process.exit(1);
 					}
 					goaled_client.score--;
+					goaled_client.changed = true;
 					console.log("client ", goaled_client.global_id, " points: ", goaled_client.score);
 					if (goaled_client.score == 0) {
 						goaled_client.loose();
@@ -296,12 +306,26 @@ export class GameEngine {
 
 	private update_walls(delta_time: number) {
 		for (const wall of this.walls) {
-			wall.rotate(wall.rotation * Math.PI / 2, delta_time);
+			wall.changed = true;
+			//wall.rotate(wall.rotation * Math.PI / 2, delta_time);
+			if (wall.rotation != 0) {
+				wall.rotate(wall.rotation * Math.PI / 2, delta_time);
+				wall.changed = true;
+			} else {
+				wall.next_normal = wall.normal.clone();
+				wall.angular_vel = 0;
+			}
+			if (this._frame_count == 0) {
+				wall.changed = true;
+			}
 		}
 	}
 
 	private update_paddles(delta_time: number) {
 		for (const client of this.clients) {
+			if (this._frame_count == 0) {
+				client.changed = true;
+			}
 			client.update(this.balls, delta_time);
 		}
 	}
@@ -342,6 +366,8 @@ export class GameEngine {
 		this.update_walls(delta_time);
 		this.update_balls(delta_time);
 		this.finish_frame(delta_time);
+		this._frame_count++;
+		this._frame_count %= 60;
 	}
 
 	private finish_frame(delta_time: number) {

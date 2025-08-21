@@ -8,6 +8,8 @@ import { GridMaterial } from '@babylonjs/materials/grid';
 import type { ClientBall, ClientClient, ClientWall, GameState } from '../objects/index.ts';
 
 import { BaseScene } from './base.ts';
+import { Effects } from '../game_shared/serialization.ts';
+
 
 let color_idx = 0;
 
@@ -68,10 +70,16 @@ export class GameScene extends BaseScene {
 	private _light: BABYLON.HemisphericLight;
 	private _background: BABYLON.Mesh;
 
+	private _gui: GUI.AdvancedDynamicTexture;
+	private _up_held = false;
+	private _down_held = false;
+	private _left_held = false;
+	private _right_held = false;
+
 	private _meshes: Map<number, BABYLON.Mesh> = new Map<number, BABYLON.Mesh>;
 	//private _score_text: GUI.TextBlock;
 
-	private _color_schemes: Map<number, PlayerColors> = new Map<number, PlayerColors>;
+	public _color_schemes: Map<number, PlayerColors> = new Map<number, PlayerColors>;
 
 	public score_panel: ScorePanel;
 
@@ -111,8 +119,12 @@ export class GameScene extends BaseScene {
 		this._background.material = backgroundMaterial;
 		this._background.isPickable = false;
 
-		const gui = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this);
-		this.score_panel = new ScorePanel(gui);
+		(this._canvas as HTMLCanvasElement).style.touchAction = "none";
+
+		this._gui = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this);
+		this.score_panel = new ScorePanel(this._gui);
+
+		this._add_mobile_buttons();
 	}
 
 	public cleanup() {
@@ -157,7 +169,14 @@ export class GameScene extends BaseScene {
 				// Correctly calculate rotation from the wall's normal vector
 				const angle = Math.atan2(w.normal.y, w.normal.x) - Math.PI / 2;
 				wall.rotation.z = angle;
-
+				const color: PlayerColors | undefined = this._color_schemes.get(w.obj_id);
+				if (color) {
+					if (w.effects.includes(Effects.BASE)) {
+						wall.material = color.major;
+					} else {
+						wall.material = color.minor;
+					}
+				}
 			} else {
 				const wall: BABYLON.Mesh = BABYLON.MeshBuilder.CreateBox(
 					`wall_${w.obj_id}`,
@@ -175,6 +194,10 @@ export class GameScene extends BaseScene {
 
 				const angle = Math.atan2(w.normal.y, w.normal.x) - Math.PI / 2;
 				wall.rotation.z = angle;
+				const color: PlayerColors | undefined = this._color_schemes.get(w.obj_id);
+				if (color) {
+					wall.material = color.major;
+				}
 
 				this._meshes.set(w.obj_id, wall);
 			}
@@ -185,33 +208,202 @@ export class GameScene extends BaseScene {
 	private _init_color_schemes(clients: ClientClient[]) {
 		clients.forEach((c: ClientClient) => {
 			if (this._color_schemes.has(c.obj_id)) {
-				return;
+				return ;
 			}
 			this._color_schemes.set(c.obj_id, new PlayerColors(this, rnd_col(), rnd_col(), `player_${c.obj_id}`));
-			const color_scheme: PlayerColors = this._color_schemes.get(c.obj_id);
-			if (this._meshes.has(c.paddle.obj_id) == undefined
-				|| this._meshes.has(c.base.obj_id) == undefined) {
-				console.log("game error: paddle or base not in meshes");
-				process.exit(1);
-			}
-			const paddle_mesh: BABYLON.Mesh = this._meshes.get(c.paddle.obj_id);
-			paddle_mesh.material = color_scheme.major;
+			//const color_scheme: PlayerColors = this._color_schemes.get(c.obj_id);
+			//if (this._meshes.has(c.paddle.obj_id) == undefined
+			//	|| this._meshes.has(c.base.obj_id) == undefined) {
+			//	console.log("game error: paddle or base not in meshes");
+			//	process.exit(1);
+			//}
+			//const paddle_mesh: BABYLON.Mesh = this._meshes.get(c.paddle.obj_id);
+			//paddle_mesh.material = color_scheme.major;
 			// const base_mesh: BABYLON.Mesh = this._meshes.get(c.base.obj_id);
 			// base_mesh.material = color_scheme.minor;
 		});
 	}
 
 	update(game_state: GameState): void {
+		//console.log('Game: got GameState: ', game_state);
 		//console.log("game_timer: ", game_state.game_timer);
-		this._update_balls(game_state.balls);
-		this._update_walls(game_state.walls);
-		this._init_color_schemes(game_state.clients);
-
+		//this._init_color_schemes(game_state.clients);
 		game_state.clients.forEach((c: ClientClient) => {
-			const color: BABYLON.Color3 = this._color_schemes.get(c.obj_id).major.diffuseColor;
-			this.score_panel.update_score(c.obj_id, c.score, color, undefined);
+			let color: PlayerColors | undefined = this._color_schemes.get(c.obj_id);
+			if (!color) {
+				color = new PlayerColors(this, rnd_col(), rnd_col(), `player_${c.obj_id}`);
+				this._color_schemes.set(c.obj_id, color);
+				this._color_schemes.set(c.base.obj_id, color);
+				this._color_schemes.set(c.paddle.obj_id, color);
+				return ;
+			}
+
+			console.log(c.base.obj_id);
+			console.log(c.paddle.obj_id);
+
+
+			console.log(c);
+			this.score_panel.update_score(c.obj_id, c.score, color.major.diffuseColor, undefined);
 			this.score_panel.update_timer(game_state.game_timer);
 		});
+		this._update_balls(game_state.balls);
+		this._update_walls(game_state.walls);
+	}
 
+	private _is_mobile(): boolean {
+		return ((navigator.maxTouchPoints ?? 0) > 0 || "ontouchstart" in window);
+	}
+
+	private _dispatch_key(
+		code: 'KeyW' | 'KeyA' | 'KeyS' | 'KeyD',
+		key: 'w' |'a' | 's' | 'd',
+		type: 'keydown'|'keyup'
+	) {
+		const ev = new KeyboardEvent(type, { code, key, bubbles: true });
+		window.dispatchEvent(ev);
+	}
+
+	private _pressUp() {
+		if (!this._up_held) {
+			this._dispatch_key('KeyW', 'w', 'keydown');
+			this._up_held = true;
+		}
+	}
+	private _releaseUp() {
+		if (this._up_held) {
+			this._dispatch_key('KeyW', 'w', 'keyup');
+			this._up_held = false;
+		}
+	}
+	private _pressDown() {
+		if (!this._down_held) {
+			this._dispatch_key('KeyS', 's', 'keydown');
+			this._down_held = true;
+		}
+	}
+	private _releaseDown() {
+		if (this._down_held) {
+			this._dispatch_key('KeyS', 's', 'keyup');
+			this._down_held = false;
+		}
+	}
+
+	private _pressLeft() {
+		if (!this._left_held) {
+			this._dispatch_key('KeyA','a','keydown');
+			this._left_held = true;
+		}
+	}
+
+	private _releaseLeft() {
+		if (this._left_held) {
+			this._dispatch_key('KeyA','a','keyup');
+			this._left_held = false;
+		}
+	}
+
+	private _pressRight() {
+		if (!this._right_held) {
+			this._dispatch_key('KeyD','d','keydown');
+			this._right_held = true;
+		}
+	}
+
+	private _releaseRight() {
+			if (this._right_held) {
+				this._dispatch_key('KeyD','d','keyup');
+				this._right_held = false;
+			}
+	}
+
+	private _add_mobile_buttons() {
+		if (!this._is_mobile()) {
+			return ;
+		}
+	
+		const make_button = (
+			w: string, h: string, label: string,
+			onDown: () => void, onUp: () => void
+		): GUI.Rectangle => {
+			const r: GUI.Rectangle = new GUI.Rectangle();
+			r.width = w;
+			r.height = h;
+			r.cornerRadius = 16;
+			r.thickness = 0;
+			r.background = "rgba(255,255,255,0.12)";
+			r.isPointerBlocker = true;
+	
+			const t: GUI.TextBlock = new GUI.TextBlock();
+			t.text = label;
+			t.fontSize = 48;
+			t.textHorizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+			t.textVerticalAlignment	 = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+			r.addControl(t);
+	
+			r.onPointerDownObservable.add(onDown);
+			r.onPointerUpObservable.add(onUp);
+			r.onPointerOutObservable.add(onUp);
+			return (r);
+		};
+	
+		const BTN = 90; //button size
+		const GAP = 12; //gap between buttons
+	
+		const dpad: GUI.Grid = new GUI.Grid("mobileDPad");
+		dpad.width	= `${BTN * 3 + GAP * 2}px`;
+		dpad.height = `${BTN * 3 + GAP * 2}px`;
+		dpad.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+		dpad.verticalAlignment	 = GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+		dpad.paddingLeft = "20px";
+		dpad.paddingBottom = "20px";
+		dpad.zIndex = 1000;
+	
+		// 5×5 grid: [BTN, GAP, BTN, GAP, BTN]
+		for (let i = 0; i < 5; i++) {
+			dpad.addColumnDefinition(i % 2 === 0 ? BTN : GAP, true);
+		}
+		for (let i = 0; i < 5; i++) {
+			dpad.addRowDefinition(i % 2 === 0 ? BTN : GAP, true);
+		}
+	
+		this._gui.addControl(dpad);
+	
+		const up_btn: GUI.Rectangle = make_button(
+			`${BTN}px`, `${BTN}px`, "▲",
+			() => this._pressUp(),		() => this._releaseUp()
+		);
+		const down_btn: GUI.Rectangle = make_button(
+			`${BTN}px`, `${BTN}px`, "▼", () => this._pressDown(),
+			() => this._releaseDown()
+		);
+		const left_btn: GUI.Rectangle = make_button(
+			`${BTN}px`, `${BTN}px`, "◀", () => this._pressLeft(),
+			() => this._releaseLeft()
+		);
+		const right_btn: GUI.Rectangle = make_button(
+			`${BTN}px`, `${BTN}px`, "▶",
+			() => this._pressRight(), () => this._releaseRight()
+		);
+		/*
+			[   ][ ▲ ][   ]
+			[ ◀ ][   ][ ▶ ]
+			[   ][ ▼ ][   ]
+		*/
+		dpad.addControl(up_btn, 0, 2);
+		dpad.addControl(left_btn, 2, 0);
+		dpad.addControl(right_btn, 2, 4);
+		dpad.addControl(down_btn, 4, 2);
+	
+		this.onPointerObservable.add((pi) => {
+			if (
+				pi.type === BABYLON.PointerEventTypes.POINTERUP ||
+				pi.type === BABYLON.PointerEventTypes.POINTEROUT
+			) {
+				this._releaseUp();
+				this._releaseDown();
+				this._releaseLeft();
+				this._releaseRight();
+			}
+		});
 	}
 };

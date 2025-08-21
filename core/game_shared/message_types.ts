@@ -57,6 +57,7 @@ export interface CreateLobbyResp {
 export interface CreateTournamentReq {
 	map_name: string;
 	password: string;
+	client_id: number;
 };
 
 export interface CreateTournamentResp {
@@ -118,6 +119,7 @@ export type ServerError =
 	| 'Allready started'
 	| 'Allready in game'
 	| 'Allready in tournament'
+	| 'Allready connected in a different session'
 	| ''
 ;
 

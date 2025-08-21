@@ -122,7 +122,7 @@ export class Tournament {
 	): Promise<Tournament | undefined>
 	{
 		const create_resp: CreateTournamentResp = await TournamentApi
-			.create_tournament(map_name, tournament_password);
+			.create_tournament(map_name, tournament_password, user_id);
 		if (create_resp.error != '') {
 			console.log(create_resp);
 			return ;

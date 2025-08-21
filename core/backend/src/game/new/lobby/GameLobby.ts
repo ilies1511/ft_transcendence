@@ -55,8 +55,8 @@ export class GameLobby {
 
 	public lobby_type: LobbyType;
 
-	private static readonly PENDING_CONNECT_TIMEOUT_MS = 15_000;
-	private static readonly RECONNECT_GRACE_MS = 30_000;
+	private static readonly PENDING_CONNECT_TIMEOUT_MS = 60_000;
+	private static readonly RECONNECT_GRACE_MS = 60_000;
 
 
 	constructor(
@@ -112,22 +112,39 @@ export class GameLobby {
 		this._completion_callback(this.id, msg);
 	}
 
-	// HACK: this is not only called to start the game but also on reconnects to fix the sockets of the game engine
+	private _update_sockets() {
+		console.log("Game lobby: _update_sockets");
+		let i = 0;
+		if (this.engine) {
+			while (i < this._connections.length) {
+				this._clear_timeout(this._connections[i]);
+				if (this._connections[i].sock && this._connections[i].sock.ws) {
+					this.engine.clients[i].set_socket(this._connections[i].sock.ws);
+				}
+				this.engine.clients[i].global_id = this._connections[i].id;
+				this._connections[i].ingame_id = this.engine.clients[i].obj_id;
+				i++;
+			}
+		}
+	}
+
 	private _start_game() {
+		console.log("starting game..");
 		this._game_engine_finish_callback = this._game_engine_finish_callback.bind(this);
 		if (!this.engine) {
 			this.engine = new GameEngine(this._map_name, this.lobby_type, this,
 				this._game_engine_finish_callback, 1000 /* todo: hardcoded 1000 sec */);
+		} else {
 		}
-		console.log("starting game..");
 		let i = 0;
-		while (i < this._connections.length) {
-			this._clear_timeout(this._connections[i]);
-			this.engine.clients[i].set_socket(this._connections[i].sock.ws);
-			this.engine.clients[i].global_id = this._connections[i].id;
-			this._connections[i].ingame_id = this.engine.clients[i].obj_id;
-			i++;
-		}
+		this._update_sockets();
+		//while (i < this._connections.length) {
+		//	this._clear_timeout(this._connections[i]);
+		//	this.engine.clients[i].set_socket(this._connections[i].sock.ws);
+		//	this.engine.clients[i].global_id = this._connections[i].id;
+		//	this._connections[i].ingame_id = this.engine.clients[i].obj_id;
+		//	i++;
+		//}
 		this.engine.start_loop();
 	}
 
@@ -194,6 +211,7 @@ export class GameLobby {
 			console.log("Game: Error: Attempting reconnect when there was no connection before");
 			throw ("Internal Error");
 		} else if (connection.sock.ws === ws) {
+			console.log("Game Lobby: reconnected with same ws?");
 		} else {
 			connection.sock.ws.close();
 			connection.sock = new WebsocketConnection(ws);
@@ -210,8 +228,15 @@ export class GameLobby {
 			this._update_lobby();
 			if (this._ai_count + this.loaded_player_count >= this._map_file.clients.length
 				&& this._connections.length + this._ai_count == this._map_file.clients.length
+				&& !this.engine
 			) {
 				this._start_game();
+			} else if (this.engine) {
+				this._update_sockets();
+			} else if (!this.engine) {
+				console.log("no engine");
+			} else {
+				console.log("else");
 			}
 		}
 
@@ -226,8 +251,28 @@ export class GameLobby {
 		//	ws.close();
 		//	return ;
 		//}
+		console.log("lobby: client ", client_id , " attempts to connect");
 		for (const connection of this._connections) {
 			if (client_id == connection.id && connection.sock !== undefined) {
+				if (connection.sock.ws && connection.sock.ws.readyState == WebSocket.OPEN) {
+					{
+						const msg: GameToClientInfo = {
+							type: 'info',
+							text: 'Allready connected to game from a different session',
+						};
+						ws.send(JSON.stringify(msg));
+						console.log('sending ', msg);
+					}
+					{
+						const msg: ServerToClientError = {
+							type: 'error',
+							msg: 'Allready connected in a different session',
+						};
+						ws.send(JSON.stringify(msg));
+						console.log('sending ', msg);
+					}
+					return ;
+				}
 				this._reconnect(ws, connection);
 				return ;
 			} else if (client_id == connection.id) {
@@ -241,8 +286,11 @@ export class GameLobby {
 				this._update_lobby();
 				if (this._ai_count + this.loaded_player_count >= this._map_file.clients.length
 					&& this._connections.length + this._ai_count == this._map_file.clients.length
+					&& !this.engine
 				) {
 					this._start_game();
+				} else if (this.engine) {
+					this._update_sockets();
 				}
 				return ;
 			}
@@ -387,14 +435,15 @@ export class GameLobby {
 	}
 
 	public ws_close_handler(ws: WebSocket) {
+		console.log("game lobby ws close handler");
 		for (const connection of this._connections) {
 			if (connection.sock?.ws === ws) {
 				connection.sock = undefined;
 				if (!this.engine) {
 					this._arm_timeout(connection, GameLobby.RECONNECT_GRACE_MS, 'reconnect');
 				}
-				this.loaded_player_count--;
 				this._update_lobby();
+				this.loaded_player_count--;
 			}
 		}
 	}

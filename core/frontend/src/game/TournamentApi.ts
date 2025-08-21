@@ -20,11 +20,13 @@ export class TournamentApi {
 	public static async create_tournament(
 		map_name: string,
 		password: string,
+		client_id: number,
 	) : Promise<CreateTournamentResp>
 	{
 		const req: CreateTournamentReq = {
 			map_name: map_name,
 			password: password,
+			client_id: client_id,
 		};
 		const response = await fetch('/api/create_tournament', {
 			method: 'POST',

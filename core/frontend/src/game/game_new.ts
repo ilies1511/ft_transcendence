@@ -94,6 +94,10 @@ export class Game {
 
 	private _display_names: Map<number, string> | undefined = undefined;
 
+	private _next_socket_timeout: number = 100;
+
+	private _next_close_handler: NodeJS.Timeout | undefined = undefined;
+
 	constructor(
 		id: number, //some number that is unique for each client, ideally bound to the account
 		container: HTMLElement,
@@ -163,7 +167,7 @@ export class Game {
 
 	private _get_container(): HTMLElement | null {
 		if (this.container && document.contains(this.container)) {
-			console.log("game container unchanged");
+			//console.log("game container unchanged");
 			return (this.container);
 		}
 		this.container = document.querySelector(this.container_selector);
@@ -257,6 +261,7 @@ export class Game {
 			if (this.finished) {
 				return ;
 			}
+			console.log("GAME: Attempting (re)connect..");
 			console.log("game id: ", this.game_id);
 			const wsBase =
 				(location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
@@ -279,8 +284,14 @@ export class Game {
 			this._socket.addEventListener("close", () => {
 				console.log("GAME: Disconnected");
 				if (!this.finished && !is_unloading) {
-					console.log("GAME: Attempting reconnect..");
-					this._open_socket();
+					if (this._next_close_handler) {
+						clearTimeout(this._next_socket_timeout);
+					}
+					this._next_close_handler = setTimeout(() => {
+							this._open_socket();
+						}, this._next_socket_timeout
+					);
+					this._next_socket_timeout *= 2;
 				} else {
 				}
 			});
@@ -394,8 +405,21 @@ export class Game {
 			case ('Not Found'):
 				this.finished = true;
 				this.disconnect();
+				//todo: this toast is not fully visable on the game page
+				showToast({
+					title: 'Could not run game',
+				});
+				break ;
+			case ('Allready connected in a different session'):
+				this.finished = true;
+				this.disconnect();
 				break ;
 			case ('Internal Error'):
+				showToast({
+					title: 'Could not run game',
+				});
+				this.finished = true;
+				this.leave();
 				break ;
 			case (''):
 				break ;
@@ -404,59 +428,6 @@ export class Game {
 		}
 	}
 
-
-	// private _process_msg() {
-	// 	//console.log("_process_msg");
-	// 	if (this._last_server_msg == null) {
-	// 		//console.log("GAME: no message to process");
-	// 		return ;
-	// 	}
-	// 	const msg: LobbyToClient = this._last_server_msg;
-	// 	if (msg instanceof ArrayBuffer) {
-	// 		if (this._active_scene !== this._game_scene) {
-	// 			this._start_game();
-	// 		}
-	// 		/* msg is a game state update */
-	// 		//console.log("GAME: got ArrayBuffer");
-	// 		this._game_scene.update(GameState.deserialize(msg));
-	// 	} else if (typeof msg === 'string') {
-	// 		console.log("GAME: got string: ", msg);
-	// 		const json: LobbyToClientJson = JSON.parse(msg) as LobbyToClientJson;
-	// 		console.log("GAME: got ServerToClientMessage object: ", json);
-	// 		switch (json.type) {
-	// 			case ('game_lobby_update'):
-	// 				if (this._active_scene !== this._lobby_scene) {
-	// 					this._active_scene = this._lobby_scene;
-	// 				}
-	// 				this._lobby_scene.update(json);
-	// 				break ;
-	// 			case ('error'):
-	// 				this._process_server_error(json.msg);
-	// 				break ;
-	// 			case ('finish'):
-	// 				// postpone cleanup so 'info' toast can render
-	// 				setTimeout(() => this._finish_game(json), 200);
-	// 				break;
-	// 			case ('info'):
-	// 				// console.log(json.text);
-	// 				//todo: make a small temporary popup for the user to read this data
-	// 				const toastBox = showToast({
-	// 					title: json.text,
-	// 					from: 'Match server',
-	// 				});
-	// 				console.log('toastBox added', toastBox);
-	// 				setTimeout(() => {
-	// 					console.log('still there?', document.body.contains(toastBox));
-	// 				}, 50);
-	// 				break;
-	// 			default:
-	// 				throw ("Got not implemented msg type from server: ", msg);
-	// 		}
-	// 	} else {
-	// 		console.log("GAME: Error: unknown message type recieved: ", typeof msg);
-	// 	}
-	// 	this._last_server_msg = null;
-	// }
 	//TODO: update2 for user leave notifications
 	private _process_msg(): void {
 		if (this._last_server_msg) {
@@ -476,8 +447,9 @@ export class Game {
 
 			switch (json.type) {
 				case 'game_lobby_update':
-					if (this._active_scene !== this._lobby_scene)
-						this._active_scene = this._lobby_scene;
+					if (this._active_scene !== this._lobby_scene) {
+						break ;
+					}
 					this._lobby_scene.update(json);
 					break;
 

@@ -13,6 +13,7 @@ export class SharedWall {
 	private _direct: SharedVec2 = new SharedVec2();
 	private _endpoint1: SharedVec2 = new SharedVec2();
 	private _endpoint2: SharedVec2 = new SharedVec2();
+	public changed: boolean = true;
 
 	constructor(center: SharedVec2,
 		normal: SharedVec2,
@@ -69,7 +70,15 @@ export class SharedWall {
 	}
 
 	// Serialization: center(8), normal(8), length(4), dispose(1), effects(1+N)
-	public serialize(): ArrayBuffer {
+	public serialize(): ArrayBuffer | undefined {
+		if (!this.changed) {
+			return ;
+		}
+		//currently the frontend needs these always in case of init since
+		//these are currently stoared as part of a client and wall
+		if (!this.effects.includes(Effects.PADDLE) && !this.effects.includes(Effects.BASE)) {
+			this.changed = false;
+		}
 		const effectsCount = this.effects.length;
 		const buffer = new ArrayBuffer(
 			2 // obj_id

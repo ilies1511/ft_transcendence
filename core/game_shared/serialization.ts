@@ -32,12 +32,38 @@ export class GameState {
 	}
 
 	public serialize(): ArrayBuffer {
-		const clientBuffers = this.clients.map(c => c.serialize());
-		const ballBuffers = this.balls.map(b => b.serialize());
-		const wallBuffers = this.walls.map(w => w.serialize());
-		const clientCount = clientBuffers.length;
-		const ballCount = ballBuffers.length;
-		const wallCount = wallBuffers.length;
+		const clientBuffers: ArrayBuffer[] = [];
+		let clientCount = 0;
+		for (const client of this.clients) {
+			const buf: ArrayBuffer | undefined = client.serialize();
+			if (!buf) {
+				continue ;
+			}
+			clientBuffers.push(buf);
+			clientCount++;
+		}
+
+		const ballBuffers: ArrayBuffer[] = [];
+		let ballCount = 0;
+		for (const ball of this.balls) {
+			const buf: ArrayBuffer | undefined = ball.serialize();
+			if (!buf) {
+				continue;
+			}
+			ballBuffers.push(buf);
+			ballCount++;
+		}
+		
+		const wallBuffers: ArrayBuffer[] = [];
+		let wallCount = 0;
+		for (const wall of this.walls) {
+			const buf: ArrayBuffer | undefined = wall.serialize();
+			if (!buf) {
+				continue;
+			}
+			wallBuffers.push(buf);
+			wallCount++;
+		}
 		let totalSize =
 			4 + clientBuffers.reduce((s, b) => s + b.byteLength, 0) +
 			4 + ballBuffers.reduce((s, b) => s + b.byteLength, 0) +

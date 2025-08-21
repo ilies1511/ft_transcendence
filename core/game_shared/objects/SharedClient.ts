@@ -8,6 +8,7 @@ export class SharedClient {
 	public paddle: SharedWall;
 	public base: SharedWall;
 	public score: number = 0;//todo: needs to be serialized 
+	public changed: boolean = true;
 
 	constructor(
 		paddle: SharedWall,
@@ -25,7 +26,11 @@ export class SharedClient {
 	 // ingame_id 4
 	 // paddle
 	 // base
-	public serialize(): ArrayBuffer {
+	public serialize(): ArrayBuffer | undefined {
+		if (!this.changed) {
+			return ;
+		}
+		this.changed = false;
 		const paddleBuf = this.paddle.serialize();
 		const baseBuf   = this.base.serialize();
 

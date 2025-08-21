@@ -15,6 +15,11 @@ export class ServerClient extends SharedClient {
 	public down: boolean = false;
 	public left: boolean = false;
 	public right: boolean = false;
+	/* improve glitchy intersection calculation by not changing direction within 1 frame */
+	//private _last_up: boolean = false;
+	//private _last_down: boolean = false;
+	private _last_left: boolean = false;
+	private _last_right: boolean = false;
 	public final_placement: number = -1;
 
 	constructor(
@@ -33,6 +38,7 @@ export class ServerClient extends SharedClient {
 	}
 
 	public loose() {
+		this.changed = true;
 		console.log("Client ", this.global_id, " lost");
 		this.base.effects = this.base.effects.filter(e => e !== Effects.BASE);
 		console.log(this.base);
@@ -49,33 +55,31 @@ export class ServerClient extends SharedClient {
 		const new_paddle_pos: ServerVec2 = this.paddle.center.clone();
 		if (this.up) {
 			new_paddle_pos.add(direct.scale(0.12));
+			//this.changed = true;
 		}
 		if (this.down) {
 			new_paddle_pos.add(direct.scale(-0.12));
 		}
 		if (this.up || this.down) {
-			let p1: vec2, p2:vec2 = this.paddle.get_endpoints();
-			const p1_old = p1;
-			const p2_old = p2;
 			this.paddle.center = new_paddle_pos;
 			this.paddle.update();
-			p1, p2 = this.paddle.get_endpoints();
-			const p1_new = p1;
-			const p2_new = p2;
-			for (const ball of balls) {
-
-			}
-
 		}
 
 		if (this.left && this.right) {
 			this.paddle.rotation = 0;
-		} else if (this.left) {
+			this._last_left = false;
+			this._last_right = false;
+		} else if (this.left && !this._last_right) {
 			this.paddle.rotation = Math.PI / 2;
-		} else if (this.right) {
+			this._last_left = true;
+		} else if (this.right && !this._last_left) {
 			this.paddle.rotation = Math.PI / -2;
+			this._last_right = true;
 		} else {
 			this.paddle.rotation = 0;
+			this._last_left = false;
+			this._last_right = false;
 		}
+		this.paddle.update();
 	}
 };
