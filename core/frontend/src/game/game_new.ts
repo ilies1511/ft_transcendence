@@ -404,59 +404,6 @@ export class Game {
 		}
 	}
 
-
-	// private _process_msg() {
-	// 	//console.log("_process_msg");
-	// 	if (this._last_server_msg == null) {
-	// 		//console.log("GAME: no message to process");
-	// 		return ;
-	// 	}
-	// 	const msg: LobbyToClient = this._last_server_msg;
-	// 	if (msg instanceof ArrayBuffer) {
-	// 		if (this._active_scene !== this._game_scene) {
-	// 			this._start_game();
-	// 		}
-	// 		/* msg is a game state update */
-	// 		//console.log("GAME: got ArrayBuffer");
-	// 		this._game_scene.update(GameState.deserialize(msg));
-	// 	} else if (typeof msg === 'string') {
-	// 		console.log("GAME: got string: ", msg);
-	// 		const json: LobbyToClientJson = JSON.parse(msg) as LobbyToClientJson;
-	// 		console.log("GAME: got ServerToClientMessage object: ", json);
-	// 		switch (json.type) {
-	// 			case ('game_lobby_update'):
-	// 				if (this._active_scene !== this._lobby_scene) {
-	// 					this._active_scene = this._lobby_scene;
-	// 				}
-	// 				this._lobby_scene.update(json);
-	// 				break ;
-	// 			case ('error'):
-	// 				this._process_server_error(json.msg);
-	// 				break ;
-	// 			case ('finish'):
-	// 				// postpone cleanup so 'info' toast can render
-	// 				setTimeout(() => this._finish_game(json), 200);
-	// 				break;
-	// 			case ('info'):
-	// 				// console.log(json.text);
-	// 				//todo: make a small temporary popup for the user to read this data
-	// 				const toastBox = showToast({
-	// 					title: json.text,
-	// 					from: 'Match server',
-	// 				});
-	// 				console.log('toastBox added', toastBox);
-	// 				setTimeout(() => {
-	// 					console.log('still there?', document.body.contains(toastBox));
-	// 				}, 50);
-	// 				break;
-	// 			default:
-	// 				throw ("Got not implemented msg type from server: ", msg);
-	// 		}
-	// 	} else {
-	// 		console.log("GAME: Error: unknown message type recieved: ", typeof msg);
-	// 	}
-	// 	this._last_server_msg = null;
-	// }
 	//TODO: update2 for user leave notifications
 	private _process_msg(): void {
 		if (this._last_server_msg) {
@@ -476,8 +423,9 @@ export class Game {
 
 			switch (json.type) {
 				case 'game_lobby_update':
-					if (this._active_scene !== this._lobby_scene)
-						this._active_scene = this._lobby_scene;
+					if (this._active_scene !== this._lobby_scene) {
+						break ;
+					}
 					this._lobby_scene.update(json);
 					break;
 
