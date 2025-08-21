@@ -5,7 +5,8 @@
 [ ]: tournament testing with different user counts and disconnects/leaving players at different points
 [ ]: transition to secure connections (API/wss)
 [ ]: CLI game (will not start before transition to secure connection to not do double work)
-[ ]: game frontend: limit socket reconnection attempts
+[~]: game frontend: limit socket reconnection attempts
+	-> [ ]: actual counter that when reached cleans up the game and informs the user that he can try to reconnect
 [~] - global player count in frontend game lobby scene
 	-> [ ] currently only dummy data
 [ ] - delete empty lobbies after some time in the backend

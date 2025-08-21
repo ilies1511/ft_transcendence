@@ -407,7 +407,7 @@ export class Game {
 				this.disconnect();
 				//todo: this toast is not fully visable on the game page
 				showToast({
-					title: 'Could not run game\n\nasdasdasd\n\nad',
+					title: 'Could not run game',
 				});
 				break ;
 			case ('Allready connected in a different session'):
