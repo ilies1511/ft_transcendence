@@ -70,6 +70,12 @@ export class GameScene extends BaseScene {
 	private _light: BABYLON.HemisphericLight;
 	private _background: BABYLON.Mesh;
 
+	private _gui: GUI.AdvancedDynamicTexture;
+	private _up_held = false;
+	private _down_held = false;
+	private _left_held = false;
+	private _right_held = false;
+
 	private _meshes: Map<number, BABYLON.Mesh> = new Map<number, BABYLON.Mesh>;
 	//private _score_text: GUI.TextBlock;
 
@@ -113,8 +119,12 @@ export class GameScene extends BaseScene {
 		this._background.material = backgroundMaterial;
 		this._background.isPickable = false;
 
-		const gui = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this);
-		this.score_panel = new ScorePanel(gui);
+		(this._canvas as HTMLCanvasElement).style.touchAction = "none";
+
+		this._gui = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this);
+		this.score_panel = new ScorePanel(this._gui);
+
+		this._add_mobile_buttons();
 	}
 
 	public cleanup() {
@@ -237,8 +247,162 @@ export class GameScene extends BaseScene {
 		});
 		this._update_balls(game_state.balls);
 		this._update_walls(game_state.walls);
+	}
 
+	private _is_mobile(): boolean {
+		return ((navigator.maxTouchPoints ?? 0) > 0 || "ontouchstart" in window);
+	}
 
+	private _dispatch_key(
+		code: 'KeyW' | 'KeyA' | 'KeyS' | 'KeyD',
+		key: 'w' |'a' | 's' | 'd',
+		type: 'keydown'|'keyup'
+	) {
+		const ev = new KeyboardEvent(type, { code, key, bubbles: true });
+		window.dispatchEvent(ev);
+	}
 
+	private _pressUp() {
+		if (!this._up_held) {
+			this._dispatch_key('KeyW', 'w', 'keydown');
+			this._up_held = true;
+		}
+	}
+	private _releaseUp() {
+		if (this._up_held) {
+			this._dispatch_key('KeyW', 'w', 'keyup');
+			this._up_held = false;
+		}
+	}
+	private _pressDown() {
+		if (!this._down_held) {
+			this._dispatch_key('KeyS', 's', 'keydown');
+			this._down_held = true;
+		}
+	}
+	private _releaseDown() {
+		if (this._down_held) {
+			this._dispatch_key('KeyS', 's', 'keyup');
+			this._down_held = false;
+		}
+	}
+
+	private _pressLeft() {
+		if (!this._left_held) {
+			this._dispatch_key('KeyA','a','keydown');
+			this._left_held = true;
+		}
+	}
+
+	private _releaseLeft() {
+		if (this._left_held) {
+			this._dispatch_key('KeyA','a','keyup');
+			this._left_held = false;
+		}
+	}
+
+	private _pressRight() {
+		if (!this._right_held) {
+			this._dispatch_key('KeyD','d','keydown');
+			this._right_held = true;
+		}
+	}
+
+	private _releaseRight() {
+			if (this._right_held) {
+				this._dispatch_key('KeyD','d','keyup');
+				this._right_held = false;
+			}
+	}
+
+	private _add_mobile_buttons() {
+		if (!this._is_mobile()) {
+			return ;
+		}
+	
+		const make_button = (
+			w: string, h: string, label: string,
+			onDown: () => void, onUp: () => void
+		): GUI.Rectangle => {
+			const r: GUI.Rectangle = new GUI.Rectangle();
+			r.width = w;
+			r.height = h;
+			r.cornerRadius = 16;
+			r.thickness = 0;
+			r.background = "rgba(255,255,255,0.12)";
+			r.isPointerBlocker = true;
+	
+			const t: GUI.TextBlock = new GUI.TextBlock();
+			t.text = label;
+			t.fontSize = 48;
+			t.textHorizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+			t.textVerticalAlignment	 = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+			r.addControl(t);
+	
+			r.onPointerDownObservable.add(onDown);
+			r.onPointerUpObservable.add(onUp);
+			r.onPointerOutObservable.add(onUp);
+			return (r);
+		};
+	
+		const BTN = 90; //button size
+		const GAP = 12; //gap between buttons
+	
+		const dpad: GUI.Grid = new GUI.Grid("mobileDPad");
+		dpad.width	= `${BTN * 3 + GAP * 2}px`;
+		dpad.height = `${BTN * 3 + GAP * 2}px`;
+		dpad.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+		dpad.verticalAlignment	 = GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+		dpad.paddingLeft = "20px";
+		dpad.paddingBottom = "20px";
+		dpad.zIndex = 1000;
+	
+		// 5×5 grid: [BTN, GAP, BTN, GAP, BTN]
+		for (let i = 0; i < 5; i++) {
+			dpad.addColumnDefinition(i % 2 === 0 ? BTN : GAP, true);
+		}
+		for (let i = 0; i < 5; i++) {
+			dpad.addRowDefinition(i % 2 === 0 ? BTN : GAP, true);
+		}
+	
+		this._gui.addControl(dpad);
+	
+		const up_btn: GUI.Rectangle = make_button(
+			`${BTN}px`, `${BTN}px`, "▲",
+			() => this._pressUp(),		() => this._releaseUp()
+		);
+		const down_btn: GUI.Rectangle = make_button(
+			`${BTN}px`, `${BTN}px`, "▼", () => this._pressDown(),
+			() => this._releaseDown()
+		);
+		const left_btn: GUI.Rectangle = make_button(
+			`${BTN}px`, `${BTN}px`, "◀", () => this._pressLeft(),
+			() => this._releaseLeft()
+		);
+		const right_btn: GUI.Rectangle = make_button(
+			`${BTN}px`, `${BTN}px`, "▶",
+			() => this._pressRight(), () => this._releaseRight()
+		);
+		/*
+			[   ][ ▲ ][   ]
+			[ ◀ ][   ][ ▶ ]
+			[   ][ ▼ ][   ]
+		*/
+		dpad.addControl(up_btn, 0, 2);
+		dpad.addControl(left_btn, 2, 0);
+		dpad.addControl(right_btn, 2, 4);
+		dpad.addControl(down_btn, 4, 2);
+	
+		this.onPointerObservable.add((pi) => {
+			if (
+				pi.type === BABYLON.PointerEventTypes.POINTERUP ||
+				pi.type === BABYLON.PointerEventTypes.POINTEROUT
+			) {
+				this._releaseUp();
+				this._releaseDown();
+				this._releaseLeft();
+				this._releaseRight();
+			}
+		});
 	}
 };
