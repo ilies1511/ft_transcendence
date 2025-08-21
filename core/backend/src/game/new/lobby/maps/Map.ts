@@ -21,12 +21,27 @@ export class MapFile {
 	public next_obj_id: number = 1;
 	public max_time: number; //seconds
 
-
 	constructor(map_name: string = 'default') {
 		let map_data: any;
 		if (map_name == "default") {
 			// set the name here
+			map_data = default_map;
+		} else if (map_name == "1") {
+			map_data = 1;
+		} else if (map_name == "BigPlus2") {
+			map_data = BigPlus2;
+		} else if (map_name == "BigPlus4") {
+			map_data = BigPlus4;
+		} else if (map_name == "Diamond2") {
+			map_data = Diamond2;
+		} else if (map_name == "OctaPong2") {
 			map_data = OctaPong2;
+		} else if (map_name == "OctaPong4") {
+			map_data = OctaPong4;
+		} else if (map_name == "SimpleSquare2") {
+			map_data = SimpleSquare2;
+		} else if (map_name == "SimpleSquare4") {
+			map_data = SimpleSquare4;
 		} else {
 			throw ('Invalid Map');
 		}
