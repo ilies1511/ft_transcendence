@@ -98,5 +98,5 @@ All the console logs should be in english.
 - [ ] Check how many modules we have. We have to have 7 major modules.
 - [ ] Update game end page. Fix it a bit, add corners back so it feels better.
 - [ ] Add notification on disconnect, when the player disconnects from the game.
-- [ ] Prevent spam clicking invite to the game to all users.
+- [ ] Prevent spam clicking invite to the game to all users. (localstorage and map)
 - [ ] Fix mobile menu
