@@ -298,9 +298,14 @@ export class GameEngine {
 
 	private update_walls(delta_time: number) {
 		for (const wall of this.walls) {
+			wall.changed = true;
+			//wall.rotate(wall.rotation * Math.PI / 2, delta_time);
 			if (wall.rotation != 0) {
 				wall.rotate(wall.rotation * Math.PI / 2, delta_time);
 				wall.changed = true;
+			} else {
+				wall.next_normal = wall.normal.clone();
+				wall.angular_vel = 0;
 			}
 			if (this._frame_count % 60 == 0) {
 				wall.changed = true;

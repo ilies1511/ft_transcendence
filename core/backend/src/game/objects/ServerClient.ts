@@ -15,6 +15,11 @@ export class ServerClient extends SharedClient {
 	public down: boolean = false;
 	public left: boolean = false;
 	public right: boolean = false;
+	/* prevent glitchy intersectuion calculation by not changing direction within 1 frame */
+	private _last_up: boolean = false;
+	private _last_down: boolean = false;
+	private _last_left: boolean = false;
+	private _last_right: boolean = false;
 	public final_placement: number = -1;
 
 	constructor(
@@ -71,12 +76,18 @@ export class ServerClient extends SharedClient {
 
 		if (this.left && this.right) {
 			this.paddle.rotation = 0;
-		} else if (this.left) {
+			this._last_left = false;
+			this._last_right = false;
+		} else if (this.left && !this._last_right) {
 			this.paddle.rotation = Math.PI / 2;
-		} else if (this.right) {
+			this._last_left = true;
+		} else if (this.right && !this._last_left) {
 			this.paddle.rotation = Math.PI / -2;
+			this._last_right = true;
 		} else {
 			this.paddle.rotation = 0;
+			this._last_left = false;
+			this._last_right = false;
 		}
 		this.paddle.update();
 	}
