@@ -163,7 +163,7 @@ export class Game {
 
 	private _get_container(): HTMLElement | null {
 		if (this.container && document.contains(this.container)) {
-			console.log("game container unchanged");
+			//console.log("game container unchanged");
 			return (this.container);
 		}
 		this.container = document.querySelector(this.container_selector);
@@ -391,11 +391,14 @@ export class Game {
 				break ;
 			case ('Full'):
 			case ('Invalid Map'):
+			case ('Allready connected in a different session'):
 			case ('Not Found'):
 				this.finished = true;
 				this.disconnect();
 				break ;
 			case ('Internal Error'):
+				this.finished = true;
+				this.leave();
 				break ;
 			case (''):
 				break ;

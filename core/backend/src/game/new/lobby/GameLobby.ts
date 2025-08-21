@@ -254,9 +254,25 @@ export class GameLobby {
 		console.log("lobby: client ", client_id , " attempts to connect");
 		for (const connection of this._connections) {
 			if (client_id == connection.id && connection.sock !== undefined) {
-				// somehow always this branch never triggers?
-				// so the connect branch also runs for reconnects
-				// doesn't leed to issues since password is not needed any more to connect
+				if (connection.sock.ws && connection.sock.ws.readyState == WebSocket.OPEN) {
+					{
+						const msg: GameToClientInfo = {
+							type: 'info',
+							text: 'Allready connected to game from a different session',
+						};
+						ws.send(JSON.stringify(msg));
+						console.log('sending ', msg);
+					}
+					{
+						const msg: ServerToClientError = {
+							type: 'error',
+							msg: 'Allready connected in a different session',
+						};
+						ws.send(JSON.stringify(msg));
+						console.log('sending ', msg);
+					}
+					return ;
+				}
 				this._reconnect(ws, connection);
 				return ;
 			} else if (client_id == connection.id) {
@@ -419,14 +435,15 @@ export class GameLobby {
 	}
 
 	public ws_close_handler(ws: WebSocket) {
+		console.log("game lobby ws close handler");
 		for (const connection of this._connections) {
 			if (connection.sock?.ws === ws) {
 				connection.sock = undefined;
 				if (!this.engine) {
 					this._arm_timeout(connection, GameLobby.RECONNECT_GRACE_MS, 'reconnect');
 				}
-				this.loaded_player_count--;
 				this._update_lobby();
+				this.loaded_player_count--;
 			}
 		}
 	}

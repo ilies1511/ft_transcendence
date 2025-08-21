@@ -119,6 +119,7 @@ export type ServerError =
 	| 'Allready started'
 	| 'Allready in game'
 	| 'Allready in tournament'
+	| 'Allready connected in a different session'
 	| ''
 ;
 

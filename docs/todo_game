@@ -1,7 +1,7 @@
 [x]: bug: if all players disconnect during the game no one can reconnect unless everyone is connected
 [x]: craeting a tournament api succeeds even though user is in a running tournamet
 	-> check if fixed after leave is fully implemented
-[ ]: bug: same account 2 sessions leads to buggy lobby
+[x]: bug: same account 2 sessions leads to buggy lobby
 [ ]: tournament testing with different user counts and disconnects/leaving players at different points
 [ ]: transition to secure connections (API/wss)
 [ ]: CLI game (will not start before transition to secure connection to not do double work)
