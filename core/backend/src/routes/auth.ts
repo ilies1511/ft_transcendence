@@ -7,7 +7,7 @@ import { DEFAULT_AVATARS } from '../constants/avatars.ts';
 import { error } from 'console';
 import { validateCredentials, verify2FaToken } from '../functions/2fa.ts';
 import { setUserLive } from '../functions/user.ts';
-import { RegisterBodySchema } from '../schemas/auth.ts';
+import { loginSchema, RegisterBodySchema } from '../schemas/auth.ts';
 
 const COST = 12  // bcrypt cost factor (2^12 ≈ 400 ms on laptop)
 
@@ -99,36 +99,37 @@ export default async function authRoutes(app: FastifyInstance) {
 	}>(
 		'/api/login',
 		{
-			schema: {
-				description: 'Loggt einen Benutzer ein und liefert ein HTTP-Only Cookie',
-				tags: ['auth'],
-				body: {
-					type: 'object',
-					required: ['email', 'password'],
-					properties: {
-						email: { type: 'string', format: 'email' },
-						password: { type: 'string', minLength: 1 }
-						// token: { type: 'string'}
-					}
-				},
-				response: {
-					200: {
-						description: 'Successful login or 2FA required',
-						type: 'object',
-						properties: {
-							ok: { type: 'boolean', const: true },
-							twofa_required: { type: 'boolean' }
-						}
-					},
-					401: {
-						description: 'Invalid credentials',
-						type: 'object',
-						properties: {
-							error: { type: 'string' }
-						}
-					}
-				}
-			}
+			// schema: {
+			// 	description: 'Loggt einen Benutzer ein und liefert ein HTTP-Only Cookie',
+			// 	tags: ['auth'],
+			// 	body: {
+			// 		type: 'object',
+			// 		required: ['email', 'password'],
+			// 		properties: {
+			// 			email: { type: 'string', format: 'email' },
+			// 			password: { type: 'string', minLength: 1 }
+			// 			// token: { type: 'string'}
+			// 		}
+			// 	},
+			// 	response: {
+			// 		200: {
+			// 			description: 'Successful login or 2FA required',
+			// 			type: 'object',
+			// 			properties: {
+			// 				ok: { type: 'boolean', const: true },
+			// 				twofa_required: { type: 'boolean' }
+			// 			}
+			// 		},
+			// 		401: {
+			// 			description: 'Invalid credentials',
+			// 			type: 'object',
+			// 			properties: {
+			// 				error: { type: 'string' }
+			// 			}
+			// 		}
+			// 	}
+			// }
+			schema: loginSchema
 		},
 		async (req, reply) => {
 			const { email, password } = req.body
