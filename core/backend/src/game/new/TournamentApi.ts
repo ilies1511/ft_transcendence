@@ -91,10 +91,11 @@ const start_schema = {
 const create_tournament_schema = {
 	body: {
 		type: 'object',
-		required: ['map_name', 'password'],
+		required: ['map_name', 'password', 'client_id'],
 		properties: {
 			map_name: { type: 'string' },
 			password: { type: 'string' },
+			client_id: { type: 'number' },
 		}
 	}
 };
@@ -159,7 +160,12 @@ export class TournamentApi {
 			tournament_id: -1,
 		};
 
-		const { map_name, password } = request.body;
+		const { map_name, password, client_id } = request.body;
+		const parti: ClientParticipation | undefined = GameServer.client_participations.get(client_id);
+		if (parti && parti.tournament_id) {
+			response.error = 'Allready in tournament';
+			return (response);
+		}
 		const tournament_id: number = TournamentApi.next_tournament_id++;
 
 		const tournament: Tournament = new Tournament(map_name,

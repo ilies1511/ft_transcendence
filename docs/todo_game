@@ -1,5 +1,5 @@
 [x]: bug: if all players disconnect during the game no one can reconnect unless everyone is connected
-[ ]: craeting a tournament api succeeds even though user is in a running tournamet
+[x]: craeting a tournament api succeeds even though user is in a running tournamet
 	-> check if fixed after leave is fully implemented
 [ ]: bug: same account 2 sessions leads to buggy lobby
 [ ]: tournament testing with different user counts and disconnects/leaving players at different points
