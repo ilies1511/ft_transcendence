@@ -197,6 +197,12 @@ export class GameEngine {
 			}
 			delta_time = input_d_time;
 			//console.log(ball);
+			/* Testing without loop to see if physics still feel good.
+			 * This would make balls that bounce more than once a frame wrong,
+			 * should not be noticable by humans?
+			 * -> Balls become bugged out, if neededed needs more testing
+			*/
+			// {
 			while (delta_time > EPSILON) {
 				//console.log("delta time: ", delta_time);
 				const intersecs: ft_math.intersection_point[] = [];
@@ -240,7 +246,8 @@ export class GameEngine {
 					hit_points.push(intersc.p);
 				}
 				delta_time -= first_intersec.time;
-				delta_time -= EPSILON * 10; // protects from very fast balls lagging out the server without effecting gameplay
+				//add this line if performance is an issues
+				//delta_time -= EPSILON * 10; // protects from very fast balls lagging out the server without effecting gameplay
 
 				const wall = first_intersec.wall;
 				if (wall.effects.indexOf(Effects.BASE) != -1) {
@@ -307,7 +314,7 @@ export class GameEngine {
 				wall.next_normal = wall.normal.clone();
 				wall.angular_vel = 0;
 			}
-			if (this._frame_count % 60 == 0) {
+			if (this._frame_count == 0) {
 				wall.changed = true;
 			}
 		}
@@ -315,7 +322,7 @@ export class GameEngine {
 
 	private update_paddles(delta_time: number) {
 		for (const client of this.clients) {
-			if (this._frame_count % 60 == 0) {
+			if (this._frame_count == 0) {
 				client.changed = true;
 			}
 			client.update(this.balls, delta_time);
@@ -359,6 +366,7 @@ export class GameEngine {
 		this.update_balls(delta_time);
 		this.finish_frame(delta_time);
 		this._frame_count++;
+		this._frame_count %= 60;
 	}
 
 	private finish_frame(delta_time: number) {

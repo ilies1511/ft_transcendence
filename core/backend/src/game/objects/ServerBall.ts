@@ -167,7 +167,6 @@ export class ServerBall extends SharedBall {
 			wall.interp_normal = normal_hit;
 			return { p: ball_impact_pos, time: impact_time, wall };
 		}
-	
 		return undefined;
 	}
 

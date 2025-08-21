@@ -15,9 +15,9 @@ export class ServerClient extends SharedClient {
 	public down: boolean = false;
 	public left: boolean = false;
 	public right: boolean = false;
-	/* prevent glitchy intersectuion calculation by not changing direction within 1 frame */
-	private _last_up: boolean = false;
-	private _last_down: boolean = false;
+	/* improve glitchy intersection calculation by not changing direction within 1 frame */
+	//private _last_up: boolean = false;
+	//private _last_down: boolean = false;
 	private _last_left: boolean = false;
 	private _last_right: boolean = false;
 	public final_placement: number = -1;
@@ -60,18 +60,8 @@ export class ServerClient extends SharedClient {
 			new_paddle_pos.add(direct.scale(-0.12));
 		}
 		if (this.up || this.down) {
-			let p1: vec2, p2:vec2 = this.paddle.get_endpoints();
-			const p1_old = p1;
-			const p2_old = p2;
 			this.paddle.center = new_paddle_pos;
 			this.paddle.update();
-			p1, p2 = this.paddle.get_endpoints();
-			const p1_new = p1;
-			const p2_new = p2;
-			for (const ball of balls) {
-
-			}
-
 		}
 
 		if (this.left && this.right) {
