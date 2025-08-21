@@ -7,23 +7,25 @@ import { DEFAULT_AVATARS } from '../constants/avatars.ts';
 import { error } from 'console';
 import { validateCredentials, verify2FaToken } from '../functions/2fa.ts';
 import { setUserLive } from '../functions/user.ts';
+import { RegisterBodySchema } from '../schemas/auth.ts';
 
 const COST = 12  // bcrypt cost factor (2^12 ≈ 400 ms on laptop)
 
 export default async function authRoutes(app: FastifyInstance) {
 
 	app.post('/api/register', {
-		schema: {
-			body: {
-				type: 'object',
-				required: ['email', 'password', 'username'],
-				properties: {
-					email: { type: 'string', format: 'email' },
-					password: { type: 'string', minLength: 1 }, //TODO: update minLength on production
-					username: { type: 'string', minLength: 1 } //TODO: update minLength on production
-				}
-			}
-		}
+		// schema: {
+		// 	body: {
+		// 		type: 'object',
+		// 		required: ['email', 'password', 'username'],
+		// 		properties: {
+		// 			email: { type: 'string', format: 'email' },
+		// 			password: { type: 'string', minLength: 1 }, //TODO: update minLength on production
+		// 			username: { type: 'string', minLength: 1 } //TODO: update minLength on production
+		// 		}
+		// 	}
+		// }
+		schema: RegisterBodySchema
 	}, async (req, reply) => {
 		const { email, password, username } = req.body as {
 			email: string; password: string; username: string
@@ -58,7 +60,7 @@ export default async function authRoutes(app: FastifyInstance) {
 					client.send(JSON.stringify(payload));
 				}
 			}
-			
+
 			// Auto-login after registration
 			const token = await reply.jwtSign({ id: lastID, name: username })
 			reply.setCookie('token', token, {
