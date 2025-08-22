@@ -405,6 +405,7 @@ export class GameLobby {
 			return ;
 		}
 
+		//console.log('Game: got msg: ', msg);
 		switch (msg.type) {
 			case ('send_input'):
 				if (this.engine) {
