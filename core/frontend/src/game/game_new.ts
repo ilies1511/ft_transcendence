@@ -391,40 +391,65 @@ export class Game {
 		this._active_scene = this._game_scene;
 	}
 
-	private _process_server_error(error: ServerError) {
+	public static process_server_error(error: ServerError, game?: Game) {
 		console.log("Game: Got error from server: ", error);
 		switch (error) {
 			case ('Invalid Request'):
 				break ;
 			case ('Invalid Password'):
-				this.finished = true;
-				this.disconnect();
+				if (game) {
+					game.finished = true;
+					game.disconnect();
+				}
 				break ;
 			case ('Full'):
 			case ('Invalid Map'):
 			case ('Not Found'):
-				if (!this.finished) {
-					this.finished = true;
+				if (game && !game.finished) {
+					game.finished = true;
+					showToast({
+						title: 'Could not run game',
+					});
+				} else if (!game) {
 					showToast({
 						title: 'Could not run game',
 					});
 				}
-				this.disconnect();
-				//todo: this toast is not fully visable on the game page
-
+				if (game) {
+					game.disconnect();
+				}
+				break ;
+			case ('Allready in game'):
+				showToast({
+					title: 'You are allready in a game or tournament, try to reconnect first. If you want to start a new game finish or leave your other game first.',
+				});
+				if (game) {
+					game.finished = true;
+					game.disconnect();
+				}
+				break ;
+			case ('Allready started'):
 				break ;
 			case ('Allready connected in a different session'):
-				this.finished = true;
-				this.disconnect();
+				showToast({
+					title: 'You are allready connected to the game from a different session, disconnect there first to connect to the game here',
+				});
+				if (game) {
+					game.finished = true;
+					game.disconnect();
+				}
 				break ;
+			case ('Allready in tournament'): // should never happen
 			case ('Internal Error'):
-				if (!this.finished) {
-					this.finished = true;
+				if (game && !game.finished) {
+					game.finished = true;
 					showToast({
 						title: 'Could not run game',
 					});
 				}
-				this.leave();
+				if (game) {
+					game.leave();
+				}
 				break ;
 			case (''):
 				break ;
@@ -465,7 +490,7 @@ export class Game {
 					break;
 
 				case 'error':
-					this._process_server_error(json.msg);
+					Game.process_server_error(json.msg, this);
 					break;
 
 				case 'finish':

@@ -1,3 +1,8 @@
+[ ]: bug: players can disconnect and join other games without leaving the first leading to a weird server state
+	-> [ ]: create lobby api needs client_id to verify hes not in game
+	-> [ ]: verify when joining a lobby
+	-> [ ]: verify when joing a tournamet
+	-> [x]: verify when entering matchmaking
 [x]: bug: if all players disconnect during the game no one can reconnect unless everyone is connected
 [x]: craeting a tournament api succeeds even though user is in a running tournamet
 	-> check if fixed after leave is fully implemented

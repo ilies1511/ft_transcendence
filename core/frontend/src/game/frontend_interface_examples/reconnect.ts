@@ -28,12 +28,14 @@ import type {
 	 game.leave(); // simmilar to game.disconnect(), BUT
 	 //'game.leave()' tells the server that we will not reconnect
 */
-export async function attempt_reconnect(match_container: HTMLElement, user_id: number)
+export async function attempt_reconnect(match_container: HTMLElement, user_id: number, hide_error: boolean = false)
 	: Promise<void>
 {
 	if (globalThis.game !== undefined) {
-		console.log("WARNING: Game: attempt_reconnect() was called while game object existed.",
-			"\n\tIt simply returned right way!\n\tGame id: ", globalThis.game.game_id);
+		if (!hide_error) {
+			console.log("WARNING: Game: attempt_reconnect() was called while game object existed.",
+				"\n\tIt simply returned right way!\n\tGame id: ", globalThis.game.game_id);
+		}
 		return ;
 	}
 
@@ -44,12 +46,13 @@ export async function attempt_reconnect(match_container: HTMLElement, user_id: n
 		if (!globalThis.tournament) {
 			new Tournament(user_id, reconnect.tournament_id, reconnect.tournament_password, match_container);
 		} else {
-			console.log("Error: there is allready a tournament obj");
+			if (!hide_error) {
+				console.log("Error: there is allready a tournament obj");
+			}
 		}
 		if (reconnect.match_id >= 0) {
 			match_id = reconnect.match_id;
 		}
-		//todo
 	} else if (reconnect.match_id >= 0) {
 		match_id = reconnect.match_id;
 	}

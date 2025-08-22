@@ -323,6 +323,14 @@ export class GameServer {
 
 		const { user_id, display_name, map_name, ai_count } = request.body;
 		console.log("GAME: _enter_matchmaking_api: ", request.body);
+
+		const parti: ClientParticipation | undefined = this.client_participations.get(user_id);
+
+		if (parti && parti.lobby_id) {
+			response.error = "Allready in game";
+			return (response);
+		}
+
 		for (const [lobby_id, lobby] of GameServer.lobbies) {
 			if (lobby.join(user_id, display_name) == "") {
 				response.match_id = lobby_id;
@@ -388,7 +396,7 @@ export class GameServer {
 
 		const parti: ClientParticipation | undefined = this.client_participations.get(user_id);
 
-		if (parti?.lobby_id && parti?.lobby_id != lobby_id) {
+		if (parti && parti.lobby_id) {
 			return ("Allready in game");
 		}
 
