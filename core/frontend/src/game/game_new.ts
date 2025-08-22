@@ -403,22 +403,27 @@ export class Game {
 			case ('Full'):
 			case ('Invalid Map'):
 			case ('Not Found'):
-				this.finished = true;
+				if (!this.finished) {
+					this.finished = true;
+					showToast({
+						title: 'Could not run game',
+					});
+				}
 				this.disconnect();
 				//todo: this toast is not fully visable on the game page
-				showToast({
-					title: 'Could not run game',
-				});
+
 				break ;
 			case ('Allready connected in a different session'):
 				this.finished = true;
 				this.disconnect();
 				break ;
 			case ('Internal Error'):
-				showToast({
-					title: 'Could not run game',
-				});
-				this.finished = true;
+				if (!this.finished) {
+					this.finished = true;
+					showToast({
+						title: 'Could not run game',
+					});
+				}
 				this.leave();
 				break ;
 			case (''):
@@ -430,6 +435,9 @@ export class Game {
 
 	//TODO: update2 for user leave notifications
 	private _process_msg(): void {
+		if (this.finished) {
+			return ;
+		}
 		if (this._last_server_msg) {
 	 		if (this._active_scene !== this._game_scene) {
 	 			this._start_game();
@@ -440,6 +448,9 @@ export class Game {
 			this._last_server_msg = null;
 		}
 		while (this._msg_queue.length) {
+			if (this.finished) {
+				return ;
+			}
 			const raw = this._msg_queue.shift()!; // never undefined here
 
 			const json = JSON.parse(raw as unknown as string) as LobbyToClientJson;
@@ -459,6 +470,7 @@ export class Game {
 
 				case 'finish':
 					// allow any preceding “info” toast to render first
+					this.finished = true;
 					setTimeout(() => this._finish_game(json), 200);
 					break;
 
