@@ -79,11 +79,12 @@ const enter_matchmaking_schema = {
 const create_lobby_schema = {
 	body: {
 		type: 'object',
-		required: ['map_name', 'ai_count', 'password'],
+		required: ['map_name', 'ai_count', 'password', 'client_id'],
 		properties: {
 			map_name: { type: 'string' },
 			ai_count: { type: 'number' },
 			password: { type: 'string' },
+			client_id: { type: 'number' },
 		}
 	}
 };
@@ -373,7 +374,18 @@ export class GameServer {
 			error: "",
 			match_id: -1,
 		};
-		const { map_name, ai_count, password } = request.body;
+		const { map_name, ai_count, password, client_id } = request.body;
+
+		const parti: ClientParticipation | undefined = GameServer.client_participations.get(client_id);
+		if (parti && parti.lobby_id) {
+			response.error = "Allready in game";
+			return (response);
+		}
+		if (parti && parti.tournament_id) {
+			response.error = "Allready in tournament";
+			return (response);
+		}
+
 		try {
 			const lobby_id: number = await GameServer.create_lobby(LobbyType.CUSTOM,
 				map_name, ai_count, password);

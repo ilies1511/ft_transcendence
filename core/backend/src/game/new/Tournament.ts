@@ -127,7 +127,7 @@ export class Tournament {
 			console.log(`Waring: client ${client_id} tried to leave tournament ${this._id} but is not part of any tournament`);
 			return ("Not Found");
 		}
-		if (parti.tournament_id != this.id) {
+		if (parti.tournament_id != this._id) {
 			console.log(`Waring: client ${client_id} tried to leave tournament ${this._id} but is part of tournament ${parti.tournament_id}`);
 			return ("Not Found");
 		}

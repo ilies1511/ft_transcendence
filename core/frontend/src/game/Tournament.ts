@@ -4,6 +4,8 @@ import type { LobbyInvite,
 	CreateTournamentResp,
 } from './game_shared/message_types.ts';
 import { is_unloading } from './globals.ts';
+
+import { showToast } from '../ui/toast-interface.ts';
 /*
  * tournament_running:
 	* lagging indicatior if a game should render it's result.
@@ -239,17 +241,23 @@ export class Tournament {
 			invite.lobby_id, display_name);
 		if (resp.error != '') {
 			console.log("Could not accept tournament invite: resp.error");
+			return ;
 		}
 		const tournament: Tournament = new Tournament(user_id, invite.lobby_id,
 			invite.lobby_password, match_container);
 		return (tournament);
 	}
 
-	public leave() {
+	public leave(silent: boolean = false) {
 		this.finished = true;
 		globalThis.game?.leave();
 		this.render_tournament_state();
 		TournamentApi.leave_tournament(this.user_id, this.tournament_id);
+		if (!silent) {
+			showToast({
+				title: 'Left tournament',
+			});
+		}
 		this._cleanup();
 	}
 

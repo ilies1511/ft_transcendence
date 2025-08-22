@@ -421,7 +421,16 @@ export class Game {
 				break ;
 			case ('Allready in game'):
 				showToast({
-					title: 'You are allready in a game or tournament, try to reconnect first. If you want to start a new game finish or leave your other game first.',
+					title: 'You are allready in a game, reconnect and finish or leave your game first.',
+				});
+				if (game) {
+					game.finished = true;
+					game.disconnect();
+				}
+				break ;
+			case ('Allready in tournament'):
+				showToast({
+					title: 'You are allready in a tournament, reconnect and finish or leave the tournament first.',
 				});
 				if (game) {
 					game.finished = true;
@@ -432,14 +441,13 @@ export class Game {
 				break ;
 			case ('Allready connected in a different session'):
 				showToast({
-					title: 'You are allready connected to the game from a different session, disconnect there first to connect to the game here',
+					title: 'You are allready connected to the game/tournament from a different session, disconnect there first to connect here.',
 				});
 				if (game) {
 					game.finished = true;
 					game.disconnect();
 				}
 				break ;
-			case ('Allready in tournament'): // should never happen
 			case ('Internal Error'):
 				if (game && !game.finished) {
 					game.finished = true;

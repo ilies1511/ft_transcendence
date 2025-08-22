@@ -51,7 +51,7 @@ export async function create_join_lobby(
 {
 	const lobby_password: string = generate_password();
 	const resp: CreateLobbyResp = await GameApi.create_lobby(options.map_name,
-		options.ai_count, lobby_password,);
+		options.ai_count, lobby_password, user_id);
 	if (resp.error != "") {
 		console.log(resp.error);
 		return (resp.error);

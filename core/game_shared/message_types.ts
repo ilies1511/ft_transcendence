@@ -40,6 +40,7 @@ export interface CreateLobbyReq {
 	map_name: string;
 	ai_count: number;
 	password: string;
+	client_id: number;
 };
 
 export interface JoinReq {

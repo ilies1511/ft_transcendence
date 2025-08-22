@@ -13,6 +13,8 @@ import type {
 	StartReq,
 } from './game_shared/TournamentApiTypes.ts';
 
+import { Game } from './game_new.ts';
+
 
 export class TournamentApi {
 	private constructor() {}
@@ -61,6 +63,9 @@ export class TournamentApi {
 			body: JSON.stringify(req)
 		});
 		const data: DefaultResp = await response.json();
+		if (data.error != '') {
+			Game.process_server_error(data.error);
+		}
 		console.log("game: join_tournament api response: ", data);
 		return (data);
 	}
@@ -93,7 +98,7 @@ export class TournamentApi {
 	{
 		const req: LeaveReq = {
 			client_id: user_id,
-			lobby_id: tournament_id,
+			tournament_id: tournament_id,
 		};
 		const response = await fetch('/api/leave_tournament', {
 			method: 'POST',
@@ -103,6 +108,6 @@ export class TournamentApi {
 			body: JSON.stringify(req)
 		});
 
-		console.log("game: start_tournament api");
+		console.log("game: leave_tournament api");
 	}
 };

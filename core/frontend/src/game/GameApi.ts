@@ -58,14 +58,16 @@ export class GameApi {
 	}
 
 	public static async create_lobby(map_name: string, ai_count: number,
-		password: string,
+		password: string, client_id: number
 	) : Promise<CreateLobbyResp>
 	{
 		const req: CreateLobbyReq = {
 			map_name: map_name,
 			ai_count: ai_count,
-			password: password
+			password: password,
+			client_id: client_id,
 		};
+
 		const response = await fetch('/api/create_lobby', {
 			method: 'POST',
 			headers: {
@@ -75,6 +77,9 @@ export class GameApi {
 		});
 		const data: CreateLobbyResp = await response.json();
 		console.log("Game: create_lobby api response: ", data);
+		if (data.error != '') {
+			Game.process_server_error(data.error);
+		}
 		return (data);
 	}
 
