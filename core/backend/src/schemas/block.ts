@@ -39,3 +39,17 @@ export const blockUserSchema = {
 		404: ErrorResponse,
 	},
 } as const
+
+// BEGIN -- Unblock
+export const unblockUserSchema = {
+	tags: ['block'],
+	params: BlockParamsSchema,
+	body: EmptyBodySchema,
+	response: {
+		200: BlockOkResponse,
+		400: ErrorResponse,
+		403: ErrorResponse,
+		404: ErrorResponse,
+	},
+} as const
+// END -- Unblock
