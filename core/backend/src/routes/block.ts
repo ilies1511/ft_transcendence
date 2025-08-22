@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import { blockUser, unblockUser, getBlockedUsersList } from "../functions/block.ts";
 import { areFriends, removeFriend } from "../functions/friends.ts";
-import { blockUserSchema, unblockUserSchema } from "../schemas/block.ts";
+import { blockListSchema, blockUserSchema, unblockUserSchema } from "../schemas/block.ts";
 
 export const blockRoutes: FastifyPluginAsync = async (fastify) => {
 	//block
@@ -76,28 +76,33 @@ export const blockRoutes: FastifyPluginAsync = async (fastify) => {
 
 	fastify.get<{
 		Params: { id: number }
-		Reply: number[]
+		Reply: number[] | { error: string }
 	}>(
 		'/api/users/:id/block',
 		{
-			schema: {
-				tags: ['block'],
-				params: {
-					type: 'object',
-					required: ['id'],
-					properties: { id: { type: 'integer' } }
-				},
-				response: {
-					200: {
-						type: 'array',
-						items: { type: 'integer' }
-					}
-				}
-			}
+			// schema: {
+			// 	tags: ['block'],
+			// 	params: {
+			// 		type: 'object',
+			// 		required: ['id'],
+			// 		properties: { id: { type: 'integer' } }
+			// 	},
+			// 	response: {
+			// 		200: {
+			// 			type: 'array',
+			// 			items: { type: 'integer' }
+			// 		}
+			// 	}
+			// }
+			schema: blockListSchema
 		},
 		async (req, reply) => {
 			const { id } = req.params;
-			// const blockedUsers = await getBlockedUsersList(fastify, id);
+			const authUserId = (req.user as any).id
+
+			if (id !== authUserId) {
+				return reply.code(403).send({ error: 'Forbidden' })
+			}
 			const blockedUsers = await getBlockedUsersList(fastify, id);
 			return blockedUsers;
 		}
