@@ -141,6 +141,7 @@ export class Tournament {
 			this._total_player_count = this._all_players.length;
 			//this._next_placement = this._rounds[0].players.length;
 			this._next_placement = this._all_players.length;
+			this._broadcast_player_list();
 			return ("");
 		}
 		//case 1; done: player is currently connected to a lobby: should be handled by the lobby
@@ -407,6 +408,29 @@ export class Tournament {
 		this._completion_callback(this._id);
 	}
 
+	private _broadcast_player_list() {
+		if (this._started) {
+			return ;
+		}
+		const player_list: TournamentPlayerList = {
+			type: 'player_list',
+			data: [],
+		};
+		for (const player of this._all_players) {
+			player_list.data.push({display_name: player.display_name, id: player.client_id});
+		}
+		for (const player of this._all_players) {
+			player.ws?.send(JSON.stringify(player_list));
+			if (player.ws && player.ws.readyState == WebSocket.OPEN) {
+				console.log("sending ", player_list);
+			} else if (player.ws) {
+				console.log("tried to send ", player_list, ", but ws was not open");
+			} else { 
+				console.log("tried to send ", player_list, ", but there was no ws");
+			}
+		}
+	}
+
 	public rcv_msg(data: string, ws: WebSocket) {
 		let msg: ClientToTournament;
 		try {
@@ -419,12 +443,7 @@ export class Tournament {
 		console.log("tournament received msg: ", msg);
 		switch (msg.type) {
 			case ('reconnect'):
-				const player_list: TournamentPlayerList = {
-					type: 'player_list',
-					data: [],
-				};
 				for (const player of this._all_players) {
-					player_list.data.push({display_name: player.display_name, id: player.client_id});
 					if (player.client_id == msg.client_id) {
 						if (player.ws) {
 							player.ws.close();
@@ -432,19 +451,7 @@ export class Tournament {
 						player.ws = ws;
 					}
 				}
-				if (!this._started) {
-
-					for (const player of this._all_players) {
-						player.ws?.send(JSON.stringify(player_list));
-						if (player.ws && player.ws.readyState == WebSocket.OPEN) {
-							console.log("sending ", player_list);
-						} else if (player.ws) {
-							console.log("tried to send ", player_list, ", but ws was not open");
-						} else { 
-							console.log("tried to send ", player_list, ", but there was no ws");
-						}
-					}
-				}
+				this._broadcast_player_list();
 				break ;
 		}
 	}

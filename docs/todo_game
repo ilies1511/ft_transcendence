@@ -1,9 +1,10 @@
-[ ]: bug: players can disconnect and join other games without leaving the first leading to a weird server state
+[x]: bug: players can disconnect and join other games without leaving the first leading to a weird server state
 	-> [x]: create lobby api needs client_id to verify hes not in game
-	-> [ ]: create tournamet api needs client_id to verify hes not in game
+	-> [x]: create tournamet api needs client_id to verify hes not in game
 	-> [x]: verify when joining a lobby
 	-> [x]: verify when joing a tournamet
 	-> [x]: verify when entering matchmaking
+[x]: tournamet backend: when a player leaves pre start there needs to be a player list broadcast
 [x]: bug: leave tournamet dosn't fully work?
 [x]: bug: if all players disconnect during the game no one can reconnect unless everyone is connected
 [x]: craeting a tournament api succeeds even though user is in a running tournamet
