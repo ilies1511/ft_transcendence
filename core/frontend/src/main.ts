@@ -1,7 +1,6 @@
 import './style.css';
 import { Router } from './router.ts';
 import { initFriendUI, destroyFriendUI } from './chat/chat-init.ts';
-import { currentUser } from './services/auth';
 import { initWs, closeWs } from './services/websocket';
 import { presence } from './services/presence';
 import { updateDot } from './utils/statusDot';
@@ -10,25 +9,28 @@ import { refreshMenu } from './ui/menu';
 import { refreshHeader } from './ui/header';
 import { initAllUsersUI, destroyAllUsersUI } from './all-users/all-users-init.ts';
 import { initFriendRequestWs, destroyFriendRequestWs } from './friends/friend-ws'
+import { getSession, clearSession } from './services/session';
 
 const root = document.querySelector<HTMLElement>('#app')!;
 export const router = new Router(root);
-
-//TODO: REMOVE. CURRENTUSER, MOVE TO SESSION
 
 // initFriendUI(); // friend-list UI
 document.addEventListener('click', router.linkHandler); // link delegation
 
 // Fire auth-change once if a valid cookie already exists
 (async () => {
-	if (await currentUser())
+	const user = await getSession();
+	if (user) {
 		document.dispatchEvent(new Event('auth-change'));
+	}
 })();
 
 router.go(location.pathname);
 
 document.addEventListener('auth-change', async () => {
-	const user = await currentUser();
+	clearSession();
+	const user = await getSession();
+	console.log("main.ts 'auth-change' triggred");
 
 	if (user) {
 		initWs();

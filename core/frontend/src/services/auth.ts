@@ -4,9 +4,10 @@ import { closeWs } from './websocket';
 import type { AuthUser } from '../types/types';
 
 export async function currentUser(): Promise<AuthUser | null> {
-	const res = await fetch('/api/me', { credentials: 'include' });
-	if (!res.ok) return null;
 	try {
+		const res = await fetch('/api/me', { credentials: 'include' });
+		if (!res.ok) return null;
+
 		return await res.json() as AuthUser;
 	} catch {
 		return null;  // Handle JSON parse errors gracefully

@@ -1,9 +1,9 @@
 // src/utils/isFriend.ts
 import type { ApiUserWithFriends } from '../types/types'
-import { currentUser } from '../services/auth'
+import { getSession } from '../services/session';
 
 export async function isFriend(profileId: number): Promise<boolean> {
-	const me = await currentUser()
+	const me = await getSession()
 	if (!me)
 		return false // not logged-in
 	if (me.id === profileId)

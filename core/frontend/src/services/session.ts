@@ -1,22 +1,24 @@
 import { currentUser } from './auth';
 import type { AuthUser } from '../types/types';
 
-let cache: AuthUser | null | undefined;
+let cache: Promise<AuthUser | null> | undefined;
 
-export async function getSession() {
-	if (cache !== undefined)
-	return cache;
+export async function getSession():Promise <AuthUser | null> {
+	if (cache)
+		return cache;
 
-	try {
-		cache = await currentUser();
-	} catch {
-		cache = null;
-	}
+	cache = (async () => {
+		try{
+			const user = await currentUser();
+			return user ?? null;
+		} catch{
+			return null;
+		}
+	})();
 
 	return cache;
 }
 
-// reset after logout
 export function clearSession() {
 	cache = undefined;
 }

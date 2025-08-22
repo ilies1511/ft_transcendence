@@ -100,3 +100,5 @@ All the console logs should be in english.
 - [ ] Add notification on disconnect, when the player disconnects from the game.
 - [ ] Prevent spam clicking invite to the game to all users. (localstorage and map)
 - [ ] Fix mobile menu
+- [x] Make all friends bubble scrollable
+- [x] Update every page to use session instead of currentUser
