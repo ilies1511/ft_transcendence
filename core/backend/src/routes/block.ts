@@ -1,20 +1,25 @@
 import type { FastifyPluginAsync } from "fastify";
 import { blockUser, unblockUser, getBlockedUsersList } from "../functions/block.ts";
 import { areFriends, removeFriend } from "../functions/friends.ts";
+import { blockUserSchema } from "../schemas/block.ts";
 
 export const blockRoutes: FastifyPluginAsync = async (fastify) => {
 	//block
 	fastify.post<{
 		Params: { id: number; targetId: number }
+		Reply: { message: string } | { error: string }
 	}>(
 		'/api/users/:id/block/:targetId',
 		{
-			schema: {
-				tags: ['block']
-			}
+			schema: blockUserSchema
 		},
 		async (req, reply) => {
 			const { id, targetId } = req.params
+			const authUserId = (req.user as any).id
+
+			if (req.params.id !== authUserId) {
+				return reply.code(403).send({ error: 'Forbidden' })
+			}
 			if (id === targetId) {
 				return reply.code(400).send({ error: "Can't block yourself" })
 			}

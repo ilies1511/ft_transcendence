@@ -242,6 +242,7 @@ export default async function authRoutes(app: FastifyInstance) {
 
 	app.post<{
 		Body: { email: string; password?: string; token: string }
+		Reply: { ok: true } | { error: string }
 	}>(
 		'/api/login/2fa',
 		{
