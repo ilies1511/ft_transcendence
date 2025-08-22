@@ -160,10 +160,16 @@ def enter_matchmaking(session, user_id=2, display_name='CLI_DISPLAY_NAME', map_n
     print(json.dumps(resp_json, indent=2))
     return resp_json
 
+def whoami(session: requests.Session):
+    r = session.get(f"{BASE}/api/me", timeout=10)
+    return r.json()['id']
+
 def login():
     print("=== Login ===")
-    email = 'a@a.a'
-    password = 'a'
+    email = input('email: ')
+    password = input('password: ')
+    #email = 'a@a.a'
+    #password = 'a'
 
     with requests.Session() as session:
         try:
@@ -186,7 +192,8 @@ def login():
             sys.exit(1)
 
         print("Logged in")
-        client_id = 2
+        client_id = whoami(session)
+        print(f'client_id: {client_id}')
         mm_response = enter_matchmaking(session, user_id=client_id)
         match_id = mm_response['match_id']
 
