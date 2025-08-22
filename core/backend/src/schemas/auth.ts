@@ -146,3 +146,62 @@ export const logoutSchema = {
 } as const
 
 // END -- '/api/logout' Schema
+
+// BEGIN -- '/api/login/2fa' Schema
+
+//OLD
+// schema: {
+// 	tags: ['auth'],
+// 	body: {
+// 		type: 'object',
+// 		required: ['email', 'token'],
+// 		properties: {
+// 			email: { type: 'string', format: 'email' },
+// 			password: { type: 'string' },
+// 			token: { type: 'string' }
+// 		}
+// 	}
+// }
+//OLD
+export const Login2FABodySchema = {
+	type: 'object',
+	additionalProperties: false,
+	required: ['email', 'token'],
+	properties: {
+		email: {
+			type: 'string',
+			format: 'email',
+			maxLength: 254,
+			transform: ['trim', 'toLowerCase'],
+		},
+		password: {
+			type: 'string',
+			minLength: 8,
+			maxLength: 128,
+			transform: ['trim'],
+		},
+		token: {
+			type: 'string',
+			minLength: 6,
+			maxLength: 12,
+			pattern: '^[0-9\\s]+$', // Spacw also allowed
+			transform: ['trim'],
+		},
+	},
+} as const
+
+export const Login2FAResponse200 = LoginOkResponse
+export const LoginError400 = LoginError401
+
+export const login2FASchema = {
+	tags: ['2fa'],
+	description: 'Completes login with TOTP (2FA) + sets an HTTP-only cookie',
+	body: Login2FABodySchema,
+	response: {
+		200: Login2FAResponse200,
+		400: LoginError400,
+		401: LoginError401,
+	},
+} as const
+
+// END -- '/api/login/2fa' Schema

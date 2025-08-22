@@ -7,7 +7,7 @@ import { DEFAULT_AVATARS } from '../constants/avatars.ts';
 import { error } from 'console';
 import { validateCredentials, verify2FaToken } from '../functions/2fa.ts';
 import { setUserLive } from '../functions/user.ts';
-import { loginSchema, logoutSchema, RegisterBodySchema } from '../schemas/auth.ts';
+import { login2FASchema, loginSchema, logoutSchema, RegisterBodySchema } from '../schemas/auth.ts';
 
 const COST = 12  // bcrypt cost factor (2^12 ≈ 400 ms on laptop)
 
@@ -245,18 +245,19 @@ export default async function authRoutes(app: FastifyInstance) {
 	}>(
 		'/api/login/2fa',
 		{
-			schema: {
-				tags: ['auth'],
-				body: {
-					type: 'object',
-					required: ['email', 'token'],
-					properties: {
-						email: { type: 'string', format: 'email' },
-						password: { type: 'string' },
-						token: { type: 'string' }
-					}
-				}
-			}
+			// schema: {
+			// 	tags: ['auth'],
+			// 	body: {
+			// 		type: 'object',
+			// 		required: ['email', 'token'],
+			// 		properties: {
+			// 			email: { type: 'string', format: 'email' },
+			// 			password: { type: 'string' },
+			// 			token: { type: 'string' }
+			// 		}
+			// 	}
+			// }
+			schema: login2FASchema
 		},
 		async (req, reply) => {
 			const { email, password, token } = req.body
