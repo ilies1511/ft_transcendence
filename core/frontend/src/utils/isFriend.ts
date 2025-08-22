@@ -1,5 +1,5 @@
 // src/utils/isFriend.ts
-import type { ApiUserWithFriends } from '../types/api'
+import type { ApiUserWithFriends } from '../types/types'
 import { currentUser } from '../services/auth'
 
 export async function isFriend(profileId: number): Promise<boolean> {

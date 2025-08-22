@@ -1,6 +1,6 @@
 // frontend/src/pages/profile.ts
 import type { PageModule } from '../router';
-import type { ApiUser } from '../types/api';
+import type { ApiUser } from '../types/types';
 // import { getSession } from '../services/auth'
 import { router } from '../main';
 import { getSession } from '../services/session';

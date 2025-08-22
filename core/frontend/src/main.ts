@@ -5,7 +5,7 @@ import { currentUser } from './services/auth';
 import { initWs, closeWs } from './services/websocket';
 import { presence } from './services/presence';
 import { updateDot } from './utils/statusDot';
-import type { FriendStatusMsg } from './types/ws';
+import type { FriendStatusMsg } from './types/types.ts';
 import { refreshMenu } from './ui/menu';
 import { refreshHeader } from './ui/header';
 import { initAllUsersUI, destroyAllUsersUI } from './all-users/all-users-init.ts';

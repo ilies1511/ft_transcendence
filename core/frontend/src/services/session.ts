@@ -1,7 +1,7 @@
 import { currentUser } from './auth';
+import type { AuthUser } from '../types/types';
 
-// in memory cache so we dont need to call currentUser every time.
-let cache: Awaited<ReturnType<typeof currentUser>> | undefined;
+let cache: AuthUser | null | undefined;
 
 export async function getSession() {
 	if (cache !== undefined)
