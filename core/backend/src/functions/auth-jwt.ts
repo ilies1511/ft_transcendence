@@ -47,6 +47,7 @@ export default fp(async (app: FastifyInstance) => {
 		// BEGIN -- prod
 		'/api/register',
 		'/api/login',
+		'/api/logout',
 		'/api/auth/google',
 		'/api/auth/google/callback',
 		'/api/csrf',

@@ -87,4 +87,62 @@ export const loginSchema = {
 		401: LoginError401,
 	},
 } as const
+
+// Old Schema:
+// schema: {
+// 	description: 'Loggt einen Benutzer ein und liefert ein HTTP-Only Cookie',
+// 	tags: ['auth'],
+// 	body: {
+// 		type: 'object',
+// 		required: ['email', 'password'],
+// 		properties: {
+// 			email: { type: 'string', format: 'email' },
+// 			password: { type: 'string', minLength: 1 }
+// 			// token: { type: 'string'}
+// 		}
+// 	},
+// 	response: {
+// 		200: {
+// 			description: 'Successful login or 2FA required',
+// 			type: 'object',
+// 			properties: {
+// 				ok: { type: 'boolean', const: true },
+// 				twofa_required: { type: 'boolean' }
+// 			}
+// 		},
+// 		401: {
+// 			description: 'Invalid credentials',
+// 			type: 'object',
+// 			properties: {
+// 				error: { type: 'string' }
+// 			}
+// 		}
+// 	}
+// }
+
 // END -- '/api/login' Schema
+
+// BEGIN -- '/api/logout' Schema
+export const LogoutBodySchema = {
+	type: ['object', 'null'],
+	additionalProperties: false,
+	maxProperties: 0,
+} as const
+
+export const LogoutOkResponse = {
+	type: 'object',
+	additionalProperties: false,
+	required: ['ok'],
+	properties: { ok: { type: 'boolean', const: true } },
+} as const
+
+export const logoutSchema = {
+	tags: ['auth'],
+	description: 'Clears the auth cookie and marks the user offline.',
+	// body: LogoutBodySchema,
+	response: {
+		200: LogoutOkResponse,
+	},
+} as const
+
+// END -- '/api/logout' Schema
