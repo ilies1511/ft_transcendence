@@ -3,7 +3,7 @@ import { showActiveChatPanel } from './chat-ui';
 import { unreadCounts, chatUserNames, loadHistory,
 	saveUnreadCounts, updateUnreadBadge, updateMainBadge } from './chat-state';
 import { chatState } from './chat-init';
-import { appendNewChatMessage, saveToHistory } from './chat-state'; // for handleDirectMessage
+import { appendNewChatMessage, saveToHistory, appendSystemMessage } from './chat-state'; // for handleDirectMessage
 import { sendWs } from '../services/websocket';
 import type { LobbyInvite } from '../../src/game/game_shared/message_types.ts';
 import { LobbyType } from '../../src/game/game_shared/message_types.ts';
@@ -43,27 +43,25 @@ export async function fetchUsersAndPopulate(myID: number) {
 					'friendRow flex items-center justify-between rounded-lg ' +
 					'bg-[#181113] px-3 py-2 text-white hover:bg-[#3c272d]';
 
-				li.innerHTML = `
-					<div class="flex w-full items-center">
+					li.innerHTML = `<div class="flex w-full items-center">
 
-						<span class="flex items-center gap-2 cursor-pointer">
-						<img src="${u.avatar}"
-							class="h-5 w-5 shrink-0 rounded-full object-cover">
-						${u.username}
+						<span class="unread-message-appender flex items-center gap-2">
+							<img src="${u.avatar}" class="h-5 w-5 shrink-0 rounded-full object-cover">
+							<span class="open-chat cursor-pointer hover:underline">${u.username}</span>
 						</span>
 
 						<button
-						class="invite-btn ml-auto
-								flex items-center gap-1
-								rounded bg-[#f22667] px-2 py-0.5 text-sm
-								hover:bg-[#d71d59] cursor-pointer">
-						${icons.game_invite}
+							class="invite-btn ml-auto flex items-center gap-1
+									rounded bg-[#f22667] px-2 py-0.5 text-sm
+									hover:bg-[#d71d59] cursor-pointer">
+							${icons.game_invite}
 						</button>
 					</div>
 
-				<span class="unread-badge hidden ml-2 text-xs bg-red-500
-					text-white rounded-full px-2 py-1"></span>
+					<span class="unread-badge hidden ml-2 text-xs bg-red-500
+						text-white rounded-full px-2 py-1"></span>
 				`;
+
 					// ul.appendChild(li);
 					li.querySelector('.invite-btn')!.addEventListener('click', ev => {
 						ev.stopPropagation(); // don’t open the DM
@@ -126,19 +124,17 @@ export async function fetchUsersAndPopulate(myID: number) {
 					});
 
 
-					li.addEventListener('click', e => {
-						const link = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[data-route]');
-						if (link) {
-							return;
-						}
-						e.preventDefault(); // block navigation
+					li.querySelector<HTMLSpanElement>('.open-chat')!.addEventListener('click', e => {
+						e.preventDefault();					// stop default <a> navigation if any
 						chatState.activeChatFriendId = u.id;
+
 						document.getElementById('chatUser')!.innerHTML = `
 							<a href="/profile/${u.id}" data-route
 							   class="flex items-center gap-2 hover:underline">
 								<img src="${u.avatar}" class="h-5 w-5 rounded-full object-cover">
 								${u.username}
 							</a>`;
+
 						showActiveChatPanel();
 						loadHistory(u.id);
 						unreadCounts.set(u.id, 0);
@@ -146,6 +142,7 @@ export async function fetchUsersAndPopulate(myID: number) {
 						updateUnreadBadge(u.id);
 						(document.getElementById('msgInput')! as HTMLInputElement).focus();
 					});
+
 
 
 				ul.appendChild(li);
@@ -200,6 +197,6 @@ export function handleDirectMessage(ev: Event) {
 }
 
 export function handleChatError(ev: Event) {
-	const data = (ev as CustomEvent).detail;
-	console.error('Chat error:', data.error);
+	const { message } = (ev as CustomEvent).detail
+	appendSystemMessage(message || 'User is OFFLINE - message not delivered.')
 }

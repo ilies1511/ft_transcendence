@@ -11,16 +11,24 @@ export const template = /*html*/ `
 		class="fixed bottom-[60px] right-6 z-50 flex h-14 w-14 items-center justify-center
 			rounded-full bg-[#f22667] text-white hover:bg-[#d71d59] cursor-pointer">
 	${icons.chat}
-	<span id="mainBadge"
-		class="absolute top-0 right-0 text-xs bg-red-500 text-white rounded-full px-1 py-0 hidden">!</span>
+	<span id="mainBadge" class="absolute
+		top-0
+		right-0
+		text-xs text-red-500
+		rounded-full
+		bg-[#FFFDFA]
+		px-1
+		py-0
+		hidden
+	">!</span>
 	</button>
 
 	<div id="mainChatContainer"
-		class="fixed bottom-[130px] right-6 z-40 w-80 hidden flex flex-col
-			overflow-x-hidden"> 
+		class="fixed bottom-[150px] right-6 z-40 w-80 hidden flex flex-col
+			overflow-x-hidden">
 
 		<div id="liveChatPanel"
-			class="flex flex-col h-[330px] rounded-xl bg-[#2b171e] p-4">
+			class="flex flex-col h-[230px] rounded-xl bg-[#2b171e] p-4">
 			<div class="flex items-center justify-between text-white">
 				<h3 class="text-lg font-bold">Live Chat</h3>
 				<button id="closePanel" class="text-xl leading-none cursor-pointer">
