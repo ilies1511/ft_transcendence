@@ -39,10 +39,9 @@ export const OkResponseSchema = {
 
 export const listFriendsSchema = {
 	tags: ['friends'],
-	params: Params,
+	// params: Params, // --> Not needed anymire since API Design changed
 	response: {
 		200: OkResponseSchema,
-		403: ErrorResponse,
 		404: ErrorResponse
 	}
 } as const

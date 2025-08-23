@@ -11,23 +11,23 @@ import { findUserWithFriends } from "../functions/user.ts";
 import { type FriendRequestRow, type UserWithFriends } from "../types/userTypes.ts";
 import { listFriendsSchema } from "../schemas/friends.ts";
 
+async function getUserId(request: any) {
+	return (request.user as any).id as number;
+}
+
 export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 	// GET -- BEGIN
 	fastify.get<{
-		Params: { id: number }
 		Reply: UserWithFriends | { error: string }
 	}>(
-		'/api/users/:id/friends',
+		'/api/me/friends',
 		{
 			schema: listFriendsSchema
 		},
 		async (request, reply) => {
-			const authUserId = (request.user as any).id
+			const authUserId = await getUserId(request);
 
-			if (request.params.id !== authUserId) {
-				return reply.code(403).send({ error: 'Forbidden' })
-			}
-			const result = await findUserWithFriends(fastify, request.params.id)
+			const result = await findUserWithFriends(fastify, authUserId)
 			if (!result) {
 				return reply.code(404).send({ error: 'User not found' })
 			}
