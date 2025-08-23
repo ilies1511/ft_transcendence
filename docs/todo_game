@@ -21,7 +21,7 @@
 	-> [ ] currently only dummy data
 [x]: when leaving a tournament before it starts it should remove the player list rendering
 [x] - delete empty game lobbies in the backend
-[ ] - delete empty tournament in the backend
+[x] - delete empty tournament in the backend
 [ ]: game frontend : optional fullscreen
 [ ]: AI
 

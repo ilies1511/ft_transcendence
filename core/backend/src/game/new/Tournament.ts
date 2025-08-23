@@ -142,6 +142,9 @@ export class Tournament {
 			//this._next_placement = this._rounds[0].players.length;
 			this._next_placement = this._all_players.length;
 			this._broadcast_player_list();
+			if (this._all_players.length == 0) {
+				this._finish();
+			}
 			return ("");
 		}
 		//case 1; done: player is currently connected to a lobby: should be handled by the lobby
