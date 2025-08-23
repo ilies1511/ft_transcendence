@@ -105,8 +105,8 @@ export const SendFRBodySchema = {
 			type: 'string',
 			// minLength: 3,
 			// maxLength: 24,
-			pattern: '^[a-zA-Z0-9_]+$',
-			transform: ['trim'],
+			// pattern: '^[a-zA-Z0-9_]+$',
+			// transform: ['trim'],
 		},
 	},
 } as const
@@ -212,3 +212,36 @@ export const outgoingRequestsSchema = {
 	},
 } as const
 // END -- GET request outgoing
+
+
+// BEGIN -- POST Accecpt
+// schema: {
+// 	tags: ['friends'],
+// 	params: { type: 'object', required: ['requestId'], properties: { requestId: { type: 'integer' } } },
+// 	response: {
+// 		200: { type: 'object', properties: { message: { type: 'string' } } },
+// 		404: { type: 'object', properties: { error: { type: 'string' } } }
+// 	}
+// }
+
+export const AcceptFRParamsSchema = {
+	type: 'object',
+	additionalProperties: false,
+	required: ['requestId'],
+	properties: {
+		requestId: { type: 'integer', minimum: 1 },
+	},
+} as const
+
+export const acceptFriendRequestSchema = {
+	tags: ['friends'],
+	params: AcceptFRParamsSchema,
+	response: {
+		200: OkMessageResponse,
+		400: ErrorResponse,
+		403: ErrorResponse,
+		404: ErrorResponse,
+		409: ErrorResponse,
+	},
+} as const
+// END -- POST Accecpt
