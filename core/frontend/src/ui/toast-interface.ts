@@ -10,6 +10,7 @@ interface ToastOptions {
 
 export function showToast(toast: ToastOptions):HTMLDivElement {
 	const box = document.createElement('div');
+	box.id = "toast";
 
 	// box.className = `fixed top-6 right-6 w-60 rounded-xl border border-[#543B43]set`;
 
@@ -23,7 +24,7 @@ export function showToast(toast: ToastOptions):HTMLDivElement {
 	box.innerHTML = /*html*/`
 		<div class="flex items-start gap-4">
 			<div class="flex-1">
-				<h3 class="text-base font-semibold">${toast.title}</h3>
+				<h3 class="text-base font-semibold ">${toast.title}</h3>
 				${fromLine}
 			</div>
 			<button class="t-close text-[#b99da6] hover:text-white text-lg

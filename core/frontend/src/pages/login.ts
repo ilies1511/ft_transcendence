@@ -6,7 +6,7 @@ import { clearSession } from '../services/session';
 const template = /*html*/ `
 	<div class="w-full min-h-screen flex items-center justify-center bg-[#221116]">
 		<form id="login-form"
-			  class="w-full max-w-[400px] p-8 space-y-6 shadow-md rounded-[25px] bg-[#2b171e]">
+			  class="w-full max-w-[400px] p-8 space-y-4 shadow-md rounded-[25px] bg-[#2b171e]">
 			<h2 class="text-center text-white text-2xl font-bold">Log in to your account</h2>
 
 			<!-- Standard Login Fields -->
@@ -48,14 +48,18 @@ const template = /*html*/ `
 			</div>
 
 
-			<button id="login-button" class="w-full h-10 rounded-xl bg-[#f22667] text-white font-bold cursor-pointer tracking-wide
+			<button id="login-button" class="w-full h-10 rounded-xl bg-[#f22667]
+				text-white font-bold
+				cursor-pointer
+				tracking-wide
+				mb-2
 				hover:bg-[#d41d59]
 				active:bg-[#b31648]
 			">
 				Log In
 			</button>
 
-			<p id="or-separator" class="text-center text-sm text-white">or</p>
+			<p id="or-separator" class="text-center text-sm text-white mb-2">or</p>
 
 			<a id="google-login-button" href="/api/auth/google"
 				class="w-full block h-10 rounded-xl bg-white text-[#221116] text-center leading-10 font-bold tracking-wide

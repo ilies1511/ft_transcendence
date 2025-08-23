@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => ({
 		},
 		host: true,
 		port: 5173,
-		allowedHosts: ['2-h-5.42heilbronn.de'],
+		allowedHosts: ['2-h-5.42heilbronn.de', '2-h-9.42heilbronn.de'],
 		proxy: {
 			'/api': { target: 'http://localhost:3000', changeOrigin: true, secure: false },
 

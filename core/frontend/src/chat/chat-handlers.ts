@@ -1,6 +1,6 @@
 // src/features/chat/chat-handlers.ts
 import { showActiveChatPanel } from './chat-ui';
-import { unreadCounts, chatUserNames, loadHistory, 
+import { unreadCounts, chatUserNames, loadHistory,
 	saveUnreadCounts, updateUnreadBadge, updateMainBadge } from './chat-state';
 import { chatState } from './chat-init';
 import { appendNewChatMessage, saveToHistory } from './chat-state'; // for handleDirectMessage
@@ -26,7 +26,7 @@ export async function fetchUsersAndPopulate(myID: number) {
 
 		const othersUsersList = usersList.filter((u: { id: number }) => u.id !== myID);
 		if (!othersUsersList.length) {
-			ul.innerHTML = '<li class="text-sm p-2 text-gray-500">No users found</li>';
+			ul.innerHTML = '<li class="text-sm p-2 text-gray-500">No registered users, its only you bro..</li>';
 			return;
 		}
 
@@ -64,9 +64,9 @@ export async function fetchUsersAndPopulate(myID: number) {
 				<span class="unread-badge hidden ml-2 text-xs bg-red-500
 					text-white rounded-full px-2 py-1"></span>
 				`;
-					// ul.appendChild(li); 
+					// ul.appendChild(li);
 					li.querySelector('.invite-btn')!.addEventListener('click', ev => {
-						ev.stopPropagation();          // don’t open the DM
+						ev.stopPropagation(); // don’t open the DM
 
 						const invite: LobbyInvite = {
 							map_name:        '',
@@ -106,22 +106,27 @@ export async function fetchUsersAndPopulate(myID: number) {
 					});
 
 
-				li.addEventListener('click', () => {
-					chatState.activeChatFriendId = u.id;
-					(document.getElementById('chatUser')!).innerHTML = `
-						<a href="/profile/${u.id}" data-route
-						class="flex items-center gap-2 hover:underline">
-							<img src="${u.avatar}" class="h-5 w-5 rounded-full object-cover">
-							${u.username}
-						</a>
-					`;
-					showActiveChatPanel();
-					loadHistory(u.id);
-					unreadCounts.set(u.id, 0);
-					saveUnreadCounts();
-					updateUnreadBadge(u.id);
-					(document.getElementById('msgInput')! as HTMLInputElement).focus();
-				});
+					li.addEventListener('click', e => {
+						const link = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[data-route]');
+						if (link) {
+							return;
+						}
+						e.preventDefault(); // block navigation
+						chatState.activeChatFriendId = u.id;
+						document.getElementById('chatUser')!.innerHTML = `
+							<a href="/profile/${u.id}" data-route
+							   class="flex items-center gap-2 hover:underline">
+								<img src="${u.avatar}" class="h-5 w-5 rounded-full object-cover">
+								${u.username}
+							</a>`;
+						showActiveChatPanel();
+						loadHistory(u.id);
+						unreadCounts.set(u.id, 0);
+						saveUnreadCounts();
+						updateUnreadBadge(u.id);
+						(document.getElementById('msgInput')! as HTMLInputElement).focus();
+					});
+
 
 				ul.appendChild(li);
 				updateUnreadBadge(u.id);
