@@ -141,6 +141,23 @@ export class Game {
 				this._active_scene.render();
 			}
 		});
+
+		this._on_full_screen_change = this._on_full_screen_change.bind(this);
+		this._on_resize = this._on_resize.bind(this);
+		document.addEventListener('fullscreenchange', this._on_full_screen_change);
+		window.addEventListener('resize', this._on_resize);
+
+		const full_screen_btn: HTMLButtonElement = document.createElement('button');
+
+		full_screen_btn.type = 'button';
+		full_screen_btn.setAttribute('aria-label', 'Toggle fullscreen');
+		full_screen_btn.className =
+			'absolute top-3 right-3 z-50 px-3 py-1 rounded-xl text-sm ' +
+			'bg-[rgba(0,0,0,0.55)] text-white hover:bg-[rgba(0,0,0,0.7)] transition';
+		full_screen_btn.textContent = '⛶';
+		full_screen_btn.onclick = () => this.toggle_fullscrenn();
+		container.appendChild(full_screen_btn);
+
 		this._open_socket = this._open_socket.bind(this);
 		this._open_socket();
 		globalThis.game = this;
@@ -230,6 +247,10 @@ export class Game {
 			console.log("WARNING: Game cleanup called when the game was allready cleaned");
 			return ;
 		}
+
+		document.removeEventListener('fullscreenchange', this._on_full_screen_change);
+		window.removeEventListener('resize', this._on_resize);
+
 		this._cleanup_key_hooks();
 		console.log("Game: cleanup()");
 		this._game_scene.cleanup();
@@ -375,6 +396,7 @@ export class Game {
 	}
 
 	private	_start_game() {
+		this.enter_fullscreen();
 		const display_names_promise: Promise<LobbyDisplaynameResp> =
 			GameApi.get_display_names(this.game_id);
 		display_names_promise.then(names => {
@@ -529,6 +551,10 @@ export class Game {
 	private _finish_game(msg: GameToClientFinish) {
 		console.log("Game: _finish_game() of game ", this.game_id);
 		this.finished = true;
+		if (this._isFullscreen()) {
+			this.exit_fullscreen();
+		}
+
 	
 		this.disconnect();
 		if (tournament_running > 0) {
@@ -699,6 +725,49 @@ export class Game {
 			//todo: solution to recover local player name
 			this._local_player = new LocalPlayer(this, "Local player name lost");
 			return ;
+		}
+	}
+
+	private _on_full_screen_change() {
+		this._engine.resize();
+	};
+
+	private _on_resize(){
+		this._engine.resize();
+	}
+
+	private _isFullscreen(): boolean {
+		return (document.fullscreenElement != null);
+	}
+
+	public async enter_fullscreen() {
+		const el = this._get_container() || this._canvas;
+		if (!el) {
+			return;
+		}
+		try {
+			//apperently this is good to prevent issues with safari
+			await (el.requestFullscreen?.({ navigationUI: 'hide' }) ?? el.requestFullscreen?.());
+		} catch (e) {
+			console.log("fullscreen failed: ", e);
+		}
+	}
+
+	public async exit_fullscreen() {
+		try {
+			if (document.fullscreenElement) {
+				await document.exitFullscreen();
+			}
+		} catch (e) {
+			console.log("exit fullscreen failed: ", e);
+		}
+	}
+	
+	public async toggle_fullscrenn() {
+		if (this._isFullscreen()) {
+			await this.exit_fullscreen();
+		} else {
+			await this.enter_fullscreen();
 		}
 	}
 };
