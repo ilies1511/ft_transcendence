@@ -1,14 +1,15 @@
 import type { FastifyPluginAsync } from "fastify";
 import {
-  acceptFriendRequest,
-  listIncomingRequests,
-  listOutgoingRequests,
-  rejectFriendRequest, removeFriend,
-  sendFriendRequest,
-  withdrawFriendRequest
+	acceptFriendRequest,
+	listIncomingRequests,
+	listOutgoingRequests,
+	rejectFriendRequest, removeFriend,
+	sendFriendRequest,
+	withdrawFriendRequest
 } from "../functions/friends.ts";
 import { findUserWithFriends } from "../functions/user.ts";
 import { type FriendRequestRow, type UserWithFriends } from "../types/userTypes.ts";
+import { listFriendRequestSchema } from "../schemas/friends.ts";
 
 export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 	// GET -- BEGIN
@@ -18,48 +19,14 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 	}>(
 		'/api/users/:id/friends',
 		{
-			schema: {
-				tags: ['friends'],
-				params: {
-					type: "object",
-					required: ["id"],
-					properties: { id: { type: "integer" } },
-				},
-				response: {
-					200: {
-						type: 'object',
-						properties: {
-							id: { type: 'integer' },
-							username: { type: 'string' },
-							nickname: { type: 'string' },
-							email: { type: ['string', 'null'] },
-							live: { type: 'integer' },
-							avatar: { type: 'string' },
-							created_at: { type: 'integer' },
-							friends: {
-								type: 'array',
-								items: {
-									type: 'object',
-									properties: {
-										id: { type: 'integer' },
-										username: { type: 'string' },
-										live: { type: 'integer' },
-										avatar: { type: 'string' }
-									},
-									required: ['id', 'username', 'live', 'avatar']
-								}
-							}
-						},
-						required: ['id', 'username', 'nickname', 'email', 'live', 'avatar', 'created_at', 'friends']
-					},
-					404: {
-						type: "object",
-						properties: { error: { type: "string" } },
-					}
-				}
-			}
+			schema: listFriendRequestSchema
 		},
 		async (request, reply) => {
+			const authUserId = (request.user as any).id
+
+			if (request.params.id !== authUserId) {
+				return reply.code(403).send({ error: 'Forbidden' })
+			}
 			const result = await findUserWithFriends(fastify, request.params.id)
 			if (!result) {
 				return reply.code(404).send({ error: 'User not found' })
@@ -73,7 +40,7 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 	fastify.post<{
 		Params: { id: number }
 		Body: { username: string }
-		Reply: { requestId: number } | { error: string } | { message: string}
+		Reply: { requestId: number } | { error: string } | { message: string }
 	}>(
 		'/api/users/:id/requests',
 		{
