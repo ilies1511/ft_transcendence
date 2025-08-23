@@ -32,3 +32,9 @@ export interface AuthUser {
 	avatar: string;
 	live: number;
 }
+
+export interface StoredMsg {
+	from: number;
+	content: string;
+	ts: number;
+}

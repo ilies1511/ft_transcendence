@@ -11,10 +11,10 @@ interface ToastOptions {
 export function showToast(toast: ToastOptions):HTMLDivElement {
 	const box = document.createElement('div');
 
-	box.className = `fixed top-6 right-6 z-[9999] w-60 rounded-xl border border-[#543B43]set z-[9999] to z-[10001]`;
+	// box.className = `fixed top-6 right-6 w-60 rounded-xl border border-[#543B43]set`;
 
-	//box.className = `fixed top-6 right-6 z-[9999] w-60 rounded-xl border border-[#543b43]
-	//	bg-[#2b171e] shadow-lg text-white text-sm px-6 py-5 space-y-4`;
+	box.className = `fixed top-6 right-6 z-[9999] w-60 rounded-xl border border-[#543b43]
+		bg-[#2b171e] shadow-lg text-white text-sm px-6 py-5 space-y-4`;
 
 	const fromLine = toast.from
 		? `<p class="text-[#b99da6]">from <span class="italic">${toast.from}</span></p>`

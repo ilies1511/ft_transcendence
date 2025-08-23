@@ -4,10 +4,10 @@ import { getSession } from '../services/session';
 import { wsEvents } from '../services/websocket';
 import { template, wireEvents } from './chat-ui';
 import { loadUnreadCounts, clearChatHistory } from './chat-state';
-import { handleDirectMessage, handleChatError, fetchFriendsAndPopulate } from './chat-handlers';
+import { handleDirectMessage, handleChatError, fetchUsersAndPopulate } from './chat-handlers';
 
 export const chatState = {
-	currentChatUserId: null as number | null,
+	activeChatFriendId: null as number | null,
 	myUserId: 0,
 	myUsername: ''
 };
@@ -15,7 +15,7 @@ export const chatState = {
 //refresh friendlist helper
 const refreshFriends = () => {
 	if (chatState.myUserId)
-		fetchFriendsAndPopulate(chatState.myUserId);
+		fetchUsersAndPopulate(chatState.myUserId);
 };
 
 export async function initFriendUI() {
@@ -34,7 +34,7 @@ export async function initFriendUI() {
 
 	// state
 	loadUnreadCounts();
-	fetchFriendsAndPopulate(chatState.myUserId);
+	fetchUsersAndPopulate(chatState.myUserId);
 
 	wsEvents.addEventListener('direct_message', handleDirectMessage);
 	wsEvents.addEventListener('error', handleChatError);
@@ -50,7 +50,7 @@ export async function initFriendUI() {
 export function destroyFriendUI() {
 	const root = document.getElementById('friend-ui-root');
 	if (root) root.innerHTML = '';
-	chatState.currentChatUserId = null;
+	chatState.activeChatFriendId = null;
 
 	clearChatHistory();
 
