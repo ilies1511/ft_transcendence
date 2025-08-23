@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import {
 	acceptFriendRequest,
+	getFriendRequestById,
 	listIncomingRequests,
 	listOutgoingRequests,
 	rejectFriendRequest, removeFriend,
@@ -110,6 +111,19 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 			schema: acceptFriendRequestSchema
 		},
 		async (req, reply) => {
+			const { requestId } = req.params
+			const authUserId = await getUserId(req);
+
+			const fr = await getFriendRequestById(fastify, requestId)
+			if (!fr) {
+				return reply.code(404).send({ error: 'Request not found' })
+			}
+			if (fr.recipient_id !== authUserId) {
+				return reply.code(403).send({ error: 'Forbidden' })
+			}
+			if (fr.responded_at !== null) {
+				return reply.code(409).send({ error: 'Already responded' })
+			}
 			try {
 				await acceptFriendRequest(fastify, req.params.requestId)
 				return { message: 'Friend request accepted' }
@@ -118,6 +132,7 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 			}
 		}
 	)
+
 	// d) Anfrage ablehnen
 	fastify.post<{
 		Params: { requestId: number }
