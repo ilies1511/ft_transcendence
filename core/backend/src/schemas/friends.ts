@@ -249,3 +249,40 @@ export const acceptFriendRequestSchema = {
 // BEGIN -- POST Accecpt
 export const rejectFriendRequestSchema = acceptFriendRequestSchema
 // END -- POST Accecpt
+
+
+// BEGIN -- POST Withdraw Friendrequest
+// schema: {
+// 	tags: ['friends'],
+// 	params: {
+// 		type: 'object',
+// 		required: ['id', 'requestId'],
+// 		properties: {
+// 			id: { type: 'integer' },
+// 			requestId: { type: 'integer' }
+// 		}
+// 	},
+// 	response: {
+// 		200: {
+// 			type: 'object',
+// 			properties: { message: { type: 'string' } }
+// 		},
+// 		404: {
+// 			type: 'object',
+// 			properties: { error: { type: 'string' } }
+// 		}
+// 	}
+// }
+export const WithdrawFRParamsSchema = AcceptFRParamsSchema
+
+export const withdrawFriendRequestSchema = {
+	tags: ['friends'],
+	params: WithdrawFRParamsSchema,
+	response: {
+		200: OkMessageResponse,
+		403: ErrorResponse,
+		404: ErrorResponse,
+		409: ErrorResponse,
+	},
+} as const
+// END -- POST Withdraw Friendrequest

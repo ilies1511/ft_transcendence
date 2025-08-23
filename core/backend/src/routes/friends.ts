@@ -10,7 +10,7 @@ import {
 } from "../functions/friends.ts";
 import { findUserWithFriends } from "../functions/user.ts";
 import { type FriendRequestRow, type UserWithFriends } from "../types/userTypes.ts";
-import { acceptFriendRequestSchema, IncomingRequestsResponseSchema, incomingRequestsSchema, listFriendsSchema, outgoingRequestsSchema, rejectFriendRequestSchema, sendFriendRequestSchema, SendFRResponse201 } from "../schemas/friends.ts";
+import { acceptFriendRequestSchema, IncomingRequestsResponseSchema, incomingRequestsSchema, listFriendsSchema, outgoingRequestsSchema, rejectFriendRequestSchema, sendFriendRequestSchema, SendFRResponse201, withdrawFriendRequestSchema } from "../schemas/friends.ts";
 
 async function getUserId(request: any) {
 	return (request.user as any).id as number;
@@ -167,38 +167,32 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 	)
 
 	fastify.delete<{
-		Params: { id: number; requestId: number }
+		// Params: { id: number; requestId: number }
+		Params: { requestId: number }
 		Reply: { message: string } | { error: string }
 	}>(
-		'/api/users/:id/requests/:requestId',
+		// '/api/users/:id/requests/:requestId',
+		'/api/me/requests/:requestId',
 		{
-			schema: {
-				tags: ['friends'],
-				params: {
-					type: 'object',
-					required: ['id', 'requestId'],
-					properties: {
-						id: { type: 'integer' },
-						requestId: { type: 'integer' }
-					}
-				},
-				response: {
-					200: {
-						type: 'object',
-						properties: { message: { type: 'string' } }
-					},
-					404: {
-						type: 'object',
-						properties: { error: { type: 'string' } }
-					}
-				}
-			}
+			schema: withdrawFriendRequestSchema
 		},
 		async (req, reply) => {
-			const requesterId = req.params.id
+			// const requesterId = req.params.id
+			const authUserId = await getUserId(req);
 			const requestId = req.params.requestId
 
-			const ok = await withdrawFriendRequest(fastify, requesterId, requestId)
+			const fr = await getFriendRequestById(fastify, requestId)
+			if (!fr) {
+				return reply.code(404).send({ error: 'Request not found' })
+			}
+			if (fr.requester_id !== authUserId) {
+				return reply.code(403).send({ error: 'Forbidden' })
+			}
+			if (fr.responded_at !== null) {
+				return reply.code(409).send({ error: 'Already responded' })
+			}
+
+			const ok = await withdrawFriendRequest(fastify, authUserId, requestId)
 			if (!ok) {
 				return reply.code(404).send({ error: 'No pending request to withdraw' })
 			}
