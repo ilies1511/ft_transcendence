@@ -79,11 +79,12 @@ const enter_matchmaking_schema = {
 const create_lobby_schema = {
 	body: {
 		type: 'object',
-		required: ['map_name', 'ai_count', 'password'],
+		required: ['map_name', 'ai_count', 'password', 'client_id'],
 		properties: {
 			map_name: { type: 'string' },
 			ai_count: { type: 'number' },
 			password: { type: 'string' },
+			client_id: { type: 'number' },
 		}
 	}
 };
@@ -323,6 +324,14 @@ export class GameServer {
 
 		const { user_id, display_name, map_name, ai_count } = request.body;
 		console.log("GAME: _enter_matchmaking_api: ", request.body);
+
+		const parti: ClientParticipation | undefined = this.client_participations.get(user_id);
+
+		if (parti && parti.lobby_id) {
+			response.error = "Allready in game";
+			return (response);
+		}
+
 		for (const [lobby_id, lobby] of GameServer.lobbies) {
 			if (lobby.join(user_id, display_name) == "") {
 				response.match_id = lobby_id;
@@ -365,7 +374,18 @@ export class GameServer {
 			error: "",
 			match_id: -1,
 		};
-		const { map_name, ai_count, password } = request.body;
+		const { map_name, ai_count, password, client_id } = request.body;
+
+		const parti: ClientParticipation | undefined = GameServer.client_participations.get(client_id);
+		if (parti && parti.lobby_id) {
+			response.error = "Allready in game";
+			return (response);
+		}
+		if (parti && parti.tournament_id) {
+			response.error = "Allready in tournament";
+			return (response);
+		}
+
 		try {
 			const lobby_id: number = await GameServer.create_lobby(LobbyType.CUSTOM,
 				map_name, ai_count, password);
@@ -388,7 +408,7 @@ export class GameServer {
 
 		const parti: ClientParticipation | undefined = this.client_participations.get(user_id);
 
-		if (parti?.lobby_id && parti?.lobby_id != lobby_id) {
+		if (parti && parti.lobby_id) {
 			return ("Allready in game");
 		}
 

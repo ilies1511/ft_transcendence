@@ -104,10 +104,10 @@ async function test_enter_matchmaking(
 		game = undefined
 	}
 
-	const gm = await enter_matchmaking(user_id, container, matchmaking_options)
+	const gm: Game | ServerError = await enter_matchmaking(user_id, container, matchmaking_options)
 	if (gm instanceof Game){
 		wireLocalPlayerButton(gm)
-	}else{
+	} else {
 		console.log(gm as ServerError)
 	}
 }
@@ -155,13 +155,11 @@ function setupGameModes(root: HTMLElement): void {
 	const btnLocal = root.querySelector<HTMLButtonElement>('#btn-local')
 
 	const btnLeave = root.querySelector<HTMLButtonElement>('#btn-leave')
+
 	const btnDisconnect = root.querySelector<HTMLButtonElement>('#btn-disconnect')
 	const btnReconnect = root.querySelector<HTMLButtonElement>('#btn-reconnect')
 	const btnStartTournament = root.querySelector<HTMLButtonElement>('#btn-start_tournament')
-	btnLeave?.addEventListener('click', () => {
-		globalThis.game?.leave()
-		globalThis.tournament?.leave()
-	})
+
 	btnDisconnect?.addEventListener('click', () => {
 		globalThis.game?.disconnect()
 	})
@@ -192,21 +190,28 @@ function setupGameModes(root: HTMLElement): void {
 	}
 
 	const run = async (mode: 'match' | 'lobby' | 'tournament'
-		| 'reconnect'): Promise<void> => {
+		| 'reconnect' | 'leave'): Promise<void> => {
 		const user = await getSession()
 		const user_id = user?.id ?? getUserId()
 		if (user_id === null) { alert('invalid id'); return }
 
-		await attempt_reconnect(container, user_id)
-		if (globalThis.game !== undefined) return
+		//await attempt_reconnect(container, user_id)
+		//if (globalThis.game !== undefined) return
 
 		const do_nothing = async () => {};
 
+		const leave_fn = async() => {
+			console.log('leave fn');
+			await attempt_reconnect(container, user_id, true);
+			globalThis.game?.leave();
+			globalThis.tournament?.leave();
+		}
 		switch (mode) {
-			case 'match':	await test_enter_matchmaking(container, user_id);	break
-			case 'tournament':	await test_tournament(container, user_id);	break
-			case 'lobby':	await create_custom_lobby(user_id, container);				break
-			// case 'reconnect': await attempt_reconnect(container, user_id); break ;
+			case 'match':	await test_enter_matchmaking(container, user_id); break ;
+			case 'tournament':	await test_tournament(container, user_id); break ;
+			case 'lobby':	await create_custom_lobby(user_id, container); break ;
+			case 'reconnect': await attempt_reconnect(container, user_id); break ;
+			case 'leave': await leave_fn(); break ;
 	 	}
 	}
 
@@ -214,6 +219,8 @@ function setupGameModes(root: HTMLElement): void {
 	btnLobby?.addEventListener('click', () => run('lobby'))
 	btnCreateTournament?.addEventListener('click', () => run('tournament'))
 	btnReconnect?.addEventListener('click', () => run('reconnect'))
+	btnLeave?.addEventListener('click', () => run('leave'))
+
 }
 
 

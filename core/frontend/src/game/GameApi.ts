@@ -12,6 +12,9 @@ import type {
 	LobbyDisplaynameResp,
 } from './game_shared/message_types.ts';
 
+import { Game } from './game_new.ts';
+
+import { showToast } from '../ui/toast-interface.ts';
 
 export class GameApi {
 	private constructor() {}
@@ -38,6 +41,9 @@ export class GameApi {
 		});
 		const data: EnterMatchmakingResp = await response.json();
 		console.log("game: enter_matchmaking api response: ", data);
+		if (data.error != '') {
+			Game.process_server_error(data.error);
+		}
 		return (data);
 	}
 
@@ -52,14 +58,16 @@ export class GameApi {
 	}
 
 	public static async create_lobby(map_name: string, ai_count: number,
-		password: string,
+		password: string, client_id: number
 	) : Promise<CreateLobbyResp>
 	{
 		const req: CreateLobbyReq = {
 			map_name: map_name,
 			ai_count: ai_count,
-			password: password
+			password: password,
+			client_id: client_id,
 		};
+
 		const response = await fetch('/api/create_lobby', {
 			method: 'POST',
 			headers: {
@@ -69,6 +77,9 @@ export class GameApi {
 		});
 		const data: CreateLobbyResp = await response.json();
 		console.log("Game: create_lobby api response: ", data);
+		if (data.error != '') {
+			Game.process_server_error(data.error);
+		}
 		return (data);
 	}
 
@@ -97,6 +108,7 @@ export class GameApi {
 		if (data == "") {
 			console.log("Game: join_lobby api success");
 		} else {
+			Game.process_server_error(data);
 			console.log("Game: join_lobby api error: ", data);
 		}
 		return (data);

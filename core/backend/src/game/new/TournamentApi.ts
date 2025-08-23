@@ -58,10 +58,10 @@ const join_schema = {
 const leave_schema = {
 	body: {
 		type: 'object',
-		required: ['client_id', 'lobby_id'],
+		required: ['client_id', 'tournament_id'],
 		properties: {
 			client_id: { type: 'number' },
-			lobby_id: { type: 'number' },
+			tournament_id: { type: 'number' },
 		}
 	}
 };
@@ -205,7 +205,7 @@ export class TournamentApi {
 		const { client_id, tournament_id } = request.body;
 		const tournament: Tournament | undefined = GameServer.tournaments.get(tournament_id);
 		if (!tournament) {
-			console.log("leave_tournament api: Not Found");
+			console.log("leave_tournament api: Not Found tournament_id ", tournament_id, "; client_id: ", client_id);
 			return ;
 		}
 		console.log("leave_tournament api: ", client_id);

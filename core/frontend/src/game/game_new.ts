@@ -391,35 +391,73 @@ export class Game {
 		this._active_scene = this._game_scene;
 	}
 
-	private _process_server_error(error: ServerError) {
+	public static process_server_error(error: ServerError, game?: Game) {
 		console.log("Game: Got error from server: ", error);
 		switch (error) {
 			case ('Invalid Request'):
 				break ;
 			case ('Invalid Password'):
-				this.finished = true;
-				this.disconnect();
+				if (game) {
+					game.finished = true;
+					game.disconnect();
+				}
 				break ;
 			case ('Full'):
 			case ('Invalid Map'):
 			case ('Not Found'):
-				this.finished = true;
-				this.disconnect();
-				//todo: this toast is not fully visable on the game page
+				if (game && !game.finished) {
+					game.finished = true;
+					showToast({
+						title: 'Could not run game',
+					});
+				} else if (!game) {
+					showToast({
+						title: 'Could not run game',
+					});
+				}
+				if (game) {
+					game.disconnect();
+				}
+				break ;
+			case ('Allready in game'):
 				showToast({
-					title: 'Could not run game',
+					title: 'You are allready in a game, reconnect and finish or leave your game first.',
 				});
+				if (game) {
+					game.finished = true;
+					game.disconnect();
+				}
+				break ;
+			case ('Allready in tournament'):
+				showToast({
+					title: 'You are allready in a tournament, reconnect and finish or leave the tournament first.',
+				});
+				if (game) {
+					game.finished = true;
+					game.disconnect();
+				}
+				break ;
+			case ('Allready started'):
 				break ;
 			case ('Allready connected in a different session'):
-				this.finished = true;
-				this.disconnect();
+				showToast({
+					title: 'You are allready connected to the game/tournament from a different session, disconnect there first to connect here.',
+				});
+				if (game) {
+					game.finished = true;
+					game.disconnect();
+				}
 				break ;
 			case ('Internal Error'):
-				showToast({
-					title: 'Could not run game',
-				});
-				this.finished = true;
-				this.leave();
+				if (game && !game.finished) {
+					game.finished = true;
+					showToast({
+						title: 'Could not run game',
+					});
+				}
+				if (game) {
+					game.leave();
+				}
 				break ;
 			case (''):
 				break ;
@@ -430,6 +468,9 @@ export class Game {
 
 	//TODO: update2 for user leave notifications
 	private _process_msg(): void {
+		if (this.finished) {
+			return ;
+		}
 		if (this._last_server_msg) {
 	 		if (this._active_scene !== this._game_scene) {
 	 			this._start_game();
@@ -440,6 +481,9 @@ export class Game {
 			this._last_server_msg = null;
 		}
 		while (this._msg_queue.length) {
+			if (this.finished) {
+				return ;
+			}
 			const raw = this._msg_queue.shift()!; // never undefined here
 
 			const json = JSON.parse(raw as unknown as string) as LobbyToClientJson;
@@ -454,11 +498,12 @@ export class Game {
 					break;
 
 				case 'error':
-					this._process_server_error(json.msg);
+					Game.process_server_error(json.msg, this);
 					break;
 
 				case 'finish':
 					// allow any preceding “info” toast to render first
+					this.finished = true;
 					setTimeout(() => this._finish_game(json), 200);
 					break;
 
