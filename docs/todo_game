@@ -125,7 +125,10 @@ through socket was not open
 
 
 
-
+[ ] - 3 player tournament: 2 players play the first round and the other leaves: buggy
+[ ] - currently the placement gets put into the db instead of the score
+[x] - data race: tournament game finishes and player is invited to next game before the first game finish msg arrives at the client
+[ ] - frontend: somehow there is a tournament object but no player list recived
 
 [x] - game engine: handle player leave better:
 	[x] - broadcast msg to other players that this player left

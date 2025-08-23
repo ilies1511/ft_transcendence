@@ -10,7 +10,7 @@ import { showToast } from '../ui/toast-interface.ts';
  * tournament_running:
 	* lagging indicatior if a game should render it's result.
 	* Needed since game checks if globalThis.tournament exists for conditional rendering,
-	   but the game websocket might be lagging behind
+		 but the game websocket might be lagging behind
 */
 export let tournament_running: number = 0;
 
@@ -82,6 +82,18 @@ export type Player = {
 		nationality?: string
 }
 
+function wait_until(condition: () => boolean, interval = 100): Promise<void> {
+	return (new Promise((resolve) => {
+		const check = () => {
+			if (condition()) {
+				resolve();
+			} else {
+				setTimeout(check, interval);
+			}
+		};
+		check();
+	}));
+}
 
 export class Tournament {
 	public password: string;
@@ -196,7 +208,7 @@ export class Tournament {
 		this._render_player_list();
 	}
 
-	private _rcv_msg(event: MessageEvent<TournamentToClient>): undefined {
+	private async _rcv_msg(event: MessageEvent<TournamentToClient>): Promise<undefined> {
 		console.log("got tournament msg: ", event.data);
 		const msg: TournamentToClient = JSON.parse(event.data) as TournamentToClient;
 		switch (msg.type) {
@@ -220,6 +232,9 @@ export class Tournament {
 				}
 				break ;
 			case ('new_game'):
+				if (globalThis.game) {
+					await wait_until(() => globalThis.game == undefined);
+				}
 				//todo: let user know next game is ready and don't just instantly attempt connecting
 				attempt_reconnect(this._match_container, this.user_id);
 				break ;
@@ -269,7 +284,7 @@ export class Tournament {
 		if (container) {
 			container.innerHTML = '';
 		}
-		this.render_tournament_state();
+		//this.render_tournament_state();
 		TournamentApi.leave_tournament(this.user_id, this.tournament_id);
 		if (!silent) {
 			showToast({

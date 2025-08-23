@@ -287,6 +287,7 @@ export class Tournament {
 		}
 		console.log("rounds: ", this._rounds);
 		if (round.looking_for_game) {
+			console.log("round: ", round);
 			console.log(`looking for game in round after starting round, round: ${round}`);
 			throw ("looking for game in round after starting round ");
 		}
