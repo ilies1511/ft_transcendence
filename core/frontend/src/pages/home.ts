@@ -1,12 +1,13 @@
 // frontend/src/pages/home.ts
-import type { PageModule } from '../router'
+import type { PageModule } from '../router';
+import { getSession } from '../services/session';
 
 const rows = [
 	{
 		title:'Profile',
 		href:'/profile',
 		img:'/home_profile.png',
-		body:`On the profile page, you can view detailed information about your ping pong matches.
+		body:`On the Profile page, you can view detailed information about your ping pong matches.
 			This includes the total number of matches you've played, as well as your wins, losses, and draws.
 			You can also check your match history, which shows the date of each match, your opponent,
 			the final score, and whether you won, lost, or drew. All your results are displayed in a clear, organized list,
@@ -28,7 +29,7 @@ const rows = [
 		title:'Friends',
 		href:'/friendlist',
 		img:'/home_friend_list.png',
-		body:`The friends page lets you manage all your friendships in one place.
+		body:`The Friends page lets you manage all your friendships in one place.
 			You'll see three sections here: incoming requests, outgoing requests, and your current friends list.
 			At the top, you'll find your incoming friend requests, where you can choose to accept or reject
 			new connection requests from other users. Below that, your outgoing requests show the people you've
@@ -36,10 +37,10 @@ const rows = [
 			Finally, you can see all your current friends.`
 	},
 	{
-		title:'All Users',
+		title:'Users',
 		href:'/users',
 		img:'/home_all_users.png',
-		body:`On the All Users page, you can see a list of all registered users.
+		body:`On the Users page, you can see a list of all registered users.
 			Here, you can view each user's online status, send them a friend invitation,
 			or see if you have any pending requests. You also have the option to reject
 			invites or block users if needed. This page makes it easy to connect with new
@@ -49,7 +50,7 @@ const rows = [
 		title:'Settings',
 		href:'/settings',
 		img:'/home_settings.png',
-		body:`On the settings page, you can manage your personal account information and security preferences.
+		body:`On the Settings page, you can manage your personal account information and security preferences.
 			You can update your profile details, such as your username and nickname, or change your avatar by
 			uploading a new image. If you want to improve your security, you can change your password or
 			enable two-factor authentication (2FA) for extra protection. The settings page also lets
@@ -98,7 +99,18 @@ const row = (
 	</li>`
 }
 const HomePage:PageModule = {
-	render(root){
+	async render(root){
+		const session = await getSession();
+
+		const playButtonHtml = session
+			? /*html*/`
+				<div class="text-center">
+					<a href="/modes" data-route class="inline-block bg-[#0bda8e] text-white font-bold py-4 px-10 rounded-lg text-2xl hover:bg-green-500 transition-colors shadow-lg hover:shadow-xl transform mb-10">
+						Play Now!
+					</a>
+				</div>`
+			: '';
+
 		const renderedRows = rows
 			.map((rowObj, index) => {
 				return row(rowObj, index);
@@ -106,13 +118,14 @@ const HomePage:PageModule = {
 			.join('');
 		root.innerHTML = /*html*/`
 		<div class="min-h-screen bg-[#221116] flex flex-col items-center p-6 pt-[70px] space-y-10">
-			<div class="w-full max-w-6xl mx-auto space-y-10">
+			<div class="w-full max-w-6xl mx-auto space-y-5">
 				<h1 class="text-6xl text-white font-semibold text-center">
 					Welcome to Ping-Pong Revolution
 				</h1>
 				<p class="text-[#ca91a3] text-center leading-relaxed">
 					Challenge friends, climb the ladder, and master every spin.
 				</p>
+				${playButtonHtml}
 				<hr class="border-white/40"/>
 				<ul class="space-y-14 px-4">
 					${renderedRows}
