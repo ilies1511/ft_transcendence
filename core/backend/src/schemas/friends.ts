@@ -245,3 +245,7 @@ export const acceptFriendRequestSchema = {
 	},
 } as const
 // END -- POST Accecpt
+
+// BEGIN -- POST Accecpt
+export const rejectFriendRequestSchema = acceptFriendRequestSchema
+// END -- POST Accecpt

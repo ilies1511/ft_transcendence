@@ -10,7 +10,7 @@ import {
 } from "../functions/friends.ts";
 import { findUserWithFriends } from "../functions/user.ts";
 import { type FriendRequestRow, type UserWithFriends } from "../types/userTypes.ts";
-import { acceptFriendRequestSchema, IncomingRequestsResponseSchema, incomingRequestsSchema, listFriendsSchema, outgoingRequestsSchema, sendFriendRequestSchema, SendFRResponse201 } from "../schemas/friends.ts";
+import { acceptFriendRequestSchema, IncomingRequestsResponseSchema, incomingRequestsSchema, listFriendsSchema, outgoingRequestsSchema, rejectFriendRequestSchema, sendFriendRequestSchema, SendFRResponse201 } from "../schemas/friends.ts";
 
 async function getUserId(request: any) {
 	return (request.user as any).id as number;
@@ -140,17 +140,23 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 	}>(
 		'/api/requests/:requestId/reject',
 		{
-			schema: {
-				tags: ['friends'],
-				params: { type: 'object', required: ['requestId'], properties: { requestId: { type: 'integer' } } },
-				response: {
-					200: { type: 'object', properties: { message: { type: 'string' } } },
-					404: { type: 'object', properties: { error: { type: 'string' } } }
-				}
-			}
-			// schema:
+			schema: rejectFriendRequestSchema
 		},
 		async (req, reply) => {
+			const { requestId } = req.params
+			const authUserId = await getUserId(req);
+
+			const fr = await getFriendRequestById(fastify, requestId)
+			if (!fr) {
+				return reply.code(404).send({ error: 'Request not found' })
+			}
+			if (fr.recipient_id !== authUserId) {
+				return reply.code(403).send({ error: 'Forbidden' })
+			}
+			if (fr.responded_at !== null) {
+				return reply.code(409).send({ error: 'Already responded' })
+			}
+
 			try {
 				await rejectFriendRequest(fastify, req.params.requestId)
 				return { message: 'Friend request rejected' }
