@@ -131,7 +131,7 @@ export const sendFriendRequestSchema = {
 // BEGIN -- Incoming requests listen ---> received request
 export const FriendRequestItemSchema = {
 	type: 'object',
-	additionalProperties: false,
+	// additionalProperties: false,
 	required: ['id', 'requester_id', 'recipient_id', 'created_at', 'responded_at'],
 	properties: {
 		id: { type: 'integer', minimum: 1 },
@@ -178,3 +178,37 @@ export const incomingRequestsSchema = {
 
 // END -- Incoming requests listen ---> received request
 
+
+// BEGIN -- GET request outgoing
+// schema: {
+// 	tags: ['friends'],
+// 	params: { type: 'object', required: ['id'], properties: { id: { type: 'integer' } } },
+// 	response: {
+// 		200: {
+// 			type: 'array',
+// 			items: {
+// 				type: 'object',
+// 				properties: {
+// 					id: { type: 'integer' },
+// 					requester_id: { type: 'integer' },
+// 					recipient_id: { type: 'integer' },
+// 					status: { type: 'string' },
+// 					created_at: { type: 'integer' },
+// 					responded_at: { type: ['integer', 'null'] }
+// 				}
+// 			}
+// 		}
+// 	}
+// }
+
+export const outgoingRequestsSchema = {
+	tags: ['friends'],
+	response: {
+		200: {
+			type: 'array',
+			uniqueItems: true,
+			items: FriendRequestItemSchema,
+		},
+	},
+} as const
+// END -- GET request outgoing

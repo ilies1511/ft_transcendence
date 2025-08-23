@@ -9,7 +9,7 @@ import {
 } from "../functions/friends.ts";
 import { findUserWithFriends } from "../functions/user.ts";
 import { type FriendRequestRow, type UserWithFriends } from "../types/userTypes.ts";
-import { IncomingRequestsResponseSchema, incomingRequestsSchema, listFriendsSchema, sendFriendRequestSchema, SendFRResponse201 } from "../schemas/friends.ts";
+import { IncomingRequestsResponseSchema, incomingRequestsSchema, listFriendsSchema, outgoingRequestsSchema, sendFriendRequestSchema, SendFRResponse201 } from "../schemas/friends.ts";
 
 async function getUserId(request: any) {
 	return (request.user as any).id as number;
@@ -75,63 +75,29 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 		// '/api/users/:id/requests/incoming',
 		'/api/me/requests/incoming',
 		{
-			// schema: {
-			// 	tags: ['friends'],
-			// 	params: { type: 'object', required: ['id'], properties: { id: { type: 'integer' } } },
-			// 	response: {
-			// 		200: {
-			// 			type: 'array',
-			// 			items: {
-			// 				type: 'object',
-			// 				properties: {
-			// 					id: { type: 'integer' },
-			// 					requester_id: { type: 'integer' },
-			// 					recipient_id: { type: 'integer' },
-			// 					status: { type: 'string' },
-			// 					created_at: { type: 'integer' },
-			// 					responded_at: { type: ['integer', 'null'] }
-			// 				}
-			// 			}
-			// 		}
-			// 	}
-			// }
 			schema: incomingRequestsSchema
 		},
 		async (req) => {
-			const userId = (req.user as any).id
-			listIncomingRequests(fastify, userId)
+			const userId = await getUserId(req);
+			const rows = await listIncomingRequests(fastify, userId);
+			return rows;
 		}
 	)
 
 	// b.2) Outgoing requests listen ---> sent request
 	fastify.get<{
-		Params: { id: number }
+		// Params: { id: number }
 		Reply: FriendRequestRow[]
 	}>(
-		'/api/users/:id/requests/outgoing',
+		// '/api/users/:id/requests/outgoing',
+		'/api/me/requests/outgoing',
 		{
-			schema: {
-				tags: ['friends'],
-				params: { type: 'object', required: ['id'], properties: { id: { type: 'integer' } } },
-				response: {
-					200: {
-						type: 'array',
-						items: {
-							type: 'object',
-							properties: {
-								id: { type: 'integer' },
-								requester_id: { type: 'integer' },
-								recipient_id: { type: 'integer' },
-								status: { type: 'string' },
-								created_at: { type: 'integer' },
-								responded_at: { type: ['integer', 'null'] }
-							}
-						}
-					}
-				}
-			}
+			schema: outgoingRequestsSchema
 		},
-		async (req) => listOutgoingRequests(fastify, req.params.id)
+		async (req) => {
+			const userId = await getUserId(req);
+			return listOutgoingRequests(fastify, userId);
+		}
 	)
 
 	// c) Anfrage annehmen
