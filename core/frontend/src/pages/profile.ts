@@ -28,6 +28,16 @@ const template = /*html*/ `
 			<div id="profileActions" class="flex gap-3"></div>
 		</header>
 
+		<!-- Filter above stats -->
+		<div class="px-4 flex items-center justify-end">
+			<label class="text-sm text-[#b99da6] flex items-center gap-2">
+				<span>Filter Mode:</span>
+				<select id="modeFilter" class="bg-[#271c1f] border border-[#543b43] rounded px-2 py-1 text-white text-sm">
+					<option value="all">All</option>
+				</select>
+			</label>
+		</div>
+
 		<!-- stats -->
 		<section class="grid gap-3 px-4
 						grid-cols-2 sm:grid-cols-4
@@ -64,12 +74,6 @@ const template = /*html*/ `
 		<section class="space-y-4">
 			<div class="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between px-4">
 				<h2 class="text-xl font-bold text-white">Match History</h2>
-				<label class="text-sm text-[#b99da6] flex items-center gap-2">
-					<span>Filter Mode:</span>
-					<select id="modeFilter" class="bg-[#271c1f] border border-[#543b43] rounded px-2 py-1 text-white text-sm">
-						<option value="all">All</option>
-					</select>
-				</label>
 			</div>
 			<div class="mx-4 overflow-x-auto rounded-xl border border-[#543b43] bg-[#181113]">
 				<table class="min-w-[480px] w-full text-left">
@@ -159,15 +163,15 @@ async function fetchUserStats(userId: number) {
 	}
 }
 
-function renderStats(stats: any) {
-		const setText = (id: string, val: any) => {
-				const el = document.getElementById(id);
-				if (el) el.textContent = String(val);
-		};
-		setText('statTotal', stats.totalGames ?? 0);
-		setText('statWins', stats.wins ?? 0);
-		setText('statLosses', stats.losses ?? 0);
-		setText('statDraws', stats.draws ?? 0);
+function renderStats(stats: { totalGames: number; wins: number; losses: number; draws: number }) {
+	const totalEl = document.getElementById('statTotal')
+	const winsEl = document.getElementById('statWins')
+	const lossesEl = document.getElementById('statLosses')
+	const drawsEl = document.getElementById('statDraws')
+	if (totalEl) totalEl.textContent = String(stats.totalGames)
+	if (winsEl) winsEl.textContent = String(stats.wins)
+	if (lossesEl) lossesEl.textContent = String(stats.losses)
+	if (drawsEl) drawsEl.textContent = String(stats.draws)
 }
 
 // Helper function for history
@@ -263,57 +267,92 @@ async function renderMatchHistory(history: any[], userId: number) {
 		tbody.innerHTML = rowsHtml;
 }
 
-function drawStatsChart(stats: any) {
+function drawStatsChart(stats: { wins: number; losses: number; draws: number }) {
 		const canvas = document.getElementById('statsChart') as HTMLCanvasElement | null
 		if (!canvas) return
-		// ensure consistent small size
-		canvas.width = 96
-		canvas.height = 96
 		const ctx = canvas.getContext('2d')
 		if (!ctx) return
 
-		const wins = stats.wins ?? 0
-		const losses = stats.losses ?? 0
-		const draws = stats.draws ?? 0
-		const total = wins + losses + draws || 1
-
-		const segments = [
-				{ value: wins, color: '#0bda8e' },
-				{ value: losses, color: '#D22B2B' },
-				{ value: draws, color: '#bfa626' }
-		]
-
-		let start = -Math.PI / 2
-		const cx = canvas.width / 2
-		const cy = canvas.height / 2
-		const r = (Math.min(cx, cy) - 2)
-
+		// Clear
 		ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-		segments.forEach(seg => {
-				if (seg.value <= 0) return
-				const angle = (seg.value / total) * Math.PI * 2
+		const values = [stats.wins, stats.losses, stats.draws]
+		const colors = ['#0bda8e', '#D22B2B', '#bfa626']
+		const total = values.reduce((a, b) => a + b, 0)
+		const wins = stats.wins
+
+		const cx = canvas.width / 2
+		const cy = canvas.height / 2
+		const rOuter = 42
+		const rInner = 28
+
+		// If nothing to draw, just render a subtle ring
+		if (total === 0) {
+				// Subtle ring
+				ctx.beginPath()
+				ctx.arc(cx, cy, rOuter, 0, Math.PI * 2)
+				ctx.strokeStyle = '#3a2b2f'
+				ctx.lineWidth = 12
+				ctx.stroke()
+
+				// Center label (0%)
+				const winRate = 0
+				ctx.fillStyle = '#ffffff'
+				ctx.font = 'bold 14px system-ui'
+				ctx.textAlign = 'center'
+				ctx.textBaseline = 'middle'
+				ctx.fillText(`${winRate}%`, cx, cy)
+				return
+		}
+
+		// Donut segments
+		let start = -Math.PI / 2
+		for (let i = 0; i < values.length; i++) {
+				const angle = (values[i] / total) * Math.PI * 2
+				const end = start + angle
 				ctx.beginPath()
 				ctx.moveTo(cx, cy)
-				ctx.arc(cx, cy, r, start, start + angle)
+				ctx.arc(cx, cy, rOuter, start, end)
 				ctx.closePath()
-				ctx.fillStyle = seg.color
+				ctx.fillStyle = colors[i]
 				ctx.fill()
-				start += angle
-		})
+				start = end
+		}
 
-		// hole
+		// Punch inner hole
+		ctx.globalCompositeOperation = 'destination-out'
 		ctx.beginPath()
-		ctx.arc(cx, cy, r * 0.55, 0, Math.PI * 2)
-		ctx.fillStyle = '#181113'
+		ctx.arc(cx, cy, rInner, 0, Math.PI * 2)
 		ctx.fill()
+		ctx.globalCompositeOperation = 'source-over'
 
-		const winRate = total ? Math.round((wins / total) * 100) : 0
+		// Center win rate label (respects filter because stats are filtered)
+		const winRate = Math.round((wins / total) * 100)
 		ctx.fillStyle = '#ffffff'
 		ctx.font = 'bold 14px system-ui'
 		ctx.textAlign = 'center'
 		ctx.textBaseline = 'middle'
 		ctx.fillText(`${winRate}%`, cx, cy)
+}
+
+// Utilities to compute and apply filtered stats
+function computeStatsFromHistory(history: any[]) {
+    let wins = 0, losses = 0, draws = 0
+    for (const h of history) {
+        if (h.result === 'win') wins++
+        else if (h.result === 'loss') losses++
+        else if (h.result === 'draw') draws++
+    }
+    return {
+        totalGames: history.length,
+        wins, losses, draws
+    }
+}
+
+function updateStatsForHistory(history: any[], _root: HTMLElement) {
+    const stats = computeStatsFromHistory(history)
+    renderStats(stats)
+    drawStatsChart(stats)
 }
 
 const onFriendsChanged = async () => {
@@ -393,20 +432,25 @@ function lobbyTypeName(mode: number): string {
 function initModeFilter(history: any[], userId: number, root: HTMLElement) {
 	const select = root.querySelector<HTMLSelectElement>('#modeFilter');
 	if (!select) return;
-	// Collect unique modes
+
+	// Fill options from unique modes
 	const modes = Array.from(new Set(history.map(h => h.match.mode))).sort((a, b) => a - b);
-	const fragment = document.createDocumentFragment();
-	modes.forEach(mode => {
+	const frag = document.createDocumentFragment();
+	for (const m of modes) {
 		const opt = document.createElement('option');
-		opt.value = String(mode);
-		opt.textContent = lobbyTypeName(mode);
-		fragment.appendChild(opt);
-	});
-	select.appendChild(fragment);
+		opt.value = String(m);
+		opt.textContent = lobbyTypeName(m);
+		frag.appendChild(opt);
+	}
+	select.appendChild(frag);
+
+	// Handle changes: update stats and table
 	select.addEventListener('change', async () => {
 		const full = (root as any)._fullHistory as any[] || [];
 		const val = select.value;
 		const filtered = val === 'all' ? full : full.filter(h => String(h.match.mode) === val);
+
+		updateStatsForHistory(filtered, root);
 		await renderMatchHistory(filtered, userId);
 	});
 }
