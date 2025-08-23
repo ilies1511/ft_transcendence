@@ -94,7 +94,7 @@ export class Game {
 
 	private _display_names: Map<number, string> | undefined = undefined;
 
-	private _next_socket_timeout: number = 100;
+	private _next_socket_timeout: number = 500;
 
 	private _next_close_handler: NodeJS.Timeout | undefined = undefined;
 
@@ -287,11 +287,15 @@ export class Game {
 					if (this._next_close_handler) {
 						clearTimeout(this._next_socket_timeout);
 					}
-					this._next_close_handler = setTimeout(() => {
-							this._open_socket();
-						}, this._next_socket_timeout
-					);
-					this._next_socket_timeout *= 2;
+					if (this._next_socket_timeout > 60000) {
+						this.disconnect();
+					} else {
+						this._next_close_handler = setTimeout(() => {
+								this._open_socket();
+							}, this._next_socket_timeout
+						);
+						this._next_socket_timeout *= 2;
+					}
 				} else {
 				}
 			});

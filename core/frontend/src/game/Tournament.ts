@@ -97,6 +97,9 @@ export class Tournament {
 
 	private _player_list: {display_name: string, id: number}[] = [];
 
+	private _next_socket_timeout: number = 500;
+	private _next_close_handler: NodeJS.Timeout | undefined = undefined;
+
 	public constructor(user_id: number,
 		tournament_id: number,
 		password: string,
@@ -161,11 +164,22 @@ export class Tournament {
 
 			this._socket.onmessage = (
 				event: MessageEvent<TournamentToClient>) => this._rcv_msg(event);
+
 			this._socket.addEventListener("close", () => {
 				console.log("Tournament: Disconnected");
 				if (!this.finished && !is_unloading) {
-					console.log("Tournament: Attempting reconnect..");
-					this._open_socket();
+					if (this._next_close_handler) {
+						clearTimeout(this._next_socket_timeout);
+					}
+					if (this._next_socket_timeout > 60000) {
+						this._cleanup();
+					} else {
+						this._next_close_handler = setTimeout(() => {
+								this._open_socket();
+							}, this._next_socket_timeout
+						);
+						this._next_socket_timeout *= 2;
+					}
 				} else {
 				}
 			});
