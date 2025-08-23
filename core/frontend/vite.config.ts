@@ -2,12 +2,16 @@ import path from 'path' // <-- Required for path.resolve
 import { defineConfig } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
 	plugins: [tailwindcss()],
 	resolve: {
 		alias: {
 			'@': path.resolve(__dirname, 'client'), // optional but useful for client code
 		}
+	},
+	esbuild: { // REMOVES CONSOLE, DEBUGGER LOGS FROM PRODUCTION
+		drop: mode === 'production' ? ['console', 'debugger'] : [],
+		// pure: mode === 'production' ? ['console.log'] : [],
 	},
 	server: {
 		// host: "0.0.0.0",
@@ -17,7 +21,7 @@ export default defineConfig({
 		},
 		host: true,
 		port: 5173,
-		allowedHosts: ['2-h-5.42heilbronn.de'],
+		allowedHosts: ['2-h-5.42heilbronn.de', '2-h-9.42heilbronn.de'],
 		proxy: {
 			'/api': { target: 'http://localhost:3000', changeOrigin: true, secure: false },
 
@@ -52,7 +56,7 @@ export default defineConfig({
 		//	'/avatars': 'http://localhost:3000',
 		//}
 	}
-})
+}))
 
 
 

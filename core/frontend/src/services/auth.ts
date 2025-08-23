@@ -1,52 +1,15 @@
 import { router } from '../main';
-import { clearSession, getSession } from '../services/session';
+import { clearSession } from '../services/session';
 import { closeWs } from './websocket';
-
-const DEFAULT_REDIRECT = '/';
-
-/**
- * @deprecated This function does not handle the 2FA flow. The logic has been moved to `login.ts`.
- */
-export async function submitLogin(email: string, password: string) {
-	const res = await fetch('/api/login', {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ email, password }),
-		credentials: 'include'  // Receive the JWT cookie
-	});
-
-	if (!res.ok) {
-		const { error } = await res.json().catch(() => ({}));
-		throw new Error(error ?? 'login failed');
-	}
-
-	// Force a fresh session fetch after login
-	clearSession();
-	const user = await getSession();
-
-	// Redirect based on session
-	if (user) {
-		router.go(`/`);
-	} else {
-		router.go(`/login`);  // Fallback
-	}
-
-	document.dispatchEvent(new Event('auth-change'));
-}
-
-/* TODO: Need to move this so where else. */
-export interface AuthUser {
-	id: number;
-	username: string;
-	nickname: string;
-	avatar: string;
-	live: number;
-}
+import type { AuthUser } from '../types/types';
 
 export async function currentUser(): Promise<AuthUser | null> {
-	const res = await fetch('/api/me', { credentials: 'include' });
-	if (!res.ok) return null;
 	try {
+		console.log("BEFORE /api/me");
+		const res = await fetch('/api/me', { credentials: 'include' });
+		console.log("AFTER /api/me");
+		if (!res.ok) return null;
+
 		return await res.json() as AuthUser;
 	} catch {
 		return null;  // Handle JSON parse errors gracefully
