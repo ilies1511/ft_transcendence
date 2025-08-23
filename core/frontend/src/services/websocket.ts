@@ -1,5 +1,9 @@
 // frontend/src/websocket.ts
-import type { LobbyInvite } from '../../src/game/game_shared/message_types.ts'; 
+import type { LobbyInvite } from '../../src/game/game_shared/message_types.ts';
+
+const baseDelay = 500;
+let nextDelay = baseDelay;
+let timerID: number | null = null;
 
 //TODO: should be moved?
 type WsMessage =
@@ -18,7 +22,8 @@ const wsEvents = new EventTarget();
 
 export function initWs() {
 	// if already connected, do nothing
-	if (ws?.readyState === WebSocket.OPEN)
+	if (ws?.readyState === WebSocket.OPEN ||
+		ws?.readyState === WebSocket.CONNECTING)
 		return;
 
 	const url = location.protocol === 'https:'
@@ -29,12 +34,18 @@ export function initWs() {
 
 	ws.onopen = () => {
 		console.log('[WS].onopen');
-		// TODO: check for auth here..? 
+		nextDelay = baseDelay;
+		if (timerID !== null) {
+			clearTimeout(timerID); //clean up old timer
+			timerID = null;
+		}
+		// TODO: check for auth here..?
 	};
 
 	ws.onclose = () => {
-		console.log('[WS].onopen');
+		console.log('[WS].onclose');
 		ws = null;
+		wsReconnection();
 		// TODO: Add reconnect logic here if needed.
 		// (e.g., setTimeout(initWs, 10000) if shouldReconnect)
 	};
@@ -54,6 +65,21 @@ export function initWs() {
 			console.error('Bad WS message:', err);
 		}
 	};
+}
+
+function wsReconnection(): void {
+	if (nextDelay > 60_000) {
+		console.warn('[WS] lost for ever..');
+		return;
+	}
+
+	console.log(`[WS] reconnect in ${nextDelay} ms`);
+	timerID = window.setTimeout(() => {
+		timerID = null;
+		initWs();
+	}, nextDelay)
+
+	nextDelay *= 2;
 }
 
 export function closeWs() {
