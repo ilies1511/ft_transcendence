@@ -10,7 +10,12 @@ import {
 } from "../functions/friends.ts";
 import { findUserWithFriends } from "../functions/user.ts";
 import { type FriendRequestRow, type UserWithFriends } from "../types/userTypes.ts";
-import { acceptFriendRequestSchema, IncomingRequestsResponseSchema, incomingRequestsSchema, listFriendsSchema, outgoingRequestsSchema, rejectFriendRequestSchema, sendFriendRequestSchema, SendFRResponse201, withdrawFriendRequestSchema } from "../schemas/friends.ts";
+import {
+	acceptFriendRequestSchema, IncomingRequestsResponseSchema,
+	incomingRequestsSchema, listFriendsSchema, outgoingRequestsSchema,
+	rejectFriendRequestSchema, removeFriendSchema, sendFriendRequestSchema,
+	SendFRResponse201, withdrawFriendRequestSchema
+} from "../schemas/friends.ts";
 
 async function getUserId(request: any) {
 	return (request.user as any).id as number;
@@ -202,42 +207,22 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 	//POST -- BEGIN
 
 	//DELETE -- BEGIN
-	/* TEST:
-		curl -i -X DELETE http://localhost:3000/api/users/2/friends/5
-	 */
 	fastify.delete<{
-		Params: { id: number; friendId: number }
+		Params: { friendId: number }
+		// Params: { id: number; friendId: number }
 		Reply: { message: string } | { error: string }
 	}>(
-		'/api/users/:id/friends/:friendId',
+		// '/api/users/:id/friends/:friendId',
+		'/api/me/friends/:friendId',
 		{
-			schema: {
-				tags: ['friends'],
-				params: {
-					type: 'object',
-					required: ['id', 'friendId'],
-					properties: {
-						id: { type: 'integer' },
-						friendId: { type: 'integer' }
-					}
-				},
-				response: {
-					200: {
-						type: 'object',
-						properties: { message: { type: 'string' } }
-					},
-					404: {
-						type: 'object',
-						properties: { error: { type: 'string' } }
-					}
-				}
-			}
+			schema: removeFriendSchema
 		},
 		async (req, reply) => {
-			const userId = req.params.id
+			// const userId = req.params.id
+			const authUserId = await getUserId(req);
 			const friendId = req.params.friendId
 
-			const ok = await removeFriend(fastify, userId, friendId)
+			const ok = await removeFriend(fastify, authUserId, friendId)
 			if (!ok) {
 				return reply.code(404).send({ error: 'Friendship not found' })
 			}

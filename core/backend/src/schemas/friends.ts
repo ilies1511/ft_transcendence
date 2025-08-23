@@ -286,3 +286,45 @@ export const withdrawFriendRequestSchema = {
 	},
 } as const
 // END -- POST Withdraw Friendrequest
+
+// BEGIN -- DELETE frienship
+/* schema: {
+	tags: ['friends'],
+	params: {
+		type: 'object',
+		required: ['id', 'friendId'],
+		properties: {
+			id: { type: 'integer' },
+			friendId: { type: 'integer' }
+		}
+	},
+	response: {
+		200: {
+			type: 'object',
+			properties: { message: { type: 'string' } }
+		},
+		404: {
+			type: 'object',
+			properties: { error: { type: 'string' } }
+		}
+	}
+} */
+export const RemoveFriendParamsSchema = {
+	type: 'object',
+	additionalProperties: false,
+	required: ['friendId'],
+	properties: {
+		friendId: { type: 'integer', minimum: 1 },
+	},
+} as const
+
+export const removeFriendSchema = {
+	tags: ['friends'],
+	params: RemoveFriendParamsSchema,
+	response: {
+		200: OkMessageResponse,
+		404: ErrorResponse
+	},
+} as const
+
+// END -- DELETE frienship
