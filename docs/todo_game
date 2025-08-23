@@ -1,3 +1,4 @@
+[ ]: frontend: 'D' input key is buggy sometimes?
 [x]: bug: players can disconnect and join other games without leaving the first leading to a weird server state
 	-> [x]: create lobby api needs client_id to verify hes not in game
 	-> [x]: create tournamet api needs client_id to verify hes not in game

@@ -12,6 +12,8 @@ import type {
 	LobbyDisplaynameResp,
 } from './game_shared/message_types.ts';
 
+import { token } from '../services/session.ts';
+
 import { Game } from './game_new.ts';
 
 import { showToast } from '../ui/toast-interface.ts';
@@ -34,8 +36,10 @@ export class GameApi {
 		};
 		const response = await fetch('/api/enter_matchmaking', {
 			method: 'POST',
+			credentials: 'include',
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				'X-CSRF-Token': token,
 			},
 			body: JSON.stringify(req)
 		});
@@ -70,8 +74,10 @@ export class GameApi {
 
 		const response = await fetch('/api/create_lobby', {
 			method: 'POST',
+			credentials: 'include',
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				'X-CSRF-Token': token,
 			},
 			body: JSON.stringify(req)
 		});
@@ -99,8 +105,10 @@ export class GameApi {
 		};
 		const response = await fetch('/api/join_lobby', {
 			method: 'POST',
+			credentials: 'include',
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				'X-CSRF-Token': token,
 			},
 			body: JSON.stringify(req)
 		});
@@ -123,8 +131,10 @@ export class GameApi {
 		};
 		const response = await fetch('/api/create_tournament', {
 			method: 'POST',
+			credentials: 'include',
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				'X-CSRF-Token': token,
 			},
 			body: JSON.stringify(req)
 		});
@@ -141,8 +151,10 @@ export class GameApi {
 		};
 		const response = await fetch('/api/reconnect', {
 			method: 'POST',
+			credentials: 'include',
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				'X-CSRF-Token': token,
 			},
 			body: JSON.stringify(req)
 		});

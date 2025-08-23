@@ -1,3 +1,4 @@
+import { token } from '../services/session.ts';
 import type {
 	JoinReq,
 	CreateTournamentReq,
@@ -32,8 +33,10 @@ export class TournamentApi {
 		};
 		const response = await fetch('/api/create_tournament', {
 			method: 'POST',
+			credentials: 'include',
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				'X-CSRF-Token': token,
 			},
 			body: JSON.stringify(req)
 		});
@@ -57,8 +60,10 @@ export class TournamentApi {
 		};
 		const response = await fetch('/api/join_tournament', {
 			method: 'POST',
+			credentials: 'include',
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				'X-CSRF-Token': token,
 			},
 			body: JSON.stringify(req)
 		});
@@ -81,8 +86,10 @@ export class TournamentApi {
 		};
 		const response = await fetch('/api/start_tournament', {
 			method: 'POST',
+			credentials: 'include',
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				'X-CSRF-Token': token,
 			},
 			body: JSON.stringify(req)
 		});
@@ -102,8 +109,10 @@ export class TournamentApi {
 		};
 		const response = await fetch('/api/leave_tournament', {
 			method: 'POST',
+			credentials: 'include',
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				'X-CSRF-Token': token,
 			},
 			body: JSON.stringify(req)
 		});
