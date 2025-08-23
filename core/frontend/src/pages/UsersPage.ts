@@ -92,7 +92,7 @@ const UsersPage: PageModule = {
 	render(root) {
 		root.innerHTML = `
 			<div class="min-h-screen bg-[#221116] flex flex-col items-center px-4 py-10">
-				<h2 class="text-4xl text-white mb-8 font-semibold tracking-wide">Registered Users</h2>
+				<h2 class="text-4xl text-white mb-8 font-semibold tracking-wide">All Users</h2>
 				<div class="w-full max-w-4xl rounded-2xl overflow-hidden shadow-lg users-card-wrapper">
 					<div class="users-header hidden sm:grid" role="row">
 						<div class="col-user">User</div>

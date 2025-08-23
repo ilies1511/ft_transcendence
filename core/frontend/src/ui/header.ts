@@ -1,5 +1,5 @@
-import { router } from '../main'
-import { currentUser, logout } from '../services/auth'
+import { router } from '../main';
+import { currentUser, logout } from '../services/auth';
 import { icons } from '../ui/icons';
 
 export async function refreshHeader() {
@@ -28,11 +28,6 @@ export async function refreshHeader() {
 				<li><a data-route href="/profile"
 						class="cursor-pointer block px-4 py-2 hover:bg-[#41222b]">
 					Profile
-					</a>
-				</li>
-				<li><a data-route href="/friendlist"
-						class="cursor-pointer block px-4 py-2 hover:bg-[#41222b]">
-					Friends
 					</a>
 				</li>
 				<li><a data-route href="/settings"
