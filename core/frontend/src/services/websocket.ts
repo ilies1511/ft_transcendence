@@ -46,12 +46,10 @@ export function initWs() {
 		console.log('[WS].onclose');
 		ws = null;
 		wsReconnection();
-		// TODO: Add reconnect logic here if needed.
-		// (e.g., setTimeout(initWs, 10000) if shouldReconnect)
 	};
 
 	// ws.onerror = (err) => console.error('WS error:', err);
-	ws.onerror  = (ev: Event) => console.error('WS error:', ev);
+	ws.onerror = (ev: Event) => console.error('WS error:', ev);
 
 	ws.onmessage = (ev: MessageEvent<string>) => {
 		try {
