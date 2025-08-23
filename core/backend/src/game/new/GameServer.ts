@@ -512,7 +512,7 @@ export class GameServer {
 
 	private static _remove_lobby(id: number, end_data: GameToClientFinish): undefined {
 		//console.trace(`_remove_lobby called for lobby ${id}`);
-		if (end_data) {
+		if (end_data && end_data.mode != LobbyType.INVALID) {
 			const match_data: NewMatch = {
 				duration: end_data.duration,
 				mode: end_data.mode,
@@ -543,7 +543,7 @@ export class GameServer {
 			}
 			completeMatch(GameServer._fastify, id, match_data);
 		}
-		console.log("removing lobby ", id, ": ");
+		console.log("removing lobby ", id);
 		GameServer.lobbies.delete(id);
 	}
 

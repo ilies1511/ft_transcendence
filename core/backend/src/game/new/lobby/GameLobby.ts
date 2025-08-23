@@ -368,6 +368,15 @@ export class GameLobby {
 			this._game_engine_finish_callback(result);
 		}
 		this._update_lobby();
+		if (!this.engine && this._connections.length == 0 && this.lobby_type != LobbyType.TOURNAMENT_GAME) {
+			const dummy_result: GameToClientFinish = {
+				type: 'finish',
+				duration: 0,
+				mode: LobbyType.INVALID,
+				placements: [],
+			};
+			this._game_engine_finish_callback(dummy_result);
+		}
 	}
 
 

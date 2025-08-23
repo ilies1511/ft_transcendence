@@ -20,7 +20,8 @@
 [~] - global player count in frontend game lobby scene
 	-> [ ] currently only dummy data
 [x]: when leaving a tournament before it starts it should remove the player list rendering
-[ ] - delete empty lobbies after some time in the backend
+[x] - delete empty game lobbies in the backend
+[ ] - delete empty tournament in the backend
 [ ]: game frontend : optional fullscreen
 [ ]: AI
 
