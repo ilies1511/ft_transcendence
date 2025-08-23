@@ -5,6 +5,8 @@ import { wsEvents } from '../services/websocket';
 import { template, wireEvents } from './chat-ui';
 import { loadUnreadCounts, clearChatHistory } from './chat-state';
 import { handleDirectMessage, handleChatError, fetchUsersAndPopulate } from './chat-handlers';
+import type { LobbyInvite, ServerError } from '../game/game_shared/message_types.ts';
+import { gameInviteToast } from '../ui/gameInviteToast';
 
 export const chatState = {
 	activeChatFriendId: null as number | null,
@@ -44,8 +46,20 @@ export async function initFriendUI() {
 	// wsEvents.addEventListener('friend_removed', refreshFriends);
 	// document.addEventListener('friends-changed', refreshFriends);
 	wsEvents.addEventListener('user_registered', refresh);
+	wsEvents.addEventListener('lobby_invite', handleLobbyInvite);
 
 	wireEvents(root);
+}
+
+
+async function handleLobbyInvite(ev: Event) {
+	const { from, content } = (ev as CustomEvent).detail;
+	globalThis.last_invite = content as LobbyInvite;
+	const invite: LobbyInvite = content as LobbyInvite;
+
+	gameInviteToast(from);
+
+	console.log('[LobbyInvite] from user', from, content);
 }
 
 export function destroyFriendUI() {
