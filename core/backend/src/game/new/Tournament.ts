@@ -175,12 +175,14 @@ export class Tournament {
 	}
 
 	public start(client_id: number): ServerError {
-		console.log("Starting tournament..");
 		const parti: ClientParticipation | undefined = GameServer.client_participations.get(client_id);
 		if (!parti || parti.tournament_id != this._id) {
 			console.log(`Warning: client ${client_id} tried to start tournament he had no participation of (tournament ${this._id}`);
 			return ('Not Found');
 		}
+		//if (this.
+		console.log("Starting tournament..");
+
 		console.log(this.active_players);
 		this._total_player_count = this._all_players.length;
 		this._next_placement = this._total_player_count;
@@ -283,7 +285,7 @@ export class Tournament {
 			this._advance_player_to_round(round.players[player_idx], this._round_idx + 1);
 			round.looking_for_game--;
 		}
-		console.log(`rounds: ${this._rounds}`);
+		console.log("rounds: ", this._rounds);
 		if (round.looking_for_game) {
 			console.log(`looking for game in round after starting round, round: ${round}`);
 			throw ("looking for game in round after starting round ");
