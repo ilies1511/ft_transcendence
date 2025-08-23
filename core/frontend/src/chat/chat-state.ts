@@ -15,7 +15,7 @@ export function updateMainBadge() {
 export function updateUnreadBadge(friendId: number) {
 	const count = unreadCounts.get(friendId) || 0;
 	const li = document.querySelector(
-		`li[data-user-id="${friendId}"]`) as HTMLElement;
+		`li[data-user-id="${friendId}"] .unread-message-appender`) as HTMLElement;
 
 	if (!li) return;
 	let badge = li.querySelector('.unread-badge') as HTMLElement | null;
@@ -24,7 +24,9 @@ export function updateUnreadBadge(friendId: number) {
 		if (!badge) {
 			badge = document.createElement('span');
 			badge.className =
-				'unread-badge ml-2 text-xs bg-red-500 text-white rounded-full px-2 py-1';
+			'unread-badge ml-2 px-2 py-1 text-xs rounded-full ' +
+			'text-red-500 border-2 border-red-500 ' +
+			'bg-[#FAF9F6]';
 			li.appendChild(badge);
 		}
 		badge.textContent = `(${count})`;
@@ -68,7 +70,7 @@ export function appendNewChatMessage(from: number, username: string, content: st
 		bg = 'bg-[#181113] text-[#b99da6]';
 	}
 
-	const time = new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+	const time = new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 
 	box.insertAdjacentHTML('beforeend', `
 		<div class="max-w-[75%] mb-2 ${align}">
@@ -127,6 +129,16 @@ export function clearChatHistory() {
 	sessionStorage.clear();
 	unreadCounts.clear();
 	updateMainBadge();
+}
+
+export function appendSystemMessage(text: string) {
+	const box = document.getElementById('messages')!
+	if (!box)
+			return
+	box.insertAdjacentHTML('beforeend',
+		`<p class="mx-auto my-2 text-xs italic text-[#FAF9F6]">${text}</p>`
+	)
+	box.scrollTop = box.scrollHeight //stay scrolled down
 }
 
 export { unreadCounts, chatUserNames };
