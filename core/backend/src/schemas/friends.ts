@@ -127,3 +127,54 @@ export const sendFriendRequestSchema = {
 	}
 };
 // END --GET friend request
+
+// BEGIN -- Incoming requests listen ---> received request
+export const FriendRequestItemSchema = {
+	type: 'object',
+	additionalProperties: false,
+	required: ['id', 'requester_id', 'recipient_id', 'created_at', 'responded_at'],
+	properties: {
+		id: { type: 'integer', minimum: 1 },
+		requester_id: { type: 'integer', minimum: 1 },
+		recipient_id: { type: 'integer', minimum: 1 },
+		created_at: { type: 'integer', minimum: 0 },
+		responded_at: { type: ['integer', 'null'] },
+	},
+} as const
+
+export const IncomingRequestsResponseSchema = {
+	type: 'array',
+	uniqueItems: true,
+	items: FriendRequestItemSchema,
+} as const
+
+export const incomingRequestsSchema = {
+	tags: ['friends'],
+	response: {
+		200: IncomingRequestsResponseSchema,
+	},
+} as const
+
+// schema: {
+// 	tags: ['friends'],
+// 	params: { type: 'object', required: ['id'], properties: { id: { type: 'integer' } } },
+// 	response: {
+// 		200: {
+// 			type: 'array',
+// 			items: {
+// 				type: 'object',
+// 				properties: {
+// 					id: { type: 'integer' },
+// 					requester_id: { type: 'integer' },
+// 					recipient_id: { type: 'integer' },
+// 					status: { type: 'string' },
+// 					created_at: { type: 'integer' },
+// 					responded_at: { type: ['integer', 'null'] }
+// 				}
+// 			}
+// 		}
+// 	}
+// }
+
+// END -- Incoming requests listen ---> received request
+
