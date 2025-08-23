@@ -9,7 +9,7 @@ import {
 } from "../functions/friends.ts";
 import { findUserWithFriends } from "../functions/user.ts";
 import { type FriendRequestRow, type UserWithFriends } from "../types/userTypes.ts";
-import { listFriendsSchema } from "../schemas/friends.ts";
+import { listFriendsSchema, sendFriendRequestSchema, SendFRResponse201 } from "../schemas/friends.ts";
 
 async function getUserId(request: any) {
 	return (request.user as any).id as number;
@@ -38,27 +38,18 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 
 	//POST -- BEGIN
 	fastify.post<{
-		Params: { id: number }
 		Body: { username: string }
 		Reply: { requestId: number } | { error: string } | { message: string }
 	}>(
-		'/api/users/:id/requests',
+		// '/api/users/:id/requests',
+		'/api/me/requests',
 		{
-			schema: {
-				tags: ['friends'],
-				params: { type: 'object', required: ['id'], properties: { id: { type: 'integer' } } },
-				body: { type: 'object', required: ['username'], properties: { username: { type: 'string' } } },
-				response: {
-					201: { type: 'object', properties: { requestId: { type: 'integer' } } },
-					400: { type: 'object', properties: { error: { type: 'string' } } },
-					404: { type: 'object', properties: { error: { type: 'string' } } },
-					409: { type: 'object', properties: { error: { type: 'string' } } }
-				}
-			}
+			schema: sendFriendRequestSchema
 		},
 		async (req, reply) => {
 			try {
-				const fr = await sendFriendRequest(fastify, req.params.id, req.body.username)
+				const authUserId = await getUserId(req);
+				const fr = await sendFriendRequest(fastify, authUserId, req.body.username)
 				if (fr.type === 'accepted') {
 					reply.code(200).send({ message: 'Friend request automatically accepted' });
 				}

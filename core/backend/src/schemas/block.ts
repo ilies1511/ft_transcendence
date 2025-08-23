@@ -1,3 +1,5 @@
+import { ErrorResponse, OkMessageResponse, EmptyBodySchema } from "./shared.ts"
+
 export const BlockParamsSchema = {
 	type: 'object',
 	additionalProperties: false,
@@ -8,32 +10,12 @@ export const BlockParamsSchema = {
 	},
 } as const
 
-export const EmptyBodySchema = {
-	type: ['object', 'null'],
-	additionalProperties: false,
-	maxProperties: 0,
-} as const
-
-export const BlockOkResponse = {
-	type: 'object',
-	additionalProperties: false,
-	required: ['message'],
-	properties: { message: { type: 'string' } },
-} as const
-
-export const ErrorResponse = {
-	type: 'object',
-	additionalProperties: false,
-	required: ['error'],
-	properties: { error: { type: 'string' } },
-} as const
-
 export const blockUserSchema = {
 	tags: ['block'],
 	params: BlockParamsSchema,
 	body: EmptyBodySchema,
 	response: {
-		200: BlockOkResponse,
+		200: OkMessageResponse,
 		400: ErrorResponse,
 		403: ErrorResponse,
 		404: ErrorResponse,
@@ -46,7 +28,7 @@ export const unblockUserSchema = {
 	params: BlockParamsSchema,
 	body: EmptyBodySchema,
 	response: {
-		200: BlockOkResponse,
+		200: OkMessageResponse,
 		400: ErrorResponse,
 		403: ErrorResponse,
 		404: ErrorResponse,

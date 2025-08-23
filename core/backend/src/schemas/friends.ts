@@ -1,4 +1,4 @@
-import { ErrorResponse } from "./block.ts"
+import { ErrorResponse, OkMessageResponse } from "./shared.ts"
 
 export const Params = {
 	type: "object",
@@ -86,3 +86,44 @@ export const listFriendsSchema = {
 // 		}
 // 	}
 // }
+
+// BEGIN -- GET friend request
+
+export const SendFRResponse201 = {
+	type: 'object',
+	additionalProperties: false,
+	required: ['requestId'],
+	properties: { requestId: { type: 'integer', minimum: 1 } },
+} as const
+
+export const SendFRBodySchema = {
+	type: 'object',
+	additionalProperties: false,
+	required: ['username'],
+	properties: {
+		username: {
+			type: 'string',
+			// minLength: 3,
+			// maxLength: 24,
+			pattern: '^[a-zA-Z0-9_]+$',
+			transform: ['trim'],
+		},
+	},
+} as const
+
+export const sendFriendRequestSchema = {
+	tags: ['friends'],
+	summary: 'Send a friend request as the authenticated user',
+	body: SendFRBodySchema,
+	response: {
+		200: OkMessageResponse,
+		201: SendFRResponse201,
+		400: ErrorResponse,
+		401: ErrorResponse,
+		403: ErrorResponse,
+		404: ErrorResponse,
+		409: ErrorResponse,
+		500: ErrorResponse
+	}
+};
+// END --GET friend request
