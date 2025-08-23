@@ -37,7 +37,7 @@ export const OkResponseSchema = {
 	}
 } as const
 
-export const listFriendRequestSchema = {
+export const listFriendsSchema = {
 	tags: ['friends'],
 	params: Params,
 	response: {

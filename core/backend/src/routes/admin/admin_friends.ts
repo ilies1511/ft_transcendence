@@ -6,34 +6,14 @@ import {
 	rejectFriendRequest, removeFriend,
 	sendFriendRequest,
 	withdrawFriendRequest
-} from "../functions/friends.ts";
-import { findUserWithFriends } from "../functions/user.ts";
-import { type FriendRequestRow, type UserWithFriends } from "../types/userTypes.ts";
-import { listFriendsSchema } from "../schemas/friends.ts";
+} from "../../functions/friends.ts";
+import { type FriendRequestRow, type UserWithFriends } from "../../types/userTypes.ts";
+import { listFriendsSchema } from "../../schemas/friends.ts";
 
 export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 	// GET -- BEGIN
-	fastify.get<{
-		Params: { id: number }
-		Reply: UserWithFriends | { error: string }
-	}>(
-		'/api/users/:id/friends',
-		{
-			schema: listFriendsSchema
-		},
-		async (request, reply) => {
-			const authUserId = (request.user as any).id
 
-			if (request.params.id !== authUserId) {
-				return reply.code(403).send({ error: 'Forbidden' })
-			}
-			const result = await findUserWithFriends(fastify, request.params.id)
-			if (!result) {
-				return reply.code(404).send({ error: 'User not found' })
-			}
-			return result
-		}
-	)
+
 	// GET -- END
 
 	//POST -- BEGIN
