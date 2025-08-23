@@ -279,27 +279,37 @@ function drawStatsChart(stats: { wins: number; losses: number; draws: number }) 
 		const values = [stats.wins, stats.losses, stats.draws]
 		const colors = ['#0bda8e', '#D22B2B', '#bfa626']
 		const total = values.reduce((a, b) => a + b, 0)
+		const wins = stats.wins
 
-		// If nothing to draw, just render a subtle ring
-		if (total === 0) {
-				ctx.beginPath()
-				ctx.arc(canvas.width / 2, canvas.height / 2, 42, 0, Math.PI * 2)
-				ctx.strokeStyle = '#3a2b2f'
-				ctx.lineWidth = 12
-				ctx.stroke()
-				return
-		}
-
-		let start = -Math.PI / 2
 		const cx = canvas.width / 2
 		const cy = canvas.height / 2
 		const rOuter = 42
 		const rInner = 28
 
+		// If nothing to draw, just render a subtle ring
+		if (total === 0) {
+				// Subtle ring
+				ctx.beginPath()
+				ctx.arc(cx, cy, rOuter, 0, Math.PI * 2)
+				ctx.strokeStyle = '#3a2b2f'
+				ctx.lineWidth = 12
+				ctx.stroke()
+
+				// Center label (0%)
+				const winRate = 0
+				ctx.fillStyle = '#ffffff'
+				ctx.font = 'bold 14px system-ui'
+				ctx.textAlign = 'center'
+				ctx.textBaseline = 'middle'
+				ctx.fillText(`${winRate}%`, cx, cy)
+				return
+		}
+
+		// Donut segments
+		let start = -Math.PI / 2
 		for (let i = 0; i < values.length; i++) {
 				const angle = (values[i] / total) * Math.PI * 2
 				const end = start + angle
-				// Segment
 				ctx.beginPath()
 				ctx.moveTo(cx, cy)
 				ctx.arc(cx, cy, rOuter, start, end)
@@ -308,12 +318,21 @@ function drawStatsChart(stats: { wins: number; losses: number; draws: number }) 
 				ctx.fill()
 				start = end
 		}
-		// Punch inner circle
+
+		// Punch inner hole
 		ctx.globalCompositeOperation = 'destination-out'
 		ctx.beginPath()
 		ctx.arc(cx, cy, rInner, 0, Math.PI * 2)
 		ctx.fill()
 		ctx.globalCompositeOperation = 'source-over'
+
+		// Center win rate label (respects filter because stats are filtered)
+		const winRate = Math.round((wins / total) * 100)
+		ctx.fillStyle = '#ffffff'
+		ctx.font = 'bold 14px system-ui'
+		ctx.textAlign = 'center'
+		ctx.textBaseline = 'middle'
+		ctx.fillText(`${winRate}%`, cx, cy)
 }
 
 // Utilities to compute and apply filtered stats
