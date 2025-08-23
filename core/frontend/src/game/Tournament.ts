@@ -265,6 +265,10 @@ export class Tournament {
 	public leave(silent: boolean = false) {
 		this.finished = true;
 		globalThis.game?.leave();
+		const container: HTMLElement | null = this._get_container();
+		if (container) {
+			container.innerHTML = '';
+		}
 		this.render_tournament_state();
 		TournamentApi.leave_tournament(this.user_id, this.tournament_id);
 		if (!silent) {

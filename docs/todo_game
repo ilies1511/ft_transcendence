@@ -19,7 +19,7 @@
 	-> [x]: actual counter that when reached cleans up the game and informs the user that he can try to reconnect: max delay 1 min now
 [~] - global player count in frontend game lobby scene
 	-> [ ] currently only dummy data
-[ ]: when leaving a tournament before it starts it should remove the player list rendering
+[x]: when leaving a tournament before it starts it should remove the player list rendering
 [ ] - delete empty lobbies after some time in the backend
 [ ]: game frontend : optional fullscreen
 [ ]: AI
