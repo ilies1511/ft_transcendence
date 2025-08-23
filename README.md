@@ -90,6 +90,8 @@ Clean makefile, compose file,
 All the console logs should be in english.
 
 
+
+ipconfig getifaddr en0
 # Maksim Notes
 - [x] Avatar insta update via ws for other users.
 - [x] Main page text update from lorem ipsum.
@@ -102,3 +104,5 @@ All the console logs should be in english.
 - [ ] Fix mobile menu
 - [x] Make all friends bubble scrollable
 - [x] Update every page to use session instead of currentUser
+- [ ] When user live chat another user, you can console log that user is not online. Prob should give notification, that user is not online or smth.
+
