@@ -36,11 +36,11 @@ document.addEventListener('auth-change', async () => {
 		initWs();
 		presence.start();
 		initFriendUI();
-		initAllUsersUI();
+		// initAllUsersUI();
 		initFriendRequestWs()
 	} else {
-		destroyAllUsersUI(); 
-		destroyFriendUI();
+		destroyAllUsersUI();
+		// destroyFriendUI();
 		destroyFriendRequestWs();
 		presence.stop();
 		closeWs();

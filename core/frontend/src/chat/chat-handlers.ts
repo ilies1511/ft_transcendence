@@ -67,6 +67,26 @@ export async function fetchUsersAndPopulate(myID: number) {
 					// ul.appendChild(li);
 					li.querySelector('.invite-btn')!.addEventListener('click', ev => {
 						ev.stopPropagation(); // don’t open the DM
+						const btn = ev.currentTarget as HTMLButtonElement;
+
+						if (btn.disabled) return;
+
+						btn.disabled = true;
+						btn.classList.add(
+							'opacity-50',
+							'cursor-not-allowed',
+							'pointer-events-none'
+						);
+
+						// Re-enable after 5 s
+						setTimeout(() => {
+							btn.disabled = false;
+							btn.classList.remove(
+								'opacity-50',
+								'cursor-not-allowed',
+								'pointer-events-none'
+							);
+						}, 5000);
 
 						const invite: LobbyInvite = {
 							map_name:        '',

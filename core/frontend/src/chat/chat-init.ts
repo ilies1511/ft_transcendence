@@ -13,7 +13,7 @@ export const chatState = {
 };
 
 //refresh friendlist helper
-const refreshFriends = () => {
+const refresh = () => {
 	if (chatState.myUserId)
 		fetchUsersAndPopulate(chatState.myUserId);
 };
@@ -38,11 +38,12 @@ export async function initFriendUI() {
 
 	wsEvents.addEventListener('direct_message', handleDirectMessage);
 	wsEvents.addEventListener('error', handleChatError);
-	wsEvents.addEventListener('new_friend_request', refreshFriends);
-	wsEvents.addEventListener('friend_accepted', refreshFriends);
-	wsEvents.addEventListener('friend_rejected', refreshFriends);
-	wsEvents.addEventListener('friend_removed', refreshFriends);
-	document.addEventListener('friends-changed', refreshFriends);
+	// wsEvents.addEventListener('new_friend_request', refreshFriends);
+	// wsEvents.addEventListener('friend_accepted', refreshFriends);
+	// wsEvents.addEventListener('friend_rejected', refreshFriends);
+	// wsEvents.addEventListener('friend_removed', refreshFriends);
+	// document.addEventListener('friends-changed', refreshFriends);
+	wsEvents.addEventListener('user_registered', refresh);
 
 	wireEvents(root);
 }
@@ -56,9 +57,9 @@ export function destroyFriendUI() {
 
 	wsEvents.removeEventListener('direct_message', handleDirectMessage);
 	wsEvents.removeEventListener('error', handleChatError);
-	wsEvents.removeEventListener('new_friend_request', refreshFriends);
-	wsEvents.removeEventListener('friend_accepted', refreshFriends);
-	wsEvents.removeEventListener('friend_rejected', refreshFriends);
-	wsEvents.removeEventListener('friend_removed', refreshFriends);
-	document.removeEventListener('friends-changed', refreshFriends);
+	// wsEvents.removeEventListener('new_friend_request', refreshFriends);
+	// wsEvents.removeEventListener('friend_accepted', refreshFriends);
+	// wsEvents.removeEventListener('friend_rejected', refreshFriends);
+	// wsEvents.removeEventListener('friend_removed', refreshFriends);
+	// document.removeEventListener('friends-changed', refreshFriends);
 }
