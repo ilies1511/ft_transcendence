@@ -1,8 +1,7 @@
 // frontend/src/pages/settings.ts
 import { router } from '../main';
 import type { PageModule } from '../router';
-import { currentUser } from '../services/auth';
-import { clearSession } from '../services/session';
+import { getSession, clearSession } from '../services/session';
 import { showMsg } from '../utils/showMsg';
 
 const SettingsPage: PageModule & { renderWithParams?: Function } = {
@@ -13,7 +12,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 	async renderWithParams(root, params) {
 		root.innerHTML = '<p>Loading settings...</p>'
 
-		const me = await currentUser()
+		const me = await getSession()
 		if (!me) { router.go('/login'); return }
 
 		if (!params.id || params.id !== String(me.id)) {
@@ -75,7 +74,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 				</label>
 
 				<button class="w-full h-10 rounded-xl bg-[#f22667] text-white font-bold tracking-wide
-							   hover:bg-[#d41d59] active:bg-[#b31648]" type="submit">
+						hover:bg-[#d41d59] active:bg-[#b31648] cursor-pointer" type="submit">
 					Update
 				</button>
 
@@ -102,7 +101,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 				</label>
 
 				<button class="w-full h-10 rounded-xl bg-[#f22667] text-white font-bold tracking-wide
-							   hover:bg-[#d41d59] active:bg-[#b31648]" type="submit">
+					hover:bg-[#d41d59] active:bg-[#b31648] cursor-pointer" type="submit">
 					Change
 				</button>
 
@@ -142,14 +141,14 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 
 					<button id="verify-2fa-btn"
 							class="w-full h-10 rounded-xl bg-green-800 text-white font-bold tracking-wide
-									 hover:bg-green-700 active:bg-green-600"
+									 hover:bg-green-700 active:bg-green-600 cursor-pointer"
 							type="button">
 						Enable 2FA
 					</button>
 
 					<button id="cancel-2fa-btn"
 							class="w-full h-10 rounded-xl bg-gray-600 text-white font-bold tracking-wide
-									 hover:bg-gray-500 active:bg-gray-400"
+									 hover:bg-gray-500 active:bg-gray-400 cursor-pointer"
 							type="button">
 						Cancel
 					</button>
@@ -161,14 +160,14 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 				<div id="twofa-controls" class="hidden space-y-4">
 					<button id="enable-2fa-btn"
 							class="w-full h-10 rounded-xl bg-green-800 text-white font-bold tracking-wide
-									 hover:bg-green-700 active:bg-green-600 hidden"
+									 hover:bg-green-700 active:bg-green-600 hidden cursor-pointer"
 							type="button">
 						Enable 2FA
 					</button>
 
 					<button id="disable-2fa-btn"
 							class="w-full h-10 rounded-xl bg-red-800 text-white font-bold tracking-wide
-									 hover:bg-red-700 active:bg-red-600 hidden"
+									 hover:bg-red-700 active:bg-red-600 hidden cursor-pointer"
 							type="button">
 						Disable 2FA
 					</button>
@@ -183,14 +182,14 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 
 				<button id="delete-account-btn"
 					class="w-full h-10 rounded-xl bg-red-800 text-white font-bold tracking-wide
-						hover:bg-red-700 active:bg-red-600"
+						hover:bg-red-700 active:bg-red-600 cursor-pointer"
 					type="button">
 					Delete Account
 				</button>
 
 				<button id="anonymize-data-btn"
 					class="w-full h-10 rounded-xl bg-[#824155] text-white font-bold tracking-wide
-						hover:bg-[#6c3543] active:bg-[#582a36]"
+						hover:bg-[#6c3543] active:bg-[#582a36] cursor-pointer"
 					type="button">
 					Anonymize Data
 				</button>
@@ -213,7 +212,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 
 				<button id="export-data-btn"
 					class="w-full h-10 rounded-xl bg-gray-600 text-white font-bold tracking-wide
-						hover:bg-gray-500 active:bg-gray-400"
+						hover:bg-gray-500 active:bg-gray-400 cursor-pointer"
 					type="button">
 					Export Data
 				</button>

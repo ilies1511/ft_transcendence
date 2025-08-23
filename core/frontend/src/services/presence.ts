@@ -1,5 +1,5 @@
 // presence.ts
-import type { FriendStatusMsg } from '../types/ws'
+import type { FriendStatusMsg } from '../types/types.ts'
 import { wsEvents } from '../services/websocket'
 import { updateDot } from '../utils/statusDot'
 

@@ -1,54 +1,163 @@
 // src/features/chat/chat-handlers.ts
-import { showChat } from './chat-ui';
-import { unreadCounts, friendUsernames, loadHistory, 
+import { showActiveChatPanel } from './chat-ui';
+import { unreadCounts, chatUserNames, loadHistory,
 	saveUnreadCounts, updateUnreadBadge, updateMainBadge } from './chat-state';
 import { chatState } from './chat-init';
-import { appendMessage, saveToHistory } from './chat-state'; // for handleDirectMessage
+import { appendNewChatMessage, saveToHistory } from './chat-state'; // for handleDirectMessage
+import { sendWs } from '../services/websocket';
+import type { LobbyInvite } from '../../src/game/game_shared/message_types.ts';
+import { LobbyType } from '../../src/game/game_shared/message_types.ts';
+import { icons } from '../ui/icons';
 
 // get friends list
-export async function fetchFriendsAndPopulate(userId: number) {
-	const ul = document.getElementById('friendsList') as HTMLUListElement;
-	ul.innerHTML = '<li class="text-[#b99da6]">Loading friends…</li>';
+export async function fetchUsersAndPopulate(myID: number) {
+	const ul = document.getElementById('userChatList') as HTMLUListElement;
+	ul.innerHTML = '';
 
 	try {
-		const res = await fetch(`/api/users/${userId}/friends`);
-		if (!res.ok) throw new Error('Failed to fetch friends');
-		const data = await res.json();
+		const res = await fetch('/api/users');
+		if (!res.ok)
+			throw new Error('Failed to fetch users');
+		const usersList = await res.json() as{
+			id: number;
+			username: string,
+			avatar: string
+		}[];
 
-		ul.innerHTML = '';
-		if (!data.friends.length) {
-			ul.innerHTML = '<li class="text-[#b99da6]">No friends yet.</li>';
+		const othersUsersList = usersList.filter((u: { id: number }) => u.id !== myID);
+		if (!othersUsersList.length) {
+			ul.innerHTML = '<li class="text-sm p-2 text-gray-500">No registered users, its only you bro..</li>';
 			return;
 		}
 
-		friendUsernames.clear();
-		data.friends.forEach((f: { id: number; username: string; }) => {
-			friendUsernames.set(f.id, f.username);
+		chatUserNames.clear();
 
-			const li = document.createElement('li');
-			li.dataset.userId = f.id.toString();
-			li.textContent = f.username;
-			li.className =
-				'friendRow cursor-pointer rounded-lg bg-[#181113] px-3 py-2 text-white hover:bg-[#3c272d]';
+		othersUsersList.forEach(
+			(u: { id: number; username: string; avatar: string }) => {
 
-			li.addEventListener('click', () => {
-				chatState.currentChatUserId = f.id;
-				(document.getElementById('chatUser')!).textContent = f.username;
-				showChat();
-				loadHistory(f.id);
-				unreadCounts.set(f.id, 0);
-				saveUnreadCounts();
-				updateUnreadBadge(f.id);
-				(document.getElementById('msgInput')! as HTMLInputElement).focus();
-			});
+				chatUserNames.set(u.id, u.username);
 
-			ul.appendChild(li);
-			updateUnreadBadge(f.id);
-		});
+				const li = document.createElement('li');
+				li.dataset.userId = String(u.id);
+				li.className =
+					'friendRow flex items-center justify-between rounded-lg ' +
+					'bg-[#181113] px-3 py-2 text-white hover:bg-[#3c272d]';
+
+				li.innerHTML = `
+					<div class="flex w-full items-center">
+
+						<span class="flex items-center gap-2 cursor-pointer">
+						<img src="${u.avatar}"
+							class="h-5 w-5 shrink-0 rounded-full object-cover">
+						${u.username}
+						</span>
+
+						<button
+						class="invite-btn ml-auto
+								flex items-center gap-1
+								rounded bg-[#f22667] px-2 py-0.5 text-sm
+								hover:bg-[#d71d59] cursor-pointer">
+						${icons.game_invite}
+						</button>
+					</div>
+
+				<span class="unread-badge hidden ml-2 text-xs bg-red-500
+					text-white rounded-full px-2 py-1"></span>
+				`;
+					// ul.appendChild(li);
+					li.querySelector('.invite-btn')!.addEventListener('click', ev => {
+						ev.stopPropagation(); // don’t open the DM
+						const btn = ev.currentTarget as HTMLButtonElement;
+
+						if (btn.disabled) return;
+
+						btn.disabled = true;
+						btn.classList.add(
+							'opacity-50',
+							'cursor-not-allowed',
+							'pointer-events-none'
+						);
+
+						// Re-enable after 5 s
+						setTimeout(() => {
+							btn.disabled = false;
+							btn.classList.remove(
+								'opacity-50',
+								'cursor-not-allowed',
+								'pointer-events-none'
+							);
+						}, 5000);
+
+						const invite: LobbyInvite = {
+							map_name:        '',
+							lobby_password:  '',
+							lobby_id:        -1,
+							lobby_type:      LobbyType.INVALID,
+							valid:           false
+						};
+
+						if (globalThis.tournament) {
+							invite.lobby_type     = LobbyType.TOURNAMENT;
+							invite.lobby_password = globalThis.tournament.password;
+							invite.lobby_id       = globalThis.tournament.tournament_id;
+							// map_name not needed for a tournament
+							invite.valid          = true;
+
+						} else if (globalThis.game) {
+							invite.lobby_type     = globalThis.game.lobby_type;
+							invite.lobby_password = globalThis.game.password;
+							invite.lobby_id       = globalThis.game.game_id;
+							invite.map_name       = globalThis.game.map_name;
+							invite.valid          = true;
+
+						} else {
+							// player is not in any lobby - do nothing
+							return;
+						}
+
+						sendWs({
+							type:    'lobby_invite',
+							to:      u.id,
+							content: invite
+						});
+						console.log(`[invite] sent to user ${u.id}`);
+						console.log(JSON.stringify(invite, null, 2));
+
+					});
+
+
+					li.addEventListener('click', e => {
+						const link = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[data-route]');
+						if (link) {
+							return;
+						}
+						e.preventDefault(); // block navigation
+						chatState.activeChatFriendId = u.id;
+						document.getElementById('chatUser')!.innerHTML = `
+							<a href="/profile/${u.id}" data-route
+							   class="flex items-center gap-2 hover:underline">
+								<img src="${u.avatar}" class="h-5 w-5 rounded-full object-cover">
+								${u.username}
+							</a>`;
+						showActiveChatPanel();
+						loadHistory(u.id);
+						unreadCounts.set(u.id, 0);
+						saveUnreadCounts();
+						updateUnreadBadge(u.id);
+						(document.getElementById('msgInput')! as HTMLInputElement).focus();
+					});
+
+
+				ul.appendChild(li);
+				updateUnreadBadge(u.id);
+			}
+		);
+
+
 	} catch (err) {
 		console.error(err);
 		ul.innerHTML =
-			'<li class="text-[#b99da6]">Error loading friends. Try again.</li>';
+			'<li class="text-[#b99da6]">Error loading users. Try again.</li>';
 	}
 	updateMainBadge();
 }
@@ -71,13 +180,13 @@ export function handleDirectMessage(ev: Event) {
 		return;
 	}
 
-	const username = friendUsernames.get(fromId) || 'Unknown';
+	const username = chatUserNames.get(fromId) || 'Unknown';
 
-	if (chatState.currentChatUserId === fromId) {
-		// chat is open -> render immediately
-		appendMessage(fromId, username, data.content, data.ts);
+	if (chatState.activeChatFriendId === fromId) {
+		// chat is open > render immediately
+		appendNewChatMessage(fromId, username, data.content, data.ts);
 	} else {
-		// chat not open -> mark as unread
+		// chat not open > mark as unread
 		const cnt = (unreadCounts.get(fromId) || 0) + 1;
 		unreadCounts.set(fromId, cnt);
 		saveUnreadCounts();

@@ -1,15 +1,9 @@
 // src/features/chat/chat-state.ts
 import { chatState } from './chat-init';
+import type { StoredMsg } from '../types/types'
 
 const unreadCounts = new Map<number, number>(); // friendId -> #unread
-const friendUsernames = new Map<number, string>(); // friendId -> username
-
-//TODO: move this?
-interface StoredMsg {
-	from: number;
-	content: string;
-	ts: number;
-}
+const chatUserNames = new Map<number, string>(); // friendId -> username
 
 // badge utilities
 export function updateMainBadge() {
@@ -55,19 +49,34 @@ export function saveUnreadCounts() {
 	sessionStorage.setItem('unreadCounts', JSON.stringify(obj));
 }
 
+
 // message helpers (append, load, save history)
-export function appendMessage(from: number, username: string, content: string, ts: number) {
+export function appendNewChatMessage(from: number, username: string, content: string, ts: number) {
 	const box = document.getElementById('messages')!;
-	const align = from === chatState.myUserId ? 'ml-auto text-right' : 'mr-auto text-left';
-	const bg = from === chatState.myUserId ? 'bg-[#f22667] text-white' : 'bg-[#181113] text-[#b99da6]';
+
+	let align: string;
+	if (from === chatState.myUserId) {
+		align = 'ml-auto text-right';
+	} else {
+		align = 'mr-auto text-left';
+	}
+
+	let bg: string;
+	if (from === chatState.myUserId) {
+		bg = 'bg-[#f22667] text-white';
+	} else {
+		bg = 'bg-[#181113] text-[#b99da6]';
+	}
+
 	const time = new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
 	box.insertAdjacentHTML('beforeend', `
 		<div class="max-w-[75%] mb-2 ${align}">
-			<div class="flex justify-between items-center text-xs font-semibold text-gray-500 mb-1">
-				<span>${username}</span><span>${time}</span>
+			<div class="flex justify-between items-center text-sm font-semibold mb-1 text-white">
+				<span class="mr-1">${username}</span>
+				<span>${time}</span>
 			</div>
-			<div class="rounded-lg px-3 py-2 text-sm break-words ${bg}">
+			<div class="rounded-lg px-3 py-2 text-base break-words text-white ${bg}">
 				${content}
 			</div>
 		</div>
@@ -84,14 +93,21 @@ export function loadHistory(friendId: number | null) {
 	const msgs: StoredMsg[] =
 		JSON.parse(sessionStorage.getItem(key) || '[]');
 
-	msgs.forEach(m =>
-		appendMessage(
+	msgs.forEach(m => {
+		let username: string;
+		if (m.from === chatState.myUserId) {
+			username = chatState.myUsername;
+		} else {
+			username = chatUserNames.get(m.from) || 'Unknown';
+		}
+
+		appendNewChatMessage(
 			m.from,
-			m.from === chatState.myUserId ? chatState.myUsername : friendUsernames.get(m.from) || 'Unknown',
+			username,
 			m.content,
 			m.ts
-		)
-	);
+		);
+	});
 	box.scrollTop = box.scrollHeight;
 }
 
@@ -113,4 +129,4 @@ export function clearChatHistory() {
 	updateMainBadge();
 }
 
-export { unreadCounts, friendUsernames };
+export { unreadCounts, chatUserNames };

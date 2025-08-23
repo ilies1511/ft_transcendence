@@ -167,11 +167,12 @@ const template = /*html*/`
 			<button class="w-full h-10 rounded-xl bg-[#f22667] text-white font-bold cursor-pointer tracking-wide
 				hover:bg-[#d41d59]
 				active:bg-[#b31648]
+				mb-1
 			">
 				Sign Up
 			</button>
 
-			<p class="text-center text-sm text-white">or</p>
+			<p class="text-center text-sm text-white mb-1">or</p>
 
 			<a href="/api/auth/google"
 				class="w-full block h-10 rounded-xl bg-white text-[#221116] text-center leading-10 font-bold tracking-wide

@@ -4,18 +4,18 @@ import { getSession } from '../services/session';
 import { wsEvents } from '../services/websocket';
 import { template, wireEvents } from './chat-ui';
 import { loadUnreadCounts, clearChatHistory } from './chat-state';
-import { handleDirectMessage, handleChatError, fetchFriendsAndPopulate } from './chat-handlers';
+import { handleDirectMessage, handleChatError, fetchUsersAndPopulate } from './chat-handlers';
 
 export const chatState = {
-	currentChatUserId: null as number | null,
+	activeChatFriendId: null as number | null,
 	myUserId: 0,
 	myUsername: ''
 };
 
 //refresh friendlist helper
-const refreshFriends = () => {
+const refresh = () => {
 	if (chatState.myUserId)
-		fetchFriendsAndPopulate(chatState.myUserId);
+		fetchUsersAndPopulate(chatState.myUserId);
 };
 
 export async function initFriendUI() {
@@ -34,15 +34,16 @@ export async function initFriendUI() {
 
 	// state
 	loadUnreadCounts();
-	fetchFriendsAndPopulate(chatState.myUserId);
+	fetchUsersAndPopulate(chatState.myUserId);
 
 	wsEvents.addEventListener('direct_message', handleDirectMessage);
 	wsEvents.addEventListener('error', handleChatError);
-	wsEvents.addEventListener('new_friend_request', refreshFriends);
-	wsEvents.addEventListener('friend_accepted', refreshFriends);
-	wsEvents.addEventListener('friend_rejected', refreshFriends);
-	wsEvents.addEventListener('friend_removed', refreshFriends);
-	document.addEventListener('friends-changed', refreshFriends);
+	// wsEvents.addEventListener('new_friend_request', refreshFriends);
+	// wsEvents.addEventListener('friend_accepted', refreshFriends);
+	// wsEvents.addEventListener('friend_rejected', refreshFriends);
+	// wsEvents.addEventListener('friend_removed', refreshFriends);
+	// document.addEventListener('friends-changed', refreshFriends);
+	wsEvents.addEventListener('user_registered', refresh);
 
 	wireEvents(root);
 }
@@ -50,15 +51,15 @@ export async function initFriendUI() {
 export function destroyFriendUI() {
 	const root = document.getElementById('friend-ui-root');
 	if (root) root.innerHTML = '';
-	chatState.currentChatUserId = null;
+	chatState.activeChatFriendId = null;
 
 	clearChatHistory();
 
 	wsEvents.removeEventListener('direct_message', handleDirectMessage);
 	wsEvents.removeEventListener('error', handleChatError);
-	wsEvents.removeEventListener('new_friend_request', refreshFriends);
-	wsEvents.removeEventListener('friend_accepted', refreshFriends);
-	wsEvents.removeEventListener('friend_rejected', refreshFriends);
-	wsEvents.removeEventListener('friend_removed', refreshFriends);
-	document.removeEventListener('friends-changed', refreshFriends);
+	// wsEvents.removeEventListener('new_friend_request', refreshFriends);
+	// wsEvents.removeEventListener('friend_accepted', refreshFriends);
+	// wsEvents.removeEventListener('friend_rejected', refreshFriends);
+	// wsEvents.removeEventListener('friend_removed', refreshFriends);
+	// document.removeEventListener('friends-changed', refreshFriends);
 }
