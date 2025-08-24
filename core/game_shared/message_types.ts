@@ -164,6 +164,7 @@ export type GameToClientFinish = {
 	placements: {
 		id: number,
 		final_placement: number,
+		health: number,
 	}[];
 };
 

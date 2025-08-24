@@ -149,7 +149,7 @@ export class GameLobby {
 	}
 
 	// this does not setup the connection, without this the client tring to connect will be denied
-	public join(user_id: number, display_name: string, password?: string
+	public join(user_id: number, display_name: string, password?: string, map_name?: string,
 		): ServerError
 	{
 		if (user_id <= 0 && this.lobby_type == LobbyType.TOURNAMENT_GAME) {
@@ -167,6 +167,9 @@ export class GameLobby {
 		if (this.password != password) {
 			console.log("join: this.password: ", this.password, "; password: ", password);
 			return ("Invalid Password");
+		}
+		if (map_name && this._map_name != map_name) {
+			return ('Invalid Map');
 		}
 		console.log("Game: User", user_id, " joing lobby ", this.id);
 		const connection: GameConnection = {
@@ -349,18 +352,21 @@ export class GameLobby {
 					result?.placements.push({
 						id: connection.id,
 						final_placement: 1,
+						health: 1,
 					});
 				} else {
 					result?.placements.push({
 						id: connection.id,
 						final_placement: 2,
+						health: 0,
 					});
 				}
 			}
 		}
-		if (!this.engine) {
+		//todo: what reason did I have for this differentiation
+		//if (!this.engine) {
 			this._connections = this._connections.filter(c => c.id != msg.client_id && c.id != msg.client_id * -1);
-		}
+		//}
 		if (result) {
 			for (const connection of this._connections) {
 				connection.sock?.send(result);
@@ -368,6 +374,15 @@ export class GameLobby {
 			this._game_engine_finish_callback(result);
 		}
 		this._update_lobby();
+		if (!this.engine && this._connections.length == 0 && this.lobby_type != LobbyType.TOURNAMENT_GAME) {
+			const dummy_result: GameToClientFinish = {
+				type: 'finish',
+				duration: 0,
+				mode: LobbyType.INVALID,
+				placements: [],
+			};
+			this._game_engine_finish_callback(dummy_result);
+		}
 	}
 
 

@@ -39,7 +39,7 @@ Game frontend.
 		a. Map. Might be more, like speed, colors and so on.
 	4. When you selected the options, you enter the match.
 	Differences between gamemodes.
-		- Matchmaking. 
+		- Matchmaking.
 			If somebody already created a loby whit the same options you selected, you will enter that loby.
 			If there is no loby avaible with your options, the new loby will be created. Other peope who are searching for the game with the same options will automatically join your game loby.
 			Also, you you can invite other people to join the loby.
@@ -47,7 +47,7 @@ Game frontend.
 		- Custom loby.
 			With password. You create a loby and you create a password. Only people who knows the password, can join. You can also invite friends (or everybody, not sure yet) to this custom loby.
 			Same as Machmaking, you can select options for the game, like MAP, speed and score maybe, time. Not avaire of full available options.
-		
+
 		- Tournament.
 			Not sure about behavior of this. Tournament will be simmilar to custom lobby.
 			There is a map selection of a sub set of all the maps (only 1v1 maps).
@@ -84,19 +84,30 @@ Need to fully test the Live Chat/Live status/friend invites. If everything is up
 4.
 
 ## Problem 12
-Clean makefile, compose file, 
+Clean makefile, compose file,
 
 ## Problem 13
 All the console logs should be in english.
 
 
+
+ipconfig getifaddr en0
 # Maksim Notes
 - [x] Avatar insta update via ws for other users.
-- [ ] Main page text update from lorem ipsum.
-- [ ] When the game ends, its not possible to click logout button. Need to add z-index.
+- [x] Main page text update from lorem ipsum.
+- [x] When the game ends, its not possible to click logout button. Need to add z-index.
 - [ ] Refactor CSS, have default styles from the styles.css. Make same sizes for different pages.
-- [ ] Check how many modules we have. We have to have 7 major modules.
+- [x] Check how many modules we have. We have to have 7 major modules.
 - [ ] Update game end page. Fix it a bit, add corners back so it feels better.
 - [ ] Add notification on disconnect, when the player disconnects from the game.
-- [ ] Prevent spam clicking invite to the game to all users.
+- [x] Prevent spam clicking invite to the game to all users. (localstorage and map)
 - [ ] Fix mobile menu
+- [x] Make all friends bubble scrollable
+- [x] Update every page to use session instead of currentUser
+- [x] When user live chat another user, you can console log that user is not online. Prob should give notification, that user is not online or smth.
+- [ ] When you click on the user profile from "All users" / "Registered Users" page, the avatar on the profile page is not showing.
+- [ ] When user deletes his account, the All users page and Live Chat list is not updated via WS.
+- [ ] controling the game, the "D" button does not work.
+- [x] chat military time
+- [ ] Clean up all TODO:
+- [ ] Go throuhght every file and see nothing shitty left.

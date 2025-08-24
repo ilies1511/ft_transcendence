@@ -333,7 +333,7 @@ export class GameServer {
 		}
 
 		for (const [lobby_id, lobby] of GameServer.lobbies) {
-			if (lobby.join(user_id, display_name) == "") {
+			if (lobby.join(user_id, display_name, '', map_name) == "") {
 				response.match_id = lobby_id;
 				return (response);
 			}
@@ -487,7 +487,7 @@ export class GameServer {
 			const game_id: number = parseInt(game_id_str);
 			const lobby: GameLobby | undefined = GameServer.lobbies.get(game_id);
 			if (lobby == undefined) {
-				console.log("game: lobby with key ", game_id, " was not found");
+				//console.log("game: lobby with key ", game_id, " was not found");
 				WebsocketConnection.static_send_error(ws, 'Not Found');
 				ws.close();
 				return ;
@@ -512,7 +512,7 @@ export class GameServer {
 
 	private static _remove_lobby(id: number, end_data: GameToClientFinish): undefined {
 		//console.trace(`_remove_lobby called for lobby ${id}`);
-		if (end_data) {
+		if (end_data && end_data.mode != LobbyType.INVALID) {
 			const match_data: NewMatch = {
 				duration: end_data.duration,
 				mode: end_data.mode,
@@ -537,13 +537,18 @@ export class GameServer {
 				//don't push local player results to db
 				if (end_data.placements[i].id > 0) {
 					match_data.participants.push({user_id: end_data.placements[i].id,
-						score: end_data.placements[i].final_placement, result: result});
+						score: end_data.placements[i].health, result: result});
 				}
 				i++;
 			}
-			completeMatch(GameServer._fastify, id, match_data);
+			//this filters out cases that crash the db.
+			//tho the duration is not the reason for the crash.
+			//todo: What is the actual reason?
+			if (match_data.duration != 0) {
+				completeMatch(GameServer._fastify, id, match_data);
+			}
 		}
-		console.log("removing lobby ", id, ": ");
+		console.log("removing lobby ", id);
 		GameServer.lobbies.delete(id);
 	}
 

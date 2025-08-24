@@ -1,3 +1,86 @@
+through socket was not open
+[0] leave_tournament api:  3
+[0] [participation] cleared tournament for client 3
+[0] [participation] removed empty participation record for client 3
+[0] game: GameLobby constructor
+[0] Game: User 2  joing lobby  38
+[0] [participation] lobby set: client=2, from=none to=38
+[0] Game: User 1  joing lobby  38
+[0] [participation] lobby set: client=1, from=none to=38
+[0] rounds: [object Object],[object Object]
+[0] lobby: client  2  attempts to connect
+[0] Game: client  2  connected to lobby  38
+[0] Game: _update_lobby()
+[0] Map(1) {
+[0]   2 => Tournament {
+[0]     _map_name: 'default',
+[0]     password: '5]XSmwCiF{G.?;py',
+[0]     _id: 2,
+[0]     _completion_callback: [Function: finish_tournament_callback],
+[0]     _started: true,
+[0]     _all_players: [ [Object], [Object], [Object] ],
+[0]     _rounds: [ [Object], [Object] ],
+[0]     active_players: [ 1, 2 ],
+[0]     _total_player_count: 3,
+[0]     _next_placement: 2,
+[0]     _round_idx: 1,
+[0]     _finish_game_callback: [Function: bound _finish_game_callback]
+[0]   }
+[0] }
+[0] Starting tournament..
+[0] [ 1, 2 ]
+[0] rounds len:  4
+[0] total player count tournament:  3
+[0] starting tournament with 4 rounds and 2 players
+[0] Tournament: starting round 1
+[0] start_tournament api:  { error: '', type: 'default' }
+[0] game: GameLobby constructor
+[0] Game: User 2  joing lobby  39
+[0] [participation] lobby set: client=2, from=38 to=39
+[0] Game: User 1  joing lobby  39
+[0] [participation] lobby set: client=1, from=38 to=39
+[0] rounds: [object Object],[object Object],[object Object],[object Object]
+[0] looking for game in round after starting round, round: [object Object]
+[0] node:internal/process/promises:392
+[0]       new UnhandledPromiseRejection(reason);
+[0]       ^
+[0]
+[0] UnhandledPromiseRejection: This error originated either by throwing inside of an async function without a catch block, or by rejecting a promise which was not handled with .catch(). The promise rejected with the reason "looking for game in round after starting round ".
+[0]     at throwUnhandledRejectionsMode (node:internal/process/promises:392:7)
+[0]     at processPromiseRejections (node:internal/process/promises:475:17)
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:106:32) {
+[0]   code: 'ERR_UNHANDLED_REJECTION'
+[0] }
+[0]
+[0] Node.js v22.18.0
+[1] 4:15:56 PM [vite] http proxy error: /api/reconnect
+[1] Error: read ECONNRESET
+[1]     at TCP.onStreamRead (node:internal/stream_base_commons:216:20)
+[1] 4:15:56 PM [vite] ws proxy error:
+[1] AggregateError [ECONNREFUSED]:
+[1]     at internalConnectMultiple (node:net:1134:18)
+[1]     at afterConnectMultiple (node:net:1715:7)
+
+
+
+[x] - matchmaking does not work: map name is not regarded when selecting the lobby
+[x] - add a delay when a goal is scored before resetting a ball
+
+[x] - currently the placement gets put into the db instead of the score
+[ ] - when a player leaves a running game his participation might be removed twice
+[ ] - tournament backend socket cleaning when leaving?
+[x] - tournament game has too many rounds
+[x] - 3 player tournament: 2 players play the first round and the other leaves: buggy
+[x] - data race: tournament game finishes and player is invited to next game before the first game finish msg arrives at the client
+[ ] - frontend: somehow there is a tournament object but no player list recived
+
+[ ] - weird db crash when not filtering out db writebacks when removing a lobby with duration 0
+	-> case: 3 player tournament -> round 0: 2 players player the other leaves
+		-> the next round the last game starts and finishes instantly since one player left
+
+
+[ ]: frontend: 'D' input key is buggy sometimes?
+[x]: backend: reduce logging bloat to debug tournament
 [x]: bug: players can disconnect and join other games without leaving the first leading to a weird server state
 	-> [x]: create lobby api needs client_id to verify hes not in game
 	-> [x]: create tournamet api needs client_id to verify hes not in game
@@ -14,13 +97,14 @@
 [ ]: tournament testing with different user counts and disconnects/leaving players at different points
 [ ]: transition to secure connections (API/wss)
 [x]: CLI game (will not start before transition to secure connection to not do double work)
-[~]: game frontend: limit socket reconnection attempts
-	-> [ ]: actual counter that when reached cleans up the game and informs the user that he can try to reconnect
+[x]: game frontend: limit socket reconnection attempts
+	-> [x]: actual counter that when reached cleans up the game and informs the user that he can try to reconnect: max delay 1 min now
 [~] - global player count in frontend game lobby scene
 	-> [ ] currently only dummy data
-[ ]: when leaving a tournament before it starts it should remove the player list rendering
-[ ] - delete empty lobbies after some time in the backend
-[ ]: game frontend : optional fullscreen
+[x]: when leaving a tournament before it starts it should remove the player list rendering
+[x] - delete empty game lobbies in the backend
+[x] - delete empty tournament in the backend
+[x]: game frontend : optional fullscreen
 [ ]: AI
 
 
@@ -60,18 +144,11 @@
 }
 
 
-
-
-
 [x] - game engine: handle player leave better:
 	[x] - broadcast msg to other players that this player left
 	[x] - set leaving player to loose as the next positon
 	[x] - potentially end game if only 1 player is left
 
-
-[ ] - when 'leaving' from the frontend and there is no game request from the server
-	if the client is in a game (same from the tournament), like this the client can leave without
-	an active connection
 
 [ ] - test leaving a tournamet with many differnt senarios with many differnt player counts
 !!![x] - leaving a tournamet: implement this before fixing the tournamet brackets; way to buggy right now

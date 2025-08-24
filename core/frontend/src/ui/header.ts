@@ -1,12 +1,13 @@
 import { router } from '../main';
-import { currentUser, logout } from '../services/auth';
+import { logout } from '../services/auth';
+import { getSession } from '../services/session';
 import { icons } from '../ui/icons';
 
 export async function refreshHeader() {
 	const span = document.getElementById('user-indicator')
 	if (!span) return
 
-	const user = await currentUser()
+	const user = await getSession()
 	if (!user) { span.textContent = ''; return }
 
 	span.innerHTML = /*html*/`
@@ -61,6 +62,9 @@ export async function refreshHeader() {
 	})
 
 	const logoutBtn = span.querySelector<HTMLButtonElement>('#logout')!
-	logoutBtn.onclick = async () => { await logout(); router.go('/login') }
+		logoutBtn.onclick = async () => {
+		await logout();
+		router.go('/login');
+	};
 }
 

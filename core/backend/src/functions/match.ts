@@ -111,34 +111,51 @@ export interface NewMatch {
 	}>;
 }
 
+//only for debugging
+const finishes_per_id: Map<number, number> = new Map<number, number>;
+
 // BEGIN -- Testing Route for Match (to be removed)
 export async function createMatch(
 	fastify: FastifyInstance,
 	data: NewMatch
 ): Promise<number> {
-	await fastify.db.exec('BEGIN')
-
-	const info = await fastify.db.run(
-		`INSERT INTO matches (mode, duration)
-		VALUES (?, ?)`,
-		data.mode,
-		data.duration
-	)
-	const matchId = info.lastID;
-	for (const p of data.participants) {
-		await fastify.db.run(
-			`INSERT INTO match_participants (match_id, user_id, score, result)
-			VALUES (?, ?, ?, ?)`,
-			matchId,
-			p.user_id,
-			p.score,
-			p.result
+	try {
+		await fastify.db.exec('BEGIN')
+		const info = await fastify.db.run(
+			`INSERT INTO matches (mode, duration)
+			VALUES (?, ?)`,
+			data.mode,
+			data.duration
 		)
-	}
-	await fastify.db.exec('COMMIT')
-	if (matchId === undefined)
+		const matchId = info.lastID;
+		for (const p of data.participants) {
+			await fastify.db.run(
+				`INSERT INTO match_participants (match_id, user_id, score, result)
+				VALUES (?, ?, ?, ?)`,
+				matchId,
+				p.user_id,
+				p.score,
+				p.result
+			)
+		}
+		await fastify.db.exec('COMMIT')
+		if (matchId == undefined || finishes_per_id.get(matchId)) {
+			console.log("Error: createMatch; matchId: ", matchId);
+			if (matchId) {
+				console.log("finishes_per_id.get(matchId): ", finishes_per_id.get(matchId));
+			}
+		}
+		if (matchId === undefined) {
+			process.exit(123);
+			return (0);
+		}
+		finishes_per_id.set(matchId, 0);
+		return matchId
+	} catch (e) {
+		console.log("Error when creating match: ", e);
+		process.exit(123);
 		return (0);
-	return matchId
+	}
 }
 // END -- Testing Route for Match
 
@@ -152,6 +169,12 @@ export async function createMatchMeta(
 		VALUES (?, 0)`,
 		mode
 	);
+	const old_finishes_count = finishes_per_id.get(info.lastID!);
+	if (old_finishes_count != undefined) {
+		console.log("old_finishes_count is not undefined in createMatchMeta");
+		process.exit(123);
+	}
+	finishes_per_id.set(info.lastID!, 0);
 	return info.lastID!;
 }
 
@@ -160,25 +183,42 @@ export async function completeMatch(
 	matchId: number,
 	data: Pick<NewMatch, 'duration' | 'participants'>
 ): Promise<void> {
-	await fastify.db.exec('BEGIN')
-
-	await fastify.db.run(
-		`UPDATE matches SET duration = ? WHERE id = ?`,
-		data.duration,
-		matchId
-	)
-	for (const p of data.participants) {
-		await fastify.db.run(
-		`INSERT INTO match_participants (match_id, user_id, score, result)
-		VALUES (?, ?, ?, ?)`,
-			matchId,
-			p.user_id,
-			p.score,
-			p.result
-		)
+	console.log(`completeMatch(${matchId})`);
+	const old_finishes_count = finishes_per_id.get(matchId);
+	if (old_finishes_count == undefined) {
+		console.log("completeMatch: old finishes_per_id does not exist");
+		process.exit(123);
 	}
-	await fastify.db.exec('COMMIT')
+	if (old_finishes_count != 0) {
+		console.log("completeMatch: old finishes_per_id is not 0");
+		process.exit(123);
+	}
+	finishes_per_id.set(matchId, old_finishes_count + 1);
+	try {
+		await fastify.db.exec('BEGIN')
+		await fastify.db.run(
+			`UPDATE matches SET duration = ? WHERE id = ?`,
+			data.duration,
+			matchId
+		)
+		for (const p of data.participants) {
+			await fastify.db.run(
+			`INSERT INTO match_participants (match_id, user_id, score, result)
+			VALUES (?, ?, ?, ?)`,
+				matchId,
+				p.user_id,
+				p.score,
+				p.result
+			)
+		}
+		await fastify.db.exec('COMMIT')
+	} catch (e) {
+		console.log("Error when finishing match: ", e);
+		console.log('\tdata: ', data);
+		console.log('\tmatch_id: ', matchId);
+	}
 }
+
 
 export async function getParticipantsForMatch(
 	fastify: FastifyInstance,

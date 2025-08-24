@@ -27,15 +27,16 @@ export async function handleWsMessage(
 			const senderId = extSocket.userId!;
 
 			//NEW: checking if friends
-			const senderFriends = await findUserWithFriends(fastify, senderId);
-			const isFriend = senderFriends?.friends.some(f => f.id === toId);
-			if (!isFriend) {
+			// const senderFriends = await findUserWithFriends(fastify, senderId);
+			// const isFriend = senderFriends?.friends.some(f => f.id === toId);
+
+			// prevent sending message to myself
+			if (toId === senderId) {
 				return extSocket.send(JSON.stringify({
-					type: 'error',
-					error: 'You can only message friends'
+					type:  'error',
+					error: 'Cannot message yourself'
 				}));
 			}
-
 			if (await isBlocked(fastify, toId, extSocket.userId!)) {
 				return extSocket.send(JSON.stringify({
 					type: 'error',

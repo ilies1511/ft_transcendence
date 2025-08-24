@@ -1,6 +1,6 @@
 // frontend/src/pages/profile.ts
 import type { PageModule } from '../router';
-import type { ApiUser } from '../types/api';
+import type { ApiUser } from '../types/types';
 // import { getSession } from '../services/auth'
 import { router } from '../main';
 import { getSession } from '../services/session';
@@ -155,7 +155,7 @@ async function fetchUserStats(userId: number) {
 		const res = await fetch(`/api/users/${userId}/stats`);
 		if (!res.ok) throw new Error(`stats ${res.status}`);
 		const data = await res.json();
-		console.log('⭐ user stats', data);
+		// console.log('⭐ user stats', data);
 		return data;
 	} catch (err) {
 		console.error('Failed to load stats:', err);
@@ -180,7 +180,7 @@ async function fetchMatchHistory(userId: number) {
 		const res = await fetch(`/api/users/${userId}/matches`);
 		if (!res.ok) throw new Error(`matches ${res.status}`);
 		const data = await res.json();
-		console.log('📜 match history', data);
+		// console.log('📜 match history', data);
 		return data;
 	} catch (err) {
 		console.error('Failed to load history:', err);

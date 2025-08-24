@@ -83,6 +83,7 @@ export class MapFile {
 			const ball: ServerBall = new ServerBall(this.next_obj_id++, false);
 			ball.speed = speed;
 			ball.effects = effects;
+			ball.effects.push(Effects.RESETING);
 			ball.pos = pos;
 			ball.init_pos = ball.clone();
 			this.balls.push(ball);

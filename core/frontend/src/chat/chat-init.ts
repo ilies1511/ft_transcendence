@@ -4,61 +4,73 @@ import { getSession } from '../services/session';
 import { wsEvents } from '../services/websocket';
 import { template, wireEvents } from './chat-ui';
 import { loadUnreadCounts, clearChatHistory } from './chat-state';
-import { handleDirectMessage, handleChatError, fetchFriendsAndPopulate } from './chat-handlers';
+import { handleDirectMessage, handleChatError, fetchUsersAndPopulate } from './chat-handlers';
+import type { LobbyInvite } from '../game/game_shared/message_types.ts';
+import { gameInviteToast } from '../ui/gameInviteToast';
 
+//hold the chat runtime state
 export const chatState = {
-	currentChatUserId: null as number | null,
-	myUserId: 0,
+	activeChatUserID: null as number | null,
+	myUserID: 0,
 	myUsername: ''
 };
 
-//refresh friendlist helper
-const refreshFriends = () => {
-	if (chatState.myUserId)
-		fetchFriendsAndPopulate(chatState.myUserId);
+//refresh friends list when user state changes
+const refresh = () => {
+	if (chatState.myUserID) fetchUsersAndPopulate(chatState.myUserID);
 };
 
-export async function initFriendUI() {
-	const root = document.getElementById('friend-ui-root')!;
+//mount the chat UI, wire events, and subscribe to WS events
+export async function initFriendUI(): Promise<void> {
+	const root = document.getElementById('friend-ui-root');
+	if (!root) return;
 
-	// fetch session
+	//fetch the current session; bail if not logged in
 	const me = await getSession();
 	if (!me || !me.id) {
 		console.log('[LiveChat] user not logged in, not showing chat!');
 		return;
 	}
-	chatState.myUserId = me.id;
+
+	chatState.myUserID = me.id;
 	chatState.myUsername = me.username || 'You';
 
+	//render static UI skeleton
 	root.innerHTML = template;
 
-	// state
+	//load unread counters and populate list
 	loadUnreadCounts();
-	fetchFriendsAndPopulate(chatState.myUserId);
+	fetchUsersAndPopulate(chatState.myUserID);
 
+	//subscribe to websocket events
 	wsEvents.addEventListener('direct_message', handleDirectMessage);
 	wsEvents.addEventListener('error', handleChatError);
-	wsEvents.addEventListener('new_friend_request', refreshFriends);
-	wsEvents.addEventListener('friend_accepted', refreshFriends);
-	wsEvents.addEventListener('friend_rejected', refreshFriends);
-	wsEvents.addEventListener('friend_removed', refreshFriends);
-	document.addEventListener('friends-changed', refreshFriends);
+	wsEvents.addEventListener('user_registered', refresh);
+	wsEvents.addEventListener('lobby_invite', handleLobbyInvite);
 
+	//wire DOM-only UI events (open/close/send)
 	wireEvents(root);
+
+	//show lobby invite toast and store last invite
+	function handleLobbyInvite(ev: Event) {
+		const { from, content } = (ev as CustomEvent).detail;
+		globalThis.last_invite = content as LobbyInvite;
+		gameInviteToast(from);
+		console.log('[LobbyInvite] from user', from, content);
+	}
 }
 
-export function destroyFriendUI() {
+//unmount the chat UI and unsubscribe events
+export function destroyFriendUI(): void {
 	const root = document.getElementById('friend-ui-root');
 	if (root) root.innerHTML = '';
-	chatState.currentChatUserId = null;
 
+	chatState.activeChatUserID = null;
 	clearChatHistory();
 
 	wsEvents.removeEventListener('direct_message', handleDirectMessage);
 	wsEvents.removeEventListener('error', handleChatError);
-	wsEvents.removeEventListener('new_friend_request', refreshFriends);
-	wsEvents.removeEventListener('friend_accepted', refreshFriends);
-	wsEvents.removeEventListener('friend_rejected', refreshFriends);
-	wsEvents.removeEventListener('friend_removed', refreshFriends);
-	document.removeEventListener('friends-changed', refreshFriends);
+	wsEvents.removeEventListener('user_registered', refresh);
+	//leave lobby_invite listener as well if mounted
+	wsEvents.removeEventListener('lobby_invite', () => {});
 }

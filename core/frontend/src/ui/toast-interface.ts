@@ -10,11 +10,12 @@ interface ToastOptions {
 
 export function showToast(toast: ToastOptions):HTMLDivElement {
 	const box = document.createElement('div');
+	box.id = "toast";
 
-	box.className = `fixed top-6 right-6 z-[9999] w-60 rounded-xl border border-[#543B43]set z-[9999] to z-[10001]`;
+	// box.className = `fixed top-6 right-6 w-60 rounded-xl border border-[#543B43]set`;
 
-	//box.className = `fixed top-6 right-6 z-[9999] w-60 rounded-xl border border-[#543b43]
-	//	bg-[#2b171e] shadow-lg text-white text-sm px-6 py-5 space-y-4`;
+	box.className = `fixed top-6 right-6 z-[9999] w-60 rounded-xl border border-[#543b43]
+		bg-[#2b171e] shadow-lg text-white text-sm px-6 py-5 space-y-4`;
 
 	const fromLine = toast.from
 		? `<p class="text-[#b99da6]">from <span class="italic">${toast.from}</span></p>`
@@ -23,7 +24,7 @@ export function showToast(toast: ToastOptions):HTMLDivElement {
 	box.innerHTML = /*html*/`
 		<div class="flex items-start gap-4">
 			<div class="flex-1">
-				<h3 class="text-base font-semibold">${toast.title}</h3>
+				<h3 class="text-base font-semibold ">${toast.title}</h3>
 				${fromLine}
 			</div>
 			<button class="t-close text-[#b99da6] hover:text-white text-lg
@@ -73,7 +74,7 @@ export function showToast(toast: ToastOptions):HTMLDivElement {
 		});
 	}
 
-	setTimeout(close, 50000);
+	setTimeout(close, 10000);
 
 	return box;
 }

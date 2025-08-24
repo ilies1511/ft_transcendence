@@ -10,7 +10,7 @@ import { showToast } from '../ui/toast-interface.ts';
  * tournament_running:
 	* lagging indicatior if a game should render it's result.
 	* Needed since game checks if globalThis.tournament exists for conditional rendering,
-	   but the game websocket might be lagging behind
+		 but the game websocket might be lagging behind
 */
 export let tournament_running: number = 0;
 
@@ -82,6 +82,18 @@ export type Player = {
 		nationality?: string
 }
 
+function wait_until(condition: () => boolean, interval = 100): Promise<void> {
+	return (new Promise((resolve) => {
+		const check = () => {
+			if (condition()) {
+				resolve();
+			} else {
+				setTimeout(check, interval);
+			}
+		};
+		check();
+	}));
+}
 
 export class Tournament {
 	public password: string;
@@ -96,6 +108,9 @@ export class Tournament {
 	public container_selector: string;
 
 	private _player_list: {display_name: string, id: number}[] = [];
+
+	private _next_socket_timeout: number = 500;
+	private _next_close_handler: NodeJS.Timeout | undefined = undefined;
 
 	public constructor(user_id: number,
 		tournament_id: number,
@@ -161,11 +176,22 @@ export class Tournament {
 
 			this._socket.onmessage = (
 				event: MessageEvent<TournamentToClient>) => this._rcv_msg(event);
+
 			this._socket.addEventListener("close", () => {
 				console.log("Tournament: Disconnected");
 				if (!this.finished && !is_unloading) {
-					console.log("Tournament: Attempting reconnect..");
-					this._open_socket();
+					if (this._next_close_handler) {
+						clearTimeout(this._next_socket_timeout);
+					}
+					if (this._next_socket_timeout > 60000) {
+						this._cleanup();
+					} else {
+						this._next_close_handler = setTimeout(() => {
+								this._open_socket();
+							}, this._next_socket_timeout
+						);
+						this._next_socket_timeout *= 2;
+					}
 				} else {
 				}
 			});
@@ -182,7 +208,7 @@ export class Tournament {
 		this._render_player_list();
 	}
 
-	private _rcv_msg(event: MessageEvent<TournamentToClient>): undefined {
+	private async _rcv_msg(event: MessageEvent<TournamentToClient>): Promise<undefined> {
 		console.log("got tournament msg: ", event.data);
 		const msg: TournamentToClient = JSON.parse(event.data) as TournamentToClient;
 		switch (msg.type) {
@@ -206,6 +232,9 @@ export class Tournament {
 				}
 				break ;
 			case ('new_game'):
+				if (globalThis.game) {
+					await wait_until(() => globalThis.game == undefined);
+				}
 				//todo: let user know next game is ready and don't just instantly attempt connecting
 				attempt_reconnect(this._match_container, this.user_id);
 				break ;
@@ -251,7 +280,11 @@ export class Tournament {
 	public leave(silent: boolean = false) {
 		this.finished = true;
 		globalThis.game?.leave();
-		this.render_tournament_state();
+		const container: HTMLElement | null = this._get_container();
+		if (container) {
+			container.innerHTML = '';
+		}
+		//this.render_tournament_state();
 		TournamentApi.leave_tournament(this.user_id, this.tournament_id);
 		if (!silent) {
 			showToast({
