@@ -28,7 +28,7 @@ const template = /*html*/`
 		<!-- controls -->
 		<div class="flex flex-col gap-4">
 			<!-- Map Selector -->
-			<details id="map-selector" class="rounded border border-[#543b43] bg-[#1e1518]" open>
+			<details id="map-selector" class="rounded border border-[#543b43] bg-[#1e1518]">
 				<summary class="cursor-pointer select-none px-4 py-3 text-white flex items-center justify-between">
 					<div class="flex items-center gap-2">
 						<span class="font-semibold">Choose Map</span>
