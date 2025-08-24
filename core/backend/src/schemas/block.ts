@@ -14,7 +14,7 @@ export const BlockParamsSchema = {
 export const blockUserSchema = {
 	tags: ['block'],
 	params: BlockParamsSchema,
-	body: EmptyBodySchema,
+	// body: EmptyBodySchema,
 	response: {
 		200: OkMessageResponse,
 		400: ErrorResponse,
@@ -27,7 +27,7 @@ export const blockUserSchema = {
 export const unblockUserSchema = {
 	tags: ['block'],
 	params: BlockParamsSchema,
-	body: EmptyBodySchema,
+	// body: EmptyBodySchema,
 	response: {
 		200: OkMessageResponse,
 		400: ErrorResponse,

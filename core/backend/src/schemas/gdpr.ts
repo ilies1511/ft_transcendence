@@ -24,7 +24,7 @@ export const meDataSchema = {
 
 export const anonymizeMeSchema = {
 	tags: ['gdpr'],
-	body: EmptyBodySchema,
+	// body: EmptyBodySchema,
 	response: {
 		200: OkMessageResponse,
 		401: ErrorResponse,
@@ -44,7 +44,6 @@ export const anonymizeMeSchema = {
 
 export const meDeleteSchema = {
 	tags: ['gdpr'],
-	body: EmptyBodySchema,
 	response: {
 		200: OkMessageResponse,
 		401: ErrorResponse,

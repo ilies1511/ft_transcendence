@@ -187,7 +187,8 @@ const UsersPage: PageModule = {
 					const requestId = btn.dataset.requestid!;
 					btn.disabled = true; btn.textContent = 'Undoing…';
 					try {
-						const r = await fetch(`/api/users/${me.id}/requests/${requestId}`, { method: 'DELETE' });
+						// const r = await fetch(`/api/users/${me.id}/requests/${requestId}`, { method: 'DELETE' });
+						const r = await fetch(`/api/me/requests/${requestId}`, { method: 'DELETE' });
 						if (!r.ok) throw new Error(await r.text());
 						document.dispatchEvent(new Event('friends-changed'));
 					} catch {
