@@ -1,6 +1,6 @@
 // frontend/src/pages/users.ts
 import type { PageModule } from '../router';
-import { getSession } from '../services/session';
+import { token as CSRFToken, getSession } from '../services/session';
 import { wsEvents } from '../services/websocket';
 
 function renderUserRow(
@@ -116,15 +116,26 @@ const UsersPage: PageModule = {
 
 		const refreshList = async () => {
 			const [usersRes, friendsRes, outRes, inRes, blockedRes] = await Promise.all([
-				fetch('/api/users'),
-				// fetch(`/api/users/${me.id}/friends`),
-				fetch(`/api/me/friends`),
-				// fetch(`/api/users/${me.id}/requests/outgoing`),
-				fetch(`/api/me/requests/outgoing`),
-				// fetch(`/api/users/${me.id}/requests/incoming`),
-				fetch('/api/me/requests/incoming'),
-				// fetch(`/api/users/${me.id}/block`)
-				fetch(`/api/me/block`)
+				fetch('/api/users', {
+					method: 'GET',
+					credentials: 'include',
+				}),
+				fetch(`/api/me/friends`, {
+					method: 'GET',
+					credentials: 'include',
+				}),
+				fetch(`/api/me/requests/outgoing`, {
+					method: 'GET',
+					credentials: 'include',
+				}),
+				fetch('/api/me/requests/incoming', {
+					method: 'GET',
+					credentials: 'include',
+				}),
+				fetch(`/api/me/block`, {
+					method: 'GET',
+					credentials: 'include',
+				})
 			]);
 
 			if (!(usersRes.ok && friendsRes.ok && outRes.ok && inRes.ok && blockedRes.ok)) {
@@ -157,14 +168,17 @@ const UsersPage: PageModule = {
 			list.querySelectorAll<HTMLButtonElement>('.invite-btn').forEach(btn => {
 				btn.addEventListener('click', async () => {
 					const username = btn.dataset.username!;
-					btn.disabled = true; btn.textContent = 'Sending…';
+					btn.disabled = true;
+					btn.textContent = 'Sending…';
 					try {
-						// const r = await fetch(`/api/users/${me.id}/requests`, {
-						const r = await fetch(`/api/me/requests`, {
-							method: 'POST',
-							headers: { 'Content-Type': 'application/json' },
-							body: JSON.stringify({ username })
-						});
+							const headers = new Headers({ 'Content-Type': 'application/json' });
+							if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
+							const r = await fetch(`/api/me/requests`, {
+								method: 'POST',
+								headers,
+								credentials: 'include',
+								body: JSON.stringify({ username })
+							});
 						if (!r.ok) {
 							if (r.status === 403) {
 								const err = await r.json();
@@ -172,8 +186,6 @@ const UsersPage: PageModule = {
 							}
 							throw new Error(await r.text());
 						}
-
-						//local UI update
 						document.dispatchEvent(new Event('friends-changed'));
 					} catch {
 						btn.disabled = false; btn.textContent = 'Invite';
@@ -187,7 +199,13 @@ const UsersPage: PageModule = {
 					const requestId = btn.dataset.requestid!;
 					btn.disabled = true; btn.textContent = 'Undoing…';
 					try {
-						const r = await fetch(`/api/users/${me.id}/requests/${requestId}`, { method: 'DELETE' });
+						const headers = new Headers({ 'Content-Type': 'application/json' });
+						if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
+						const r = await fetch(`/api/me/requests/${requestId}`, {
+							method: 'DELETE',
+							headers,
+							credentials: 'include'
+						});
 						if (!r.ok) throw new Error(await r.text());
 						document.dispatchEvent(new Event('friends-changed'));
 					} catch {
@@ -202,7 +220,13 @@ const UsersPage: PageModule = {
 					const requestId = btn.dataset.requestid!;
 					btn.disabled = true; btn.textContent = 'Accepting…';
 					try {
-						const r = await fetch(`/api/requests/${requestId}/accept`, { method: 'POST' });
+						const headers = new Headers();
+						if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
+						const r = await fetch(`/api/requests/${requestId}/accept`, {
+							method: 'POST',
+							headers,
+							credentials: 'include'
+						});
 						if (!r.ok) throw new Error(await r.text());
 						document.dispatchEvent(new Event('friends-changed'));
 					} catch {
@@ -217,7 +241,13 @@ const UsersPage: PageModule = {
 					const requestId = btn.dataset.requestid!;
 					btn.disabled = true; btn.textContent = 'Rejecting…';
 					try {
-						const r = await fetch(`/api/requests/${requestId}/reject`, { method: 'POST' });
+						const headers = new Headers();
+						if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
+						const r = await fetch(`/api/requests/${requestId}/reject`, {
+							method: 'POST',
+							headers,
+							credentials: 'include'
+						});
 						if (!r.ok) throw new Error(await r.text());
 						document.dispatchEvent(new Event('friends-changed'));
 					} catch {
@@ -231,8 +261,13 @@ const UsersPage: PageModule = {
 					const userId = btn.dataset.userid!;
 					btn.disabled = true; btn.textContent = 'Blocking…';
 					try {
-						// const r = await fetch(`/api/users/${me.id}/block/${userId}`, { method: 'POST' });
-						const r = await fetch(`/api/me/block/${userId}`, { method: 'POST' });
+						const headers = new Headers();
+						if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
+						const r = await fetch(`/api/me/block/${userId}`, {
+							method: 'POST',
+							headers,
+							credentials: 'include'
+						});
 						if (!r.ok) throw new Error(await r.text());
 						document.dispatchEvent(new Event('block-changed'));
 						document.dispatchEvent(new Event('friends-changed')); // backend may remove friendship
@@ -247,8 +282,14 @@ const UsersPage: PageModule = {
 					const userId = btn.dataset.userid!;
 					btn.disabled = true; btn.textContent = 'Unblocking…';
 					try {
+						const headers = new Headers();
+						if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
 						// const r = await fetch(`/api/users/${me.id}/block/${userId}`, { method: 'DELETE' });
-						const r = await fetch(`/api/me/block/${userId}`, { method: 'DELETE' });
+						const r = await fetch(`/api/me/block/${userId}`, {
+							method: 'DELETE',
+							headers,
+							credentials: 'include'
+						});
 						if (!r.ok) throw new Error(await r.text());
 						document.dispatchEvent(new Event('block-changed'));
 					} catch {

@@ -1,5 +1,6 @@
 // src/ui/friendRequestToast.ts
 import { showToast } from './toast-interface';
+import { token as CSRFToken } from '../services/session';
 
 export function friendRequestToast(requestId:number, from:string) {
 	const acceptURL = `/api/requests/${requestId}/accept`;
@@ -10,13 +11,25 @@ export function friendRequestToast(requestId:number, from:string) {
 		from : from,
 
 		async onAccept() {
-			const res = await fetch(acceptURL, { method:'POST' });
+			const headers = new Headers();
+			if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
+			const res = await fetch(acceptURL, {
+				method: 'POST',
+				headers,
+				credentials: 'include',
+			});
 			return res.ok;
 		},
 
 		async onReject() {
-			const res = await fetch(rejectURL, { method:'POST' });
+			const headers = new Headers();
+			if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
+			const res = await fetch(rejectURL, {
+				method: 'POST',
+				headers,
+				credentials: 'include',
+			});
 			return res.ok;
-		}
+		},
 	});
 }
