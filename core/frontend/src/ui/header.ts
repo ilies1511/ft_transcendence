@@ -20,7 +20,7 @@ export async function refreshHeader() {
 							transition-colors duration-150">
 				<img src="${user.avatar}"
 					 class="h-7 w-7 rounded-full object-cover">
-				<span class="pr-1">${user.nickname}</span>
+				<span class="pr-1">${user.username}</span>
 			</button>
 
 			<ul id="userMenu"
