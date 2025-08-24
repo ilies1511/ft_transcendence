@@ -487,7 +487,7 @@ export class GameServer {
 			const game_id: number = parseInt(game_id_str);
 			const lobby: GameLobby | undefined = GameServer.lobbies.get(game_id);
 			if (lobby == undefined) {
-				console.log("game: lobby with key ", game_id, " was not found");
+				//console.log("game: lobby with key ", game_id, " was not found");
 				WebsocketConnection.static_send_error(ws, 'Not Found');
 				ws.close();
 				return ;
@@ -541,7 +541,12 @@ export class GameServer {
 				}
 				i++;
 			}
-			completeMatch(GameServer._fastify, id, match_data);
+			//this filters out cases that crash the db.
+			//tho the duration is not the reason for the crash.
+			//todo: What is the actual reason?
+			if (match_data.duration != 0) {
+				completeMatch(GameServer._fastify, id, match_data);
+			}
 		}
 		console.log("removing lobby ", id);
 		GameServer.lobbies.delete(id);

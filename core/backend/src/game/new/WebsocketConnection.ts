@@ -26,7 +26,7 @@ export class WebsocketConnection {
 
 	static static_send(ws: WebSocket, msg: ServerToClientMessage) {
 		if (ws.readyState !== WebSocket.OPEN) {
-			console.log("tryed to send\n", msg, "\nthrough socket was not open");
+			//console.log("tryed to send\n", msg, "\nthrough socket was not open");
 			return ;
 		}
 		let data: string | ArrayBuffer = "";

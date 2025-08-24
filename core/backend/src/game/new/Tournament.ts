@@ -142,6 +142,7 @@ export class Tournament {
 			//this._next_placement = this._rounds[0].players.length;
 			this._next_placement = this._all_players.length;
 			this._broadcast_player_list();
+			console.log("Tournament after player left not started tournament: ", this);
 			if (this._all_players.length == 0) {
 				this._finish();
 			}
@@ -160,7 +161,14 @@ export class Tournament {
 			if (!player) {
 				return ("Not Found");
 			}
+			if (player.placement != -1) {
+				//player allready lost
+				console.log('Tournament player lost after he has allready lost');
+				return ('');
+			}
 			player.loose_next = true;
+			console.log("Tournament after player left running tournament while he was NOT in game: ", this);
+			this.log_rounds();
 			return ("");
 		} else {
 			//lobby will handle this
@@ -170,6 +178,8 @@ export class Tournament {
 				return ("Internal Error");
 			}
 			lobby.leave(client_id);
+			console.log("Tournament after player left running tournament while he was in game: ", this);
+			this.log_rounds();
 			return ("");
 		}
 	}
@@ -181,8 +191,9 @@ export class Tournament {
 			return ('Not Found');
 		}
 		//if (this.
-		console.log(this);
+		console.log("++++++++++++++++\n");
 		console.log("Starting tournament..");
+		//console.log("this(tournament): ", this);
 
 		console.log(this.active_players);
 		this._total_player_count = this._all_players.length;
@@ -220,23 +231,32 @@ export class Tournament {
 			this._rounds[0].looking_for_game = this._total_player_count;
 			this._rounds[0].players = this._all_players;
 		}
-		console.log("rounds len: ", this._rounds.length);
-		console.log("total player count tournament: ", this._total_player_count);
+		//console.log("After starting tournament: ");
+		//console.log("\ttotal player count tournament: ", this._total_player_count);
+		//console.log("\tRounds:");
+		//for (const round of this._rounds) {
+		//	console.dir(round, { depth: 2, colors: true });
+		//}
+		//console.log(`\tstarting tournament with ${this._rounds.length} rounds and ${this.active_players.length} players`);
+		//console.log("\tthis(tournament) at end of start(): ", this);
 		if (this._total_player_count <= 0) {
 			this._finish();
 		}
 		this._started = true;
-		console.log(`starting tournament with ${this._rounds.length} rounds and ${this.active_players.length} players`);
+		console.log(`Starting tournament ${this._id}`);
+		console.log(`\tstarting tournament with ${this._rounds.length} rounds and ${this.active_players.length} players`);
+		console.log("\tthis(tournament) at end of start(): ", this);
 		this._start_round();
 		return ("");
 	}
 
 	private async _start_round(): Promise<void> {
-
+		console.log("-----------\n");
 		console.log(`Tournament: starting round ${this._round_idx}`);
 		const round: Round = this._rounds[this._round_idx];
 		if (this._round_idx == this._rounds.length /* - 1 */) {
 			//round.players[0].placement = this._next_placement--;
+			console.log("Tournament: Tried to start round after last round -> tournament finished");
 			if (this._next_placement != 1 /*0*/) {
 				console.log("tournament: next placement in the end != 0: ", this._next_placement);
 				throw ("tournament: next placement in the end != 0");
@@ -265,20 +285,36 @@ export class Tournament {
 			//	map_name: this._map_name,
 			//	lobby_type: LobbyType.TOURNAMENT,
 			//};
-			console.log('rounds: ', this._rounds);
-			if (round.players[player_idx].loose_next) {
-				this._advance_player_to_round(round.players[player_idx + 1], this._round_idx + 1);
-			} else if (round.players[player_idx + 1].loose_next) {
-				this._advance_player_to_round(round.players[player_idx], this._round_idx + 1);
-			} else {
+			//if (round.players[player_idx].loose_next) {
+			//	//round.players[player_idx].placement = this._next_placement--;
+			//	//if (this._round_idx + 1 < this._rounds.length) {
+			//	//	this._advance_player_to_round(round.players[player_idx + 1], this._round_idx + 1);
+			//	//} else {
+			//	//}
+			//} else if (round.players[player_idx + 1].loose_next) {
+			//	//round.players[player_idx + 1].placement = this._next_placement--;
+			//	//this._advance_player_to_round(round.players[player_idx], this._round_idx + 1);
+			//} else {
+			
+				// creates game lobby even if player left but makes the player leave that
 				game_lobby.join(round.players[player_idx].client_id, round.players[player_idx].display_name, this.password);
 				game_lobby.join(round.players[player_idx + 1].client_id, round.players[player_idx + 1].display_name, this.password);
 				const msg: NewGame = {
 					type: 'new_game',
 				};
-				round.players[player_idx].ws?.send(JSON.stringify(msg));
-				round.players[player_idx + 1].ws?.send(JSON.stringify(msg));
-			}
+
+				if (!round.players[player_idx].loose_next) {
+					round.players[player_idx].ws?.send(JSON.stringify(msg));
+				}
+				if (!round.players[player_idx + 1].loose_next) {
+					round.players[player_idx + 1].ws?.send(JSON.stringify(msg));
+				}
+				if (round.players[player_idx].loose_next) {
+					game_lobby.leave(round.players[player_idx].client_id);
+				} else if (round.players[player_idx + 1].loose_next) {
+					game_lobby.leave(round.players[player_idx + 1].client_id);
+				}
+			//}
 			round.looking_for_game -= 2;
 			round.active_players += 2;
 			player_idx += 2;
@@ -287,11 +323,17 @@ export class Tournament {
 			this._advance_player_to_round(round.players[player_idx], this._round_idx + 1);
 			round.looking_for_game--;
 		}
-		console.log("rounds: ", this._rounds);
+		console.log(`this(tournament) after starting round ${this._round_idx}`, this);
 		if (round.looking_for_game) {
 			console.log("round: ", round);
 			console.log(`looking for game in round after starting round`);
 			throw ("looking for game in round after starting round ");
+		}
+		console.log(`After starting round ${this._round_idx}: `);
+		console.log("\ttotal player count tournament: ", this._total_player_count);
+		this.log_rounds();
+		if (this._total_player_count <= 0) {
+			this._finish();
 		}
 		this._broadcast_update();
 		//if (this._round_idx == this._rounds.length - 2 && round.game_ids.length == 0) {
@@ -354,6 +396,7 @@ export class Tournament {
 
 	private _finish() {
 		console.log(`Tournament ${this._id} finished`);
+		this.log_rounds();
 		if (this._all_players.length == 0) {
 			console.log("Finished an empty tournament");
 			this._completion_callback(this._id);
@@ -427,10 +470,11 @@ export class Tournament {
 		for (const player of this._all_players) {
 			player_list.data.push({display_name: player.display_name, id: player.client_id});
 		}
+		console.log('Tournament: Broadcasting player list: ', player_list);
 		for (const player of this._all_players) {
 			player.ws?.send(JSON.stringify(player_list));
 			if (player.ws && player.ws.readyState == WebSocket.OPEN) {
-				console.log("sending ", player_list);
+				//console.log("sending ", player_list);
 			} else if (player.ws) {
 				console.log("tried to send ", player_list, ", but ws was not open");
 			} else { 
@@ -527,6 +571,17 @@ export class Tournament {
 			} catch (e) {
 				console.log('broadcast_update fail for player ', player.client_id, e);
 			}
+		}
+	}
+
+
+	public log_rounds() {
+		console.log("\tRounds: ");
+		let i: number = 0;
+		for (const round of this._rounds) {
+			console.log(`\t\tRound[${i}]:`);
+			console.dir(round, { depth: 2, colors: true });
+			i++;
 		}
 	}
 };

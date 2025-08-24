@@ -217,7 +217,7 @@ export class TournamentApi {
 			error: '',
 			type: 'default',
 		};
-		console.log(GameServer.tournaments);
+		console.log('tournaments: ', GameServer.tournaments);
 		const { client_id, tournament_id } = request.body;
 		const tournament: Tournament | undefined = GameServer.tournaments.get(tournament_id);
 		if (!tournament) {
