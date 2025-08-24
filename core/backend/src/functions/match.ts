@@ -111,6 +111,7 @@ export interface NewMatch {
 	}>;
 }
 
+//only for debugging
 const finishes_per_id: Map<number, number> = new Map<number, number>;
 
 // BEGIN -- Testing Route for Match (to be removed)
