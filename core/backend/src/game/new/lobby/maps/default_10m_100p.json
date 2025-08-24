@@ -1,15 +1,15 @@
 {
-	"paddle_length": 7,
+	"paddle_length": 12,
 	"base_length": 10,
-	"health": 10,
-	"max_time": 60,
+	"health": 100,
+	"max_time": 600,
 	"players": {
 		"1": {
-			"center": [-5, 0],
+			"center": [-10, 0],
 			"normal": [1, 0]
 		},
 		"2": {
-			"center": [5, 0],
+			"center": [10, 0],
 			"normal": [-1, 0]
 		}
 	},
@@ -17,29 +17,35 @@
 		"1": {
 			"center": [0, 5],
 			"normal": [0, 1],
-			"length": 10.4,
+			"length": 20,
 			"effects": [],
 			"rotation": 0
 		},
 		"2": {
 			"center": [0, -5],
 			"normal": [0, 1],
-			"length": 10.4,
+			"length": 20,
 			"effects": [],
 			"rotation": 0
 		},
 		"3": {
 			"center": [0, 0],
 			"normal": [0, 1],
-			"length": 3,
+			"length": 20,
 			"effects": [],
-			"rotation": 0.1
+			"rotation": 0
 		}
+
 	},
 	"balls": {
 		"1": {
-			"point": [0, 1],
-			"speed": [0, 3],
+			"point": [2, 1],
+			"speed": [3, 0],
+			"effects": []
+		},
+		"2": {
+			"point": [-2, -1],
+			"speed": [-3, 1],
 			"effects": []
 		}
 	}

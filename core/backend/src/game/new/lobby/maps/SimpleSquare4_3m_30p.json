@@ -1,8 +1,8 @@
 {
 	"paddle_length": 7,
 	"base_length": 10,
-	"health": 10,
-	"max_time": 60,
+	"health": 30,
+	"max_time": 180,
 	"players": {
 		"1": {
 			"center": [-5, 0],
