@@ -17,16 +17,24 @@ export class ServerBall extends SharedBall {
 	public init_pos: SharedBall;
 	public last_collision_obj_id: number[] = [];
 	public cur_collision_obj_id: number[] = [];
+	public frames_till_reset: number = -1;
+	public frames_till_movement: number;
 
 	constructor(obj_id?: number, dispose?: boolean) {
 		super(obj_id, dispose);
 		this.init_pos = this.clone();
 		this.cur_collision_obj_id = [];
 		this.last_collision_obj_id = [];
+		this.effects.push(Effects.RESETING);
+		this.changed = true;
+		this.frames_till_movement = 90;
 	}
 
 	// when ball is bugged
 	public reset() {
+		this.frames_till_reset = -1;
+		this.frames_till_movement = 120;
+		this.changed = true;
 		//console.log("resetting ball from: ", this);
 		this.cur_collision_obj_id = [];
 		this.last_collision_obj_id = [];

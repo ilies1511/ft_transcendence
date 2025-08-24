@@ -8,6 +8,7 @@ export enum Effects {
 	PADDLE = 0,
 	BASE = 1,
 	FIRE = 2,
+	RESETING = 3,
 };
 
 let i: number = 0;

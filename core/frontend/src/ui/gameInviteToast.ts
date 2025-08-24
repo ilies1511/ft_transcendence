@@ -15,8 +15,11 @@ import { showToast } from './toast-interface';
 export function gameInviteToast(fromName:string) {
 	// const acceptURL = `/api/requests/${requestId}/accept`;
 	// const rejectURL = `/api/requests/${requestId}/reject`;
+	if (!globalThis.last_invite) {
+		return ;
+	}
 	showToast({
-		title : 'Game invite',
+		title : `Game invite for ${globalThis.last_invite.map_name}`,
 		from : fromName,
 
 		onAccept: async (): Promise<boolean> => {

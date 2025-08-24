@@ -64,6 +64,7 @@ through socket was not open
 
 
 [x] - matchmaking does not work: map name is not regarded when selecting the lobby
+[x] - add a delay when a goal is scored before resetting a ball
 
 [x] - currently the placement gets put into the db instead of the score
 [ ] - when a player leaves a running game his participation might be removed twice

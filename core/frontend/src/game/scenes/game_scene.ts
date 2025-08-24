@@ -83,6 +83,8 @@ export class GameScene extends BaseScene {
 
 	public score_panel: ScorePanel;
 
+	private _resetting = new Set<number>();
+
 	constructor(engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
 		super(engine, canvas);
 
@@ -142,8 +144,15 @@ export class GameScene extends BaseScene {
 			if (this._meshes.has(b.obj_id)) {
 				const cur: BABYLON.Mesh = this._meshes.get(b.obj_id);
 				if (!b.dispose) {
+					//console.log(b);
 					cur.position.x = b.pos.x;
 					cur.position.y = b.pos.y;
+					if (b.effects.includes(Effects.RESETING)) {
+						console.log("RESETING BALL");
+						this._toggle_resetting(cur, b.obj_id, true);
+					} else {
+						this._toggle_resetting(cur, b.obj_id, false);
+					}
 				} else {
 					cur.dispose(true);
 					this._meshes.delete(b.obj_id);
@@ -238,11 +247,11 @@ export class GameScene extends BaseScene {
 				return ;
 			}
 
-			console.log(c.base.obj_id);
-			console.log(c.paddle.obj_id);
+			//console.log(c.base.obj_id);
+			//console.log(c.paddle.obj_id);
 
 
-			console.log(c);
+			//console.log(c);
 			this.score_panel.update_score(c.obj_id, c.score, color.major.diffuseColor, undefined);
 			this.score_panel.update_timer(game_state.game_timer);
 		});
@@ -385,9 +394,9 @@ export class GameScene extends BaseScene {
 			() => this._pressRight(), () => this._releaseRight()
 		);
 		/*
-			[   ][ ▲ ][   ]
-			[ ◀ ][   ][ ▶ ]
-			[   ][ ▼ ][   ]
+			[	 ][ ▲ ][	 ]
+			[ ◀ ][	 ][ ▶ ]
+			[	 ][ ▼ ][	 ]
 		*/
 		dpad.addControl(up_btn, 0, 2);
 		dpad.addControl(left_btn, 2, 0);
@@ -405,5 +414,48 @@ export class GameScene extends BaseScene {
 				this._releaseRight();
 			}
 		});
+	}
+
+	private _toggle_resetting(mesh: BABYLON.Mesh, id: number, on: boolean) {
+		const mat: BABYLON.StandardMaterial = (mesh.material as BABYLON.StandardMaterial)
+						 ?? new BABYLON.StandardMaterial(`ball_mat_${id}`, this);
+		if (on) {
+			if (this._resetting.has(id)) {
+				return ;
+			}
+			this._resetting.add(id);
+			mesh.material = mat;
+	
+			mat.alpha = 0.35;
+			mat.emissiveColor = BABYLON.Color3.White();
+	
+			mesh.renderOutline = true;
+			mesh.outlineColor = BABYLON.Color3.FromHexString("#FFCC00");
+			mesh.outlineWidth = 0.03;
+	
+			const anim = new BABYLON.Animation(
+				`resetPulse_${id}`, "scaling.x", 4,
+				BABYLON.Animation.ANIMATIONTYPE_FLOAT,
+				BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE
+			);
+			anim.setKeys([{ frame: 0, value: 1.0 }, { frame: 15, value: 1.1 }, { frame: 30, value: 1.0 }]);
+			const ay = anim.clone();
+			ay.targetProperty = "scaling.y";
+			const az = anim.clone();
+			az.targetProperty = "scaling.z";
+			mesh.animations = [anim, ay, az];
+			this.beginAnimation(mesh, 0, 30, true);
+		} else {
+			if (!this._resetting.delete(id)) {
+				return;
+			}
+	
+			if (mat) {
+				mat.alpha = 1.0;
+				mat.emissiveColor = BABYLON.Color3.Black();
+			}
+			mesh.renderOutline = false;
+			mesh.scaling.setAll(1);
+		}
 	}
 };

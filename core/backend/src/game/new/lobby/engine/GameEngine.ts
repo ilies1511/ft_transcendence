@@ -88,6 +88,7 @@ export class GameEngine {
 	private _reset() {
 		for (const ball of this.balls) {
 			ball.reset();
+			ball.frames_till_movement = 0;
 		}
 		for (const wall of this.walls) {
 			// wall.reset();//does not exist
@@ -191,6 +192,27 @@ export class GameEngine {
 	private update_balls(delta_time: number) {
 		const input_d_time: number = delta_time;
 		for (const ball of this.balls) {
+			if (ball.frames_till_reset == 0) {
+				ball.reset();
+				ball.effects.push(Effects.RESETING);
+				continue ;
+			} else if (ball.frames_till_reset > 0) {
+				ball.frames_till_reset--;
+				if (ball.changed) {
+					console.log('frames_till_reset--', ball.effects);
+				}
+				continue ;
+			} else if (ball.frames_till_movement > 0) {
+				ball.frames_till_movement--;
+				if (ball.changed) {
+					console.log('frames_till_movement--', ball.effects);
+				}
+				if (ball.frames_till_movement == 0) {
+					ball.effects = ball.effects.filter(e => e != Effects.RESETING);
+				} else {
+					continue ;
+				}
+			}
 			ball.changed = true;
 			if (Math.abs(ball.pos.x) > 100 || Math.abs(ball.pos.y) > 100) {
 				ball.reset();
@@ -253,7 +275,12 @@ export class GameEngine {
 				const wall = first_intersec.wall;
 				if (wall.effects.indexOf(Effects.BASE) != -1) {
 					//console.log("hit base");
-					ball.reset();
+					ball.effects.push(Effects.RESETING);
+					ball.frames_till_reset = 45;
+					if (ball.changed) {
+						console.log('frames_till_movement=', ball.effects);
+					}
+
 					const goaled_client = this.clients.find(c => c.base === wall);
 					if (goaled_client == undefined) {
 						console.log("Game: error: base that was scored at could not be matched to a client");

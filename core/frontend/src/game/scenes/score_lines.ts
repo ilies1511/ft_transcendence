@@ -69,7 +69,7 @@ export class ScorePanel {
 	}
 
 	public update_score(id: number, score: number, color: BABYLON.Color3, name?: string) {
-		console.log("Game: update score ", id);
+		//console.log("Game: update score ", id);
 		if (name) {
 			this._display_names.set(id, name);
 		} else {
@@ -80,12 +80,12 @@ export class ScorePanel {
 		}
 		let line = this.lines.get(id);
 		if (!line) {
-			console.log("no line found");
+			//console.log("no line found");
 			line = new ScoreLine(id, score, color, name);
 			this.lines.set(id, line);
 			this.panel.addControl(line.textBlock);
 		} else {
-			console.log("line found");
+			//console.log("line found");
 		}
 		line.update(score, color, name);
 	}
