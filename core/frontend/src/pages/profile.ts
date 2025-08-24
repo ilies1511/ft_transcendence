@@ -152,7 +152,8 @@ async function renderProfile(root: HTMLElement, user: ApiUser) {
 // Helper function for stats
 async function fetchUserStats(userId: number) {
 	try {
-		const res = await fetch(`/api/users/${userId}/stats`);
+		// const res = await fetch(`/api/users/${userId}/stats`);
+		const res = await fetch(`/api/me/stats`);
 		if (!res.ok) throw new Error(`stats ${res.status}`);
 		const data = await res.json();
 		// console.log('⭐ user stats', data);
@@ -177,7 +178,8 @@ function renderStats(stats: { totalGames: number; wins: number; losses: number; 
 // Helper function for history
 async function fetchMatchHistory(userId: number) {
 	try {
-		const res = await fetch(`/api/users/${userId}/matches`);
+		const res = await fetch(`/api/me/matches`);
+		// const res = await fetch(`/api/users/${userId}/matches`);
 		if (!res.ok) throw new Error(`matches ${res.status}`);
 		const data = await res.json();
 		// console.log('📜 match history', data);
@@ -405,6 +407,7 @@ const ProfilePage: PageModule & { renderWithParams?: Function } = {
 }
 
 export default ProfilePage
+
 
 function formatDuration(raw: number) {
     // raw already in seconds (float). Show mm:ss or s.ms if < 60

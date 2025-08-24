@@ -117,10 +117,14 @@ const UsersPage: PageModule = {
 		const refreshList = async () => {
 			const [usersRes, friendsRes, outRes, inRes, blockedRes] = await Promise.all([
 				fetch('/api/users'),
-				fetch(`/api/users/${me.id}/friends`),
-				fetch(`/api/users/${me.id}/requests/outgoing`),
-				fetch(`/api/users/${me.id}/requests/incoming`),
-				fetch(`/api/users/${me.id}/block`)
+				// fetch(`/api/users/${me.id}/friends`),
+				fetch(`/api/me/friends`),
+				// fetch(`/api/users/${me.id}/requests/outgoing`),
+				fetch(`/api/me/requests/outgoing`),
+				// fetch(`/api/users/${me.id}/requests/incoming`),
+				fetch('/api/me/requests/incoming'),
+				// fetch(`/api/users/${me.id}/block`)
+				fetch(`/api/me/block`)
 			]);
 
 			if (!(usersRes.ok && friendsRes.ok && outRes.ok && inRes.ok && blockedRes.ok)) {
@@ -155,7 +159,8 @@ const UsersPage: PageModule = {
 					const username = btn.dataset.username!;
 					btn.disabled = true; btn.textContent = 'Sending…';
 					try {
-						const r = await fetch(`/api/users/${me.id}/requests`, {
+						// const r = await fetch(`/api/users/${me.id}/requests`, {
+						const r = await fetch(`/api/me/requests`, {
 							method: 'POST',
 							headers: { 'Content-Type': 'application/json' },
 							body: JSON.stringify({ username })
@@ -226,7 +231,8 @@ const UsersPage: PageModule = {
 					const userId = btn.dataset.userid!;
 					btn.disabled = true; btn.textContent = 'Blocking…';
 					try {
-						const r = await fetch(`/api/users/${me.id}/block/${userId}`, { method: 'POST' });
+						// const r = await fetch(`/api/users/${me.id}/block/${userId}`, { method: 'POST' });
+						const r = await fetch(`/api/me/block/${userId}`, { method: 'POST' });
 						if (!r.ok) throw new Error(await r.text());
 						document.dispatchEvent(new Event('block-changed'));
 						document.dispatchEvent(new Event('friends-changed')); // backend may remove friendship
@@ -241,7 +247,8 @@ const UsersPage: PageModule = {
 					const userId = btn.dataset.userid!;
 					btn.disabled = true; btn.textContent = 'Unblocking…';
 					try {
-						const r = await fetch(`/api/users/${me.id}/block/${userId}`, { method: 'DELETE' });
+						// const r = await fetch(`/api/users/${me.id}/block/${userId}`, { method: 'DELETE' });
+						const r = await fetch(`/api/me/block/${userId}`, { method: 'DELETE' });
 						if (!r.ok) throw new Error(await r.text());
 						document.dispatchEvent(new Event('block-changed'));
 					} catch {

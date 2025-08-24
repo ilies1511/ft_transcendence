@@ -1,6 +1,6 @@
 // src/utils/isFriend.ts
 import type { ApiUserWithFriends } from '../types/types'
-import { getSession } from '../services/session';
+// import { getSession } from '../services/session';
 
 export async function isFriend(profileId: number): Promise<boolean> {
 	const me = await getSession()
@@ -9,7 +9,8 @@ export async function isFriend(profileId: number): Promise<boolean> {
 	if (me.id === profileId)
 		return true // my own profile
 
-	const res = await fetch(`/api/users/${me.id}/friends`)
+	// const res = await fetch(`/api/users/${me.id}/friends`)
+	const res = await fetch(`/api/me/friends`)
 	if (!res.ok)
 		return false
 

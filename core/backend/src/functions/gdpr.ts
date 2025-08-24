@@ -34,7 +34,6 @@ export async function anonymizeUser(fastify: FastifyInstance, userId: number) {
 		WHERE id = ?`,
 		pseudo, pseudo, userId
 	);
-
 }
 //// Old
 // export async function deleteUserAndData(fastify: FastifyInstance, userId: number) {

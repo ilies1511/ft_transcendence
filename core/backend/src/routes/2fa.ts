@@ -2,11 +2,15 @@ import { type FastifyInstance, type FastifyPluginAsync } from "fastify";
 import QRCode from 'qrcode';
 import { Disable2FAResponse, disable2FA, init2FA, verify2FA } from "../functions/2fa.ts";
 import { type UserRow } from "../types/userTypes.ts";
+import { generate2FASchema, verify2FASchema, disable2FASchema } from "../schemas/2fa.ts";
 
 export const twoFaRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 	fastify.post(
 		'/api/2fa/generate',
-		{ preHandler: [fastify.auth] }, //Needed ?
+		{
+			schema: generate2FASchema
+		},
+		// { preHandler: [fastify.auth] }, //Needed ?
 		// // {
 		// // 	schema: {
 		// // 		tags: ['auth'],
@@ -67,18 +71,19 @@ export const twoFaRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) 
 	}>(
 		'/api/2fa/verify',
 		{
-			schema: {
-				tags: ['auth'],
-				body: {
-					type: 'object',
-					required: ['token'],
-					properties: { token: { type: 'string' } }
-				},
-				response: {
-					200: { type: 'object', properties: { success: { type: 'boolean' } } },
-					400: { type: 'object', properties: { error: { type: 'string' } } }
-				}
-			},
+			schema: verify2FASchema,
+			// schema: {
+			// 	tags: ['auth'],
+			// 	body: {
+			// 		type: 'object',
+			// 		required: ['token'],
+			// 		properties: { token: { type: 'string' } }
+			// 	},
+			// 	response: {
+			// 		200: { type: 'object', properties: { success: { type: 'boolean' } } },
+			// 		400: { type: 'object', properties: { error: { type: 'string' } } }
+			// 	}
+			// },
 			preHandler: [fastify.auth]
 		},
 		async (req, reply) => {
@@ -103,16 +108,17 @@ export const twoFaRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) 
 		'/api/2fa/disable',
 		{
 			preHandler: [fastify.auth],
-			schema: {
-				tags: ['auth'],
-				description: 'Disable 2FA for current user',
-				response: {
-					200: {
-						type: 'object',
-						properties: { success: { type: 'boolean' } }
-					}
-				}
-			}
+			// schema: {
+			// 	tags: ['auth'],
+			// 	description: 'Disable 2FA for current user',
+			// 	response: {
+			// 		200: {
+			// 			type: 'object',
+			// 			properties: { success: { type: 'boolean' } }
+			// 		}
+			// 	}
+			// }
+			schema: disable2FASchema
 		},
 		async (req, reply) => {
 			const userId = (req.user as any).id

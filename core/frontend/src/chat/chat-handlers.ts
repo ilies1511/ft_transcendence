@@ -1,16 +1,7 @@
 // src/features/chat/chat-handlers.ts
-import { showActiveChatPanel } from './chat-ui';
-import {
-	unreadCounts,
-	chatUserNames,
-	loadHistory,
-	saveUnreadCounts,
-	updateUnreadBadge,
-	updateMainBadge,
-	appendNewChatMessage,
-	saveToHistory,
-	appendSystemMessage
-} from './chat-state';
+import { showChat } from './chat-ui';
+import { unreadCounts, friendUsernames, loadHistory,
+	saveUnreadCounts, updateUnreadBadge, updateMainBadge } from './chat-state';
 import { chatState } from './chat-init';
 import { sendWs } from '../services/websocket';
 import type { LobbyInvite } from '../../src/game/game_shared/message_types.ts';

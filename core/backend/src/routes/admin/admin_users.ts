@@ -1,20 +1,20 @@
 // src/routes/users.ts
 import type { FastifyPluginAsync } from "fastify";
-import { createWriteStream } from 'fs';
-import { mkdir } from 'node:fs/promises';
-import path from 'path';
-import { pipeline } from 'stream/promises';
-import { fileURLToPath } from 'url';
+import bcrypt from "bcrypt";
+import { type UserWithFriends, type FriendRequestRow, type UserRow } from "../../types/userTypes.ts";
+import { error, info } from "console";
 import {
-	deleteUserById,
-	getUserById, setUserLive,
-	updateUser,
-	updateUserAvatar,
+	createUser, updateUser,
 	type UpdateUserData,
-	getUserId
-} from "../functions/user.ts";
-import { type UserRow } from "../types/userTypes.ts";
-import { uploadAvatarSchema } from "../schemas/users.ts";
+	getUserById, setUserLive, deleteUserById,
+	updateUserAvatar
+} from "../../functions/user.ts";
+import { promises as fs } from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import { pipeline } from 'stream/promises'
+import { createWriteStream } from 'fs'
+import { mkdir } from 'node:fs/promises'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -69,7 +69,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 
 	//All
 	fastify.get<{
-		Reply: Array<Pick<UserRow, "id" | "username" | "nickname" | "email" | "live" | "avatar" | "created_at" | "is_oauth">>;
+		Reply: Array<Pick<UserRow, "id" | "username" | "nickname" | "email" | "live" | "avatar" | "created_at">>;
 	}>(
 		"/api/users",
 		{
@@ -87,7 +87,6 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 								live: { type: "integer" },
 								avatar: { type: "string" },
 								created_at: { type: "integer" },
-								is_oauth: { type: "integer" }
 							},
 						},
 					},
@@ -96,7 +95,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 		},
 		async () => {
 			return fastify.db.all(
-				"SELECT id, username, nickname, live, email, avatar, created_at, is_oauth FROM users"
+				"SELECT id, username, nickname, live, email, avatar, created_at FROM users"
 			);
 		}
 	);
@@ -107,7 +106,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 	fastify.get<{
 		Params: { id: number };
 		Reply:
-		| Pick<UserRow, "id" | "username" | "nickname" | "email" | "live" | "avatar" | "created_at" | "is_oauth">
+		| Pick<UserRow, "id" | "username" | "nickname" | "email" | "live" | "avatar" | "created_at">
 		| { error: string };
 	}>(
 		"/api/users/:id",
@@ -129,7 +128,6 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 							live: { type: "integer" },
 							avatar: { type: "string" },
 							created_at: { type: "integer" },
-							is_oauth: { type: "integer" }
 						},
 					},
 					404: {
@@ -291,13 +289,29 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 	// 		reply.send({ success: true });
 	// 	}
 	// )
-	fastify.post(
-		'/api/me/avatar',
+	fastify.post<{
+		Params: { id: number }
+	}>(
+		'/api/users/:id/avatar',
 		{
-			schema: uploadAvatarSchema
+			schema: {
+				params: {
+					type: 'object',
+					required: ['id'],
+					properties: { id: { type: 'integer' } }
+				},
+				response: {
+					200: {
+						type: 'object',
+						properties: { avatarUrl: { type: 'string' } }
+					},
+					400: { type: 'object', properties: { error: { type: 'string' } } },
+					404: { type: 'object', properties: { error: { type: 'string' } } }
+				}
+			}
 		},
 		async (request, reply) => {
-			const userId = await getUserId(request);
+			const userId = request.params.id
 
 			const data = await request.file({ limits: { fieldNameSize: 100 } })
 			if (!data) {
@@ -306,6 +320,41 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 			if (!data.filename.toLowerCase().endsWith('.png')) {
 				return reply.code(400).send({ error: 'Only .png allowed' })
 			}
+			// const filename = "NewUploadedAvatar.png";
+
+			// const filename = "NewUploadedAvatar" + `_${userId}`;
+
+			// const destPath = path.join(__dirname, '../../../frontend/public/', filename);
+			// await pipeline(data.file, createWriteStream(destPath));
+
+			// const destPath2 = path.join(process.env.PUBLIC_DIR
+			// 		?? '../../../frontend/public/', process.env.AVATAR_SUBDIR ?? 'avatars');
+			// // console.log('destPath2:' + destPath2);
+			// // console.log('destPath2:' + destPath2);
+			// // console.log('destPath2:' + destPath2);
+			// // console.log('destPath2:' + destPath2);
+			// const PUBLIC_DIR = process.env.PUBLIC_DIR;
+			// const AVATAR_SUBDIR = process.env.AVATAR_SUBDIR;
+
+			// const avatarDir = path.join(PUBLIC_DIR!, AVATAR_SUBDIR!)
+			// await fs.promises.mkdir(avatarDir, { recursive: true })
+
+			// // Sicheren Dateinamen wählen (nur Dateiname, keine Pfade)
+			// // const filename = `avatar_${userId}.png`
+			// // const filename = "NewUploadedAvatar" + `_${userId}`;
+			// const destPath = path.join(avatarDir, filename)
+
+			// await pipeline(data.file, createWriteStream(destPath));
+			// // await pipeline(data.file, createWriteStream(destPath2));
+			// const avatar = `../../${filename}`
+			// // const ok = await updateUserAvatar(fastify, userId, avatar)
+			// const ok = await updateUserAvatar(fastify, userId, filename)
+			// if (!ok) {
+			// 	return reply.code(404).send({ error: 'User not found' })
+			// }
+			// return reply.code(200).send({ avatar })
+
+
 			const PUBLIC_DIR = process.env.PUBLIC_DIR!;
 			const AVATAR_SUBDIR = process.env.AVATAR_SUBDIR!;
 
