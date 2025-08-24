@@ -62,7 +62,7 @@ const template = /*html*/`
 				<!-- In-Game/In-Lobby Actions -->
 				<div id="game-actions" class="hidden flex gap-2">
 					<button id="btn-start_tournament" class="hidden rounded bg-green-500 px-4 py-2 text-white cursor-pointer">Start Tournament</button>
-					<button id="btn-add-local-player" class="hidden rounded bg-blue-400 px-4 py-2 text-white">Add Local Player</button>
+					<button id="btn-add-local-player" class="hidden rounded bg-blue-400 px-4 py-2 text-white cursor-pointer">Add Local Player</button>
 					<button id="btn-leave" class="rounded bg-[#D22B2B] px-4 py-2 text-white cursor-pointer">Leave</button>
 				</div>
 			</div>
@@ -348,7 +348,7 @@ function setupGameModes(root: HTMLElement): void {
 				}
 			}
 
-			// --- Add Local Player visibility ---
+			// --- Add Local Player visibility + wiring ---
 			{
 				const addBtn = document.getElementById('btn-add-local-player');
 
@@ -361,20 +361,34 @@ function setupGameModes(root: HTMLElement): void {
 						// Game has started -> ensure hidden and clear pending flag
 						addBtn?.classList.add('hidden');
 						pendingCustomLobby = false;
-					} else if (isCustomLobby(game)) {
 						// In a custom lobby and game not started yet -> show
+						// clear wiring when game starts
+						wiredLocalPlayerForGameId = null;
+					} else if (isCustomLobby(game) || isMatchmaking(game)) {
 						addBtn?.classList.remove('hidden');
+
+						// Wire the button exactly once per game_id
+						if (wiredLocalPlayerForGameId !== game.game_id) {
+							try {
+								wireLocalPlayerButton(game);
+								wiredLocalPlayerForGameId = game.game_id;
+							} catch (e) {
+								console.warn('Failed to wire Add Local Player button:', e);
+							}
+						}
 					} else {
 						// Not a custom lobby (matchmaking/tournament lobbies) -> hide
 						addBtn?.classList.add('hidden');
 					}
 				} else {
-					// No game yet: only show if we're in the middle of creating a custom lobby
+					// No game yet
 					if (pendingCustomLobby) {
 						addBtn?.classList.remove('hidden');
 					} else {
 						addBtn?.classList.add('hidden');
 					}
+					// clear wiring when no game
+					wiredLocalPlayerForGameId = null;
 				}
 			}
 		}, 200);
@@ -411,6 +425,8 @@ function setupGameModes(root: HTMLElement): void {
 
 	// Keep "Add local player" visible while we're creating a custom lobby
 	let pendingCustomLobby = false;
+	// Track which game_id we've wired the Add Local Player button for
+	let wiredLocalPlayerForGameId: number | null = null
 
 	// Helper to normalize lobby type checks
 	function isCustomLobby(game: any): boolean {
@@ -418,6 +434,12 @@ function setupGameModes(root: HTMLElement): void {
 		// support number enums and strings; accept COMMON custom names
 		const name = typeof t === 'number' ? (LobbyType as any)[t] : String(t).toUpperCase();
 		return name === 'CUSTOM' || name === 'CUSTOM_LOBBY' || name === 'LOBBY';
+	}
+
+	function isMatchmaking(game: any): boolean {
+		const t = game?.lobby_type;
+		const name = typeof t === 'number' ? (LobbyType as any)[t] : String(t).toUpperCase();
+		return name === 'MATCHMAKING';
 	}
 
 	const run = async (mode: 'match' | 'lobby' | 'tournament' | 'reconnect' | 'leave'): Promise<void> => {
@@ -433,6 +455,7 @@ function setupGameModes(root: HTMLElement): void {
 			console.log('leave fn');
 			stopUiUpdater();
 			pendingCustomLobby = false;
+			wiredLocalPlayerForGameId = null;
 			await attempt_reconnect(container, user_id, true);
 			(globalThis as any).game?.leave();
 			(globalThis as any).tournament?.leave();
@@ -444,6 +467,7 @@ function setupGameModes(root: HTMLElement): void {
 		switch (mode) {
 			case 'match':
 				pendingCustomLobby = false;
+				wiredLocalPlayerForGameId = null;
 				// Hide map selector immediately to avoid flash
 				mapSelectorDetails.classList.add('hidden');
 				showGameActions();
@@ -452,6 +476,7 @@ function setupGameModes(root: HTMLElement): void {
 				break;
 			case 'tournament':
 				pendingCustomLobby = false;
+				wiredLocalPlayerForGameId = null;
 				mapSelectorDetails.classList.add('hidden');
 				showGameActions();
 				await test_tournament(container, user_id, selectedMap);
@@ -460,6 +485,7 @@ function setupGameModes(root: HTMLElement): void {
 			case 'lobby':
 				// Show button immediately while lobby is being created
 				pendingCustomLobby = true;
+				wiredLocalPlayerForGameId = null;
 				mapSelectorDetails.classList.add('hidden');
 				showGameActions();
 				await create_custom_lobby(user_id, container, selectedMap);
@@ -467,6 +493,7 @@ function setupGameModes(root: HTMLElement): void {
 				break;
 			case 'reconnect':
 				pendingCustomLobby = false;
+				wiredLocalPlayerForGameId = null;
 				await attempt_reconnect(container, user_id);
 				if ((globalThis as any).game || (globalThis as any).tournament) {
 					// Hide selector if we reconnected into a lobby/game
