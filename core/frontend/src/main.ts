@@ -7,7 +7,7 @@ import { updateDot } from './utils/statusDot';
 import type { FriendStatusMsg } from './types/types.ts';
 import { refreshMenu } from './ui/menu';
 import { refreshHeader } from './ui/header';
-import { initFriendRequestWs, destroyFriendRequestWs } from './friends/friend-ws'
+import { initFriendRequestWs, destroyFriendRequestWs } from './services/friend-ws.ts'
 import { getSession, clearSession } from './services/session';
 
 const root = document.querySelector<HTMLElement>('#app')!;

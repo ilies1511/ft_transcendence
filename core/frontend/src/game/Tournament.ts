@@ -159,7 +159,9 @@ export class Tournament {
 			if (this.finished) {
 				return ;
 			}
-			const route: string = `ws://localhost:5173/tournament/${this.tournament_id}`;
+			const wsBase =
+				(location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
+			const route: string = `${wsBase}/tournament/${this.tournament_id}`;
 			this._socket = new WebSocket(route)
 			this._socket.binaryType = "arraybuffer";
 
@@ -442,7 +444,7 @@ export class Tournament {
 						p.id === this.user_id ? ' (you)' : ''
 						}</li>`
 			).join('');
-	
+
 		container.innerHTML = `
 			<div id="tournament-player-list">
 				<h3>Tournament Players</h3>

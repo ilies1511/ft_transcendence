@@ -84,6 +84,7 @@ globalThis.tournament = undefined;
 declare global { var last_invite: LobbyInvite | undefined }
 globalThis.game = undefined;
 
+const user = await getSession();
 
 function wireLocalPlayerButton(game: Game): void {
 	const btn = document.getElementById('btn-add-local-player') as HTMLButtonElement | null
@@ -182,6 +183,8 @@ function setupMapSelector(root: HTMLElement) {
 	};
 }
 
+
+
 async function test_enter_matchmaking(
 	container: HTMLElement,
 	user_id: number,
@@ -190,8 +193,9 @@ async function test_enter_matchmaking(
 	const matchmaking_options: MatchmakingOptions = {
 		map_name,
 		ai_count: 0,
-		display_name: `display_name_${user_id}`,
+		display_name: user!.nickname,
 	}
+
 
 	if (game !== undefined) {
 		game.leave()
@@ -229,7 +233,7 @@ async function test_tournament(
 	map_name: string, // <- pass selected map
 ): Promise<void> {
 
-	const display_name: string = `placeholder_display_name_${user_id}`;
+	const display_name: string = user!.nickname;
 	const tournament_password = generate_password();
 
 	const tournament: Tournament | undefined = await Tournament.create_tournament(
