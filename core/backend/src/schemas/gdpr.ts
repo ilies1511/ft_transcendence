@@ -183,3 +183,65 @@ export const mePatchSchema = {
 	},
 } as const
 // END -- /api/me PATCH
+
+
+
+// BEGIN -- /api/me/export
+
+export const ogExportSchema = {
+	tags: ['gdpr'],
+	querystring: {
+		type: 'object',
+		properties: {
+			format: { type: 'string', enum: ['json', 'json.gz', 'zip'], default: 'json' },
+			includeMedia: { type: 'boolean', default: false }
+		}
+	},
+	response: {
+		200: {
+			content: {
+				'application/json': { schema: { type: 'string' } },
+				'application/gzip': { schema: { type: 'string', format: 'binary' } },
+				'application/zip': { schema: { type: 'string', format: 'binary' } }
+			}
+		}
+	}
+}
+
+
+export const MeExportQuerySchema = {
+	type: 'object',
+	// additionalProperties: false,
+	properties: {
+		// format: { type: 'string', enum: ['json', 'json.gz', 'zip'], default: 'json' },
+		format: { type: 'string', enum: ['json', 'json.gz', 'zip'], default: 'json' },
+		includeMedia: { type: 'boolean', default: false },
+	},
+	allOf: [
+		{
+			if: { properties: { includeMedia: { const: true } } },
+			then: { properties: { format: { const: 'zip' } } },
+		},
+	],
+} as const
+
+export const meExportSchema = {
+	tags: ['gdpr'],
+	summary: 'Export your data (JSON, JSON.GZ, ZIP)',
+	querystring: MeExportQuerySchema,
+	response: {
+		200: {
+			content: {
+				'application/json': { schema: { type: 'string' } },
+				'application/gzip': { schema: { type: 'string', format: 'binary' } },
+				'application/zip': { schema: { type: 'string', format: 'binary' } },
+			},
+		},
+		400: ErrorResponse,
+		401: ErrorResponse,
+	},
+} as const
+
+// END -- /api/me/export
+
+

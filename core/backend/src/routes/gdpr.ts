@@ -9,7 +9,7 @@ import fs from "fs";
 import { fileURLToPath } from 'node:url'
 import { extractFilename, resolveAvatarFsPath, resolvePublicPath } from '../functions/gdpr.ts';
 import { getUserId } from '../functions/user.ts';
-import { anonymizeMeSchema, meDataSchema, meDeleteSchema, mePatchSchema } from '../schemas/gdpr.ts';
+import { anonymizeMeSchema, meDataSchema, meDeleteSchema, meExportSchema, mePatchSchema, ogExportSchema } from '../schemas/gdpr.ts';
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -138,31 +138,11 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 
 	fastify.get('/api/me/export',
 		{
-			preHandler: [fastify.auth],
-			schema: {
-				tags: ['gdpr'],
-				querystring: {
-					type: 'object',
-					properties: {
-						format: { type: 'string', enum: ['json', 'json.gz', 'zip'], default: 'json' },
-						// includeOtherUsers: { type: 'boolean', default: false },
-						includeMedia: { type: 'boolean', default: false }
-					}
-				},
-				response: {
-					200: {
-						content: {
-							'application/json': { schema: { type: 'string' } },
-							'application/gzip': { schema: { type: 'string', format: 'binary' } },
-							'application/zip': { schema: { type: 'string', format: 'binary' } }
-						}
-						// type: 'string'
-					}
-				}
-			}
+			// schema: meExportSchema
+			schema: ogExportSchema
 		},
 		async (req, reply) => {
-			const userId = (req.user as any).id
+			const userId = await getUserId(req);
 			const { format = 'json', includeMedia = false } = req.query as any
 
 			if (format !== 'zip' && includeMedia) {
