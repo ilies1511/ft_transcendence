@@ -190,6 +190,9 @@ export class Tournament {
 			console.log(`Warning: client ${client_id} tried to start tournament he had no participation of (tournament ${this._id}`);
 			return ('Not Found');
 		}
+		if (this._started) {
+			return ('Allready started');
+		}
 		//if (this.
 		console.log("++++++++++++++++\n");
 		console.log("Starting tournament..");
