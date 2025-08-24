@@ -1,4 +1,4 @@
-import { ErrorResponse, OkMessageResponse } from "./shared.ts"
+import { ErrorResponse, OkMessageResponse, EmptyBodySchema } from "./shared.ts"
 
 export const MeDataResponseSchema = {
 	type: 'object',
@@ -19,5 +19,14 @@ export const meDataSchema = {
 	response: {
 		200: MeDataResponseSchema,
 		404: ErrorResponse
+	},
+} as const
+
+export const anonymizeMeSchema = {
+	tags: ['gdpr'],
+	body: EmptyBodySchema,
+	response: {
+		200: OkMessageResponse,
+		401: ErrorResponse,
 	},
 } as const
