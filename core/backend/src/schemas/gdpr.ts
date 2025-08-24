@@ -51,5 +51,135 @@ export const meDeleteSchema = {
 		409: ErrorResponse,
 	},
 }
-
 // END -- /api/me DELETE
+// schema: {
+// 	tags: ['gdpr'],
+// 	body: {
+// 		type: 'object',
+// 		minProperties: 1,
+// 		properties: {
+// 			username: { type: 'string', minLength: 1 },
+// 			nickname: { type: 'string', minLength: 1 },
+// 			email: { type: 'string', format: 'email' },
+// 			password: { type: 'string', minLength: 1 },
+// 			currentPassword: { type: 'string', minLength: 1 }
+// 		},
+// 		allOf: [
+// 			{ if: { required: ['password'] }, then: { required: ['currentPassword'] } },
+// 			{ if: { required: ['currentPassword'] }, then: { required: ['password'] } }
+// 		]
+// 	},
+// 	response: {
+// 		200: { type: 'object', properties: { ok: { type: 'boolean' } } },
+// 		400: { type: 'object', properties: { error: { type: 'string' } } },
+// 		401: { type: 'object', properties: { error: { type: 'string' } } },
+// 		409: { type: 'object', properties: { error: { type: 'string' } } },
+// 		500: { type: 'object', properties: { error: { type: 'string' } } }
+// 	}
+// }
+
+// BEGIN -- /api/me PATCH
+// schema: {
+// 	tags: ['gdpr'],
+// 	body: {
+// 		type: 'object',
+// 		minProperties: 1,
+// 		properties: {
+// 			username: { type: 'string', minLength: 1 },
+// 			nickname: { type: 'string', minLength: 1 },
+// 			email: { type: 'string', format: 'email' },
+// 			password: { type: 'string', minLength: 1 },
+// 			currentPassword: { type: 'string', minLength: 1 }
+// 		},
+// 		allOf: [
+// 			{ if: { required: ['password'] }, then: { required: ['currentPassword'] } },
+// 			{ if: { required: ['currentPassword'] }, then: { required: ['password'] } }
+// 		]
+// 	},
+// 	response: {
+// 		200: { type: 'object', properties: { ok: { type: 'boolean' } } },
+// 		400: { type: 'object', properties: { error: { type: 'string' } } },
+// 		401: { type: 'object', properties: { error: { type: 'string' } } },
+// 		409: { type: 'object', properties: { error: { type: 'string' } } },
+// 		500: { type: 'object', properties: { error: { type: 'string' } } }
+// 	}
+// }
+
+export const old_PatchBodySchema = {
+	type: 'object',
+	minProperties: 1,
+	properties: {
+		username: { type: 'string', minLength: 1 },
+		nickname: { type: 'string', minLength: 1 },
+		email: { type: 'string', format: 'email' },
+		password: { type: 'string', minLength: 1 },
+		currentPassword: { type: 'string', minLength: 1 }
+	},
+	allOf: [
+		{ if: { required: ['password'] }, then: { required: ['currentPassword'] } },
+		{ if: { required: ['currentPassword'] }, then: { required: ['password'] } }
+	]
+}
+
+export const old_mePatchSchema = {
+	tags: ['gdpr'],
+	body: old_PatchBodySchema,
+	response: {
+		200: { type: 'object', properties: { ok: { type: 'boolean' } } },
+		401: ErrorResponse,
+		409: ErrorResponse,
+		500: ErrorResponse
+	},
+}
+
+// PATCH /api/me
+export const PatchBodySchema = {
+	type: 'object',
+	additionalProperties: false,
+	minProperties: 1,
+	properties: {
+		username: {
+			type: 'string',
+			minLength: 3,
+			maxLength: 240,
+			pattern: '^[a-zA-Z0-9_]+$',
+			transform: ['trim'],
+		},
+		nickname: {
+			type: 'string',
+			minLength: 1,
+			maxLength: 240,
+			transform: ['trim'],
+		},
+		email: {
+			type: 'string',
+			format: 'email',
+			maxLength: 254,
+			transform: ['trim', 'toLowerCase'],
+		},
+		password: { type: 'string', minLength: 8, maxLength: 128 },
+		currentPassword: { type: 'string', minLength: 8, maxLength: 128 },
+	},
+	allOf: [
+		{ if: { required: ['password'] }, then: { required: ['currentPassword'] } },
+		{ if: { required: ['currentPassword'] }, then: { required: ['password'] } },
+	],
+} as const
+
+export const mePatchSchema = {
+	tags: ['gdpr'],
+	body: PatchBodySchema,
+	response: {
+		200: {
+			type: 'object',
+			additionalProperties: false,
+			required: ['ok'],
+			properties: { ok: { type: 'boolean', const: true } },
+		},
+		400: ErrorResponse,
+		401: ErrorResponse,
+		409: ErrorResponse,
+		500: ErrorResponse,
+	},
+} as const
+// END -- /api/me PATCH

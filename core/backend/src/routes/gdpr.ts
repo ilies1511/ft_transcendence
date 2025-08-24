@@ -9,7 +9,7 @@ import fs from "fs";
 import { fileURLToPath } from 'node:url'
 import { extractFilename, resolveAvatarFsPath, resolvePublicPath } from '../functions/gdpr.ts';
 import { getUserId } from '../functions/user.ts';
-import { anonymizeMeSchema, meDataSchema, meDeleteSchema } from '../schemas/gdpr.ts';
+import { anonymizeMeSchema, meDataSchema, meDeleteSchema, mePatchSchema } from '../schemas/gdpr.ts';
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -92,67 +92,10 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 	}>(
 		'/api/me',
 		{
-			// schema: {
-			// 	tags: ['gdpr'],
-			// 	body: {
-			// 		type: 'object',
-			// 		minProperties: 1,
-			// 		properties: {
-			// 			username: { type: 'string', minLength: 1 },
-			// 			nickname: { type: 'string', minLength: 1 },
-			// 			email: { type: 'string', format: 'email' },
-			// 			password: { type: 'string', minLength: 8 },
-			// 			currentPassword: { type: 'string', minLength: 8 }
-
-			// 		},
-			// 		allOf: [
-			// 			{
-			// 				if: { required: ['password'] },
-			// 				then: { required: ['currentPassword'] }
-			// 			}
-			// 		]
-			// 	},
-			// 	response: {
-			// 		200: { type: 'object', properties: { ok: { type: 'boolean' } } },
-			// 		400: { type: 'object', properties: { error: { type: 'string' } } }
-			// 	}
-			// }
-			preHandler: [fastify.auth],
-			schema: {
-				tags: ['gdpr'],
-				body: {
-					type: 'object',
-					minProperties: 1,
-					properties: {
-						username: { type: 'string', minLength: 1 },
-						nickname: { type: 'string', minLength: 1 },
-						email: { type: 'string', format: 'email' },
-						password: { type: 'string', minLength: 1 },
-						currentPassword: { type: 'string', minLength: 1 }
-					},
-					allOf: [
-						{ if: { required: ['password'] }, then: { required: ['currentPassword'] } },
-						{ if: { required: ['currentPassword'] }, then: { required: ['password'] } }
-					]
-				},
-				response: {
-					200: { type: 'object', properties: { ok: { type: 'boolean' } } },
-					400: { type: 'object', properties: { error: { type: 'string' } } },
-					401: { type: 'object', properties: { error: { type: 'string' } } },
-					409: { type: 'object', properties: { error: { type: 'string' } } },
-					500: { type: 'object', properties: { error: { type: 'string' } } }
-				}
-			}
-
+			schema: mePatchSchema
 		},
-		// async (req, reply) => {
-		// 	const userId = (req.user as any).id
-		// 	const ok = await updateMyProfile(fastify, userId, req.body)
-		// 	if (!ok) return reply.code(400).send({ error: 'No valid fields to update' })
-		// 	return { ok: true }
-		// }
 		async (req, reply) => {
-			const userId = (req.user as any).id
+			const userId = await getUserId(req);
 			try {
 				const ok = await updateMyProfile(fastify, userId, req.body)
 				if (!ok) return reply.code(400).send({ error: 'Nothing to update or user not found.' })
