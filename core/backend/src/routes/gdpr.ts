@@ -9,7 +9,7 @@ import fs from "fs";
 import { fileURLToPath } from 'node:url'
 import { extractFilename, resolveAvatarFsPath, resolvePublicPath } from '../functions/gdpr.ts';
 import { getUserId } from '../functions/user.ts';
-import { anonymizeMeSchema, meDataSchema } from '../schemas/gdpr.ts';
+import { anonymizeMeSchema, meDataSchema, meDeleteSchema } from '../schemas/gdpr.ts';
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -60,20 +60,12 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 
 	fastify.delete('/api/me',
 		{
-			preHandler: [fastify.auth],
-			schema: {
-				tags: ['gdpr'],
-				response: {
-					200: { type: 'object', properties: { message: { type: 'string' } } },
-					404: { type: 'object', properties: { error: { type: 'string' } } },
-					409: { type: 'object', properties: { error: { type: 'string' } } }
-				}
-			}
+			schema: meDeleteSchema
 		},
 		async (req, reply) => {
-			const userId = (req.user as any).id
+			// const userId = (req.user as any).id
+			const userId = await getUserId(req);
 			try {
-				// await deleteUserAndData(fastify, userId)
 				await deleteUserAndData(fastify, userId);
 				reply.clearCookie('token', {
 					path: '/',
@@ -81,7 +73,6 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 					sameSite: 'lax',
 					secure: false
 				})
-				// await deleteUserAndData(fastify, userId);
 				return reply.send({ message: 'Your account and all associated data have been permanently deleted.' })
 			} catch (error: any) {
 				if (error?.statusCode) {

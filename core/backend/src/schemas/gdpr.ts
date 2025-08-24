@@ -30,3 +30,26 @@ export const anonymizeMeSchema = {
 		401: ErrorResponse,
 	},
 } as const
+
+
+// BEGIN -- /api/me DELETE
+// schema: {
+// 	tags: ['gdpr'],
+// 	response: {
+// 		200: { type: 'object', properties: { message: { type: 'string' } } },
+// 		404: { type: 'object', properties: { error: { type: 'string' } } },
+// 		409: { type: 'object', properties: { error: { type: 'string' } } }
+// 	}
+// }
+
+export const meDeleteSchema = {
+	tags: ['gdpr'],
+	body: EmptyBodySchema,
+	response: {
+		200: OkMessageResponse,
+		401: ErrorResponse,
+		409: ErrorResponse,
+	},
+}
+
+// END -- /api/me DELETE
