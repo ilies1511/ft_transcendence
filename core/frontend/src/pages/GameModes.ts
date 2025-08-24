@@ -258,6 +258,27 @@ function setupGameModes(root: HTMLElement): void {
 
 	const mapSelector = setupMapSelector(root);
 
+	// --- Disable Tournament button for >2-player maps ---
+	const updateTournamentButton = () => {
+		const selectedMap = mapSelector.getSelected();
+		const mapInfo = MAPS.find(m => m.id === selectedMap);
+		if (!btnCreateTournament) return;
+		if (mapInfo && mapInfo.players > 2) {
+			btnCreateTournament.disabled = true;
+			btnCreateTournament.title = "Tournament mode only supports 2-player maps";
+			btnCreateTournament.classList.add('opacity-50', 'cursor-not-allowed');
+		} else {
+			btnCreateTournament.disabled = false;
+			btnCreateTournament.title = "";
+			btnCreateTournament.classList.remove('opacity-50', 'cursor-not-allowed');
+		}
+	};
+	updateTournamentButton();
+	// Listen for map changes
+	const grid = root.querySelector<HTMLElement>('#map-grid')!;
+	grid.addEventListener('click', () => setTimeout(updateTournamentButton, 0));
+	// --- End disable logic ---
+
 	const showGameActions = () => {
 		initialActions.classList.add('hidden');
 		gameActions.classList.remove('hidden');
