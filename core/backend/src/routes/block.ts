@@ -39,25 +39,29 @@ export const blockRoutes: FastifyPluginAsync = async (fastify) => {
 
 	// Unblock
 	fastify.delete<{
-		Params: { id: number; targetId: number }
+		// Params: { id: number; targetId: number }
+		Params: { targetId: number }
 		Reply: { message: string } | { error: string }
 	}>(
-		'/api/users/:id/block/:targetId',
+		// '/api/users/:id/block/:targetId',
+		'/api/me/block/:targetId',
 		{
 			schema: unblockUserSchema
 		},
 		async (req, reply) => {
-			const { id, targetId } = req.params
-			const authUserId = (req.user as any).id
+			const { targetId } = req.params
+			const authUserId = await getUserId(req);
 
-			if (req.params.id !== authUserId) {
-				return reply.code(403).send({ error: 'Forbidden' })
-			}
-			if (id === targetId) {
+			// if (req.params.id !== authUserId) {
+			// 	return reply.code(403).send({ error: 'Forbidden' })
+			// }
+			if (authUserId === targetId) {
 				return reply.code(400).send({ error: "Can't unblock yourself" })
 			}
-			const ok = await unblockUser(fastify, id, targetId)
-			if (!ok) return reply.code(404).send({ error: 'No such block' })
+			const ok = await unblockUser(fastify, authUserId, targetId)
+			if (!ok) {
+				return reply.code(404).send({ error: 'No such block' })
+			}
 			return reply.send({ message: 'User unblocked' })
 		}
 	)
