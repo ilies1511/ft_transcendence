@@ -7,6 +7,7 @@ import { type UserStats } from '../types/userTypes.ts'
 import { type NewMatch } from '../functions/match.ts'
 import { createMatch } from '../functions/match.ts'
 import { getUserId } from '../functions/user.ts'
+import { getMatchParticipantsSchema } from '../schemas/match.ts'
 // END -- TESTING
 
 export const matchRoutes: FastifyPluginAsync = async fastify => {
@@ -31,21 +32,24 @@ export const matchRoutes: FastifyPluginAsync = async fastify => {
 	)
 
 	fastify.get<{
-		Params: { id: number }
+		// Params: { id: number }
 		Reply: Array<{
 			match: { id: number; mode: number; duration: number; created_at: number }
 			score: number
 			result: 'win' | 'loss' | 'draw'
 		}>
 	}>(
-		'/api/users/:id/matches',
+		// '/api/users/:id/matches',
+		'/api/me/matches',
 		{
 			schema: {
 				tags: ['match'],
 			}
 		},
 		async (request) => {
-			return getMatchHistory(fastify, request.params.id)
+			const authUserId = await getUserId(request);
+			// return getMatchHistory(fastify, request.params.id)
+			return getMatchHistory(fastify, authUserId);
 		}
 	)
 
@@ -61,31 +65,7 @@ export const matchRoutes: FastifyPluginAsync = async fastify => {
 	}>(
 		'/api/matches/:matchId/participants',
 		{
-			schema: {
-				description: 'Alle Teilnehmer eines Matches mit Score und Ergebnis',
-				tags: ['match'],
-				params: {
-					type: 'object',
-					required: ['matchId'],
-					properties: {
-						matchId: { type: 'integer' }
-					}
-				},
-				response: {
-					200: {
-						type: 'array',
-						items: {
-							type: 'object',
-							properties: {
-								user_id: { type: 'integer' },
-								username: { type: 'string' },
-								score: { type: 'integer' },
-								result: { type: 'string', enum: ['win', 'loss', 'draw'] }
-							}
-						}
-					}
-				}
-			}
+			schema: getMatchParticipantsSchema
 		},
 		async (request, reply) => {
 			const participants =
