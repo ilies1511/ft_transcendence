@@ -138,8 +138,8 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 
 	fastify.get('/api/me/export',
 		{
-			// schema: meExportSchema
-			schema: ogExportSchema
+			schema: meExportSchema
+			// schema: ogExportSchema
 		},
 		async (req, reply) => {
 			const userId = await getUserId(req);

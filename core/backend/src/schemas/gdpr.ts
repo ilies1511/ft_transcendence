@@ -208,21 +208,19 @@ export const ogExportSchema = {
 	}
 }
 
-
 export const MeExportQuerySchema = {
 	type: 'object',
-	// additionalProperties: false,
+	additionalProperties: false,
 	properties: {
-		// format: { type: 'string', enum: ['json', 'json.gz', 'zip'], default: 'json' },
 		format: { type: 'string', enum: ['json', 'json.gz', 'zip'], default: 'json' },
 		includeMedia: { type: 'boolean', default: false },
 	},
-	allOf: [
-		{
-			if: { properties: { includeMedia: { const: true } } },
-			then: { properties: { format: { const: 'zip' } } },
-		},
-	],
+	// allOf: [
+	// 	{
+	// 		if: { properties: { includeMedia: { const: true } } },
+	// 		then: { properties: { format: { const: 'zip' } } },
+	// 	},
+	// ],
 } as const
 
 export const meExportSchema = {
