@@ -24,7 +24,7 @@ import { LobbyType } from '../game/game_shared/message_types.ts'
 
 import { getSession } from '../services/session'
 
-const template = /*html*/`
+const template =`
 	<div class="w-full max-w-5xl mx-auto p-6 space-y-6">
 		<!-- controls -->
 		<div class="flex flex-col gap-4">
@@ -33,10 +33,10 @@ const template = /*html*/`
 				<summary class="cursor-pointer select-none px-4 py-3 text-white flex items-center justify-between">
 					<div class="flex items-center gap-2">
 						<span class="font-semibold">Choose Map</span>
-						<span class="opacity-70">(Selected: <span id="selected-map-label" class="underline">default</span>)</span>
+						<span class="opacity-70">(Selected: <span id="selected-map-label" class="underline">default_3m_30p</span>)</span>
 					</div>
 				</summary>
-				<div id="map-grid" class="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+				<div id="map-grid" class="p-4 space-y-6"></div>
 			</details>
 
 			<div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
@@ -62,7 +62,7 @@ const template = /*html*/`
 				<!-- In-Game/In-Lobby Actions -->
 				<div id="game-actions" class="hidden flex gap-2">
 					<button id="btn-start_tournament" class="hidden rounded bg-green-500 px-4 py-2 text-white cursor-pointer">Start Tournament</button>
-					<button id="btn-add-local-player" class="hidden rounded bg-blue-400 px-4 py-2 text-white">Add Local Player</button>
+					<button id="btn-add-local-player" class="hidden rounded bg-blue-400 px-4 py-2 text-white cursor-pointer">Add Local Player</button>
 					<button id="btn-leave" class="rounded bg-[#D22B2B] px-4 py-2 text-white cursor-pointer">Leave</button>
 				</div>
 			</div>
@@ -103,36 +103,123 @@ function wireLocalPlayerButton(game: Game): void {
 
 // Map metadata and selector wiring
 type MapInfo = { id: string; name: string; players: number };
-const MAPS: MapInfo[] = [
-	{ id: 'default',        name: 'Default',          players: 2 },
-	{ id: 'BigPlus2',       name: 'Big Plus (2P)',    players: 2 },
-	{ id: 'BigPlus4',       name: 'Big Plus (4P)',    players: 4 },
-	{ id: 'Diamond2',       name: 'Diamond (2P)',     players: 2 },
-	{ id: 'OctaPong2',      name: 'Octa Pong (2P)',   players: 2 },
-	{ id: 'OctaPong4',      name: 'Octa Pong (4P)',   players: 4 },
-	{ id: 'SimpleSquare2',  name: 'Simple Square (2P)', players: 2 },
-	{ id: 'SimpleSquare4',  name: 'Simple Square (4P)', players: 4 },
+
+type MapGroup = {
+    name: string;
+    maps: MapInfo[];
+};
+
+// Exposed API for the selector
+type MapSelectorApi = {
+    getSelected: () => string;
+};
+
+// Persist selected map between visits
+const MAP_STORAGE_KEY = 'ftt:selectedMap';
+
+const MAP_GROUPS: MapGroup[] = [
+    {
+        name: 'Default',
+        maps: [
+            { id: 'default', name: 'Standard', players: 2 },
+            { id: 'default_3m_30p', name: '3m/30HP', players: 2 },
+            { id: 'default_10m_100p', name: '10m/100HP', players: 2 },
+        ],
+    },
+    {
+        name: 'Big Plus',
+        maps: [
+            { id: 'BigPlus2', name: '2 Players', players: 2 },
+            { id: 'BigPlus2_3m_30p', name: '2 Players (3m/30HP)', players: 2 },
+            { id: 'BigPlus2_10m_100p', name: '2 Players (10m/100HP)', players: 2 },
+            { id: 'BigPlus4', name: '4 Players', players: 4 },
+            { id: 'BigPlus4_3m_30p', name: '4 Players (3m/30HP)', players: 4 },
+            { id: 'BigPlus4_10m_100p', name: '4 Players (10m/100HP)', players: 4 },
+        ],
+    },
+    {
+        name: 'Diamond',
+        maps: [
+            { id: 'Diamond2', name: '2 Players', players: 2 },
+            { id: 'Diamond2_3m_30p', name: '2 Players (3m/30HP)', players: 2 },
+            { id: 'Diamond2_10m_100p', name: '2 Players (10m/100HP)', players: 2 },
+        ],
+    },
+    {
+        name: 'Octa Pong',
+        maps: [
+            { id: 'OctaPong2', name: '2 Players', players: 2 },
+            { id: 'OctaPong2_3m_30p', name: '2 Players (3m/30HP)', players: 2 },
+            { id: 'OctaPong2_10m_100p', name: '2 Players (10m/100HP)', players: 2 },
+            { id: 'OctaPong4', name: '4 Players', players: 4 },
+            { id: 'OctaPong4_3m_30p', name: '4 Players (3m/30HP)', players: 4 },
+            { id: 'OctaPong4_10m_100p', name: '4 Players (10m/100HP)', players: 4 },
+        ],
+    },
+    {
+        name: 'Simple Square',
+        maps: [
+            { id: 'SimpleSquare2', name: '2 Players', players: 2 },
+            { id: 'SimpleSquare2_3m_30p', name: '2 Players (3m/30HP)', players: 2 },
+            { id: 'SimpleSquare2_10m_100p', name: '2 Players (10m/100HP)', players: 2 },
+            { id: 'SimpleSquare4', name: '4 Players', players: 4 },
+            { id: 'SimpleSquare4_3m_30p', name: '4 Players (3m/30HP)', players: 4 },
+            { id: 'SimpleSquare4_10m_100p', name: '4 Players (10m/100HP)', players: 4 },
+        ],
+    },
 ];
 
+const ALL_MAPS: MapInfo[] = MAP_GROUPS.flatMap(g => g.maps);
+
+// Image aliasing so variant maps reuse base previews
+const IMAGE_ALIAS: Record<string, string> = {
+    default_3m_30p: 'default',
+    default_10m_100p: 'default',
+    BigPlus2_3m_30p: 'BigPlus2',
+    BigPlus2_10m_100p: 'BigPlus2',
+    BigPlus4_3m_30p: 'BigPlus4',
+    BigPlus4_10m_100p: 'BigPlus4',
+    Diamond2_3m_30p: 'Diamond2',
+    Diamond2_10m_100p: 'Diamond2',
+    OctaPong2_3m_30p: 'OctaPong2',
+    OctaPong2_10m_100p: 'OctaPong2',
+    OctaPong4_3m_30p: 'OctaPong4',
+    OctaPong4_10m_100p: 'OctaPong4',
+    SimpleSquare2_3m_30p: 'SimpleSquare2',
+    SimpleSquare2_10m_100p: 'SimpleSquare2',
+    SimpleSquare4_3m_30p: 'SimpleSquare4',
+    SimpleSquare4_10m_100p: 'SimpleSquare4',
+};
+function getPreviewImageId(mapId: string): string {
+    return IMAGE_ALIAS[mapId] ?? mapId;
+}
+
 function renderMapCards(grid: HTMLElement, selectedId: string) {
-	grid.innerHTML = MAPS.map(m => `
-		<button
-			type="button"
-			data-map-id="${m.id}"
-			class="cursor-pointer group rounded overflow-hidden border ${m.id === selectedId ? 'border-[#0bda8e]' : 'border-[#543b43]'} bg-[#271c1f] hover:border-[#0bda8e] transition-colors">
-			<div class="aspect-video bg-[#1b1214] relative">
-				<img
-					data-map-img
-					alt="${m.name}"
-					src="/maps/${m.id}.jpg"
-					class="w-full h-full object-cover block"
-				/>
-				<div class="absolute top-1 right-1 text-xs bg-black/60 text-white px-2 py-0.5 rounded">${m.players}P</div>
+	grid.innerHTML = MAP_GROUPS.map(group => `
+		<div>
+			<h3 class="text-lg font-semibold text-white mb-3">${group.name}</h3>
+			<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+				${group.maps.map(m => `
+					<button
+						type="button"
+						data-map-id="${m.id}"
+						class="cursor-pointer group rounded overflow-hidden border ${m.id === selectedId ? 'border-[#0bda8e]' : 'border-[#543b43]'} bg-[#271c1f] hover:border-[#0bda8e] transition-colors">
+						<div class="aspect-video bg-[#1b1214] relative">
+							<img
+								data-map-img
+								alt="${m.name}"
+								src="/maps/${getPreviewImageId(m.id)}.jpg"
+								class="w-full h-full object-cover block"
+							/>
+							<div class="absolute top-1 right-1 text-xs bg-black/60 text-white px-2 py-0.5 rounded">${m.players}P</div>
+						</div>
+						<div class="px-3 py-2 text-left">
+							<div class="text-white text-sm">${m.name}</div>
+						</div>
+					</button>
+				`).join('')}
 			</div>
-			<div class="px-3 py-2 text-left">
-				<div class="text-white text-sm">${m.name}</div>
-			</div>
-		</button>
+		</div>
 	`).join('');
 
 	// Fallback placeholder if image not found
@@ -149,37 +236,61 @@ function renderMapCards(grid: HTMLElement, selectedId: string) {
 	});
 }
 
-function setupMapSelector(root: HTMLElement) {
-	const details = root.querySelector<HTMLDetailsElement>('#map-selector')!;
-	const grid = root.querySelector<HTMLElement>('#map-grid')!;
-	const label = root.querySelector<HTMLElement>('#selected-map-label')!;
-	let selected = localStorage.getItem('selectedMap') || 'default';
+function setupMapSelector(root: HTMLElement): MapSelectorApi {
+	const grid = root.querySelector<HTMLElement>('#map-grid');
+	const label = root.querySelector<HTMLElement>('#selected-map-label');
+	const detailsEl = root.querySelector<HTMLDetailsElement>('#map-selector');
+	if (!grid || !label) {
+		return { getSelected: () => 'default_3m_30p' };
+	}
 
-	const setSelected = (id: string) => {
-		selected = id;
-		localStorage.setItem('selectedMap', selected);
-		label.textContent = selected;
-		renderMapCards(grid, selected);
-		// auto-collapse after selection to save space
-		details.open = false;
+	const loadSaved = (): string | null => {
+		try {
+			const v = localStorage.getItem(MAP_STORAGE_KEY);
+			return v && ALL_MAPS.some(m => m.id === v) ? v : null;
+		} catch {
+			return null;
+		}
 	};
 
-	// Initial render
-	label.textContent = selected;
-	renderMapCards(grid, selected);
+	const save = (id: string) => {
+		try { localStorage.setItem(MAP_STORAGE_KEY, id); } catch {}
+	};
 
-	// Click delegation to pick a map
-	grid.addEventListener('click', (e) => {
-		const btn = (e.target as HTMLElement).closest('button[data-map-id]') as HTMLButtonElement | null;
-		if (!btn) return;
-		const id = btn.getAttribute('data-map-id')!;
-		setSelected(id);
-	});
+	let selectedId = loadSaved() ?? 'default_3m_30p';
+	label.textContent = selectedId;
+
+	const onSelect = (mapId: string) => {
+		selectedId = mapId;
+		label.textContent = mapId;
+		save(selectedId);
+
+		// re-render cards with selection state
+		renderMapCards(grid, selectedId);
+		wireButtons();
+
+		// collapse the selector after choosing
+		if (detailsEl) detailsEl.open = false;
+	};
+
+	const wireButtons = () => {
+		grid.querySelectorAll<HTMLButtonElement>('button[data-map-id]').forEach(button => {
+			button.addEventListener('click', () => onSelect(button.dataset.mapId!));
+		});
+		const tournamentBtn = document.getElementById('btn-create-tournament') as HTMLButtonElement | null;
+		const selectedMap = ALL_MAPS.find(m => m.id === selectedId);
+		if (tournamentBtn && selectedMap) {
+			tournamentBtn.disabled = selectedMap.players > 2;
+			tournamentBtn.title = selectedMap.players > 2 ? 'Tournaments are 2-player only' : 'Create a tournament';
+		}
+	};
+
+	// initial render with restored selection
+	renderMapCards(grid, selectedId);
+	wireButtons();
 
 	return {
-		getSelected: () => selected,
-		open: () => { details.open = true; },
-		close: () => { details.open = false; },
+		getSelected: () => selectedId,
 	};
 }
 
@@ -270,7 +381,7 @@ function setupGameModes(root: HTMLElement): void {
 	// --- Disable Tournament button for >2-player maps ---
 	const updateTournamentButton = () => {
 		const selectedMap = mapSelector.getSelected();
-		const mapInfo = MAPS.find(m => m.id === selectedMap);
+		const mapInfo = ALL_MAPS.find(m => m.id === selectedMap);
 		if (!btnCreateTournament) return;
 		if (mapInfo && mapInfo.players > 2) {
 			btnCreateTournament.disabled = true;
@@ -283,6 +394,7 @@ function setupGameModes(root: HTMLElement): void {
 		}
 	};
 	updateTournamentButton();
+
 	// Listen for map changes
 	const grid = root.querySelector<HTMLElement>('#map-grid')!;
 	grid.addEventListener('click', () => setTimeout(updateTournamentButton, 0));
@@ -352,7 +464,7 @@ function setupGameModes(root: HTMLElement): void {
 				}
 			}
 
-			// --- Add Local Player visibility ---
+			// --- Add Local Player visibility + wiring ---
 			{
 				const addBtn = document.getElementById('btn-add-local-player');
 
@@ -365,20 +477,34 @@ function setupGameModes(root: HTMLElement): void {
 						// Game has started -> ensure hidden and clear pending flag
 						addBtn?.classList.add('hidden');
 						pendingCustomLobby = false;
-					} else if (isCustomLobby(game)) {
 						// In a custom lobby and game not started yet -> show
+						// clear wiring when game starts
+						wiredLocalPlayerForGameId = null;
+					} else if (isCustomLobby(game) || isMatchmaking(game)) {
 						addBtn?.classList.remove('hidden');
+
+						// Wire the button exactly once per game_id
+						if (wiredLocalPlayerForGameId !== game.game_id) {
+							try {
+								wireLocalPlayerButton(game);
+								wiredLocalPlayerForGameId = game.game_id;
+							} catch (e) {
+								console.warn('Failed to wire Add Local Player button:', e);
+							}
+						}
 					} else {
 						// Not a custom lobby (matchmaking/tournament lobbies) -> hide
 						addBtn?.classList.add('hidden');
 					}
 				} else {
-					// No game yet: only show if we're in the middle of creating a custom lobby
+					// No game yet
 					if (pendingCustomLobby) {
 						addBtn?.classList.remove('hidden');
 					} else {
 						addBtn?.classList.add('hidden');
 					}
+					// clear wiring when no game
+					wiredLocalPlayerForGameId = null;
 				}
 			}
 		}, 200);
@@ -415,6 +541,8 @@ function setupGameModes(root: HTMLElement): void {
 
 	// Keep "Add local player" visible while we're creating a custom lobby
 	let pendingCustomLobby = false;
+	// Track which game_id we've wired the Add Local Player button for
+	let wiredLocalPlayerForGameId: number | null = null
 
 	// Helper to normalize lobby type checks
 	function isCustomLobby(game: any): boolean {
@@ -422,6 +550,12 @@ function setupGameModes(root: HTMLElement): void {
 		// support number enums and strings; accept COMMON custom names
 		const name = typeof t === 'number' ? (LobbyType as any)[t] : String(t).toUpperCase();
 		return name === 'CUSTOM' || name === 'CUSTOM_LOBBY' || name === 'LOBBY';
+	}
+
+	function isMatchmaking(game: any): boolean {
+		const t = game?.lobby_type;
+		const name = typeof t === 'number' ? (LobbyType as any)[t] : String(t).toUpperCase();
+		return name === 'MATCHMAKING';
 	}
 
 	const run = async (mode: 'match' | 'lobby' | 'tournament' | 'reconnect' | 'leave'): Promise<void> => {
@@ -437,6 +571,7 @@ function setupGameModes(root: HTMLElement): void {
 			console.log('leave fn');
 			stopUiUpdater();
 			pendingCustomLobby = false;
+			wiredLocalPlayerForGameId = null;
 			await attempt_reconnect(container, user_id, true);
 			(globalThis as any).game?.leave();
 			(globalThis as any).tournament?.leave();
@@ -448,6 +583,7 @@ function setupGameModes(root: HTMLElement): void {
 		switch (mode) {
 			case 'match':
 				pendingCustomLobby = false;
+				wiredLocalPlayerForGameId = null;
 				// Hide map selector immediately to avoid flash
 				mapSelectorDetails.classList.add('hidden');
 				showGameActions();
@@ -456,6 +592,7 @@ function setupGameModes(root: HTMLElement): void {
 				break;
 			case 'tournament':
 				pendingCustomLobby = false;
+				wiredLocalPlayerForGameId = null;
 				mapSelectorDetails.classList.add('hidden');
 				showGameActions();
 				await test_tournament(container, user_id, selectedMap);
@@ -464,6 +601,7 @@ function setupGameModes(root: HTMLElement): void {
 			case 'lobby':
 				// Show button immediately while lobby is being created
 				pendingCustomLobby = true;
+				wiredLocalPlayerForGameId = null;
 				mapSelectorDetails.classList.add('hidden');
 				showGameActions();
 				await create_custom_lobby(user_id, container, selectedMap);
@@ -471,6 +609,7 @@ function setupGameModes(root: HTMLElement): void {
 				break;
 			case 'reconnect':
 				pendingCustomLobby = false;
+				wiredLocalPlayerForGameId = null;
 				await attempt_reconnect(container, user_id);
 				if ((globalThis as any).game || (globalThis as any).tournament) {
 					// Hide selector if we reconnected into a lobby/game

@@ -63,6 +63,11 @@ function renderUserRow(
 	// Ensure my own row always shows online (green) while I am on the site
 	const online = isSelf ? true : !!u.live;
 
+	// Show status only for myself or my friends
+	const statusCell = (isSelf || isFriend)
+		? `<span class="status-dot ${online ? 'online' : 'offline'}" data-user-id="${u.id}"></span>`
+		: '';
+
 	return /*html*/`
 		<li class="user-row group" data-uid="${u.id}">
 			<a href="/profile/${u.id}" data-route
@@ -82,7 +87,7 @@ function renderUserRow(
 					</div>
 			</a>
 				<div class="hidden sm:flex items-center justify-center">
-					<span class="status-dot ${online ? 'online' : 'offline'}"></span>
+					${statusCell}
 				</div>
 				<div class="flex items-center justify-end gap-2 shrink-0 w-[150px]">
 					${action}
