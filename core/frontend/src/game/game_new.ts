@@ -108,8 +108,16 @@ export class Game {
 	) {
 		if (globalThis.game !== undefined) {
 			console.log("WARNING: Game constructor called while globalThis.game !== undefined");
-			console.log("WARNING: Game constructor: Disconnecting old game");
-			globalThis.game.leave();
+			// If this is the same lobby, don't send a 'leave' to the server.
+			// Just disconnect the previous instance to avoid the server treating
+			// it as a real leave during transition.
+			if (globalThis.game.game_id === game_id) {
+				console.log("WARNING: Same lobby id; disconnecting previous instance without leaving");
+				globalThis.game.disconnect();
+			} else {
+				console.log("WARNING: Different lobby; leaving previous lobby");
+				globalThis.game.leave();
+			}
 			globalThis.game = undefined;
 		}
 		this.password = password;

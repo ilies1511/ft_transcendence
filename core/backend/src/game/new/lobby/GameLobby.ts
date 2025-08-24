@@ -1,28 +1,24 @@
+import type { WebSocket } from '@fastify/websocket';
+import { GameServer } from '../GameServer.ts';
+import { WebsocketConnection } from '../WebsocketConnection.ts';
 import { GameEngine } from './engine/GameEngine.ts';
 import { MapFile } from './maps/Map.ts';
-import type { fastifyWebsocket } from '@fastify/websocket';
-import websocketPlugin from '@fastify/websocket';
-import type { WebSocket } from '@fastify/websocket';
-import { WebsocketConnection } from '../WebsocketConnection.ts';
-import { GameServer } from '../GameServer.ts';
 
 import type {
-	ServerToClientError,
-	LobbyToClient,
-	GameLobbyUpdate,
-	ServerError,
-	ClientToMatch,
-	ClientToGame,
 	ClientToGameInput,
-	LobbyDisplaynameResp,
-	GameToClientFinish,
+	ClientToMatch,
 	ClientToMatchLeave,
+	GameLobbyUpdate,
+	GameToClientFinish,
 	GameToClientInfo,
+	LobbyDisplaynameResp,
+	LobbyToClient,
+	ServerError,
+	ServerToClientError
 } from '../../game_shared/message_types.ts';
 
 import { LobbyType } from '../../game_shared/message_types.ts';
 
-import { is_ServerError } from '../../game_shared/message_types.ts';
 
 type GameConnection = {
 	id: number,
@@ -171,6 +167,15 @@ export class GameLobby {
 		if (map_name && this._map_name != map_name) {
 			return ('Invalid Map');
 		}
+
+		// Prevent duplicate join for the same user.
+		for (const c of this._connections) {
+			if (c.id === user_id) {
+				console.log("GameLobby: user already joined, ignoring duplicate join for", user_id);
+				return ("");
+			}
+		}
+
 		console.log("Game: User", user_id, " joing lobby ", this.id);
 		const connection: GameConnection = {
 			id: user_id,
