@@ -95,6 +95,11 @@ export class Tournament {
 		if (password != this.password) {
 			return ("Invalid Password");
 		}
+		for (const player of this._all_players) {
+			if (player.display_name == display_name) {
+				return ('Nickname allready taken in tournament');
+			}
+		}
 		//this._rounds[0].players.push({
 		this._all_players.push({
 			client_id: user_id,

@@ -244,7 +244,6 @@ export class Tournament {
 		}
 	}
 
-	//todo: user feedback if invite fails
 	static async accept_tournament_invite(
 		user_id: number,
 		display_name: string,

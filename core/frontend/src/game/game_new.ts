@@ -473,6 +473,11 @@ export class Game {
 				break ;
 			case ('Allready started'):
 				break ;
+			case ('Nickname allready taken in tournament'):
+				showToast({
+					title: error
+				});
+			break ;
 			case ('Allready connected in a different session'):
 				showToast({
 					title: 'You are allready connected to the game/tournament from a different session, disconnect there first to connect here.',

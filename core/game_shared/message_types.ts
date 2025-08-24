@@ -121,6 +121,7 @@ export type ServerError =
 	| 'Allready in game'
 	| 'Allready in tournament'
 	| 'Allready connected in a different session'
+	| 'Nickname allready taken in tournament'
 	| ''
 ;
 
@@ -134,16 +135,18 @@ export function is_ServerError(data: unknown): ServerError | undefined {
 		return (undefined);
 	}
 	if ([
-		'Invalid Request',
-		 'Invalid Password',
-		 'Full',
-		 'Internal Error',
-		 'Not Found',
-		 'Allready started',
-		 'Invalid Map',
+	'Invalid Request',
+		'Invalid Password',
+		'Full',
+		'Internal Error',
+		'Not Found',
+		'Invalid Map',
+		'Allready started',
 		'Allready in game',
 		'Allready in tournament',
-		 '',
+		'Allready connected in a different session',
+		'Nickname allready taken in tournament',
+	 '',
 		].includes(data)
 	) {
 		return (data as ServerError);
