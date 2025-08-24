@@ -333,7 +333,7 @@ export class GameServer {
 		}
 
 		for (const [lobby_id, lobby] of GameServer.lobbies) {
-			if (lobby.join(user_id, display_name) == "") {
+			if (lobby.join(user_id, display_name, '', map_name) == "") {
 				response.match_id = lobby_id;
 				return (response);
 			}

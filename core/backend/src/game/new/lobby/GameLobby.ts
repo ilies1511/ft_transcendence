@@ -149,7 +149,7 @@ export class GameLobby {
 	}
 
 	// this does not setup the connection, without this the client tring to connect will be denied
-	public join(user_id: number, display_name: string, password?: string
+	public join(user_id: number, display_name: string, password?: string, map_name?: string,
 		): ServerError
 	{
 		if (user_id <= 0 && this.lobby_type == LobbyType.TOURNAMENT_GAME) {
@@ -167,6 +167,9 @@ export class GameLobby {
 		if (this.password != password) {
 			console.log("join: this.password: ", this.password, "; password: ", password);
 			return ("Invalid Password");
+		}
+		if (map_name && this._map_name != map_name) {
+			return ('Invalid Map');
 		}
 		console.log("Game: User", user_id, " joing lobby ", this.id);
 		const connection: GameConnection = {
