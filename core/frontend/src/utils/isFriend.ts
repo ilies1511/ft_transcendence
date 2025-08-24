@@ -1,15 +1,16 @@
 // src/utils/isFriend.ts
 import type { ApiUserWithFriends } from '../types/api'
-import { currentUser } from '../services/auth'
+// import { currentUser } from '../services/auth'
 
 export async function isFriend(profileId: number): Promise<boolean> {
-	const me = await currentUser()
-	if (!me)
-		return false // not logged-in
-	if (me.id === profileId)
-		return true // my own profile
+	// const me = await currentUser()
+	// if (!me)
+	// 	return false // not logged-in
+	// if (me.id === profileId)
+	// 	return true // my own profile
 
-	const res = await fetch(`/api/users/${me.id}/friends`)
+	// const res = await fetch(`/api/users/${me.id}/friends`)
+	const res = await fetch(`/api/me/friends`)
 	if (!res.ok)
 		return false
 

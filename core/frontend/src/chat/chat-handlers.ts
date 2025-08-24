@@ -1,6 +1,6 @@
 // src/features/chat/chat-handlers.ts
 import { showChat } from './chat-ui';
-import { unreadCounts, friendUsernames, loadHistory, 
+import { unreadCounts, friendUsernames, loadHistory,
 	saveUnreadCounts, updateUnreadBadge, updateMainBadge } from './chat-state';
 import { chatState } from './chat-init';
 import { appendMessage, saveToHistory } from './chat-state'; // for handleDirectMessage
@@ -11,7 +11,8 @@ export async function fetchFriendsAndPopulate(userId: number) {
 	ul.innerHTML = '<li class="text-[#b99da6]">Loading friends…</li>';
 
 	try {
-		const res = await fetch(`/api/users/${userId}/friends`);
+		// const res = await fetch(`/api/users/${userId}/friends`);
+		const res = await fetch(`/api/me/friends`);
 		if (!res.ok) throw new Error('Failed to fetch friends');
 		const data = await res.json();
 
