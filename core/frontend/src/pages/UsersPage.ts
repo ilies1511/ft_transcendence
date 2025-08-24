@@ -36,7 +36,9 @@ function renderUserRow(
 			let friendAction = '';
 			if (!isFriend) {
 				if (sentByMe) {
-					friendAction = `<button disabled class="ml-0 text-sm px-3 py-1 rounded-md cursor-not-allowed">Pending…</button>`;
+					const reqIdOut = outPending.get(u.id);
+					friendAction = `<button class="undo-invite-btn bg-gray-700 text-white text-sm px-3 py-1 rounded-md hover:bg-gray-600 cursor-pointer"
+						data-requestid="${reqIdOut}" data-userid="${u.id}">Undo</button>`;
 				} else if (sentToMe) {
 					friendAction = `<button class="accept-btn bg-blue-800 text-white text-sm px-3 py-1 rounded-md hover:bg-blue-700 cursor-pointer"
                         data-requestid="${reqIdIn}" data-userid="${u.id}">Accept</button>
@@ -170,6 +172,21 @@ const UsersPage: PageModule = {
 						document.dispatchEvent(new Event('friends-changed'));
 					} catch {
 						btn.disabled = false; btn.textContent = 'Invite';
+					}
+				});
+			});
+
+			// Undo outgoing invite
+			list.querySelectorAll<HTMLButtonElement>('.undo-invite-btn').forEach(btn => {
+				btn.addEventListener('click', async () => {
+					const requestId = btn.dataset.requestid!;
+					btn.disabled = true; btn.textContent = 'Undoing…';
+					try {
+						const r = await fetch(`/api/users/${me.id}/requests/${requestId}`, { method: 'DELETE' });
+						if (!r.ok) throw new Error(await r.text());
+						document.dispatchEvent(new Event('friends-changed'));
+					} catch {
+						btn.disabled = false; btn.textContent = 'Undo';
 					}
 				});
 			});

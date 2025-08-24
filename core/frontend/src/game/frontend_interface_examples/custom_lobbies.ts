@@ -23,6 +23,12 @@ export async function accept_lobby_invite(
 	) : Promise<ServerError | Game>
 {
 	console.log("INVITE: ", invite);
+
+	// Guard: if we already have a Game for this lobby, reuse it.
+	if (globalThis.game && globalThis.game.game_id === invite.lobby_id) {
+		return globalThis.game;
+	}
+
 	const join_error: ServerError = await GameApi.join_lobby(
 		user_id,
 		invite.lobby_id,
