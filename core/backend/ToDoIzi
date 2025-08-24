@@ -53,24 +53,29 @@ use of JSON Web Tokens (JWT).
 
 
 ## MISC
-- []	Input sanitization (front -and Backend) --> BIG ONE
+- [x]	Input sanitization (front -and Backend) --> BIG ONE
 - [] '/api/me/anonymize' FIX --> after doing that user needs new credential in
 order to not looses his account
 - [] HTTPs & wss
-- [] IF enough time: change API design from
-	[] '/api/users/:id/block/:targetId', --> '/api/me/block/:targetId',
-	[] '/api/users/:id/block/:targetId', --> '/api/me/block/:targetId',
-	[] '/api/users/:id/block', --> '/api/me/block/:targetId',
+- [x] IF enough time ANTI IDOR design (IDOR = Insecure Direct Object Reference) : change API design from
+	- Pattern: '/api/users/:id/....' --> '/api/me/....'
+	- [x] '/api/users/:id/matches'
+	- [x] '/api/users/:id/stats'
+	- [x] '/api/users/:id/block/:targetId's
+	- [x] '/api/users/:id/block', --> '/api/me/block/:targetId',
 - [x] Any password stored in your database, if applicable, must be hashed.
 - [] Your website must be protected against SQL injections/XSS attacks.
 - [] If you have a backend or any other features, it is mandatory to enable an HTTPS
 connection for all aspects (use wss instead of ws for example).
-- [] You must implement validation mechanisms for forms and any user input, either on
+- [x] You must implement validation mechanisms for forms and any user input, either on
 the base page if no backend is used, or on the server side if a backend is employed.
 - [x] Regardless of whether you choose to implement the JWT Security module with
 2FA, it’s essential to prioritize the security of your website. For instance, if you
 choose to create an API, ensure your routes are protected. Even if you decide not
 to use JWT tokens, securing the site remains critical.
+- [] Add State Check to Google Sign In
+- [] delete pending friend request upon block (like friendship)
+
 ### csrfProtection
 - [x] BackEnd --> Plugin works
 - [] FrontEnd --> every route that sends JWT Token as Cookie (everywhere)
@@ -131,5 +136,5 @@ for tracking and analyzing data.
 - [x] Implement data visualization techniques, such as charts and graphs, to present
 statistics in a clear and visually appealing manner.
 - [] Allow users to access and explore their own gaming history and performance
-metrics conveniently.
+metrics conveniently. --> dilin (filter by mode)
 - [] Feel free to add any metrics you deem useful.

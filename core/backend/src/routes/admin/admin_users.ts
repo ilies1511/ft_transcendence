@@ -1,14 +1,14 @@
 // src/routes/users.ts
 import type { FastifyPluginAsync } from "fastify";
 import bcrypt from "bcrypt";
-import { type UserWithFriends, type FriendRequestRow, type UserRow } from "../types/userTypes.ts";
+import { type UserWithFriends, type FriendRequestRow, type UserRow } from "../../types/userTypes.ts";
 import { error, info } from "console";
 import {
 	createUser, updateUser,
 	type UpdateUserData,
 	getUserById, setUserLive, deleteUserById,
 	updateUserAvatar
-} from "../functions/user.ts";
+} from "../../functions/user.ts";
 import { promises as fs } from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
