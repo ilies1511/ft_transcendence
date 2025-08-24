@@ -261,6 +261,7 @@ function setupGameModes(root: HTMLElement): void {
 	const gameActions = root.querySelector<HTMLDivElement>('#game-actions')!
 
 	const mapSelector = setupMapSelector(root);
+	const mapSelectorDetails = root.querySelector<HTMLDetailsElement>('#map-selector')!;
 
 	// --- Disable Tournament button for >2-player maps ---
 	const updateTournamentButton = () => {
@@ -317,6 +318,13 @@ function setupGameModes(root: HTMLElement): void {
 			const game = (globalThis as any).game;
 			const tournament = (globalThis as any).tournament;
 			const hasContext = !!game || !!tournament;
+
+			// Hide/show map selector depending on state (hide if in any lobby/game or while creating custom lobby)
+			if (hasContext || pendingCustomLobby) {
+				mapSelectorDetails.classList.add('hidden');
+			} else {
+				mapSelectorDetails.classList.remove('hidden');
+			}
 
 			if (hasContext) {
 				showGameActions();
@@ -428,18 +436,23 @@ function setupGameModes(root: HTMLElement): void {
 			await attempt_reconnect(container, user_id, true);
 			(globalThis as any).game?.leave();
 			(globalThis as any).tournament?.leave();
+			// Show initial UI and map selector immediately upon leaving
+			mapSelectorDetails.classList.remove('hidden');
 			showInitialActions();
 		}
 
 		switch (mode) {
 			case 'match':
 				pendingCustomLobby = false;
+				// Hide map selector immediately to avoid flash
+				mapSelectorDetails.classList.add('hidden');
 				showGameActions();
 				await test_enter_matchmaking(container, user_id, selectedMap);
 				startUiUpdater();
 				break;
 			case 'tournament':
 				pendingCustomLobby = false;
+				mapSelectorDetails.classList.add('hidden');
 				showGameActions();
 				await test_tournament(container, user_id, selectedMap);
 				startUiUpdater();
@@ -447,6 +460,7 @@ function setupGameModes(root: HTMLElement): void {
 			case 'lobby':
 				// Show button immediately while lobby is being created
 				pendingCustomLobby = true;
+				mapSelectorDetails.classList.add('hidden');
 				showGameActions();
 				await create_custom_lobby(user_id, container, selectedMap);
 				startUiUpdater();
@@ -455,6 +469,8 @@ function setupGameModes(root: HTMLElement): void {
 				pendingCustomLobby = false;
 				await attempt_reconnect(container, user_id);
 				if ((globalThis as any).game || (globalThis as any).tournament) {
+					// Hide selector if we reconnected into a lobby/game
+					mapSelectorDetails.classList.add('hidden');
 					showGameActions();
 					startUiUpdater();
 				}
