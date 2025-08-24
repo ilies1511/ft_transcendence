@@ -1,37 +1,34 @@
 import type { FastifyPluginAsync } from "fastify";
-import { blockUser, unblockUser, getBlockedUsersList } from "../functions/block.ts";
-import { areFriends, removeFriend } from "../functions/friends.ts";
-import { blockListSchema, blockUserSchema, unblockUserSchema } from "../schemas/block.ts";
-import { getUserId } from "../functions/user.ts";
+import { blockUser, unblockUser, getBlockedUsersList } from "../../functions/block.ts";
+import { areFriends, removeFriend } from "../../functions/friends.ts";
+import { blockListSchema, blockUserSchema, unblockUserSchema } from "../../schemas/block.ts";
 
 export const blockRoutes: FastifyPluginAsync = async (fastify) => {
 	//block
 	fastify.post<{
-		Params: { targetId: number }
+		Params: { id: number; targetId: number }
 		Reply: { message: string } | { error: string }
 	}>(
-		// '/api/users/:id/block/:targetId',
-		'/api/me/block/:targetId',
+		'/api/users/:id/block/:targetId',
 		{
 			schema: blockUserSchema
 		},
 		async (req, reply) => {
-			const { targetId } = req.params
-			// const authUserId = (req.user as any).id
-			const authUserId = await getUserId(req);
+			const { id, targetId } = req.params
+			const authUserId = (req.user as any).id
 
-			// if (req.params.id !== authUserId) {
-			// 	return reply.code(403).send({ error: 'Forbidden' })
-			// }
-			if (authUserId === targetId) {
+			if (req.params.id !== authUserId) {
+				return reply.code(403).send({ error: 'Forbidden' })
+			}
+			if (id === targetId) {
 				return reply.code(400).send({ error: "Can't block yourself" })
 			}
-			const ok = await blockUser(fastify, authUserId, targetId);
+			const ok = await blockUser(fastify, id, targetId);
 			if (!ok) {
-				return reply.code(404).send({ error: 'User to block not found' })
+				return reply.send({ message: 'User to block not found' })
 			}
-			if (await areFriends(fastify, authUserId, targetId)) {
-				await removeFriend(fastify, authUserId, targetId);
+			if (await areFriends(fastify, id, targetId)) {
+				await removeFriend(fastify, id, targetId);
 			}
 			return reply.send({ message: 'User blocked and friendship removed' })
 		}

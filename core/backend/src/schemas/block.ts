@@ -3,9 +3,10 @@ import { ErrorResponse, OkMessageResponse, EmptyBodySchema } from "./shared.ts"
 export const BlockParamsSchema = {
 	type: 'object',
 	additionalProperties: false,
-	required: ['id', 'targetId'],
+	required: ['targetId'],
+	// required: ['id', 'targetId'],
 	properties: {
-		id: { type: 'integer', minimum: 1 },
+		// id: { type: 'integer', minimum: 1 },
 		targetId: { type: 'integer', minimum: 1 },
 	},
 } as const

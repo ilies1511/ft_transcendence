@@ -8,7 +8,7 @@ import {
 	sendFriendRequest,
 	withdrawFriendRequest
 } from "../functions/friends.ts";
-import { findUserWithFriends } from "../functions/user.ts";
+import { findUserWithFriends, getUserId} from "../functions/user.ts";
 import { type FriendRequestRow, type UserWithFriends } from "../types/userTypes.ts";
 import {
 	acceptFriendRequestSchema, IncomingRequestsResponseSchema,
@@ -16,10 +16,6 @@ import {
 	rejectFriendRequestSchema, removeFriendSchema, sendFriendRequestSchema,
 	SendFRResponse201, withdrawFriendRequestSchema
 } from "../schemas/friends.ts";
-
-async function getUserId(request: any) {
-	return (request.user as any).id as number;
-}
 
 export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 	// GET -- BEGIN
