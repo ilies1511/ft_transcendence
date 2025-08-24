@@ -574,7 +574,6 @@ export class Tournament {
 		}
 	}
 
-
 	public log_rounds() {
 		console.log("\tRounds: ");
 		let i: number = 0;

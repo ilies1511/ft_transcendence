@@ -349,11 +349,13 @@ export class GameLobby {
 					result?.placements.push({
 						id: connection.id,
 						final_placement: 1,
+						health: 1,
 					});
 				} else {
 					result?.placements.push({
 						id: connection.id,
 						final_placement: 2,
+						health: 0,
 					});
 				}
 			}

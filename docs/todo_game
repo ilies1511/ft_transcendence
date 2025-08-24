@@ -60,8 +60,26 @@ through socket was not open
 [1] AggregateError [ECONNREFUSED]:
 [1]     at internalConnectMultiple (node:net:1134:18)
 [1]     at afterConnectMultiple (node:net:1715:7)
+
+
+
+
+
+[x] - currently the placement gets put into the db instead of the score
+[ ] - when a player leaves a running game his participation might be removed twice
+[ ] - tournament backend socket cleaning when leaving?
+
+[x] - 3 player tournament: 2 players play the first round and the other leaves: buggy
+[x] - data race: tournament game finishes and player is invited to next game before the first game finish msg arrives at the client
+[ ] - frontend: somehow there is a tournament object but no player list recived
+
+[ ] - weird db crash when not filtering out db writebacks when removing a lobby with duration 0
+	-> case: 3 player tournament -> round 0: 2 players player the other leaves
+		-> the next round the last game starts and finishes instantly since one player left
+
+
 [ ]: frontend: 'D' input key is buggy sometimes?
-[ ]: backend: reduce logging bloat to debug tournament
+[x]: backend: reduce logging bloat to debug tournament
 [x]: bug: players can disconnect and join other games without leaving the first leading to a weird server state
 	-> [x]: create lobby api needs client_id to verify hes not in game
 	-> [x]: create tournamet api needs client_id to verify hes not in game
@@ -124,27 +142,12 @@ through socket was not open
 	->game server seems fine
 }
 
-[ ] - weird db crash when not filtering out db writebacks when removing a lobby with duration 0
-	-> case: 3 player tournament -> round 0: 2 players player the other leaves
-		-> the next round the last game starts and finishes instantly since one player left
-
-[ ] - when a player leaves a running game his participation might be removed twice
-[ ] - tournament backend socket cleaning when leaving?
-
-[x] - 3 player tournament: 2 players play the first round and the other leaves: buggy
-[ ] - currently the placement gets put into the db instead of the score
-[x] - data race: tournament game finishes and player is invited to next game before the first game finish msg arrives at the client
-[ ] - frontend: somehow there is a tournament object but no player list recived
 
 [x] - game engine: handle player leave better:
 	[x] - broadcast msg to other players that this player left
 	[x] - set leaving player to loose as the next positon
 	[x] - potentially end game if only 1 player is left
 
-
-[ ] - when 'leaving' from the frontend and there is no game request from the server
-	if the client is in a game (same from the tournament), like this the client can leave without
-	an active connection
 
 [ ] - test leaving a tournamet with many differnt senarios with many differnt player counts
 !!![x] - leaving a tournamet: implement this before fixing the tournamet brackets; way to buggy right now

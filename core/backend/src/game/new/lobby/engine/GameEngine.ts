@@ -167,6 +167,7 @@ export class GameEngine {
 			msg.placements.push({
 				id: client.global_id,
 				final_placement: client.final_placement,
+				health: client.score,
 			});
 		}
 		for (const client of this.clients) {

@@ -537,7 +537,7 @@ export class GameServer {
 				//don't push local player results to db
 				if (end_data.placements[i].id > 0) {
 					match_data.participants.push({user_id: end_data.placements[i].id,
-						score: end_data.placements[i].final_placement, result: result});
+						score: end_data.placements[i].health, result: result});
 				}
 				i++;
 			}
