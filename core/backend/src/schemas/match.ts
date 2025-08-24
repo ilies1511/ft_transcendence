@@ -61,3 +61,36 @@ export const getMatchParticipantsSchema = {
 		200: MatchParticipantsResponseSchema,
 	},
 } as const
+
+
+// BEGIN -- POST
+
+export const CreateMatchBodySchema = {
+	type: 'object',
+	additionalProperties: false,
+	required: ['mode'],
+	properties: {
+		mode: { type: 'integer', minimum: 0 },
+	},
+} as const
+
+export const CreateMatch201Schema = {
+	type: 'object',
+	additionalProperties: false,
+	required: ['matchId'],
+	properties: {
+		matchId: { type: 'integer', minimum: 1 },
+	},
+} as const
+
+export const createMatchSchema = {
+	tags: ['match'],
+	body: CreateMatchBodySchema,
+	response: {
+		201: CreateMatch201Schema,
+		400: ErrorResponse,
+		401: ErrorResponse,
+		500: ErrorResponse,
+	},
+} as const
+// END -- POST

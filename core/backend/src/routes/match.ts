@@ -7,7 +7,7 @@ import { type UserStats } from '../types/userTypes.ts'
 import { type NewMatch } from '../functions/match.ts'
 import { createMatch } from '../functions/match.ts'
 import { getUserId } from '../functions/user.ts'
-import { getMatchParticipantsSchema } from '../schemas/match.ts'
+import { createMatchSchema, getMatchParticipantsSchema } from '../schemas/match.ts'
 // END -- TESTING
 
 export const matchRoutes: FastifyPluginAsync = async fastify => {
@@ -147,9 +147,10 @@ export const matchRoutes: FastifyPluginAsync = async fastify => {
 	fastify.post<{ Body: { mode: number } }>(
 		'/api/matches',
 		{
-			schema: {
-				tags: ['match']
-			}
+			// schema: {
+			// 	tags: ['match']
+			// }
+			schema: createMatchSchema
 		},
 		async (req, reply) => {
 			const matchId = await createMatchMeta(fastify, req.body.mode)
