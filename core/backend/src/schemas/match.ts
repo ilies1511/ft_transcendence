@@ -94,3 +94,49 @@ export const createMatchSchema = {
 	},
 } as const
 // END -- POST
+
+// BEGIN -- complete match
+export const CompleteMatchParamsSchema = CreateMatch201Schema
+
+export const CompleteMatchBodySchema = {
+	type: 'object',
+	additionalProperties: false,
+	required: ['duration', 'participants'],
+	properties: {
+		duration: { type: 'integer' },
+		participants: {
+			type: 'array',
+			items: {
+				type: 'object',
+				additionalProperties: false,
+				required: ['user_id', 'score', 'result'],
+				properties: {
+					user_id: { type: 'integer'},
+					score: { type: 'integer' },
+					result: { type: 'string', enum: ['win', 'loss', 'draw'] },
+				},
+			},
+		},
+	},
+} as const
+
+//
+export const CompleteMatch200Schema = {
+	type: 'object',
+	additionalProperties: false,
+	required: ['success'],
+	properties: { success: { type: 'boolean', const: true } },
+} as const
+
+export const completeMatchSchema = {
+	tags: ['match'],
+	params: CompleteMatchParamsSchema,
+	body: CompleteMatchBodySchema,
+	response: {
+		200: CompleteMatch200Schema,
+		400: ErrorResponse,
+		404: ErrorResponse,
+		409: ErrorResponse,
+	},
+} as const
+// END -- complete match

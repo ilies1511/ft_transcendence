@@ -7,7 +7,7 @@ import { type UserStats } from '../types/userTypes.ts'
 import { type NewMatch } from '../functions/match.ts'
 import { createMatch } from '../functions/match.ts'
 import { getUserId } from '../functions/user.ts'
-import { createMatchSchema, getMatchParticipantsSchema } from '../schemas/match.ts'
+import { completeMatchSchema, createMatchSchema, getMatchParticipantsSchema } from '../schemas/match.ts'
 // END -- TESTING
 
 export const matchRoutes: FastifyPluginAsync = async fastify => {
@@ -185,9 +185,10 @@ export const matchRoutes: FastifyPluginAsync = async fastify => {
 	}>(
 		'/api/matches/:matchId/complete',
 		{
-			schema: {
-				tags: ['match']
-			}
+			// schema: {
+			// 	tags: ['match']
+			// }
+			schema: completeMatchSchema
 		},
 		async (req, reply) => {
 			await completeMatch(
