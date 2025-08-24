@@ -38,14 +38,14 @@ export const unblockUserSchema = {
 // END -- Unblock
 
 // BEGIN -- GET Blocked List
-export const BlockListParamsSchema = {
-	type: 'object',
-	additionalProperties: false,
-	required: ['id'],
-	properties: {
-		id: { type: 'integer', minimum: 1 },
-	},
-} as const
+// export const BlockListParamsSchema = {
+// 	type: 'object',
+// 	additionalProperties: false,
+// 	required: ['id'],
+// 	properties: {
+// 		id: { type: 'integer', minimum: 1 },
+// 	},
+// } as const
 
 export const BlockListResponseSchema = {
 	type: 'array',
@@ -55,7 +55,7 @@ export const BlockListResponseSchema = {
 
 export const blockListSchema = {
 	tags: ['block'],
-	params: BlockListParamsSchema,
+	// params: BlockListParamsSchema,
 	response: {
 		200: BlockListResponseSchema,
 		403: ErrorResponse,

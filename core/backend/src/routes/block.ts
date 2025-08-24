@@ -82,35 +82,23 @@ export const blockRoutes: FastifyPluginAsync = async (fastify) => {
 	// )
 
 	fastify.get<{
-		Params: { id: number }
+		// Params: { id: number }
 		Reply: number[] | { error: string }
 	}>(
-		'/api/users/:id/block',
+		// '/api/users/:id/block',
+		'/api/me/block',
 		{
-			// schema: {
-			// 	tags: ['block'],
-			// 	params: {
-			// 		type: 'object',
-			// 		required: ['id'],
-			// 		properties: { id: { type: 'integer' } }
-			// 	},
-			// 	response: {
-			// 		200: {
-			// 			type: 'array',
-			// 			items: { type: 'integer' }
-			// 		}
-			// 	}
-			// }
 			schema: blockListSchema
 		},
 		async (req, reply) => {
-			const { id } = req.params;
-			const authUserId = (req.user as any).id
+			// const { id } = req.params;
+			// const authUserId = (req.user as any).id
+			const authUserId = await getUserId(req);
 
-			if (id !== authUserId) {
-				return reply.code(403).send({ error: 'Forbidden' })
-			}
-			const blockedUsers = await getBlockedUsersList(fastify, id);
+			// if (id !== authUserId) {
+			// 	return reply.code(403).send({ error: 'Forbidden' })
+			// }
+			const blockedUsers = await getBlockedUsersList(fastify, authUserId);
 			return blockedUsers;
 		}
 	)
