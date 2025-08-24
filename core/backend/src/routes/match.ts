@@ -6,22 +6,26 @@ import { type UserStats } from '../types/userTypes.ts'
 // BEGIN -- TESTING
 import { type NewMatch } from '../functions/match.ts'
 import { createMatch } from '../functions/match.ts'
+import { getUserId } from '../functions/user.ts'
 // END -- TESTING
 
 export const matchRoutes: FastifyPluginAsync = async fastify => {
 	// BEGIN -- GET
 	fastify.get<{
-		Params: { id: number }
+		// Params: { id: number }
 		Reply: UserStats | { error: string }
 	}>(
-		'/api/users/:id/stats',
+		// '/api/users/:id/stats',
+		'/api/me/stats',
 		{
 			schema: {
 				tags: ['match']
 			}
 		},
 		async (request, reply) => {
-			const stats = await getUserStats(fastify, request.params.id)
+			const authUserId = await getUserId(request);
+			const stats = await getUserStats(fastify, authUserId)
+			// const stats = await getUserStats(fastify, request.params.id)
 			return stats
 		}
 	)
