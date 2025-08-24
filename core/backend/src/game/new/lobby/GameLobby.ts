@@ -358,9 +358,10 @@ export class GameLobby {
 				}
 			}
 		}
-		if (!this.engine) {
+		//todo: what reason did I have for this differentiation
+		//if (!this.engine) {
 			this._connections = this._connections.filter(c => c.id != msg.client_id && c.id != msg.client_id * -1);
-		}
+		//}
 		if (result) {
 			for (const connection of this._connections) {
 				connection.sock?.send(result);

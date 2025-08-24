@@ -181,6 +181,7 @@ export class Tournament {
 			return ('Not Found');
 		}
 		//if (this.
+		console.log(this);
 		console.log("Starting tournament..");
 
 		console.log(this.active_players);
@@ -264,6 +265,7 @@ export class Tournament {
 			//	map_name: this._map_name,
 			//	lobby_type: LobbyType.TOURNAMENT,
 			//};
+			console.log('rounds: ', this._rounds);
 			if (round.players[player_idx].loose_next) {
 				this._advance_player_to_round(round.players[player_idx + 1], this._round_idx + 1);
 			} else if (round.players[player_idx + 1].loose_next) {
@@ -288,7 +290,7 @@ export class Tournament {
 		console.log("rounds: ", this._rounds);
 		if (round.looking_for_game) {
 			console.log("round: ", round);
-			console.log(`looking for game in round after starting round, round: ${round}`);
+			console.log(`looking for game in round after starting round`);
 			throw ("looking for game in round after starting round ");
 		}
 		this._broadcast_update();

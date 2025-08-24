@@ -436,7 +436,7 @@ export class GameEngine {
 				continue ;
 			}
 			if (client.socket && client.socket.readyState === client.socket.OPEN) {
-				console.log(`sending ${msg}`);
+				console.log('sending : ', msg);
 				client.socket.send(JSON.stringify(msg));
 			}
 		}

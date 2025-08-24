@@ -41,7 +41,7 @@ export class ServerClient extends SharedClient {
 		this.changed = true;
 		console.log("Client ", this.global_id, " lost");
 		this.base.effects = this.base.effects.filter(e => e !== Effects.BASE);
-		console.log(this.base);
+		//console.log(this.base);
 	}
 
 	public set_socket(socket: WebSocket) {
