@@ -7,14 +7,12 @@ import { updateDot } from './utils/statusDot';
 import type { FriendStatusMsg } from './types/types.ts';
 import { refreshMenu } from './ui/menu';
 import { refreshHeader } from './ui/header';
-import { initAllUsersUI, destroyAllUsersUI } from './all-users/all-users-init.ts';
 import { initFriendRequestWs, destroyFriendRequestWs } from './friends/friend-ws'
 import { getSession, clearSession } from './services/session';
 
 const root = document.querySelector<HTMLElement>('#app')!;
 export const router = new Router(root);
 
-// initFriendUI(); // friend-list UI
 document.addEventListener('click', router.linkHandler); // link delegation
 
 // Fire auth-change once if a valid cookie already exists
@@ -36,11 +34,9 @@ document.addEventListener('auth-change', async () => {
 		initWs();
 		presence.start();
 		initFriendUI();
-		// initAllUsersUI();
 		initFriendRequestWs()
 	} else {
-		destroyAllUsersUI();
-		// destroyFriendUI();
+		destroyFriendUI();
 		destroyFriendRequestWs();
 		presence.stop();
 		closeWs();
