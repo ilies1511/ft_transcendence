@@ -198,15 +198,9 @@ export class GameEngine {
 				continue ;
 			} else if (ball.frames_till_reset > 0) {
 				ball.frames_till_reset--;
-				if (ball.changed) {
-					console.log('frames_till_reset--', ball.effects);
-				}
 				continue ;
 			} else if (ball.frames_till_movement > 0) {
 				ball.frames_till_movement--;
-				if (ball.changed) {
-					console.log('frames_till_movement--', ball.effects);
-				}
 				if (ball.frames_till_movement == 0) {
 					ball.effects = ball.effects.filter(e => e != Effects.RESETING);
 				} else {
@@ -277,10 +271,6 @@ export class GameEngine {
 					//console.log("hit base");
 					ball.effects.push(Effects.RESETING);
 					ball.frames_till_reset = 45;
-					if (ball.changed) {
-						console.log('frames_till_movement=', ball.effects);
-					}
-
 					const goaled_client = this.clients.find(c => c.base === wall);
 					if (goaled_client == undefined) {
 						console.log("Game: error: base that was scored at could not be matched to a client");
