@@ -9,7 +9,7 @@ import fs from "fs";
 import { fileURLToPath } from 'node:url'
 import { extractFilename, resolveAvatarFsPath, resolvePublicPath } from '../functions/gdpr.ts';
 import { getUserId } from '../functions/user.ts';
-import { meDataSchema } from '../schemas/gdpr.ts';
+import { anonymizeMeSchema, meDataSchema } from '../schemas/gdpr.ts';
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -34,21 +34,12 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 			return reply.send(data);
 		});
 
-	// fastify.get('/api/me', { preHandler: [fastify.auth] }, async (req, reply) => {
-	// 	const userId = (req.user as any).id;
-	// 	const data = await getUserData(fastify, userId);
-	// 	return reply.send(data);
-	// });
-
-	// fastify.post('/api/me/anonymize', { preHandler: [fastify.auth] },
 	fastify.post('/api/me/anonymize',
 		{
-			schema: {
-				tags: ['gdpr'],
-			}
+			schema: anonymizeMeSchema
 		},
 		async (req, reply) => {
-			const userId = (req.user as any).id;
+			const userId = await getUserId(req);
 			await anonymizeUser(fastify, userId);
 			return reply.send({ message: 'Your personal data has been anonymized.' });
 		});
