@@ -153,8 +153,9 @@ export class Game {
 		full_screen_btn.setAttribute('aria-label', 'Toggle fullscreen');
 		full_screen_btn.className =
 			'absolute top-3 right-3 z-50 px-3 py-1 rounded-xl text-sm ' +
-			'bg-[rgba(0,0,0,0.55)] text-white hover:bg-[rgba(0,0,0,0.7)] transition';
-		full_screen_btn.textContent = '⛶';
+			'bg-[rgba(0,0,0,0.55)] text-white hover:bg-[rgba(0,0,0,0.7)]' +
+			'transition cursor-pointer';
+		full_screen_btn.textContent = '[ ]';
 		full_screen_btn.onclick = () => this.toggle_fullscrenn();
 		container.appendChild(full_screen_btn);
 
@@ -172,7 +173,7 @@ export class Game {
 		if (!container) {
 			return false;
 		}
-	
+
 		if (this._canvas && !document.contains(this._canvas)) {
 			container.appendChild(this._canvas);
 		}
@@ -555,16 +556,16 @@ export class Game {
 			this.exit_fullscreen();
 		}
 
-	
+
 		this.disconnect();
 		if (tournament_running > 0) {
 			console.log("Game: not showing result since tournament is/was running");
 			return ;
 		}
-	
+
 		if (this._ensure_attached()) {
 			this.container.replaceChildren();
-	
+
 			const formatDuration = (sec: number) => {
 				const m = Math.floor(sec / 60);
 				const s = Math.floor(sec % 60);
@@ -585,7 +586,7 @@ export class Game {
 			};
 			const nameFor = (id: number) =>
 				this._display_names?.get(id) ?? `Player ${id}`;
-	
+
 			// header
 			const header = document.createElement("div");
 			header.className = "flex flex-col items-center text-center mb-8 pt-[30px]";
@@ -598,12 +599,12 @@ export class Game {
 				</div>
 			`;
 			this.container.appendChild(header);
-	
+
 			// results table
 			const table = document.createElement("table");
 			table.className =
 				"w-full mx-auto table-fixed border-collapse rounded-2xl overflow-hidden shadow-lg bg-[#221116]";
-	
+
 			// head
 			const thead = document.createElement("thead");
 			thead.innerHTML = `
@@ -614,18 +615,18 @@ export class Game {
 				</tr>
 			`;
 			table.appendChild(thead);
-	
+
 			// body
 			const tbody = document.createElement("tbody");
 			tbody.className = "divide-y divide-[#3a2229]/70";
-	
+
 			const placements = [...msg.placements].sort(
 				(a, b) => a.final_placement - b.final_placement
 			);
-	
+
 			const medal = (place: number) =>
 				place === 1 ? "🥇" : place === 2 ? "🥈" : place === 3 ? "🥉" : "";
-	
+
 			for (let i = 0; i < placements.length; i++) {
 				const p = placements[i];
 				const tr = document.createElement("tr");
@@ -639,13 +640,13 @@ export class Game {
 				`;
 				tbody.appendChild(tr);
 			}
-	
+
 			table.appendChild(tbody);
 			this.container.appendChild(table);
 		}
-	
+
 		globalThis.tournament?.render_tournament_state();
-	
+
 		console.log(msg);
 	}
 
@@ -673,8 +674,8 @@ export class Game {
 		this._canvas.style.height = "100%";
 		this._canvas.style.display = "block";
 		// Ensure container can size the canvas
-	
-	
+
+
 		const container: HTMLElement | null = this._get_container();
 		if (!container) {
 			console.log("Warning: _createCanvas() called without a valid container");
@@ -762,7 +763,7 @@ export class Game {
 			console.log("exit fullscreen failed: ", e);
 		}
 	}
-	
+
 	public async toggle_fullscrenn() {
 		if (this._isFullscreen()) {
 			await this.exit_fullscreen();
