@@ -1,5 +1,5 @@
 // /src/friends/friend-ws.ts
-import { wsEvents } from '../services/websocket'
+import { wsEvents } from './websocket'
 import { friendRequestToast } from '../ui/friendRequestToast'
 
 function handleNewFriendRequest(ev: Event) {
@@ -13,5 +13,3 @@ export function initFriendRequestWs() {
 export function destroyFriendRequestWs() {
 	wsEvents.removeEventListener('new_friend_request', handleNewFriendRequest)
 }
-
-//TODO: might want to move this somewhere else
