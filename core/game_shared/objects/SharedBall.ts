@@ -34,8 +34,8 @@ export class SharedBall {
 		if (this.acceleration) {
 			clone.acceleration = this.acceleration.clone();
 		}
-		clone.last_collision_obj_id = this.last_collision_obj_id.slice();
-		clone.cur_collision_obj_id = this.cur_collision_obj_id.slice();
+		//clone.last_collision_obj_id = this.last_collision_obj_id.slice();
+		//clone.cur_collision_obj_id = this.cur_collision_obj_id.slice();
 		return clone;
 	}
 
