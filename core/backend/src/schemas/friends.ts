@@ -228,9 +228,9 @@ export const AcceptFRParamsSchema = {
 	type: 'object',
 	additionalProperties: false,
 	required: ['requestId'],
-	// properties: {
-	// 	// requestId: { type: 'integer', minimum: 1 },
-	// },
+	properties: {
+		requestId: { type: 'integer', minimum: 1 },
+	},
 } as const
 
 export const acceptFriendRequestSchema = {

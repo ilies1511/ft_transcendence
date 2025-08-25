@@ -171,7 +171,7 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 
 	fastify.delete<{
 		// Params: { id: number; requestId: number }
-		Params: { requestId: number }
+		Params: { requestId: number },
 		Reply: { message: string } | { error: string }
 	}>(
 		// '/api/users/:id/requests/:requestId',
@@ -183,6 +183,7 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 			// const requesterId = req.params.id
 			const authUserId = await getUserId(req);
 			const requestId = req.params.requestId
+			console.log(`/api/me/requests/${requestId}`);
 
 			const fr = await getFriendRequestById(fastify, requestId)
 			if (!fr) {
