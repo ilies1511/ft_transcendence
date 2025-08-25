@@ -199,7 +199,7 @@ const UsersPage: PageModule = {
 					const requestId = btn.dataset.requestid!;
 					btn.disabled = true; btn.textContent = 'Undoing…';
 					try {
-						const headers = new Headers({ 'Content-Type': 'application/json' });
+						const headers = new Headers();
 						if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
 						const r = await fetch(`/api/me/requests/${requestId}`, {
 							method: 'DELETE',
