@@ -370,6 +370,21 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 			if (!ok) {
 				return reply.code(404).send({ error: 'User not found' })
 			}
+
+			// Broadcast updated user to all WS clients
+			const updated = await fastify.db.get(
+				'SELECT id, username, nickname, email, live, avatar FROM users WHERE id = ?',
+				[request.params.id]
+			)
+			if (updated) {
+				const payload = { type: 'user_updated', user: updated }
+				for (const client of fastify.websocketServer.clients) {
+					if (client.readyState === WebSocket.OPEN) {
+						client.send(JSON.stringify(payload))
+					}
+				}
+			}
+
 			const avatarUrl = `/${AVATAR_SUBDIR}/${filename}`
 			return reply.code(200).send({ avatarUrl })
 		}

@@ -47,6 +47,7 @@ export async function initFriendUI(): Promise<void> {
 	wsEvents.addEventListener('error', handleChatError);
 	wsEvents.addEventListener('user_registered', refresh);
 	wsEvents.addEventListener('lobby_invite', handleLobbyInvite);
+	wsEvents.addEventListener('user_updated', refresh);
 
 	//wire DOM-only UI events (open/close/send)
 	wireEvents(root);
@@ -73,4 +74,5 @@ export function destroyFriendUI(): void {
 	wsEvents.removeEventListener('user_registered', refresh);
 	//leave lobby_invite listener as well if mounted
 	wsEvents.removeEventListener('lobby_invite', () => {});
+	wsEvents.removeEventListener('user_updated', refresh);
 }

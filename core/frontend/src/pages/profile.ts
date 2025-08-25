@@ -6,6 +6,7 @@ import { router } from '../main';
 import { getSession } from '../services/session';
 import { isFriend } from '../utils/isFriend';
 import { updateDot } from '../utils/statusDot';
+import { wsEvents } from '../services/websocket';
 
 
 const template = /*html*/ `
@@ -147,6 +148,28 @@ async function renderProfile(root: HTMLElement, user: ApiUser) {
 	await renderMatchHistory(history, user.id);
 	// draw chart after stats
 	if (stats) drawStatsChart(stats);
+
+	// Live update profile if this user is updated elsewhere
+	const onUserUpdated = async (ev: Event) => {
+		const { user: updated } = (ev as CustomEvent).detail || {}
+		if (!updated || updated.id !== user.id) return
+		try {
+			const res = await fetch(`/api/users/${user.id}`)
+			if (!res.ok) return
+			const fresh = await res.json()
+			const nameEl = root.querySelector<HTMLHeadingElement>('#profileName')
+			const handleEl = root.querySelector<HTMLParagraphElement>('#profileHandle')
+			const avatarEl = root.querySelector<HTMLImageElement>('#profileAvatar')
+			if (nameEl) nameEl.textContent = fresh.nickname
+			if (handleEl) handleEl.textContent = '@' + fresh.username.toLowerCase().replace(/\s+/g, '_')
+			if (avatarEl) avatarEl.src = fresh.avatar + `?t=${Date.now()}`
+		} catch { /* ignore */ }
+	}
+	wsEvents.addEventListener('user_updated', onUserUpdated)
+
+	;(root as any).onDestroy = () => {
+		wsEvents.removeEventListener('user_updated', onUserUpdated)
+	}
 }
 
 // Helper function for stats
