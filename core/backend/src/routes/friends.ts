@@ -117,6 +117,7 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 
 			const fr = await getFriendRequestById(fastify, requestId)
 			if (!fr) {
+				console.log(`Backend: /api/requests/${requestId}/accept error: `, 'friend request not found');
 				return reply.code(404).send({ error: 'Request not found' })
 			}
 			if (fr.recipient_id !== authUserId) {
@@ -129,6 +130,7 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 				await acceptFriendRequest(fastify, req.params.requestId)
 				return { message: 'Friend request accepted' }
 			} catch (err: any) {
+				console.log(`Backend: /api/requests/${requestId}/accept error: `, err);
 				return reply.code(404).send({ error: err.message })
 			}
 		}
