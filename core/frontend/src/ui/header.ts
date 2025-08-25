@@ -2,6 +2,7 @@ import { router } from '../main';
 import { logout } from '../services/auth';
 import { getSession } from '../services/session';
 import { icons } from '../ui/icons';
+import { wsEvents } from '../services/websocket';
 
 export async function refreshHeader() {
 	const span = document.getElementById('user-indicator')
@@ -68,5 +69,19 @@ export async function refreshHeader() {
 		document.dispatchEvent(new Event('auth-change'));
 		router.go('/login');
 	};
+
+	// Bind WS update only once per render instance
+	if (!(span as any)._wsBound) {
+		const onUserUpdated = (ev: Event) => {
+			const { user: updated } = (ev as CustomEvent).detail || {}
+			if (!updated || updated.id !== user.id) return
+			const img = span.querySelector<HTMLImageElement>('#avatarBtn img')
+			const name = span.querySelector<HTMLSpanElement>('#avatarBtn .pr-1')
+			if (img) img.src = `${updated.avatar}?t=${Date.now()}`
+			if (name) name.textContent = updated.username
+		}
+		wsEvents.addEventListener('user_updated', onUserUpdated)
+		;(span as any)._wsBound = true
+	}
 }
 

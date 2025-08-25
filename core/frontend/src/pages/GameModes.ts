@@ -85,7 +85,6 @@ globalThis.tournament = undefined;
 declare global { var last_invite: LobbyInvite | undefined }
 globalThis.game = undefined;
 
-const user = await getSession();
 
 function wireLocalPlayerButton(game: Game): void {
 	const btn = document.getElementById('btn-add-local-player') as HTMLButtonElement | null
@@ -302,6 +301,8 @@ async function test_enter_matchmaking(
 	user_id: number,
 	map_name: string,
 ): Promise<void> {
+
+	const user = await getSession();
 	const matchmaking_options: MatchmakingOptions = {
 		map_name,
 		ai_count: 0,
@@ -345,6 +346,7 @@ async function test_tournament(
 	map_name: string, // <- pass selected map
 ): Promise<void> {
 
+	const user = await getSession();
 	const display_name: string = user!.nickname;
 	const tournament_password = generate_password();
 

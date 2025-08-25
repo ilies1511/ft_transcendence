@@ -1,19 +1,19 @@
 .DEFAULT_GOAL := shell
 
 build:
-	docker-compose build app
+	docker compose build app
 
 up: build
-	docker-compose up app
+	docker compose up app
 
 up-detach: build
-	docker-compose up -d app
+	docker compose up -d app
 
 shell: build
-	docker-compose run --rm --service-ports app sh
+	docker compose run --rm --service-ports app sh
 
 clean:
-	docker-compose down --rmi all --volumes --remove-orphans
+	docker compose down --rmi all --volumes --remove-orphans
 
 restart: down up
 

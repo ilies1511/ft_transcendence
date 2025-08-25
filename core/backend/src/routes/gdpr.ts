@@ -10,6 +10,9 @@ import { fileURLToPath } from 'node:url'
 import { extractFilename, resolveAvatarFsPath, resolvePublicPath } from '../functions/gdpr.ts';
 import { getUserId } from '../functions/user.ts';
 import { anonymizeMeSchema, meDataSchema, meDeleteSchema, meExportSchema, mePatchSchema, ogExportSchema } from '../schemas/gdpr.ts';
+import { notifyFriendStatus } from '../functions/wsHandler/connectHandler.ts';
+import { userSockets } from '../types/wsTypes.ts';
+import { setUserLive } from '../functions/user.ts';
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -65,8 +68,29 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 		async (req, reply) => {
 			// const userId = (req.user as any).id
 			const userId = await getUserId(req);
+
+			await setUserLive(fastify, userId, false);
+			await notifyFriendStatus(fastify, userSockets, userId, false);
+
 			try {
 				await deleteUserAndData(fastify, userId);
+
+				//remove user from the open sockets
+				const set = userSockets.get(userId);
+				if (set) {
+					for (const sock of set) {
+						try { sock.close(1000, 'Account deleted'); } catch {}
+					}
+					userSockets.delete(userId);
+				}
+				//notify other users that user account was deleted, so FE can be updated
+				const payload = { type: 'user_deleted', userId };
+				for (const client of fastify.websocketServer.clients) {
+					if ((client as any).readyState === WebSocket.OPEN) {
+						try { client.send(JSON.stringify(payload)); } catch {}
+					}
+				}
+
 				reply.clearCookie('token', {
 					path: '/',
 					httpOnly: true,
@@ -99,6 +123,21 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 			try {
 				const ok = await updateMyProfile(fastify, userId, req.body)
 				if (!ok) return reply.code(400).send({ error: 'Nothing to update or user not found.' })
+
+				// Broadcast updated user to all WS clients
+				const updated = await fastify.db.get(
+					'SELECT id, username, nickname, email, live, avatar FROM users WHERE id = ?',
+					[userId]
+				)
+				if (updated) {
+					const payload = { type: 'user_updated', user: updated }
+					for (const client of fastify.websocketServer.clients) {
+						if (client.readyState === WebSocket.OPEN) {
+							client.send(JSON.stringify(payload))
+						}
+					}
+				}
+
 				return { ok: true }
 			} catch (err: any) {
 				if (err.code === 'INVALID_CURRENT_PASSWORD') {
