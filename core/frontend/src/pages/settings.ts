@@ -640,7 +640,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 		}
 		showMsg(accountMsg, 'Deleting account...')
 		try {
-			const headers = new Headers({ 'Content-Type': 'application/json' });
+			const headers = new Headers();
 			if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
 			const r = await fetch('/api/me', {
 				method: 'DELETE',

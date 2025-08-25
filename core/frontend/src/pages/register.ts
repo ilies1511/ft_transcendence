@@ -102,12 +102,13 @@ const RegisterPage: PageModule = {
 			}
 
 			try {
+				//todo: verify user name.length >= 3
 				const headers = new Headers({ 'Content-Type': 'application/json' });
-				if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
+				//if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
 				const res = await fetch('/api/register', {
 					method : 'POST',
 					headers,
-					credentials: 'include',
+					//credentials: 'include',
 					body : JSON.stringify({
 						email : data.email.trim(),
 						password : data.password,
