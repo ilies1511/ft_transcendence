@@ -237,8 +237,26 @@ export class Tournament {
 				if (globalThis.game) {
 					await wait_until(() => globalThis.game == undefined);
 				}
-				//todo: let user know next game is ready and don't just instantly attempt connecting
-				attempt_reconnect(this._match_container, this.user_id);
+
+				const onModes = location.pathname === '/modes';
+
+				// If not on the game screen, prompt the player
+				if (!onModes) {
+					showToast({
+						title: 'Tournament match is ready',
+						from: 'Tournament',
+						onAccept: () => {
+							location.assign('/modes');
+							return false;
+						},
+						onReject: () => false
+					});
+				}
+				// Only try to attach when already on /modes
+				if (onModes) {
+					attempt_reconnect(this._match_container, this.user_id);
+				}
+
 				break ;
 			case ('player_list'):
 				this._rcv_player_list(msg);
