@@ -64,6 +64,8 @@ export async function refreshHeader() {
 	const logoutBtn = span.querySelector<HTMLButtonElement>('#logout')!
 		logoutBtn.onclick = async () => {
 		await logout();
+		// immediately refresh UI to guest state
+		document.dispatchEvent(new Event('auth-change'));
 		router.go('/login');
 	};
 }

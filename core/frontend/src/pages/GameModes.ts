@@ -23,6 +23,7 @@ import type {
 import { LobbyType } from '../game/game_shared/message_types.ts'
 
 import { getSession } from '../services/session'
+import { router } from '../main'
 
 const template =`
 	<div class="w-full max-w-5xl mx-auto p-6 space-y-6">
@@ -560,8 +561,12 @@ function setupGameModes(root: HTMLElement): void {
 
 	const run = async (mode: 'match' | 'lobby' | 'tournament' | 'reconnect' | 'leave'): Promise<void> => {
 		const user = await getSession()
-		const user_id = user?.id ?? getUserId()
-		if (user_id === null) { alert('invalid id'); return }
+		const user_id = user?.id
+		if (!user_id) {
+			alert('Your session has ended. Please sign in again.');
+			await router.go('/login');
+			return;
+		}
 
 		//await attempt_reconnect(container, user_id)
 		//if (globalThis.game !== undefined) return
