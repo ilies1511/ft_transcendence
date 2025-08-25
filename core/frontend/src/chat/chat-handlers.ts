@@ -1,22 +1,14 @@
 // src/features/chat/chat-handlers.ts
-import { showActiveChatPanel } from './chat-ui';
-import {
-	unreadCounts,
-	chatUserNames,
-	loadHistory,
-	saveUnreadCounts,
-	updateUnreadBadge,
-	updateMainBadge,
-	appendNewChatMessage,
-	saveToHistory,
-	appendSystemMessage
-} from './chat-state';
+import { unreadCounts, loadHistory,
+	saveUnreadCounts, updateUnreadBadge, updateMainBadge } from './chat-state';
 import { chatState } from './chat-init';
 import { sendWs } from '../services/websocket';
 import type { LobbyInvite } from '../../src/game/game_shared/message_types.ts';
 import { LobbyType } from '../../src/game/game_shared/message_types.ts';
 import { icons } from '../ui/icons';
 import { showToast } from '../ui/toast-interface.ts';
+import { chatUserNames, appendNewChatMessage, saveToHistory, appendSystemMessage} from './chat-state';
+import { showActiveChatPanel } from './chat-ui';
 
 type User = { id: number; username: string; avatar: string };
 

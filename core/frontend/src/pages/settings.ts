@@ -111,7 +111,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 			<!-- 2FA Section -->
 			<section class="w-full max-w-[400px] p-8 shadow-md rounded-[25px] bg-[#2b171e] space-y-4">
 				<h2 class="text-center text-white text-xl font-bold mb-4">Two-Factor Authentication</h2>
-				
+
 				<div id="twofa-status" class="text-center">
 					<p class="text-[#b99da6] mb-4">Loading 2FA status...</p>
 				</div>
@@ -264,7 +264,8 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 			fd.append('avatar', avatarFile)
 
 			try {
-				const uploadResponse = await fetch(`/api/users/${me.id}/avatar`, { method: 'POST', body: fd })
+				// const uploadResponse = await fetch(`/api/users/${me.id}/avatar`, { method: 'POST', body: fd })
+				const uploadResponse = await fetch(`/api/me/avatar`, { method: 'POST', body: fd })
 				if (uploadResponse.ok) {
 					const userResponse = await fetch(`/api/users/${me.id}`);
 					const updatedUser = await userResponse.json();

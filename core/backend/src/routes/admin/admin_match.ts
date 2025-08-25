@@ -1,55 +1,47 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { getMatchHistory, getUserStats, createMatchMeta, completeMatch,
-	getParticipantsForMatch } from '../functions/match.ts'
-import { type UserStats } from '../types/userTypes.ts'
+	getParticipantsForMatch } from '../../functions/match.ts'
+import { type UserStats } from '../../types/userTypes.ts'
 
 // BEGIN -- TESTING
-import { type NewMatch } from '../functions/match.ts'
-import { createMatch } from '../functions/match.ts'
-import { getUserId } from '../functions/user.ts'
-import { completeMatchSchema, createMatchSchema, getMatchParticipantsSchema } from '../schemas/match.ts'
+import { type NewMatch } from '../../functions/match.ts'
+import { createMatch } from '../../functions/match.ts'
 // END -- TESTING
 
 export const matchRoutes: FastifyPluginAsync = async fastify => {
 	// BEGIN -- GET
 	fastify.get<{
-		// Params: { id: number }
+		Params: { id: number }
 		Reply: UserStats | { error: string }
 	}>(
-		// '/api/users/:id/stats',
-		'/api/me/stats',
+		'/api/users/:id/stats',
 		{
 			schema: {
 				tags: ['match']
 			}
 		},
 		async (request, reply) => {
-			const authUserId = await getUserId(request);
-			const stats = await getUserStats(fastify, authUserId)
-			// const stats = await getUserStats(fastify, request.params.id)
+			const stats = await getUserStats(fastify, request.params.id)
 			return stats
 		}
 	)
 
 	fastify.get<{
-		// Params: { id: number }
+		Params: { id: number }
 		Reply: Array<{
 			match: { id: number; mode: number; duration: number; created_at: number }
 			score: number
 			result: 'win' | 'loss' | 'draw'
 		}>
 	}>(
-		// '/api/users/:id/matches',
-		'/api/me/matches',
+		'/api/users/:id/matches',
 		{
 			schema: {
 				tags: ['match'],
 			}
 		},
 		async (request) => {
-			const authUserId = await getUserId(request);
-			// return getMatchHistory(fastify, request.params.id)
-			return getMatchHistory(fastify, authUserId);
+			return getMatchHistory(fastify, request.params.id)
 		}
 	)
 
@@ -65,7 +57,31 @@ export const matchRoutes: FastifyPluginAsync = async fastify => {
 	}>(
 		'/api/matches/:matchId/participants',
 		{
-			schema: getMatchParticipantsSchema
+			schema: {
+				description: 'Alle Teilnehmer eines Matches mit Score und Ergebnis',
+				tags: ['match'],
+				params: {
+					type: 'object',
+					required: ['matchId'],
+					properties: {
+						matchId: { type: 'integer' }
+					}
+				},
+				response: {
+					200: {
+						type: 'array',
+						items: {
+							type: 'object',
+							properties: {
+								user_id: { type: 'integer' },
+								username: { type: 'string' },
+								score: { type: 'integer' },
+								result: { type: 'string', enum: ['win', 'loss', 'draw'] }
+							}
+						}
+					}
+				}
+			}
 		},
 		async (request, reply) => {
 			const participants =
@@ -147,10 +163,9 @@ export const matchRoutes: FastifyPluginAsync = async fastify => {
 	fastify.post<{ Body: { mode: number } }>(
 		'/api/matches',
 		{
-			// schema: {
-			// 	tags: ['match']
-			// }
-			schema: createMatchSchema
+			schema: {
+				tags: ['match']
+			}
 		},
 		async (req, reply) => {
 			const matchId = await createMatchMeta(fastify, req.body.mode)
@@ -185,10 +200,9 @@ export const matchRoutes: FastifyPluginAsync = async fastify => {
 	}>(
 		'/api/matches/:matchId/complete',
 		{
-			// schema: {
-			// 	tags: ['match']
-			// }
-			schema: completeMatchSchema
+			schema: {
+				tags: ['match']
+			}
 		},
 		async (req, reply) => {
 			await completeMatch(

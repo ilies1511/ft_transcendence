@@ -22,7 +22,7 @@ interface. --> Already given through Endpoints
 [x] Obtain the necessary credentials and permissions from the authority to enable
 secure login.
 
-[~] Implement user-friendly login and authorization flows that adhere to best prac-
+[x] Implement user-friendly login and authorization flows that adhere to best prac-
 tices and security standards.
 	[x] On top off QR, add Raw Secret --> provides both
 
@@ -43,7 +43,7 @@ such as a one-time code, in addition to their password.
 - [x] Utilize JSON Web Tokens (JWT) as a secure method for authentication and
 authorization, ensuring that user sessions and access to resources are managed
 securely.
-- [~] Provide a user-friendly setup process for enabling 2FA, with options for SMS --> upon setting up 2FA, a secret is generated as string (manual way) + with QR Code
+- [x] Provide a user-friendly setup process for enabling 2FA, with options for SMS --> upon setting up 2FA, a secret is generated as string (manual way) + with QR Code
 codes, authenticator apps, or email-based verification.
 - [x] Ensure that JWT tokens are issued and validated securely to prevent unau-
 thorized access to user accounts and sensitive data.
@@ -53,7 +53,37 @@ use of JSON Web Tokens (JWT).
 
 
 ## MISC
-- []	Input sanitization (front -and Backend) --> BIG ONE
+- [x]	Input sanitization (front -and Backend) --> BIG ONE
+- [] '/api/me/anonymize' FIX --> after doing that user needs new credential in
+order to not looses his account
+- [] HTTPs & wss
+- [x] IF enough time ANTI IDOR design (IDOR = Insecure Direct Object Reference) : change API design from
+	- Pattern: '/api/users/:id/....' --> '/api/me/....'
+	- [x] '/api/users/:id/matches'
+	- [x] '/api/users/:id/stats'
+	- [x] '/api/users/:id/block/:targetId's
+	- [x] '/api/users/:id/block', --> '/api/me/block/:targetId',
+- [x] Any password stored in your database, if applicable, must be hashed.
+- [] Your website must be protected against SQL injections/XSS attacks.
+- [] If you have a backend or any other features, it is mandatory to enable an HTTPS
+connection for all aspects (use wss instead of ws for example).
+- [x] You must implement validation mechanisms for forms and any user input, either on
+the base page if no backend is used, or on the server side if a backend is employed.
+- [x] Regardless of whether you choose to implement the JWT Security module with
+2FA, it’s essential to prioritize the security of your website. For instance, if you
+choose to create an API, ensure your routes are protected. Even if you decide not
+to use JWT tokens, securing the site remains critical.
+- [] Add State Check to Google Sign In
+- [~] delete pending friend request upon block (like friendship)
+- [] try catch um SQL ops
+- [] getAllLiveUserCount
+- [] Help Makim with CSRF in FE
+
+### csrfProtection
+- [x] BackEnd --> Plugin works
+- [] FrontEnd --> every route that sends JWT Token as Cookie (everywhere)
+- [] Add more secure schemas to routes (cross module)
+
 - [x]	add remove friend endpoint
 - [x]	add all scores per matchID endoint
 - [x]	disable 2FA
@@ -64,7 +94,7 @@ use of JSON Web Tokens (JWT).
 - [x]	Add deleteUserAccount Endpoint --> deletes entire User-Account: (GDPR compliance Module)
 			() after deletion, data related to this account shows 'deleted Account' instead of his old $username$
 
-#### Minor module: GDPR compliance options with user anonymization, local data management, and account deletion.
+## Minor module: GDPR compliance options with user anonymization, local data management, and account deletion.
 The goal of this minor module is to introduce GDPR compliance options that allow
 users to exercise their data privacy rights. Key features and objectives include:
 
@@ -75,11 +105,39 @@ users to exercise their data privacy rights. Key features and objectives include
 [x]	Provide tools for users to manage their local data, including the ability to
 	view, edit, or delete their personal information stored within the system.
 
-[]	Add EndPoint to Download every stored data as Json
+[x]	Add EndPoint to Download every stored data as Json
 
-[]	Offer a streamlined process for users to request the permanent deletion of
+[x]	Offer a streamlined process for users to request the permanent deletion of
 	their accounts, including all associated data, ensuring compliance with data
 	protection regulations.
 
-[]	Maintain clear and transparent communication with users regarding their data
+[x]	Maintain clear and transparent communication with users regarding their data
 	privacy rights, with easily accessible options to exercise these rights.
+
+
+## Major module: Standard user management, authentication and users across tournaments.
+- [x] Users can securely subscribe to the website.
+- [x] Registered users can securely log in.
+- [x] Users can select a unique display name to participate in tournaments.
+- [x] Users can update their information.
+- [x] Users can upload an avatar, with a default option if none is provided.
+- [x] Users can add others as friends and view their online status.
+- [x] User profiles display stats, such as wins and losses.
+- [x] Each user has a Match History including 1v1 games, dates, and relevant
+details, accessible to logged-in users.
+
+
+## Minor module: User and Game Stats Dashboards.
+In this minor module, the goal is to introduce dashboards that display statistics for
+individual users and game sessions. Key features and objectives include:
+- [x] Create user-friendly dashboards that provide users with insights into their
+gaming statistics.
+- [x] Develop a separate dashboard for game sessions, showing detailed statistics,
+outcomes, and historical data for each match.
+- [] Ensure that the dashboards offer an intuitive and informative user interface
+for tracking and analyzing data.
+- [x] Implement data visualization techniques, such as charts and graphs, to present
+statistics in a clear and visually appealing manner.
+- [] Allow users to access and explore their own gaming history and performance
+metrics conveniently. --> dilin (filter by mode)
+- [] Feel free to add any metrics you deem useful.

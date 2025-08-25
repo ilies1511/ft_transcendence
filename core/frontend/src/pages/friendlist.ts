@@ -67,9 +67,12 @@ const FriendListPage:PageModule = {
 		// refresh lists
 		const refresh = async () => {
 			const [inRes, outRes, frRes] = await Promise.all([
-				fetch(`/api/users/${me.id}/requests/incoming`),
-				fetch(`/api/users/${me.id}/requests/outgoing`),
-				fetch(`/api/users/${me.id}/friends`)
+				fetch(`/api/me/requests/incoming`),
+				// fetch(`/api/users/${me.id}/requests/incoming`),
+				// fetch(`/api/users/${me.id}/requests/outgoing`),
+				fetch(`/api/me/requests/outgoing`),
+				// fetch(`/api/users/${me.id}/friends`)
+				fetch(`/api/me/friends`)
 			]);
 			if (!(inRes.ok && outRes.ok && frRes.ok)) {
 				$iEmpty.textContent = 'Failed to load'; return;
@@ -144,7 +147,8 @@ const FriendListPage:PageModule = {
 				btn.onclick = async () => {
 					btn.disabled = true;
 					const ok = await fetch(
-						`/api/users/${me.id}/friends/${btn.dataset.id}`,
+						// `/api/users/${me.id}/friends/${btn.dataset.id}`,
+						`/api/me/friends/${btn.dataset.id}`,
 						{ method:'DELETE' }
 					).then(r => r.ok);
 

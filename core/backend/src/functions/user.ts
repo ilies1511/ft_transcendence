@@ -187,3 +187,8 @@ export async function updateUserAvatar(
 	return info.changes !== undefined && info.changes > 0
 }
 //PATCH -- END
+
+// HELPER
+export async function getUserId(request: any) {
+	return (request.user as any).id as number;
+}

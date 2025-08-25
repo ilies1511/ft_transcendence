@@ -85,21 +85,21 @@ export async function sendFriendRequest(
 		throw new Error('Could not fetch created friend_request')
 	}
 	// broadcasting a friend invite [ws]
-		const targets = userSockets.get(recipientId);
-		if (targets?.size) {
-			const sender = await fastify.db.get<{ username: string }>(
-				'SELECT username FROM users WHERE id = ?', requesterId
-			);
-			if (sender) {
-				for (const ws of targets) {
-					ws.send(JSON.stringify({
-						type: 'new_friend_request',
-						requestId: row.id,
-						from: sender.username
-					}));
-				}
+	const targets = userSockets.get(recipientId);
+	if (targets?.size) {
+		const sender = await fastify.db.get<{ username: string }>(
+			'SELECT username FROM users WHERE id = ?', requesterId
+		);
+		if (sender) {
+			for (const ws of targets) {
+				ws.send(JSON.stringify({
+					type: 'new_friend_request',
+					requestId: row.id,
+					from: sender.username
+				}));
 			}
 		}
+	}
 	return { type: 'pending', request: row }
 }
 
@@ -168,7 +168,7 @@ export async function rejectFriendRequest(
 	fastify: FastifyInstance,
 	requestId: number
 ): Promise<void> {
-	const req = await fastify.db.get<{ requester_id:number; recipient_id:number }>(
+	const req = await fastify.db.get<{ requester_id: number; recipient_id: number }>(
 		'SELECT requester_id, recipient_id FROM friend_requests WHERE id = ?',
 		requestId
 	)
@@ -180,8 +180,8 @@ export async function rejectFriendRequest(
 	if (targets?.size) {
 		for (const ws of targets) {
 			ws.send(JSON.stringify({
-				type:'friend_rejected',
-				friendId:req.recipient_id
+				type: 'friend_rejected',
+				friendId: req.recipient_id
 			}))
 		}
 	}
@@ -273,3 +273,13 @@ export async function areFriends(
 // 		userId
 // 	)
 // }
+
+export async function getFriendRequestById(
+	fastify: FastifyInstance,
+	requestId: number
+): Promise<FriendRequestRow | null> {
+	const row = await fastify.db.get<FriendRequestRow>(
+		`SELECT id, requester_id, recipient_id, created_at, responded_at
+		FROM friend_requests WHERE id = ?`, requestId)
+	return row ?? null
+}
