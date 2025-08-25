@@ -33,7 +33,13 @@ export const blockRoutes: FastifyPluginAsync = async (fastify) => {
 			if (await areFriends(fastify, authUserId, targetId)) {
 				await removeFriend(fastify, authUserId, targetId);
 			}
-			return reply.send({ message: 'User blocked and friendship removed' })
+			// TODO: 25.08 dilin --> broadcast via websocket (FE & BE)
+			await fastify.db.run(
+				`DELETE FROM friend_requests WHERE responded_at IS NULL AND (
+				(requester_id = ? AND recipient_id = ?) OR
+				(requester_id = ? AND recipient_id = ?) )`,
+				authUserId, targetId, targetId, authUserId)
+			return reply.send({ message: 'User blocked, friendship and pending requests removed' })
 		}
 	)
 
