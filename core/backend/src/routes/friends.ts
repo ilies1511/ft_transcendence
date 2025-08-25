@@ -16,6 +16,7 @@ import {
 	rejectFriendRequestSchema, removeFriendSchema, sendFriendRequestSchema,
 	SendFRResponse201, withdrawFriendRequestSchema
 } from "../schemas/friends.ts";
+import { userSockets } from '../types/wsTypes.ts';
 
 export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 	// GET -- BEGIN
@@ -200,6 +201,17 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 			if (!ok) {
 				return reply.code(404).send({ error: 'No pending request to withdraw' })
 			}
+			//notify user when "undo" was clicked
+			const payload = { type: 'friend_request_withdrawn', requestId, from: authUserId };
+			const targets = userSockets.get(fr.recipient_id);
+			if (targets?.size) {
+				for (const client of targets) {
+					if ((client as any).readyState === WebSocket.OPEN) {
+						try { client.send(JSON.stringify(payload)); } catch {}
+					}
+				}
+			}
+
 			return reply.code(200).send({ message: 'Friend request withdrawn' })
 		}
 	)
