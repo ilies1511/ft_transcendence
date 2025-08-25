@@ -165,6 +165,21 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 			try {
 				const ok = await updateMyProfile(fastify, userId, req.body)
 				if (!ok) return reply.code(400).send({ error: 'Nothing to update or user not found.' })
+
+				// Broadcast updated user to all WS clients
+				const updated = await fastify.db.get(
+					'SELECT id, username, nickname, email, live, avatar FROM users WHERE id = ?',
+					[userId]
+				)
+				if (updated) {
+					const payload = { type: 'user_updated', user: updated }
+					for (const client of fastify.websocketServer.clients) {
+						if (client.readyState === WebSocket.OPEN) {
+							client.send(JSON.stringify(payload))
+						}
+					}
+				}
+
 				return { ok: true }
 			} catch (err: any) {
 				if (err.code === 'INVALID_CURRENT_PASSWORD') {

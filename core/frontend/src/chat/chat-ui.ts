@@ -4,6 +4,7 @@ import { appendNewChatMessage, saveToHistory } from './chat-state';
 import { chatState } from './chat-init';
 import { updateMainBadge } from './chat-state';
 import { icons } from '../ui/icons';
+import { wsEvents } from '../services/websocket';
 
 export const template = /*html*/ `
 	<button id="allChatBubbleButton"
@@ -151,4 +152,30 @@ export function wireEvents(root: HTMLElement): void {
 		msgInput.value = '';
 		messages.scrollTop = messages.scrollHeight;
 	});
+
+	// Bind WS update only once per mounting of this root
+	if (!(root as any)._userUpdatedBound) {
+		const onUserUpdated = (ev: Event) => {
+			const { user: updated } = (ev as CustomEvent).detail || {};
+			if (!updated) return;
+
+			// If the open chat is with the updated user, replace the header content
+			if (chatState.activeChatUserID === updated.id) {
+				const header = document.getElementById('chatUser');
+				if (!header) return;
+
+				const img = document.createElement('img');
+				img.className = 'h-5 w-5 rounded-full object-cover';
+				img.src = `${updated.avatar}?t=${Date.now()}`;
+
+				const name = document.createElement('span');
+				name.textContent = updated.username;
+
+				// Replace any previous nodes (text or elements) to avoid duplicates
+				header.replaceChildren(img, name);
+			}
+		};
+		wsEvents.addEventListener('user_updated', onUserUpdated);
+		(root as any)._userUpdatedBound = true;
+	}
 }
