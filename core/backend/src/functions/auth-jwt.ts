@@ -57,7 +57,6 @@ export default fp(async (app: FastifyInstance) => {
 		'/documentation',
 		'/api/matches',
 		'/api/matches_test',
-		// '/api/me',
 		// END -- dev
 	]
 
