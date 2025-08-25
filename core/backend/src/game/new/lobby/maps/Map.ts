@@ -1,18 +1,37 @@
-import { ServerVec2 } from '../../../objects/ServerVec2.ts';
-import { ServerWall } from '../../../objects/ServerWall.ts';
+import { Effects } from '../../../game_shared/serialization.ts';
 import { ServerBall } from '../../../objects/ServerBall.ts';
 import { ServerClient } from '../../../objects/ServerClient.ts';
-import { Effects } from '../../../game_shared/serialization.ts';
-import type { ServerError } from '../../../game_shared/message_types.ts';
+import { ServerVec2 } from '../../../objects/ServerVec2.ts';
+import { ServerWall } from '../../../objects/ServerWall.ts';
 
 import default_map from './default.json' with { type: "json" };
-import OctaPong2 from './OctaPong2.json' with { type: "json" };
-import OctaPong4 from './OctaPong4.json' with { type: "json" };
-import SimpleSquare4 from './SimpleSquare4.json' with { type: "json" };
-import SimpleSquare2 from './SimpleSquare2.json' with { type: "json" };
-import BigPlus4 from './BigPlus4.json' with { type: "json" };
+import default_10m_100p from './default_10m_100p.json' with { type: "json" };
+import default_3m_30p from './default_3m_30p.json' with { type: "json" };
+
 import BigPlus2 from './BigPlus2.json' with { type: "json" };
+import BigPlus2_10m_100p from './BigPlus2_10m_100p.json' with { type: "json" };
+import BigPlus2_3m_30p from './BigPlus2_3m_30p.json' with { type: "json" };
+import BigPlus4 from './BigPlus4.json' with { type: "json" };
+import BigPlus4_10m_100p from './BigPlus4_10m_100p.json' with { type: "json" };
+import BigPlus4_3m_30p from './BigPlus4_3m_30p.json' with { type: "json" };
+
 import Diamond2 from './Diamond2.json' with { type: "json" };
+import Diamond2_10m_100p from './Diamond2_10m_100p.json' with { type: "json" };
+import Diamond2_3m_30p from './Diamond2_3m_30p.json' with { type: "json" };
+
+import OctaPong2 from './OctaPong2.json' with { type: "json" };
+import OctaPong2_10m_100p from './OctaPong2_10m_100p.json' with { type: "json" };
+import OctaPong2_3m_30p from './OctaPong2_3m_30p.json' with { type: "json" };
+import OctaPong4 from './OctaPong4.json' with { type: "json" };
+import OctaPong4_10m_100p from './OctaPong4_10m_100p.json' with { type: "json" };
+import OctaPong4_3m_30p from './OctaPong4_3m_30p.json' with { type: "json" };
+
+import SimpleSquare2 from './SimpleSquare2.json' with { type: "json" };
+import SimpleSquare2_10m_100p from './SimpleSquare2_10m_100p.json' with { type: "json" };
+import SimpleSquare2_3m_30p from './SimpleSquare2_3m_30p.json' with { type: "json" };
+import SimpleSquare4 from './SimpleSquare4.json' with { type: "json" };
+import SimpleSquare4_10m_100p from './SimpleSquare4_10m_100p.json' with { type: "json" };
+import SimpleSquare4_3m_30p from './SimpleSquare4_3m_30p.json' with { type: "json" };
 
 export class MapFile {
 	public walls: ServerWall[] = [];
@@ -21,27 +40,64 @@ export class MapFile {
 	public next_obj_id: number = 1;
 	public max_time: number; //seconds
 
-	constructor(map_name: string = 'default') {
+	constructor(map_name: string = 'default_3m_30p') {
 		let map_data: any;
 		if (map_name == "default") {
-			// set the name here
 			map_data = default_map;
-		} else if (map_name == "1") {
-			map_data = 1;
+		} else if (map_name == "default_3m_30p") {
+			map_data = default_3m_30p;
+		} else if (map_name == "default_10m_100p") {
+			map_data = default_10m_100p;
+
 		} else if (map_name == "BigPlus2") {
 			map_data = BigPlus2;
+		} else if (map_name == "BigPlus2_3m_30p") {
+			map_data = BigPlus2_3m_30p;
+		} else if (map_name == "BigPlus2_10m_100p") {
+			map_data = BigPlus2_10m_100p;
+
 		} else if (map_name == "BigPlus4") {
 			map_data = BigPlus4;
+		} else if (map_name == "BigPlus4_3m_30p") {
+			map_data = BigPlus4_3m_30p;
+		} else if (map_name == "BigPlus4_10m_100p") {
+			map_data = BigPlus4_10m_100p;
+
 		} else if (map_name == "Diamond2") {
 			map_data = Diamond2;
+		} else if (map_name == "Diamond2_3m_30p") {
+			map_data = Diamond2_3m_30p;
+		} else if (map_name == "Diamond2_10m_100p") {
+			map_data = Diamond2_10m_100p;
+
 		} else if (map_name == "OctaPong2") {
 			map_data = OctaPong2;
+		} else if (map_name == "OctaPong2_3m_30p") {
+			map_data = OctaPong2_3m_30p;
+		} else if (map_name == "OctaPong2_10m_100p") {
+			map_data = OctaPong2_10m_100p;
+
 		} else if (map_name == "OctaPong4") {
 			map_data = OctaPong4;
+		} else if (map_name == "OctaPong4_3m_30p") {
+			map_data = OctaPong4_3m_30p;
+		} else if (map_name == "OctaPong4_10m_100p") {
+			map_data = OctaPong4_10m_100p;
+
 		} else if (map_name == "SimpleSquare2") {
 			map_data = SimpleSquare2;
+		} else if (map_name == "SimpleSquare2_3m_30p") {
+			map_data = SimpleSquare2_3m_30p;
+		} else if (map_name == "SimpleSquare2_10m_100p") {
+			map_data = SimpleSquare2_10m_100p;
+
 		} else if (map_name == "SimpleSquare4") {
 			map_data = SimpleSquare4;
+		} else if (map_name == "SimpleSquare4_3m_30p") {
+			map_data = SimpleSquare4_3m_30p;
+		} else if (map_name == "SimpleSquare4_10m_100p") {
+			map_data = SimpleSquare4_10m_100p;
+
 		} else {
 			throw ('Invalid Map');
 		}

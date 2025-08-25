@@ -82,7 +82,7 @@ const template = /*html*/ `
 							<th class="px-4 py-3">Date</th>
 							<th class="px-4 py-3">Opponent</th>
 							<th class="px-4 py-3">Result</th>
-							<th class="px-4 py-3">Score</th>
+							<th class="px-4 py-3">Health</th>
 							<th class="px-4 py-3">Mode</th>
 							<th class="px-4 py-3">Duration</th>
 						</tr>

@@ -5,7 +5,14 @@ export function updateDot(userId: number, live: number | boolean) {
 	document
 		.querySelectorAll<HTMLSpanElement>(`[data-user-id="${userId}"]`)
 		.forEach(dot => {
-			dot.classList.toggle('bg-[#0bda8e]', online)
-			dot.classList.toggle('bg-[#D22B2B]', !online)
+			if (dot.classList.contains('status-dot')) {
+				// Users list uses .status-dot.online/.offline
+				dot.classList.toggle('online', online)
+				dot.classList.toggle('offline', !online)
+			} else {
+				// Profile dot uses Tailwind bg classes
+				dot.classList.toggle('bg-[#0bda8e]', online)
+				dot.classList.toggle('bg-[#D22B2B]', !online)
+			}
 		})
 }

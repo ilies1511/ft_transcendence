@@ -68,6 +68,8 @@ export class Router {
 
 		// If user not logged in and route is neither open nor guest-only -> force login
 		if (!currentUser && !isGuestOnly && !isOpen) {
+			// notify the app so header/menu/ws teardown happen immediately
+			document.dispatchEvent(new Event('auth-change'));
 			this.go(LOGIN_REDIRECT);
 			return;
 		}
@@ -83,6 +85,8 @@ export class Router {
 				const dynamicPath = `${path}/${user.id}`;
 				return this.go(dynamicPath, false); // No pushHistory to avoid loop
 			} else {
+				// session missing -> ensure UI switches to guest state
+				document.dispatchEvent(new Event('auth-change'));
 				return this.go('/login', false); // Guests to login
 			}
 		}

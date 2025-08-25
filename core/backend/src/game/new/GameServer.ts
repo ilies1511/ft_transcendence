@@ -314,6 +314,18 @@ export class GameServer {
 		}
 	}
 
+	private static async ensureActiveUser(userId: number): Promise<boolean> {
+		try {
+			const row = await GameServer._fastify.db.get<{ id: number }>(
+				'SELECT id FROM users WHERE id = ? AND is_deleted = 0',
+				userId
+			);
+			return !!row;
+		} catch {
+			return false;
+		}
+	}
+
 	private static async _enter_matchmaking_api(request: FastifyRequest< { Body: EnterMatchmakingReq } >)
 		: Promise<EnterMatchmakingResp>
 	{
@@ -324,6 +336,12 @@ export class GameServer {
 
 		const { user_id, display_name, map_name, ai_count } = request.body;
 		console.log("GAME: _enter_matchmaking_api: ", request.body);
+
+		// Reject if user does not exist or is deleted
+		if (!await this.ensureActiveUser(user_id)) {
+			response.error = "User not found or deleted";
+			return response;
+		}
 
 		const parti: ClientParticipation | undefined = this.client_participations.get(user_id);
 
