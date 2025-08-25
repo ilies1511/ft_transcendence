@@ -9,6 +9,9 @@ export default defineConfig(({ mode }) => ({
 			'@': path.resolve(__dirname, 'client'), // optional but useful for client code
 		}
 	},
+	build: {
+		target: 'es2022',
+	},
 	esbuild: { // REMOVES CONSOLE, DEBUGGER LOGS FROM PRODUCTION
 		drop: mode === 'production' ? ['console', 'debugger'] : [],
 		// pure: mode === 'production' ? ['console.log'] : [],
