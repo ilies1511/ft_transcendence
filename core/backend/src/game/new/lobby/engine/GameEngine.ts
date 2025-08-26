@@ -478,8 +478,9 @@ export class GameEngine {
 				this._update_movement(input, client);
 				break ;
 			case ("reset"):
+				//deactived for prod
 				//for faster debugging: should reset the game
-				this._reset();
+				//this._reset();
 				break ;
 			default:
 				console.log("Error: Game server: unknown input type!");
