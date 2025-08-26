@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { type UpdateProfile, anonymizeUser, deleteUserAndData, getUserData, jsonGZHandler, jsonHandler, zipHandler, updateMyProfile } from '../functions/gdpr.ts';
+import { type UpdateProfile, anonymizeUser, deleteUserAndData, getUserData, jsonGZHandler, jsonHandler, zipHandler, updateMyProfile, anonymizeAndSetPassword, issueFreshAuthCookie } from '../functions/gdpr.ts';
 import { collectUserExport } from '../functions/gdpr.ts';
 import { Readable } from 'node:stream';
 import { createGzip } from 'node:zlib';
@@ -9,7 +9,7 @@ import fs from "fs";
 import { fileURLToPath } from 'node:url'
 import { extractFilename, resolveAvatarFsPath, resolvePublicPath } from '../functions/gdpr.ts';
 import { getUserId } from '../functions/user.ts';
-import { anonymizeMeSchema, meDataSchema, meDeleteSchema, meExportSchema, mePatchSchema, ogExportSchema } from '../schemas/gdpr.ts';
+import { anonymizeAndSetPwSchema, anonymizeMeSchema, meDataSchema, meDeleteSchema, meExportSchema, mePatchSchema, ogExportSchema } from '../schemas/gdpr.ts';
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -34,14 +34,32 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 			return reply.send(data);
 		});
 
+	// BEGIN -- OLD
+	// fastify.post('/api/me/anonymize',
+	// 	{
+	// 		schema: anonymizeMeSchema
+	// 	},
+	// 	async (req, reply) => {
+	// 		const userId = await getUserId(req);
+	// 		await anonymizeUser(fastify, userId);
+	// 		return reply.send({ message: 'Your personal data has been anonymized.' });
+	// 	});
+	// END -- OLD
 	fastify.post('/api/me/anonymize',
 		{
-			schema: anonymizeMeSchema
+			schema: anonymizeAndSetPwSchema
 		},
 		async (req, reply) => {
 			const userId = await getUserId(req);
-			await anonymizeUser(fastify, userId);
-			return reply.send({ message: 'Your personal data has been anonymized.' });
+			const { newPassword } = req.body as { newPassword: string };
+
+			const { pseudoUsername, pseudoEmail } =
+				await anonymizeAndSetPassword(fastify, userId, newPassword);
+			// await issueFreshAuthCookie(fastify, reply, userId, pseudoUsername);
+			return reply.send({
+				message: 'Your data has been anonymized and your password was updated.',
+				pseudoEmail,
+			});
 		});
 
 	// fastify.delete('/api/me',
