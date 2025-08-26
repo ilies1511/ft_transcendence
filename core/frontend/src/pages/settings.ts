@@ -61,20 +61,23 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 
 				<label class="block">
 					<span class="text-sm font-medium text-[#b99da6]">Username</span>
-					<input name="username" type="text" placeholder="Username (for login)" value="${user.username ?? ''}"
-						   class="mt-1 w-full h-12 rounded-xl bg-[#48232f] p-4 text-white placeholder:text-[#ca91a3] focus:outline-none" />
+						<input name="username" type="text" placeholder="Username (for login)" value="${user.username ?? ''}"
+							maxlength="10"
+							class="mt-1 w-full h-12 rounded-xl bg-[#48232f] p-4 text-white placeholder:text-[#ca91a3] focus:outline-none" />
+
 				</label>
 
 				<label class="block">
-					<span class="text-sm font-medium text-[#b99da6]">Nickname</span>
 					<input name="nickname" type="text" placeholder="Nickname (public)" value="${user.nickname ?? ''}"
-						   class="mt-1 w-full h-12 rounded-xl bg-[#48232f] p-4 text-white placeholder:text-[#ca91a3] focus:outline-none" />
+						maxlength="10"
+						class="mt-1 w-full h-12 rounded-xl bg-[#48232f] p-4 text-white placeholder:text-[#ca91a3] focus:outline-none" />
 				</label>
 
 				<label class="block">
 					<span class="text-sm font-medium text-[#b99da6]">Email</span>
-					<input name="email" type="email" placeholder="Email" value="${user.email ?? ''}"
-						   class="mt-1 w-full h-12 rounded-xl bg-[#48232f] p-4 text-white placeholder:text-[#ca91a3] focus:outline-none" />
+				<input name="email" type="email" placeholder="Email" value="${user.email ?? ''}"
+					maxlength="50"
+					class="mt-1 w-full h-12 rounded-xl bg-[#48232f] p-4 text-white placeholder:text-[#ca91a3] focus:outline-none" />
 				</label>
 
 				<button class="w-full h-10 rounded-xl bg-[#f22667] text-white font-bold tracking-wide
@@ -269,7 +272,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 
 			try {
 				// const uploadResponse = await fetch(`/api/users/${me.id}/avatar`, { method: 'POST', body: fd })
-				const headers = new Headers({ 'Content-Type': 'application/json' });
+				const headers = new Headers();
 				if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
 				const uploadResponse = await fetch('/api/me/avatar', {
 					method: 'POST',
@@ -302,10 +305,14 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 		const settingsForm = root.querySelector<HTMLFormElement>('#settings-form')!
 		const errorMsg = root.querySelector<HTMLParagraphElement>('#msg')!
 		const nicknameInput = settingsForm.querySelector<HTMLInputElement>('input[name="nickname"]')!
+		const usernameInput = settingsForm.querySelector<HTMLInputElement>('input[name="username"]')!
+		const emailInput = settingsForm.querySelector<HTMLInputElement>('input[name="email"]')!
 		const submitBtn = settingsForm.querySelector<HTMLButtonElement>('button[type="submit"]')!
 
 		// Function to toggle button state based on input
 		const updateButtonState = () => {
+			const emailTooLong = emailInput.value.trim().length > 50
+			emailInput.setCustomValidity(emailTooLong ? 'Max 50 characters' : '')
 			submitBtn.disabled = nicknameInput.value.trim() === ''
 		}
 
@@ -313,11 +320,36 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 		updateButtonState()
 
 		// Listen for changes
+		updateButtonState()
 		nicknameInput.addEventListener('input', updateButtonState)
+		emailInput.addEventListener('input', updateButtonState)
 
 		settingsForm.onsubmit = async e => {
 			e.preventDefault()
 			showMsg(errorMsg, '')
+
+			const uname = usernameInput.value.trim()
+			const nick = nicknameInput.value.trim()
+			const email = emailInput.value.trim()
+
+			// Block updates if over 10 chars (only when changed)
+			if (uname !== user.username && uname.length > 10) {
+				showMsg(errorMsg, 'Username must be at most 10 characters.')
+				return
+			}
+			if (nick !== user.nickname && nick.length > 10) {
+				showMsg(errorMsg, 'Nickname must be at most 10 characters.')
+				return
+			}
+			if (email !== user.email && email.length > 50) {
+				showMsg(errorMsg, 'Email must be at most 50 characters.')
+				return
+			}
+
+			if (email !== user.email && email && !emailInput.checkValidity()) {
+				showMsg(errorMsg, 'Please enter a valid email address.')
+				return
+			}
 
 			const formData = new FormData(settingsForm)
 			const data: Record<string, any> = {}
@@ -639,6 +671,8 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 			return
 		}
 		showMsg(accountMsg, 'Deleting account...')
+		globalThis.game?.leave();
+		globalThis.tournament?.leave();
 		try {
 			const headers = new Headers();
 			if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
