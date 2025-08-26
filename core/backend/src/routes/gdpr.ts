@@ -93,6 +93,25 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 			try {
 				await deleteUserAndData(fastify, userId);
 
+				console.log("DELETING ACCOUT");
+				// const targets = userSockets.get(userId)
+				// if (targets?.size) {
+				// 	for (const ws of targets) {
+				// 		ws.send(JSON.stringify({
+				// 			type: 'user_deleted',
+				// 			userId
+				// 		}))
+				// 	}
+				// }
+
+				userSockets.forEach((sockets, uid) => {
+					sockets.forEach((ws) => {
+							ws.send(JSON.stringify({
+								type: 'user_deleted',
+								userId
+							}))
+					});
+				});
 				//remove user from the open sockets
 				const set = userSockets.get(userId);
 				if (set) {
@@ -102,12 +121,9 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 					userSockets.delete(userId);
 				}
 				//notify other users that user account was deleted, so FE can be updated
-				const payload = { type: 'user_deleted', userId };
-				for (const client of fastify.websocketServer.clients) {
-					if ((client as any).readyState === WebSocket.OPEN) {
-						try { client.send(JSON.stringify(payload)); } catch {}
-					}
-				}
+				// const payload = { type: 'user_deleted', userId };
+
+
 
 				reply.clearCookie('token', {
 					path: '/',
@@ -148,12 +164,20 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 					[userId]
 				)
 				if (updated) {
-					const payload = { type: 'user_updated', user: updated }
-					for (const client of fastify.websocketServer.clients) {
-						if (client.readyState === WebSocket.OPEN) {
-							client.send(JSON.stringify(payload))
-						}
-					}
+					// const payload = { type: 'user_updated', user: updated }
+					// for (const client of fastify.websocketServer.clients) {
+					// 	if (client.readyState === WebSocket.OPEN) {
+					// 		client.send(JSON.stringify(payload))
+					// 	}
+					// }
+					userSockets.forEach((sockets, uid) => {
+						sockets.forEach((ws) => {
+								ws.send(JSON.stringify({
+									type: 'user_updated',
+									user: updated
+								}))
+						});
+					});
 				}
 
 				return { ok: true }

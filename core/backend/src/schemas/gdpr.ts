@@ -139,20 +139,20 @@ export const PatchBodySchema = {
 		username: {
 			type: 'string',
 			minLength: 3,
-			maxLength: 240,
+			maxLength: 10,
 			pattern: '^[a-zA-Z0-9_]+$',
 			transform: ['trim'],
 		},
 		nickname: {
 			type: 'string',
 			minLength: 1,
-			maxLength: 240,
+			maxLength: 10,
 			transform: ['trim'],
 		},
 		email: {
 			type: 'string',
 			format: 'email',
-			maxLength: 254,
+			maxLength: 50,
 			transform: ['trim', 'toLowerCase'],
 		},
 		password: { type: 'string', minLength: 8, maxLength: 128 },

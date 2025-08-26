@@ -123,8 +123,16 @@ const RegisterPage: PageModule = {
 					router.go('/');
 				} else {
 					const res_text = await res.text()
-					console.log(JSON.parse(res_text))
-					msg.textContent = JSON.parse(res_text)['message']
+					// console.log('err1');
+					// console.log(JSON.parse(res_text))
+					// console.log('err1');
+					if (JSON.parse(res_text)['message']) {
+						msg.textContent = JSON.parse(res_text)['message']
+					} else if (JSON.parse(res_text)['error']) {
+						msg.textContent = JSON.parse(res_text)['error']
+					} else {
+						msg.textContent = 'error'
+					}
 					//const { error } = await res.json()
 					//console.log('error: ', error);
 					//msg.textContent = error.message ;

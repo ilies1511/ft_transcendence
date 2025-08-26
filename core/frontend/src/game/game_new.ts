@@ -555,7 +555,9 @@ export class Game {
 					// setTimeout(() =>
 					// 	console.log('still there?', document.body.contains(toastBox)), 50);
 					break;
-
+				case 'user_deleted':
+					showToast({ title: 'A player left the match for ever.' });
+					break;
 				default:
 					throw new Error('Unhandled message type: ' + (json as any).type);
 			}

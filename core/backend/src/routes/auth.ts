@@ -8,6 +8,7 @@ import { error } from 'console';
 import { validateCredentials, verify2FaToken } from '../functions/2fa.ts';
 import { setUserLive } from '../functions/user.ts';
 import { login2FASchema, loginSchema, logoutSchema, RegisterBodySchema } from '../schemas/auth.ts';
+import { userSockets } from '../types/wsTypes.ts';
 
 const COST = 12  // bcrypt cost factor (2^12 ≈ 400 ms on laptop)
 
@@ -47,19 +48,20 @@ export default async function authRoutes(app: FastifyInstance) {
 			}
 
 			//NEW REGISTERED USERS WS NOTIFICATON
-			const payload = {
-				type: 'user_registered',
-				user: {
-					id: lastID,
-					username: username,
-					avatar: avatar
-				}
-			};
-			for (const client of app.websocketServer.clients) {
-				if (client.readyState === WebSocket.OPEN) {
-					client.send(JSON.stringify(payload));
-				}
-			}
+
+
+				userSockets.forEach((sockets, uid) => {
+					sockets.forEach((ws) => {
+							ws.send(JSON.stringify({
+								type: 'user_registered',
+								user: {
+									id: lastID,
+									username: username,
+									avatar: avatar
+							}
+							}))
+					});
+				});
 
 			// Auto-login after registration
 			const token = await reply.jwtSign({ id: lastID, name: username })
