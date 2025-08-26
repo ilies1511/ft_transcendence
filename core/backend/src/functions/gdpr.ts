@@ -33,6 +33,7 @@ export async function anonymizeAndSetPassword(
 	newPassword: string,
 ): Promise<{ pseudoUsername: string; pseudoEmail: string }> {
 	const { username, email } = generatePseudo(userId);
+	const avatar = 'deleted_avatar.png';
 	const hash = await bcrypt.hash(newPassword, 12);
 
 	await app.db.run(
@@ -40,10 +41,10 @@ export async function anonymizeAndSetPassword(
 		username = ?,
 		nickname = ?,
 		email = ?,
-		avatar = '',
-		password = ?,
-		is_deleted = 1 WHERE id = ?`,
-		username, username, email, hash, userId
+		avatar = ?,
+		password = ? WHERE id = ?`,
+		// is_deleted = 1 WHERE id = ?`,
+		username, username, email, avatar,hash, userId
 	);
 	return { pseudoUsername: username, pseudoEmail: email };
 }
