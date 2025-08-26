@@ -69,7 +69,7 @@ function renderUserRow(
 		: '';
 
 	return /*html*/`
-		<li class="user-row group" data-uid="${u.id}">
+		<li class="user-row group ${isSelf ? 'bg-[#3a2229] border-l-2 border-gray-500' : ''}" data-uid="${u.id}">
 			<a href="/profile/${u.id}" data-route
 				class="flex items-center gap-3 min-w-0 flex-1 pr-6 focus:outline-none"
 				aria-label="View profile of ${u.username}">
@@ -78,7 +78,7 @@ function renderUserRow(
 					<div class="min-w-0">
 						<span
 							class="font-semibold text-white group-hover:text-[#f22667] transition block truncate">
-							${u.username}
+							${u.username} ${isSelf ? '<span class="text-gray-400 font-normal">(You)</span>' : ''}
 						</span>
 						<span
 							class="text-xs text-[#b99da6] break-all truncate group-hover:text-[#f22667] transition">
