@@ -70,7 +70,6 @@ export async function refreshHeader() {
 		//router.go('/login');
 	};
 
-	// Bind WS update only once per render instance
 	if (!(span as any)._wsBound) {
 		const onUserUpdated = (ev: Event) => {
 			const { user: updated } = (ev as CustomEvent).detail || {}

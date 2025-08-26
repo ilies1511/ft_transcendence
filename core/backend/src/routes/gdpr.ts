@@ -56,8 +56,18 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 			const userId = await getUserId(req);
 			const { newPassword } = req.body as { newPassword: string };
 
+
+
 			const { pseudoUsername, pseudoEmail } =
 				await anonymizeAndSetPassword(fastify, userId, newPassword);
+
+			userSockets.forEach((sockets, uid) => {
+				sockets.forEach((ws) => {
+					ws.send(JSON.stringify({
+						type: 'user_updated',
+					}))
+				});
+			});
 			// await issueFreshAuthCookie(fastify, reply, userId, pseudoUsername);
 			return reply.send({
 				message: 'Your data has been anonymized and your password was updated.',
