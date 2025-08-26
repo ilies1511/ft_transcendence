@@ -36,8 +36,8 @@ export class SharedClient {
 
 		const totalSize = 2 // obj_id
 			+ 4 // ingame_id
-			+ paddleBuf.byteLength
-			+ baseBuf.byteLength
+			+ paddleBuf!.byteLength
+			+ baseBuf!.byteLength
 			+ 2 //score
 		;
 
@@ -54,12 +54,12 @@ export class SharedClient {
 		offset += 4;
 
 		// paddle
-		new Uint8Array(buffer, offset).set(new Uint8Array(paddleBuf));
-		offset += paddleBuf.byteLength;
+		new Uint8Array(buffer, offset).set(new Uint8Array(paddleBuf!));
+		offset += paddleBuf!.byteLength;
 
 		// base
-		new Uint8Array(buffer, offset).set(new Uint8Array(baseBuf));
-		offset += baseBuf.byteLength;
+		new Uint8Array(buffer, offset).set(new Uint8Array(baseBuf!));
+		offset += baseBuf!.byteLength;
 
 		//score
 		view.setInt16(offset, this.score, true);

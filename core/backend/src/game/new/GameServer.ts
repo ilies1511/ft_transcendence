@@ -237,8 +237,8 @@ export class GameServer {
 			this.client_participations.set(client_id, parti);
 			console.log(`[participation] created new participation record for client ${client_id}`);
 		}
-		const prev = this.client_participations.get(client_id).lobby_id;
-		this.client_participations.get(client_id).lobby_id = lobby_id;
+		const prev = this.client_participations.get(client_id)!.lobby_id;
+		this.client_participations.get(client_id)!.lobby_id = lobby_id;
 		console.log(`[participation] lobby set: client=${client_id}, from=${prev ?? "none"} to=${lobby_id}`);
 	}
 
@@ -339,7 +339,7 @@ export class GameServer {
 
 		// Reject if user does not exist or is deleted
 		if (!await this.ensureActiveUser(user_id)) {
-			response.error = "User not found or deleted";
+			response.error = "Not Found";
 			return response;
 		}
 

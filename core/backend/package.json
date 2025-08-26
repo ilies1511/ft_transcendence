@@ -3,6 +3,9 @@
 	"version": "1.0.0",
 	"type": "module",
 	"main": "index.js",
+	  "compilerOptions": {
+    "noEmitOnError": false
+  },
 	"scripts": {
 		"dev": "tsx watch src/index.ts",
 		"build": "tsc -p .",

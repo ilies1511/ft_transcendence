@@ -114,8 +114,8 @@ export class GameLobby {
 		if (this.engine) {
 			while (i < this._connections.length) {
 				this._clear_timeout(this._connections[i]);
-				if (this._connections[i].sock && this._connections[i].sock.ws) {
-					this.engine.clients[i].set_socket(this._connections[i].sock.ws);
+				if (this._connections[i].sock && this._connections[i].sock!.ws) {
+					this.engine.clients[i].set_socket(this._connections[i].sock!.ws);
 				}
 				this.engine.clients[i].global_id = this._connections[i].id;
 				this._connections[i].ingame_id = this.engine.clients[i].obj_id;

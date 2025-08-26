@@ -141,14 +141,14 @@ export class TournamentApi {
 			}
 		);
 
-		TournamentApi.tournament_state_api = TournamentApi.tournament_state_api.bind(TournamentApi);
-		fastify.post<{Body: StateReq}>(
-			'/api/tournament_state',
-			{ schema: state_schema},
-			async (request, reply) => {
-				TournamentApi.tournament_state_api(request);
-			}
-		);
+		//TournamentApi.tournament_state_api = TournamentApi.tournament_state_api.bind(TournamentApi);
+		//fastify.post<{Body: StateReq}>(
+		//	'/api/tournament_state',
+		//	{ schema: state_schema},
+		//	async (request, reply) => {
+		//		TournamentApi.tournament_state_api(request);
+		//	}
+		//);
 	}
 
 	static next_tournament_id: number = 1;
@@ -230,15 +230,15 @@ export class TournamentApi {
 		return (msg);
 	}
 
-	static tournament_state_api(request: FastifyRequest< { Body: StateReq } >): TournamentState | ServerError {
-		const { client_id, tournament_id } = request.body;
-		const tournament: Tournament | undefined = GameServer.tournaments.get(tournament_id);
-		if (!tournament) {
-			console.log("tournament_state api: Not Found");
-			return ("Not Found");
-		}
-		const ret: TournamentState = tournament.get_state(client_id);
-		console.log("tournament_state api: ", ret);
-		return (ret);
-	}
+	//static tournament_state_api(request: FastifyRequest< { Body: StateReq } >): TournamentState | ServerError {
+	//	const { client_id, tournament_id } = request.body;
+	//	const tournament: Tournament | undefined = GameServer.tournaments.get(tournament_id);
+	//	if (!tournament) {
+	//		console.log("tournament_state api: Not Found");
+	//		return ("Not Found");
+	//	}
+	//	const ret: TournamentState = tournament.get_state(client_id);
+	//	console.log("tournament_state api: ", ret);
+	//	return (ret);
+	//}
 };
