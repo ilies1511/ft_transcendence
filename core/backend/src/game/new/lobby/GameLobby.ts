@@ -129,7 +129,7 @@ export class GameLobby {
 		this._game_engine_finish_callback = this._game_engine_finish_callback.bind(this);
 		if (!this.engine) {
 			this.engine = new GameEngine(this._map_name, this.lobby_type, this,
-				this._game_engine_finish_callback, 1000 /* todo: hardcoded 1000 sec */);
+				this._game_engine_finish_callback,);
 		} else {
 		}
 		let i = 0;
