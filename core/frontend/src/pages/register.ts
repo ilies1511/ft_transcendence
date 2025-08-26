@@ -122,11 +122,18 @@ const RegisterPage: PageModule = {
 					document.dispatchEvent(new Event('auth-change'));
 					router.go('/');
 				} else {
-					const { error } = await res.json()
+					const res_text = await res.text()
+					console.log(JSON.parse(res_text))
+					msg.textContent = JSON.parse(res_text)['message']
+					//const { error } = await res.json()
+					//console.log('error: ', error);
+					//msg.textContent = error.message ;
+					//console.log(msg.textContent)
 					msg.className = 'form-msg msg-error'
-					msg.textContent = error || `Error ${res.status}`
+					//msg.textContent = error || `Error ${res.status}`
 				}
-			} catch {
+			} catch (e) {
+				console.log('e: ', e)
 				msg.className = 'form-msg msg-error'
 				msg.textContent = 'Network error'
 			}
