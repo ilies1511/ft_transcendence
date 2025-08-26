@@ -28,7 +28,7 @@ export async function refreshMenu() {
 
 	links.forEach(l => {
 		const li = document.createElement('li')
-		li.innerHTML = `<a href="${l.href}" data-route>${l.text}</a>`
+		li.innerHTML = `<a class="text-sm sm:text-3xl" href="${l.href}" data-route>${l.text}</a>`
 		nav.appendChild(li)
 	})
 
