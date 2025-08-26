@@ -18,9 +18,9 @@ async function main() {
 	// const fastify = Fastify({logger: { level: 'info' }})
 
 	const fastify = Fastify({
-		// logger: false,
+		logger: false,
 		// logger: { level: 'info' },
-		logger: { level: 'debug' },
+		// logger: { level: 'debug' },
 		ajv: {
 			customOptions: {
 				removeAdditional: 'all',

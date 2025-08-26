@@ -72,7 +72,7 @@ function renderFriendRow(u: User): HTMLLIElement {
 	left.className = 'unread-message-appender flex items-center gap-2';
 
 	const avatar = document.createElement('img');
-	avatar.src = u.avatar;
+	avatar.src = `/${u.avatar}`;
 	avatar.alt = `${u.username} avatar`;
 	avatar.className = 'h-5 w-5 shrink-0 rounded-full object-cover';
 

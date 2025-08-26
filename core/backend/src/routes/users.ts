@@ -15,6 +15,7 @@ import {
 } from "../functions/user.ts";
 import { type UserRow } from "../types/userTypes.ts";
 import { uploadAvatarSchema } from "../schemas/users.ts";
+import { userSockets } from '../types/wsTypes.ts';
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -291,6 +292,10 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 	// 		reply.send({ success: true });
 	// 	}
 	// )
+
+
+
+
 	fastify.post(
 		'/api/me/avatar',
 		{
@@ -309,7 +314,9 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 			const PUBLIC_DIR = process.env.PUBLIC_DIR!;
 			const AVATAR_SUBDIR = process.env.AVATAR_SUBDIR!;
 
-			const avatarDir = path.join(PUBLIC_DIR, AVATAR_SUBDIR)
+			// const avatarDir = path.join(PUBLIC_DIR, AVATAR_SUBDIR)
+			const avatarDir = PUBLIC_DIR;
+			console.log(avatarDir)
 			await mkdir(avatarDir, { recursive: true })
 
 			const filename = "NewUploadedAvatar" + `_${userId}.png`;
@@ -328,16 +335,22 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 				[request.params.id]
 			)
 			if (updated) {
-				const payload = { type: 'user_updated', user: updated }
-				for (const client of fastify.websocketServer.clients) {
-					if (client.readyState === WebSocket.OPEN) {
-						client.send(JSON.stringify(payload))
-					}
-				}
+	
+				userSockets.forEach((sockets, uid) => {
+					sockets.forEach((ws) => {
+						ws.send(JSON.stringify({
+							type: 'user_updated',
+							user: updated
+						}))
+					});
+				});
 			}
-
+			console.log(`AVATAR SUBDIR ${AVATAR_SUBDIR}`);
 			const avatarUrl = `/${AVATAR_SUBDIR}/${filename}`
 			return reply.code(200).send({ avatarUrl })
 		}
 	)
+
+
+
 };

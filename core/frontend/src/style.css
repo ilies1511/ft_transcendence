@@ -9,6 +9,13 @@
 	.msg-ok { @apply text-green-400; }
 }
 
+@layer utilities {
+	.cursor-pointer {
+        cursor: pointer;
+        cursor: -moz-grab;
+	}
+}
+
 button[disabled] {
 	background-color: #4d3941;
 	color: #b99da6;
