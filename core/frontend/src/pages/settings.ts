@@ -226,6 +226,31 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 
 				<p id="account-msg" class="form-msg"></p>
 			</section>
+
+			<!-- Anonymize Modal -->
+			<div id="anonymize-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+				<div id="anonymize-modal-content" class="bg-[#2b171e] p-8 rounded-[25px] w-full max-w-[400px] space-y-4 mx-4">
+					<h2 class="text-center text-white text-xl font-bold">Anonymize Account</h2>
+					<p class="text-[#b99da6] text-sm text-center">
+						This will replace your personal data with anonymous placeholders. WARNING: This CANNOT be undone! To secure your account, you must set a new password.
+					</p>
+					<label class="block">
+						<span class="text-sm font-medium text-[#b99da6]">New Password</span>
+						<input id="anonymize-password" type="password" placeholder="Enter new password (min. 8 chars)"
+							   class="mt-1 w-full h-12 rounded-xl bg-[#48232f] p-4 text-white placeholder:text-[#ca91a3] focus:outline-none" />
+					</label>
+					<label class="block">
+						<span class="text-sm font-medium text-[#b99da6]">Confirm New Password</span>
+						<input id="anonymize-password-confirm" type="password" placeholder="Confirm new password"
+							   class="mt-1 w-full h-12 rounded-xl bg-[#48232f] p-4 text-white placeholder:text-[#ca91a3] focus:outline-none" />
+					</label>
+					<div class="flex space-x-4">
+						<button id="anonymize-cancel-btn" class="w-full h-10 rounded-xl bg-gray-600 text-white font-bold hover:bg-gray-500">Cancel</button>
+						<button id="anonymize-confirm-btn" class="w-full h-10 rounded-xl bg-[#824155] text-white font-bold hover:bg-[#6c3543]">Confirm</button>
+					</div>
+					<p id="anonymize-modal-msg" class="form-msg"></p>
+				</div>
+			</div>
 		</div>
 	`
 
@@ -640,9 +665,39 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 		const formatSelect = root.querySelector('#export-format') as HTMLSelectElement
 		const includeMediaCheckbox = root.querySelector('#export-include-media') as HTMLInputElement
 
-		anonymizeBtn.onclick = async () => {
-			if (!confirm('Anonymize your personal data? This action cannot be undone.')) return
-			showMsg(accountMsg, 'Processing...')
+		// Anonymize modal logic
+		const anonymizeModal = root.querySelector('#anonymize-modal') as HTMLDivElement
+		const anonymizePasswordInput = root.querySelector('#anonymize-password') as HTMLInputElement
+		const anonymizePasswordConfirmInput = root.querySelector('#anonymize-password-confirm') as HTMLInputElement
+		const anonymizeConfirmBtn = root.querySelector('#anonymize-confirm-btn') as HTMLButtonElement
+		const anonymizeCancelBtn = root.querySelector('#anonymize-cancel-btn') as HTMLButtonElement
+		const anonymizeModalMsg = root.querySelector('#anonymize-modal-msg') as HTMLParagraphElement
+
+		anonymizeBtn.onclick = () => {
+			anonymizePasswordInput.value = ''
+			anonymizePasswordConfirmInput.value = ''
+			showMsg(anonymizeModalMsg, '')
+			anonymizeModal.classList.remove('hidden')
+		}
+
+		anonymizeCancelBtn.onclick = () => {
+			anonymizeModal.classList.add('hidden')
+		}
+
+		anonymizeConfirmBtn.onclick = async () => {
+			const newPassword = anonymizePasswordInput.value
+			const confirmPassword = anonymizePasswordConfirmInput.value
+
+			if (newPassword.length < 8) {
+				showMsg(anonymizeModalMsg, 'Password must be at least 8 characters long.')
+				return
+			}
+			if (newPassword !== confirmPassword) {
+				showMsg(anonymizeModalMsg, 'Passwords do not match.')
+				return
+			}
+
+			showMsg(anonymizeModalMsg, 'Processing...')
 			try {
 				const headers = new Headers({ 'Content-Type': 'application/json' });
 				if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
@@ -650,21 +705,25 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 					method: 'POST',
 					credentials: 'include',
 					headers,
+					body: JSON.stringify({ newPassword }),
 				})
+
 				if (r.ok) {
-					showMsg(accountMsg, 'Data anonymized.', true)
-					document.dispatchEvent(new Event('settings-update'))
+					const { message } = await r.json()
+					anonymizeModal.classList.add('hidden')
+					showMsg(accountMsg, message || 'Data anonymized.', true)
+					setTimeout(() => router.go('/login'), 3000)
 				} else {
-					const { error } = await r.json().catch(() => ({ error: 'Failed' }))
-					showMsg(accountMsg, error || 'Failed')
+					const { error } = await r.json().catch(() => ({ error: 'Anonymization failed' }))
+					showMsg(anonymizeModalMsg, error)
 				}
-			} catch {
-				showMsg(accountMsg, 'Network error')
+			} catch (err) {
+				showMsg(anonymizeModalMsg, 'A network error occurred.')
 			}
 		}
 
 	deleteBtn.onclick = async () => {
-		if (!confirm('Delete your account permanently? This cannot be undone.')) return
+		if (!confirm('Delete your account permanently? This CANNOT be undone!')) return
 		const confirmText = prompt('Type DELETE to confirm permanent deletion of your account:')
 		if (confirmText !== 'DELETE') {
 			showMsg(accountMsg, 'Deletion cancelled')
