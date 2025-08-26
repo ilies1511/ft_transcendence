@@ -200,6 +200,7 @@ const LoginPage: PageModule = {
 
 				// Login successful (either directly or after 2FA)
 				clearSession();
+				globalThis.logged_in = true;
 				document.dispatchEvent(new Event('auth-change'));
 				router.go('/');
 

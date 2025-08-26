@@ -66,8 +66,8 @@ export async function refreshHeader() {
 		logoutBtn.onclick = async () => {
 		await logout();
 		// immediately refresh UI to guest state
-		document.dispatchEvent(new Event('auth-change'));
-		router.go('/login');
+		//document.dispatchEvent(new Event('auth-change'));
+		//router.go('/login');
 	};
 
 	// Bind WS update only once per render instance

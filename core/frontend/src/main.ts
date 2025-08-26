@@ -15,6 +15,10 @@ export const router = new Router(root);
 
 document.addEventListener('click', router.linkHandler); // link delegation
 
+declare global { var logged_in: boolean};
+globalThis.logged_in = false;
+
+
 // Fire auth-change once if a valid cookie already exists
 (async () => {
 	const user = await getSession();
