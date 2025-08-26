@@ -124,6 +124,10 @@ export class GameScene extends BaseScene {
 		(this._canvas as HTMLCanvasElement).style.touchAction = "none";
 
 		this._gui = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this);
+		// Ensure consistent GUI scaling across resolutions/DPR
+		this._gui.idealHeight = 1080;         // scale GUI based on a 1080p reference
+		this._gui.renderAtIdealSize = true;
+
 		this.score_panel = new ScorePanel(this._gui);
 
 		this._add_mobile_buttons();

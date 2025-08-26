@@ -35,35 +35,38 @@ export class LobbyScene extends BaseScene {
 		this._gui = GUI.AdvancedDynamicTexture.CreateFullscreenUI("LobbyUI", true, this);
 
 		const panel = new GUI.StackPanel();
-		panel.width = "400px";
+		panel.width = "800px";
 		panel.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
 		panel.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
 		panel.background = "#222222CC";
-		panel.paddingTop = "20px";
-		panel.paddingBottom = "20px";
+		panel.paddingTop = "40px";
+		panel.paddingBottom = "40px";
 		this._gui.addControl(panel);
 
 		this._header = new GUI.TextBlock();
 		this._header.text = "Loading...";
-		this._header.height = "40px";
+		this._header.height = "80px";
 		this._header.color = "white";
-		this._header.fontSize = 24;
+		this._header.fontSize = 48;
 		panel.addControl(this._header);
 
 		this._player_count_text = new GUI.TextBlock();
 		this._player_count_text.color = "white";
-		this._player_count_text.height = "30px";
+		this._player_count_text.height = "60px";
+		this._player_count_text.fontSize = 36;
 		panel.addControl(this._player_count_text);
 
 		this._loaded_player_count_text = new GUI.TextBlock();
 		this._loaded_player_count_text.color = "white";
-		this._loaded_player_count_text.height = "30px";
+		this._loaded_player_count_text.height = "60px";
+		this._loaded_player_count_text.fontSize = 36;
 		panel.addControl(this._loaded_player_count_text);
 
 		this._global_player_count_text = new GUI.TextBlock();
 		this._global_player_count_text.color = "white";
-		this._global_player_count_text.height = "30px";
+		this._global_player_count_text.height = "60px";
 		this._global_player_count_text.text = '';
+		this._global_player_count_text.fontSize = 36;
 		panel.addControl(this._global_player_count_text);
 
 		this._update_global_player_count = this._update_global_player_count.bind(this);
@@ -74,7 +77,7 @@ export class LobbyScene extends BaseScene {
 	private _update_global_player_count(timeout_duration: number = 4000): NodeJS.Timeout {
 		return (setTimeout(
 			() => {
-				this._global_player_count_text.text = `There are currently ${this._global_player_count_placeholder++} players online`;
+				this._global_player_count_text.text = `There are currently ${this._global_player_count_placeholder++} players online.`;
 				this._global_player_count_timeout =  this._update_global_player_count();
 			}
 			,timeout_duration)

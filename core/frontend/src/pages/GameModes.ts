@@ -26,14 +26,14 @@ import { getSession } from '../services/session'
 import { router } from '../main'
 
 const template =`
-	<div class="w-full max-w-5xl mx-auto p-6 space-y-6">
+	<div class="w-full max-w-5xl mx-auto p-6 space-y-6 self-start">
 		<!-- controls -->
 		<div class="flex flex-col gap-4">
 			<!-- Map Selector -->
 			<details id="map-selector" class="rounded border border-[#543b43] bg-[#1e1518]">
 				<summary class="cursor-pointer select-none px-4 py-3 text-white flex items-center justify-between">
 					<div class="flex items-center gap-2">
-						<span class="font-semibold">Choose Map</span>
+						<span class="font-semibold">All Maps</span>
 						<span class="opacity-70">(Selected: <span id="selected-map-label" class="underline">default_3m_30p</span>)</span>
 					</div>
 				</summary>
@@ -64,23 +64,34 @@ const template =`
 			</details>
 
 			<div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
-				<label class="flex flex-col text-white">
-					<span class="mb-1">Your&nbsp;ID</span>
-					<input id="user-id-input"
-						type="number"
-						placeholder="Enter your user id"
-						class="rounded bg-[#271c1f] p-2 text-white focus:outline-none">
-				</label>
-
 				<!-- Initial Actions -->
-				<div id="initial-actions" class="flex gap-2">
-					<button id="btn-matchmaking"
-						class="rounded bg-rose-500 hover:bg-rose-600 px-4 py-2 text-white cursor-pointer">Matchmaking</button>
-					<button id="btn-create-tournament"
-						class="rounded bg-rose-500 hover:bg-rose-600 px-4 py-2 text-white cursor-pointer">Tournament (1v1)</button>
-					<button id="btn-lobby"
-						class="rounded bg-rose-500 hover:bg-rose-600 px-4 py-2 text-white cursor-pointer">Private Lobby</button>
-					<button id="btn-reconnect" class="rounded bg-[#b99da6] px-4 py-2 text-white cursor-pointer">Reconnect</button>
+				<div id="initial-actions" class="w-full space-y-4">
+					<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+						<!-- Matchmaking Card -->
+						<div class="bg-[#271c1f] p-4 rounded border border-[#543b43] flex flex-col">
+							<h3 class="font-semibold text-white text-lg mb-2">Matchmaking</h3>
+							<p class="text-[#b99da6] text-sm mb-4 flex-grow">Jump into a game against a random opponent online. Quick and easy.</p>
+							<button id="btn-matchmaking" class="mt-auto w-full rounded bg-green-500 hover:bg-green-600 px-4 py-2 text-white cursor-pointer">Find Game</button>
+						</div>
+
+						<!-- Tournament Card -->
+						<div class="bg-[#271c1f] p-4 rounded border border-[#543b43] flex flex-col">
+							<h3 class="font-semibold text-white text-lg mb-2">Tournament (1v1)</h3>
+							<p class="text-[#b99da6] text-sm mb-4 flex-grow">Create or join a bracket-style tournament. Compete to be the champion.</p>
+							<button id="btn-create-tournament" class="mt-auto w-full rounded bg-green-500 hover:bg-green-600 px-4 py-2 text-white cursor-pointer">Create Tournament</button>
+						</div>
+
+						<!-- Private Lobby Card -->
+						<div class="bg-[#271c1f] p-4 rounded border border-[#543b43] flex flex-col">
+							<h3 class="font-semibold text-white text-lg mb-2">Private Lobby</h3>
+							<p class="text-[#b99da6] text-sm mb-4 flex-grow">Play with friends. Create a private lobby and invite others to join.</p>
+							<button id="btn-lobby" class="mt-auto w-full rounded bg-green-500 hover:bg-green-600 px-4 py-2 text-white cursor-pointer">Create Lobby</button>
+						</div>
+					</div>
+					<!-- Reconnect Button -->
+					<div id="reconnect-container" class="flex justify-center">
+						<button id="btn-reconnect" class="rounded bg-[#b99da6] px-4 py-2 text-white cursor-pointer">or reconnect to existing game</button>
+					</div>
 				</div>
 
 				<!-- In-Game/In-Lobby Actions -->
@@ -93,7 +104,7 @@ const template =`
 
 			<!-- game canvas / iframe / whatever -->
 			<div id="game-container"
-				class="mt-2 w-full h-[clamp(500px,70vh,900px)] rounded-lg border border-[#543b43] overflow-hidden">
+				class="hidden mt-2 w-full h-[clamp(500px,70vh,900px)] rounded-lg border border-[#543b43] overflow-hidden">
 			</div>
 		</div>
 	</div>
@@ -431,7 +442,6 @@ async function test_tournament(
 
 function setupGameModes(root: HTMLElement): void {
 	const container = root.querySelector<HTMLElement>('#game-container')!
-	const input = root.querySelector<HTMLInputElement>('#user-id-input')
 	const btnMatch = root.querySelector<HTMLButtonElement>('#btn-matchmaking')
 	const btnCreateTournament = root.querySelector<HTMLButtonElement>('#btn-create-tournament')
 	const btnLobby = root.querySelector<HTMLButtonElement>('#btn-lobby')
@@ -445,40 +455,50 @@ function setupGameModes(root: HTMLElement): void {
 	// const btnAddLocalPlayer = root.querySelector<HTMLButtonElement>('#btn-add-local-player')
 
 	const initialActions = root.querySelector<HTMLDivElement>('#initial-actions')!
-    const gameActions = root.querySelector<HTMLDivElement>('#game-actions')!
+	const gameActions = root.querySelector<HTMLDivElement>('#game-actions')!
+	const gameContainer = root.querySelector<HTMLDivElement>('#game-container')!
 
-    const mapSelector = setupMapSelector(root);
-    const mapSelectorDetails = root.querySelector<HTMLDetailsElement>('#map-selector')!;
+	const mapSelector = setupMapSelector(root);
+	const mapSelectorDetails = root.querySelector<HTMLDetailsElement>('#map-selector')!;
 
 	let uiUpdateInterval: number | null = null;
 
 	const stopUiUpdater = () => {
-		if (uiUpdateInterval) clearInterval(uiUpdateInterval);
-		uiUpdateInterval = null;
+		if (uiUpdateInterval) {
+			clearInterval(uiUpdateInterval);
+			uiUpdateInterval = null;
+		}
 	};
 
 	const showGameActions = () => {
 		initialActions.classList.add('hidden');
 		gameActions.classList.remove('hidden');
+		gameContainer.classList.remove('hidden');
 		// Also hide context-specific buttons to ensure a clean state
 		const startBtn = document.getElementById('btn-start_tournament');
 		startBtn?.classList.add('hidden');
-		const addBtn = document.getElementById('btn-add-local-player');
-		addBtn?.classList.add('hidden');
+		const addLocalBtn = document.getElementById('btn-add-local-player');
+		addLocalBtn?.classList.add('hidden');
 	}
 
 	const showInitialActions = () => {
 		initialActions.classList.remove('hidden');
 		gameActions.classList.add('hidden');
+		// Only hide the container if it has no content
+		if (gameContainer.childElementCount === 0) {
+			gameContainer.classList.add('hidden');
+		} else {
+			gameContainer.classList.remove('hidden');
+		}
 		// Also hide context-specific buttons
 		const startBtn = document.getElementById('btn-start_tournament');
 		startBtn?.classList.add('hidden');
-		const addBtn = document.getElementById('btn-add-local-player');
-		addBtn?.classList.add('hidden');
+		const addLocalBtn = document.getElementById('btn-add-local-player');
+		addLocalBtn?.classList.add('hidden');
 	}
 
 	const startUiUpdater = () => {
-		stopUiUpdater(); // Prevent multiple intervals
+		if (uiUpdateInterval) return;
 
 		uiUpdateInterval = setInterval(() => {
 			const game = (globalThis as any).game;
@@ -495,7 +515,14 @@ function setupGameModes(root: HTMLElement): void {
 			if (hasContext) {
 				showGameActions();
 			} else {
-				showInitialActions();
+				// Keep finished-game/tournament result panels visible
+				if (gameContainer.childElementCount > 0) {
+					initialActions.classList.remove('hidden');
+					gameActions.classList.add('hidden');
+					gameContainer.classList.remove('hidden');
+				} else {
+					showInitialActions();
+				}
 				return;
 			}
 
@@ -575,19 +602,11 @@ function setupGameModes(root: HTMLElement): void {
 	/* pre-fill & lock field when we already know the user */
 	void (async () => {
 		const user = await getSession()
-		if (user?.id && input) {
-			input.value	= String(user.id)
-			input.disabled = true
+		if (user?.id) {
 			// Automatically try to reconnect if the user is already in a game
 			await run('reconnect');
 		}
 	})()
-
-	const getUserId = (): number | null => {
-		const v = input?.value.trim() ?? ''
-		const n = Number(v)
-		return isNaN(n) ? null : n
-	}
 
 	// Keep "Add local player" visible while we're creating a custom lobby
 	let pendingCustomLobby = false;
@@ -664,12 +683,24 @@ function setupGameModes(root: HTMLElement): void {
 			case 'reconnect':
 				pendingCustomLobby = false;
 				wiredLocalPlayerForGameId = null;
+
+				// Ensure the container has layout size during reconnect (but keep it visually hidden)
+				gameContainer.classList.remove('hidden');
+				gameContainer.classList.add('invisible');
+
 				await attempt_reconnect(container, user_id);
+
 				if ((globalThis as any).game || (globalThis as any).tournament) {
 					// Hide selector if we reconnected into a lobby/game
 					mapSelectorDetails.classList.add('hidden');
 					showGameActions();
+					// Now reveal the container visually
+					gameContainer.classList.remove('invisible');
 					startUiUpdater();
+				} else {
+					// No game to reconnect to -> restore initial UI state
+					gameContainer.classList.remove('invisible');
+					gameContainer.classList.add('hidden');
 				}
 				break;
 			case 'leave':
