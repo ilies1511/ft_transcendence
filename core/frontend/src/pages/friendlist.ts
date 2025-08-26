@@ -117,7 +117,7 @@ const FriendListPage:PageModule = {
 						data-id="${u.id}">Remove</button>`)).join('');
 				$fEmpty.textContent = '';
 			} else {
-				$fEmpty.textContent = 'You have no friends';
+				$fEmpty.textContent = 'You have no friends :(';
 			}
 
 			attachHandlers();

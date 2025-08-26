@@ -32,7 +32,7 @@ const template = /*html*/ `
 		<!-- Filter above stats -->
 		<div class="px-4 flex items-center justify-end">
 			<label class="text-sm text-[#b99da6] flex items-center gap-2">
-				<span>Filter Mode:</span>
+				<span>Filter (Mode):</span>
 				<select id="modeFilter" class="bg-[#271c1f] border border-[#543b43] rounded px-2 py-1 text-white text-sm">
 					<option value="all">All</option>
 				</select>

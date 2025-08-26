@@ -52,12 +52,12 @@ const template =`
 				<!-- Initial Actions -->
 				<div id="initial-actions" class="flex gap-2">
 					<button id="btn-matchmaking"
-						class="rounded bg-[#0bda8e] px-4 py-2 text-white cursor-pointer">Matchmaking</button>
+						class="rounded bg-rose-500 hover:bg-rose-600 px-4 py-2 text-white cursor-pointer">Matchmaking</button>
 					<button id="btn-create-tournament"
-						class="rounded bg-[#0bda8e] px-4 py-2 text-white cursor-pointer">Tournament</button>
+						class="rounded bg-rose-500 hover:bg-rose-600 px-4 py-2 text-white cursor-pointer">Tournament (1v1)</button>
 					<button id="btn-lobby"
-						class="rounded bg-[#b99da6] px-4 py-2 text-white cursor-pointer">Custom Lobby</button>
-					<button id="btn-reconnect" class="rounded bg-blue-500 px-4 py-2 text-white cursor-pointer">Reconnect</button>
+						class="rounded bg-rose-500 hover:bg-rose-600 px-4 py-2 text-white cursor-pointer">Private Lobby</button>
+					<button id="btn-reconnect" class="rounded bg-[#b99da6] px-4 py-2 text-white cursor-pointer">Reconnect</button>
 				</div>
 
 				<!-- In-Game/In-Lobby Actions -->
@@ -204,7 +204,7 @@ function renderMapCards(grid: HTMLElement, selectedId: string) {
 					<button
 						type="button"
 						data-map-id="${m.id}"
-						class="cursor-pointer group rounded overflow-hidden border ${m.id === selectedId ? 'border-[#0bda8e]' : 'border-[#543b43]'} bg-[#271c1f] hover:border-[#0bda8e] transition-colors">
+						class="cursor-pointer group rounded overflow-hidden border ${m.id === selectedId ? 'border-rose-500' : 'border-[#543b43]'} bg-[#271c1f] hover:border-rose-500 transition-colors">
 						<div class="aspect-video bg-[#1b1214] relative">
 							<img
 								data-map-img

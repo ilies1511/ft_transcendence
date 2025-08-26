@@ -105,7 +105,7 @@ const HomePage:PageModule = {
 		const playButtonHtml = session
 			? /*html*/`
 				<div class="text-center">
-					<a href="/modes" data-route class="inline-block bg-[#0bda8e] text-white font-bold py-4 px-10 rounded-lg text-2xl hover:bg-green-500 transition-colors shadow-lg hover:shadow-xl transform mb-10">
+					<a href="/modes" data-route class="inline-block bg-rose-500 text-white font-bold py-4 px-10 rounded-lg text-2xl hover:bg-rose-600 transition-colors shadow-lg hover:shadow-xl transform mb-10">
 						Play Now!
 					</a>
 				</div>`
