@@ -8,7 +8,7 @@ import routes from './routes/index.ts';
 //Mit namespace
 import * as testRoutes from './routes/test_route.ts'
 
-export const CSRF = false;
+export const CSRF = true;
 
 async function main() {
 
@@ -20,7 +20,7 @@ async function main() {
 	const fastify = Fastify({
 		// logger: false,
 		// logger: { level: 'info' },
-		// logger: { level: 'debug' },
+		logger: { level: 'debug' },
 		ajv: {
 			customOptions: {
 				removeAdditional: 'all',

@@ -16,6 +16,7 @@ import {
 	rejectFriendRequestSchema, removeFriendSchema, sendFriendRequestSchema,
 	SendFRResponse201, withdrawFriendRequestSchema
 } from "../schemas/friends.ts";
+import { userSockets } from '../types/wsTypes.ts';
 
 export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 	// GET -- BEGIN
@@ -117,6 +118,7 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 
 			const fr = await getFriendRequestById(fastify, requestId)
 			if (!fr) {
+				console.log(`Backend: /api/requests/${requestId}/accept error: `, 'friend request not found');
 				return reply.code(404).send({ error: 'Request not found' })
 			}
 			if (fr.recipient_id !== authUserId) {
@@ -129,6 +131,7 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 				await acceptFriendRequest(fastify, req.params.requestId)
 				return { message: 'Friend request accepted' }
 			} catch (err: any) {
+				console.log(`Backend: /api/requests/${requestId}/accept error: `, err);
 				return reply.code(404).send({ error: err.message })
 			}
 		}
@@ -169,7 +172,7 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 
 	fastify.delete<{
 		// Params: { id: number; requestId: number }
-		Params: { requestId: number }
+		Params: { requestId: number },
 		Reply: { message: string } | { error: string }
 	}>(
 		// '/api/users/:id/requests/:requestId',
@@ -181,6 +184,7 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 			// const requesterId = req.params.id
 			const authUserId = await getUserId(req);
 			const requestId = req.params.requestId
+			console.log(`/api/me/requests/${requestId}`);
 
 			const fr = await getFriendRequestById(fastify, requestId)
 			if (!fr) {
@@ -197,6 +201,17 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 			if (!ok) {
 				return reply.code(404).send({ error: 'No pending request to withdraw' })
 			}
+			//notify user when "undo" was clicked
+			const payload = { type: 'friend_request_withdrawn', requestId, from: authUserId };
+			const targets = userSockets.get(fr.recipient_id);
+			if (targets?.size) {
+				for (const client of targets) {
+					if ((client as any).readyState === WebSocket.OPEN) {
+						try { client.send(JSON.stringify(payload)); } catch {}
+					}
+				}
+			}
+
 			return reply.code(200).send({ message: 'Friend request withdrawn' })
 		}
 	)

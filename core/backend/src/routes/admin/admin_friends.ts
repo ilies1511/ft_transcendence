@@ -161,6 +161,7 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 			}
 		},
 		async (req, reply) => {
+			console.log(`/api/requests/:requestId/reject`);
 			try {
 				await rejectFriendRequest(fastify, req.params.requestId)
 				return { message: 'Friend request rejected' }

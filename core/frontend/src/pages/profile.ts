@@ -3,11 +3,10 @@ import type { PageModule } from '../router';
 import type { ApiUser } from '../types/types';
 // import { getSession } from '../services/auth'
 import { router } from '../main';
-import { getSession } from '../services/session';
 import { isFriend } from '../utils/isFriend';
 import { updateDot } from '../utils/statusDot';
+import { token as CSRFToken, getSession } from '../services/session';
 import { wsEvents } from '../services/websocket';
-
 
 const template = /*html*/ `
 	<div class="w-full max-w-6xl mx-auto p-6 space-y-6">
@@ -176,7 +175,11 @@ async function renderProfile(root: HTMLElement, user: ApiUser) {
 async function fetchUserStats(userId: number) {
 	try {
 		// const res = await fetch(`/api/users/${userId}/stats`);
-		const res = await fetch(`/api/me/stats`);
+		// const res = await fetch(`/api/me/stats`);
+		const res = await fetch('/api/me/stats', {
+			method: 'GET',
+			credentials: 'include',
+		});
 		if (!res.ok) throw new Error(`stats ${res.status}`);
 		const data = await res.json();
 		// console.log('⭐ user stats', data);
@@ -201,8 +204,11 @@ function renderStats(stats: { totalGames: number; wins: number; losses: number; 
 // Helper function for history
 async function fetchMatchHistory(userId: number) {
 	try {
-		const res = await fetch(`/api/me/matches`);
-		// const res = await fetch(`/api/users/${userId}/matches`);
+				// const res = await fetch(`/api/users/${userId}/matches`);
+		const res = await fetch(`/api/me/matches`, {
+			method: 'GET',
+			credentials: 'include',
+		});
 		if (!res.ok) throw new Error(`matches ${res.status}`);
 		const data = await res.json();
 		// console.log('📜 match history', data);
@@ -215,12 +221,15 @@ async function fetchMatchHistory(userId: number) {
 
 async function fetchMatchParticipants(matchId: number) {
 		try {
-				const res = await fetch(`/api/matches/${matchId}/participants`);
-				if (!res.ok) throw new Error(`participants ${res.status}`);
-				return await res.json(); // always return data
+			const res = await fetch(`/api/matches/${matchId}/participants`, {
+				method: 'GET',
+				credentials: 'include',
+			});
+			if (!res.ok) throw new Error(`participants ${res.status}`);
+			return await res.json(); // always return data
 		} catch (err) {
-				console.error('Failed to load participants for match', matchId, err);
-				return [];
+			console.error('Failed to load participants for match', matchId, err);
+			return [];
 		}
 }
 
@@ -391,8 +400,11 @@ const onFriendsChanged = async () => {
 	if (await isFriend(id)) {
 		dot.classList.remove('hidden');
 		/* fetch fresh live flag so the first colour is correct */
-		const r = await fetch(`/api/users/${id}`);
-		const obj = await r.json() as ApiUser;
+		const r = await fetch(`/api/users/${id}`, {
+			method: 'GET',
+			credentials: 'include',
+		});
+		const obj = (await r.json()) as ApiUser;
 		updateDot(id, obj.live);
 	}
 };
@@ -409,7 +421,11 @@ const ProfilePage: PageModule & { renderWithParams?: Function } = {
 		root.innerHTML = '<p>Loading profile...</p>'
 
 		if (params.id) {
-			const res = await fetch(`/api/users/${params.id}`)
+			// const res = await fetch(`/api/users/${params.id}`)
+			const res = await fetch(`/api/users/${params.id}`, {
+				method: 'GET',
+				credentials: 'include',
+			});
 			if (!res.ok) { root.innerHTML = '<p>User not found</p>'; return }
 
 			const user = await res.json() as ApiUser

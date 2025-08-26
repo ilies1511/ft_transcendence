@@ -1,20 +1,26 @@
 import { currentUser } from './auth';
 import type { AuthUser } from '../types/types';
 
-//const base =
-//	(location.protocol === 'http:' + location.host;
+let cache: Promise<AuthUser | null> | undefined;
+export let token: string | undefined = undefined;
 
-//console.log(location.host)
-export let token: any = undefined;
 try {
-	//todo: remove hardcoded localhost
-	token = await fetch(`http://localhost:3000/api/csrf`, {
+	const res = await fetch(`/api/csrf`, {
 		credentials: 'include',
-	}).then(r => r.json())
+		method: 'GET',
+	});
+	const data = await res.json();
+
+	if (data && typeof data.token === 'string' && data.token.length > 0) {
+		token = data.token;
+		console.log(`csrf token: ${token}`); //TODO: REMOVE THIS
+	} else {
+		token = undefined;
+	}
 } catch (e) {
 	console.log(e);
+	token = undefined;
 }
-
 export async function getSession():Promise <AuthUser | null> {
 	try {
 		const user = await currentUser();

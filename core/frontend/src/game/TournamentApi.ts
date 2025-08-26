@@ -1,4 +1,4 @@
-import { token } from '../services/session.ts';
+// import { token } from '../services/session.ts';
 import type {
 	JoinReq,
 	CreateTournamentReq,
@@ -15,7 +15,7 @@ import type {
 } from './game_shared/TournamentApiTypes.ts';
 
 import { Game } from './game_new.ts';
-
+import { token } from '../services/session.ts';
 
 export class TournamentApi {
 	private constructor() {}
@@ -31,13 +31,12 @@ export class TournamentApi {
 			password: password,
 			client_id: client_id,
 		};
+		const headers = new Headers({ 'Content-Type': 'application/json' });
+		if (token) headers.set('X-CSRF-Token', token);
 		const response = await fetch('/api/create_tournament', {
 			method: 'POST',
 			credentials: 'include',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-CSRF-Token': token,
-			},
+			headers,
 			body: JSON.stringify(req)
 		});
 		const data: CreateTournamentResp = await response.json();
@@ -58,13 +57,12 @@ export class TournamentApi {
 			lobby_id: lobby_id,
 			display_name: display_name,
 		};
+		const headers = new Headers({ 'Content-Type': 'application/json' });
+		if (token) headers.set('X-CSRF-Token', token);
 		const response = await fetch('/api/join_tournament', {
 			method: 'POST',
 			credentials: 'include',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-CSRF-Token': token,
-			},
+			headers,
 			body: JSON.stringify(req)
 		});
 		const data: DefaultResp = await response.json();
@@ -84,13 +82,12 @@ export class TournamentApi {
 			client_id: user_id,
 			tournament_id: tournament_id,
 		};
+		const headers = new Headers({ 'Content-Type': 'application/json' });
+		if (token) headers.set('X-CSRF-Token', token);
 		const response = await fetch('/api/start_tournament', {
 			method: 'POST',
 			credentials: 'include',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-CSRF-Token': token,
-			},
+			headers,
 			body: JSON.stringify(req)
 		});
 		const data: DefaultResp = await response.json();
@@ -107,13 +104,12 @@ export class TournamentApi {
 			client_id: user_id,
 			tournament_id: tournament_id,
 		};
+		const headers = new Headers({ 'Content-Type': 'application/json' });
+		if (token) headers.set('X-CSRF-Token', token);
 		const response = await fetch('/api/leave_tournament', {
 			method: 'POST',
 			credentials: 'include',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-CSRF-Token': token,
-			},
+			headers,
 			body: JSON.stringify(req)
 		});
 

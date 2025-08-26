@@ -1,7 +1,7 @@
 // frontend/src/pages/friends.ts
 import type { PageModule } from '../router';
-import { getSession } from '../services/session';
 import { wsEvents } from '../services/websocket';
+import { token as CSRFToken, getSession } from '../services/session';
 
 type UserPreview = {
 	id: number;
@@ -26,7 +26,10 @@ const emptyMsg = (txt:string) => `<p class="text-[#ca91a3]">${txt}</p>`;
 
 // fetch single user preview
 async function getUser(id: number): Promise<UserPreview> {
-	const response = await fetch(`/api/users/${id}`);
+	const response = await fetch(`/api/users/${id}`, {
+		method: 'GET',
+		credentials: 'include',
+	});
 	const userData = await response.json();
 
 	return {
@@ -67,15 +70,22 @@ const FriendListPage:PageModule = {
 		// refresh lists
 		const refresh = async () => {
 			const [inRes, outRes, frRes] = await Promise.all([
-				fetch(`/api/me/requests/incoming`),
-				// fetch(`/api/users/${me.id}/requests/incoming`),
-				// fetch(`/api/users/${me.id}/requests/outgoing`),
-				fetch(`/api/me/requests/outgoing`),
-				// fetch(`/api/users/${me.id}/friends`)
-				fetch(`/api/me/friends`)
+				fetch('/api/me/requests/incoming',{
+					method: 'GET',
+					credentials: 'include'
+				}),
+				fetch('/api/me/requests/outgoing', {
+					method: 'GET',
+					credentials: 'include'
+				}),
+				fetch('/api/me/friends', {
+					method: 'GET',
+					credentials: 'include'
+				}),
 			]);
 			if (!(inRes.ok && outRes.ok && frRes.ok)) {
-				$iEmpty.textContent = 'Failed to load'; return;
+				$iEmpty.textContent = 'Failed to load';
+				return;
 			}
 
 			const incoming = await inRes.json() as { id:number; requester_id:number }[];
@@ -132,11 +142,21 @@ const FriendListPage:PageModule = {
 				btn.onclick = async () => {
 					const li = btn.closest('li')!;
 					btn.disabled = true;
-					const ok = await fetch(
-						`/api/requests/${btn.dataset.id}/${btn.dataset.act}`,
-						{ method:'POST' }
-					).then(r => r.ok);
+					// const ok = await fetch(
+					// 	`/api/requests/${btn.dataset.id}/${btn.dataset.act}`,
+					// 	{ method:'POST' }
+					// ).then(r => r.ok);
+					const headers = new Headers({ 'Content-Type': 'application/json' });
+					if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
 
+					const ok = await fetch(
+						`/api/me/requests/${btn.dataset.id}/${btn.dataset.act}`,
+						{
+							method: 'POST',
+							headers,
+							credentials: 'include',
+						}
+					).then(r => r.ok);
 					ok
 						? (li.remove(), document.dispatchEvent(new Event('friends-changed')))
 						: (alert('Server error'), btn.disabled = false);
@@ -146,10 +166,20 @@ const FriendListPage:PageModule = {
 			root.querySelectorAll<HTMLButtonElement>('.rm').forEach(btn => {
 				btn.onclick = async () => {
 					btn.disabled = true;
-					const ok = await fetch(
-						// `/api/users/${me.id}/friends/${btn.dataset.id}`,
-						`/api/me/friends/${btn.dataset.id}`,
-						{ method:'DELETE' }
+					// const ok = await fetch(
+					// 	// `/api/users/${me.id}/friends/${btn.dataset.id}`,
+					// 	`/api/me/friends/${btn.dataset.id}`,
+					// 	{ method:'DELETE' }
+					// ).then(r => r.ok);
+					const headers = new Headers();
+					if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
+
+					const ok = await fetch(`/api/me/friends/${btn.dataset.id}`,
+						{
+							method: 'DELETE',
+							headers,
+							credentials: 'include',
+						}
 					).then(r => r.ok);
 
 					ok
@@ -170,6 +200,8 @@ const FriendListPage:PageModule = {
 		wsEvents.addEventListener('friend_rejected', onChange);
 		wsEvents.addEventListener('friend_removed', onChange);
 		wsEvents.addEventListener('user_updated', onChange);
+		wsEvents.addEventListener('user_deleted', onChange);
+		wsEvents.addEventListener('friend_request_withdrawn', onChange);
 
 		// cleanup
 		(root as any).onDestroy = () => {
@@ -179,6 +211,8 @@ const FriendListPage:PageModule = {
 			wsEvents.removeEventListener('friend_rejected', onChange);
 			wsEvents.removeEventListener('friend_removed', onChange);
 			wsEvents.removeEventListener('user_updated', onChange);
+			wsEvents.removeEventListener('user_deleted', onChange);
+			wsEvents.removeEventListener('friend_request_withdrawn', onChange);
 		};
 	}
 };

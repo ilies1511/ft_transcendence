@@ -277,7 +277,7 @@ export const WithdrawFRParamsSchema = AcceptFRParamsSchema
 
 export const withdrawFriendRequestSchema = {
 	tags: ['friends'],
-	params: WithdrawFRParamsSchema,
+	// params: WithdrawFRParamsSchema,
 	response: {
 		200: OkMessageResponse,
 		403: ErrorResponse,
