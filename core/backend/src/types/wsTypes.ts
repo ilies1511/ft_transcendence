@@ -10,7 +10,7 @@ export interface ExtendedWebSocket extends WebSocket {
 
 export type Message =
 	| { type: 'direct_message'; to: number; content: string }
-	| { type: 'lobby_invite'; to: number; content: LobbyInvite } //TODO: do we need to add from usuer id?
+	| { type: 'lobby_invite'; to: number; content: LobbyInvite }
 	| { type: 'new_friend_request'; to:number; requestId:number; from:string }
 	| { type: 'ping' }
 	| { type: string;[key: string]: any }
