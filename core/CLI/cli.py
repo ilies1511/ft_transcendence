@@ -5,8 +5,12 @@ import threading
 import requests
 import websocket
 
-BASE = "http://localhost:3000"
-HOST = "localhost:3000"
+#BASE = "http://localhost:3000"
+#HOST = "localhost:3000"
+
+HOST = f'{input("Server address:: ")}:3000'
+BASE = f'http://{HOST}'
+
 
 def _cookie_header_from(session: requests.Session) -> str:
     jar = requests.utils.dict_from_cookiejar(session.cookies)
