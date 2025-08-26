@@ -456,7 +456,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 			try {
 				showMsg(twofaSetupMsg, 'Generating QR code...')
 
-				const headers = new Headers({ 'Content-Type': 'application/json' });
+				const headers = new Headers();
 				if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
 				const res = await fetch('/api/2fa/generate', {
 					method: 'POST',

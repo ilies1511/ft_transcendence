@@ -67,6 +67,9 @@ export function initWs() {
 }
 
 function wsReconnection(): void {
+	if (!globalThis.logged_in) {
+		return ;
+	}
 	if (nextDelay > 60_000) {
 		console.warn('[WS] lost for ever..');
 		return;

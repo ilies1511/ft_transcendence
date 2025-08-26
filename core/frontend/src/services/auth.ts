@@ -19,5 +19,6 @@ export async function logout() {
 	await fetch('/api/logout', { method: 'POST', credentials: 'include' });
 	clearSession();  // Reset cache for next session check
 	document.dispatchEvent(new Event('auth-change'));
+	globalThis.logged_in = false
 	router.go('/login');
 }
