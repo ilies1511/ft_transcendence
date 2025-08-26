@@ -1,7 +1,7 @@
 import { Game } from '../game_new.ts';
 import { GameApi } from '../GameApi.ts';
 import { LobbyType } from '../game_shared/message_types.ts';
-
+import { getSession } from '../../services/session';
 import { generate_password } from '../globals.ts';
 
 import type {
@@ -70,12 +70,14 @@ export async function create_join_lobby(
 		lobby_type: LobbyType.CUSTOM,
 		valid: true,
 	};
+	const me           = await getSession();	
+	const display_name = me.nickname ?? `player_${user_id}`;
 	// By default the user is not in the lobby itself.
 	// Sinece we have everything to build a LobbyInvite object in the frontend
 	//  the invite does not need to go through the server when joining your
 	//  own lobby.
 	let game: Game | ServerError = await accept_lobby_invite(user_id, container,
-		lobby_invite, `placeholder_diplay_name_of_client2_${user_id}`);
+		lobby_invite, display_name);
 	if (!(game instanceof Game)) {
 		console.log("Game: got ServerError '", game, "'");
 		return (game as ServerError);
