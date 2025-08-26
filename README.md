@@ -98,15 +98,15 @@ ipconfig getifaddr en0
 - [x] When the game ends, its not possible to click logout button. Need to add z-index.
 - [ ] Refactor CSS, have default styles from the styles.css. Make same sizes for different pages.
 - [x] Check how many modules we have. We have to have 7 major modules.
-- [ ] Update game end page. Fix it a bit, add corners back so it feels better.
+- [x] Update game end page. Fix it a bit, add corners back so it feels better.
 - [ ] Add notification on disconnect, when the player disconnects from the game.
 - [x] Prevent spam clicking invite to the game to all users. (localstorage and map)
 - [ ] Fix mobile menu
 - [x] Make all friends bubble scrollable
 - [x] Update every page to use session instead of currentUser
 - [x] When user live chat another user, you can console log that user is not online. Prob should give notification, that user is not online or smth.
-- [ ] When you click on the user profile from "All users" / "Registered Users" page, the avatar on the profile page is not showing.
-- [ ] When user deletes his account, the All users page and Live Chat list is not updated via WS.
+- [x] When you click on the user profile from "All users" / "Registered Users" page, the avatar on the profile page is not showing.
+- [x] When user deletes his account, the All users page and Live Chat list is not updated via WS.
 - [ ] controling the game, the "D" button does not work.
 - [x] chat military time
 - [ ] Clean up all TODO:
