@@ -11,8 +11,8 @@ class ScoreLine {
 		color = new BABYLON.Color3(1, 1, 1);
 		this.id = id;
 		this.textBlock = new GUI.TextBlock();
-		this.textBlock.fontSize = 28;
-		this.textBlock.height = "32px";
+		this.textBlock.fontSize = 44;
+		this.textBlock.height = "56px";
 		this.textBlock.textHorizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
 		if (display_name) {
 			this.display_name = display_name;
@@ -39,8 +39,8 @@ export class ScorePanel {
 		this.panel = new GUI.StackPanel();
 		this.panel.width = "2200px";
 		this.panel.isVertical = true;
-		this.panel.top = "16px";
-		this.panel.left = "16px";
+		this.panel.top = "32px";
+		this.panel.left = "32px";
 		this.panel.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
 		this.panel.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
 		gui.addControl(this.panel);
@@ -48,8 +48,8 @@ export class ScorePanel {
 		this.lines = new Map<number, ScoreLine>();
 
 		this.timer_text = new GUI.TextBlock();
-		this.timer_text.fontSize = 28;
-		this.timer_text.height = "32px";
+		this.timer_text.fontSize = 54;
+		this.timer_text.height = "64px";
 		this.timer_text.textHorizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
 		this.timer_text.color = "#ffffff";
 		this.timer_text.isVisible = false;

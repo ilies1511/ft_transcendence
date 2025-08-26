@@ -33,6 +33,33 @@ import SimpleSquare4 from './SimpleSquare4.json' with { type: "json" };
 import SimpleSquare4_10m_100p from './SimpleSquare4_10m_100p.json' with { type: "json" };
 import SimpleSquare4_3m_30p from './SimpleSquare4_3m_30p.json' with { type: "json" };
 
+const mapImports: Record<string, any> = {
+	default_map,
+	default_3m_30p,
+	default_10m_100p,
+	BigPlus2,
+	BigPlus2_10m_100p,
+	BigPlus2_3m_30p,
+	BigPlus4,
+	BigPlus4_10m_100p,
+	BigPlus4_3m_30p,
+	Diamond2,
+	Diamond2_10m_100p,
+	Diamond2_3m_30p,
+	OctaPong2,
+	OctaPong2_10m_100p,
+	OctaPong2_3m_30p,
+	OctaPong4,
+	OctaPong4_10m_100p,
+	OctaPong4_3m_30p,
+	SimpleSquare2,
+	SimpleSquare2_10m_100p,
+	SimpleSquare2_3m_30p,
+	SimpleSquare4,
+	SimpleSquare4_10m_100p,
+	SimpleSquare4_3m_30p,
+};
+
 export class MapFile {
 	public walls: ServerWall[] = [];
 	public balls: ServerBall[] = [];
@@ -42,64 +69,34 @@ export class MapFile {
 
 	constructor(map_name: string = 'default_3m_30p') {
 		let map_data: any;
-		if (map_name == "default") {
-			map_data = default_map;
-		} else if (map_name == "default_3m_30p") {
+		// The frontend will send names like "default_2_3m_30p"
+		// We need to convert it to the format the backend understands
+		let internal_map_name = map_name;
+		const parts = map_name.split('_');
+
+		// Reconstruct name: e.g., BigPlus_4_3m_30p -> BigPlus4_3m_30p
+		if (parts.length > 1 && (parts[1] === '2' || parts[1] === '4')) {
+			const base = parts[0];
+			const players = parts[1];
+			const variant = parts.slice(2).join('_');
+			if (base === 'default') {
+				internal_map_name = variant ? `default_${variant}` : 'default';
+			} else {
+				internal_map_name = `${base}${players}${variant ? `_${variant}` : ''}`;
+			}
+		}
+		
+		// Normalize 'default' to 'default_map' for the import object key
+		if (internal_map_name === 'default') {
+			internal_map_name = 'default_map';
+		}
+
+		map_data = mapImports[internal_map_name];
+
+		if (!map_data) {
+			console.error(`Map not found for: ${map_name} (resolved to ${internal_map_name})`);
+			// Fallback to a default map to prevent crash
 			map_data = default_3m_30p;
-		} else if (map_name == "default_10m_100p") {
-			map_data = default_10m_100p;
-
-		} else if (map_name == "BigPlus2") {
-			map_data = BigPlus2;
-		} else if (map_name == "BigPlus2_3m_30p") {
-			map_data = BigPlus2_3m_30p;
-		} else if (map_name == "BigPlus2_10m_100p") {
-			map_data = BigPlus2_10m_100p;
-
-		} else if (map_name == "BigPlus4") {
-			map_data = BigPlus4;
-		} else if (map_name == "BigPlus4_3m_30p") {
-			map_data = BigPlus4_3m_30p;
-		} else if (map_name == "BigPlus4_10m_100p") {
-			map_data = BigPlus4_10m_100p;
-
-		} else if (map_name == "Diamond2") {
-			map_data = Diamond2;
-		} else if (map_name == "Diamond2_3m_30p") {
-			map_data = Diamond2_3m_30p;
-		} else if (map_name == "Diamond2_10m_100p") {
-			map_data = Diamond2_10m_100p;
-
-		} else if (map_name == "OctaPong2") {
-			map_data = OctaPong2;
-		} else if (map_name == "OctaPong2_3m_30p") {
-			map_data = OctaPong2_3m_30p;
-		} else if (map_name == "OctaPong2_10m_100p") {
-			map_data = OctaPong2_10m_100p;
-
-		} else if (map_name == "OctaPong4") {
-			map_data = OctaPong4;
-		} else if (map_name == "OctaPong4_3m_30p") {
-			map_data = OctaPong4_3m_30p;
-		} else if (map_name == "OctaPong4_10m_100p") {
-			map_data = OctaPong4_10m_100p;
-
-		} else if (map_name == "SimpleSquare2") {
-			map_data = SimpleSquare2;
-		} else if (map_name == "SimpleSquare2_3m_30p") {
-			map_data = SimpleSquare2_3m_30p;
-		} else if (map_name == "SimpleSquare2_10m_100p") {
-			map_data = SimpleSquare2_10m_100p;
-
-		} else if (map_name == "SimpleSquare4") {
-			map_data = SimpleSquare4;
-		} else if (map_name == "SimpleSquare4_3m_30p") {
-			map_data = SimpleSquare4_3m_30p;
-		} else if (map_name == "SimpleSquare4_10m_100p") {
-			map_data = SimpleSquare4_10m_100p;
-
-		} else {
-			throw ('Invalid Map');
 		}
 		this.max_time = map_data.max_time;
 		//console.log(map_data);

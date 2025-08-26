@@ -68,10 +68,13 @@ export class Game {
 	// globalThis.game should also be !== this
 	public is_cleaned(): boolean { return (this._cleaned)}
 
-	//private _sphere: BABYLON.Mesh;
+	// Track container size to avoid rendering while hidden and to trigger proper resizes
+	private _resizeObserver?: ResizeObserver;
+	private _lastContainerW = 0;
+	private _lastContainerH = 0;
 
 	//TODO: update1 for user leave notifications
-	 private _last_server_msg: ArrayBuffer | null = null;
+	private _last_server_msg: ArrayBuffer | null = null;
 	private _msg_queue: LobbyToClient[] = [];
 
 
@@ -136,12 +139,32 @@ export class Game {
 		this._canvas = this._createCanvas();
 		//container.appendChild(this._canvas);
 
-		this._engine = new BABYLON.Engine(this._canvas, true);
+		// Make engine DPI-aware for crisp rendering on retina/high-DPI displays
+		this._engine = new BABYLON.Engine(this._canvas, true, undefined, true);
 
 		this._lobby_scene = new LobbyScene(this._engine, this._canvas);
 		this._game_scene = new GameScene(this._engine, this._canvas);
 
 		this._active_scene = this._lobby_scene;
+
+		// Observe container size so we resize when it becomes visible or changes
+		try {
+			const containerEl = this._get_container();
+			if (containerEl) {
+				this._resizeObserver = new ResizeObserver(() => {
+					// Keep last known size, call engine.resize() only when it actually changes
+					const w = containerEl.clientWidth;
+					const h = containerEl.clientHeight;
+					if (w !== this._lastContainerW || h !== this._lastContainerH) {
+						this._lastContainerW = w;
+						this._lastContainerH = h;
+						this._engine.resize();
+					}
+				});
+				this._resizeObserver.observe(containerEl);
+			}
+		} catch {}
+
 		this._engine.runRenderLoop(() => {
 			if (this.finished) return; //prevents ghost loops
 			this._process_msg();
@@ -182,11 +205,26 @@ export class Game {
 			return false;
 		}
 
+		// If container has no layout size yet (hidden or not mounted), skip rendering this frame.
+		const cw = container.clientWidth;
+		const ch = container.clientHeight;
+		if (cw === 0 || ch === 0) {
+			return false;
+		}
+
+		// Ensure the canvas is attached
 		if (this._canvas && !document.contains(this._canvas)) {
 			container.appendChild(this._canvas);
 		}
 		if (!this._canvas || !container.contains(this._canvas)) {
 			this._canvas = this._createCanvas();
+		}
+
+		// If size changed since last frame, force engine resize
+		if (cw !== this._lastContainerW || ch !== this._lastContainerH) {
+			this._lastContainerW = cw;
+			this._lastContainerH = ch;
+			this._engine.resize();
 		}
 		return (true);
 	}
@@ -259,6 +297,10 @@ export class Game {
 
 		document.removeEventListener('fullscreenchange', this._on_full_screen_change);
 		window.removeEventListener('resize', this._on_resize);
+
+		// Disconnect container size observer
+		try { this._resizeObserver?.disconnect(); } catch {}
+		this._resizeObserver = undefined;
 
 		this._cleanup_key_hooks();
 		console.log("Game: cleanup()");
@@ -405,7 +447,7 @@ export class Game {
 	}
 
 	private	_start_game() {
-		this.enter_fullscreen();
+		// this.enter_fullscreen();
 		const display_names_promise: Promise<LobbyDisplaynameResp> =
 			GameApi.get_display_names(this.game_id);
 		display_names_promise.then(names => {
@@ -690,7 +732,6 @@ export class Game {
 		this._canvas.style.display = "block";
 		// Ensure container can size the canvas
 
-
 		const container: HTMLElement | null = this._get_container();
 		if (!container) {
 			console.log("Warning: _createCanvas() called without a valid container");
@@ -698,6 +739,12 @@ export class Game {
 		}
 		container.style.position = container.style.position || 'relative';
 		container.appendChild(this._canvas);
+
+		// Request a resize on next frame (helps Safari/Firefox when container just became visible)
+		requestAnimationFrame(() => {
+			try { this._engine?.resize(); } catch {}
+		});
+
 		return this._canvas;
 	}
 
