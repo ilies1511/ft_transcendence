@@ -1,66 +1,36 @@
 import type { FastifyPluginAsync } from "fastify";
 import {
-  acceptFriendRequest,
-  listIncomingRequests,
-  listOutgoingRequests,
-  rejectFriendRequest, removeFriend,
-  sendFriendRequest,
-  withdrawFriendRequest
+	acceptFriendRequest,
+	getFriendRequestById,
+	listIncomingRequests,
+	listOutgoingRequests,
+	rejectFriendRequest, removeFriend,
+	sendFriendRequest,
+	withdrawFriendRequest
 } from "../functions/friends.ts";
-import { findUserWithFriends } from "../functions/user.ts";
+import { findUserWithFriends, getUserId} from "../functions/user.ts";
 import { type FriendRequestRow, type UserWithFriends } from "../types/userTypes.ts";
+import {
+	acceptFriendRequestSchema, IncomingRequestsResponseSchema,
+	incomingRequestsSchema, listFriendsSchema, outgoingRequestsSchema,
+	rejectFriendRequestSchema, removeFriendSchema, sendFriendRequestSchema,
+	SendFRResponse201, withdrawFriendRequestSchema
+} from "../schemas/friends.ts";
+import { userSockets } from '../types/wsTypes.ts';
 
 export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 	// GET -- BEGIN
 	fastify.get<{
-		Params: { id: number }
 		Reply: UserWithFriends | { error: string }
 	}>(
-		'/api/users/:id/friends',
+		'/api/me/friends',
 		{
-			schema: {
-				tags: ['friends'],
-				params: {
-					type: "object",
-					required: ["id"],
-					properties: { id: { type: "integer" } },
-				},
-				response: {
-					200: {
-						type: 'object',
-						properties: {
-							id: { type: 'integer' },
-							username: { type: 'string' },
-							nickname: { type: 'string' },
-							email: { type: ['string', 'null'] },
-							live: { type: 'integer' },
-							avatar: { type: 'string' },
-							created_at: { type: 'integer' },
-							friends: {
-								type: 'array',
-								items: {
-									type: 'object',
-									properties: {
-										id: { type: 'integer' },
-										username: { type: 'string' },
-										live: { type: 'integer' },
-										avatar: { type: 'string' }
-									},
-									required: ['id', 'username', 'live', 'avatar']
-								}
-							}
-						},
-						required: ['id', 'username', 'nickname', 'email', 'live', 'avatar', 'created_at', 'friends']
-					},
-					404: {
-						type: "object",
-						properties: { error: { type: "string" } },
-					}
-				}
-			}
+			schema: listFriendsSchema
 		},
 		async (request, reply) => {
-			const result = await findUserWithFriends(fastify, request.params.id)
+			const authUserId = await getUserId(request);
+
+			const result = await findUserWithFriends(fastify, authUserId)
 			if (!result) {
 				return reply.code(404).send({ error: 'User not found' })
 			}
@@ -71,27 +41,18 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 
 	//POST -- BEGIN
 	fastify.post<{
-		Params: { id: number }
 		Body: { username: string }
-		Reply: { requestId: number } | { error: string } | { message: string}
+		Reply: { requestId: number } | { error: string } | { message: string }
 	}>(
-		'/api/users/:id/requests',
+		// '/api/users/:id/requests',
+		'/api/me/requests',
 		{
-			schema: {
-				tags: ['friends'],
-				params: { type: 'object', required: ['id'], properties: { id: { type: 'integer' } } },
-				body: { type: 'object', required: ['username'], properties: { username: { type: 'string' } } },
-				response: {
-					201: { type: 'object', properties: { requestId: { type: 'integer' } } },
-					400: { type: 'object', properties: { error: { type: 'string' } } },
-					404: { type: 'object', properties: { error: { type: 'string' } } },
-					409: { type: 'object', properties: { error: { type: 'string' } } }
-				}
-			}
+			schema: sendFriendRequestSchema
 		},
 		async (req, reply) => {
 			try {
-				const fr = await sendFriendRequest(fastify, req.params.id, req.body.username)
+				const authUserId = await getUserId(req);
+				const fr = await sendFriendRequest(fastify, authUserId, req.body.username)
 				if (fr.type === 'accepted') {
 					reply.code(200).send({ message: 'Friend request automatically accepted' });
 				}
@@ -112,64 +73,34 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 	)
 	// b.1) Incoming requests listen ---> received request
 	fastify.get<{
-		Params: { id: number }
 		Reply: FriendRequestRow[]
 	}>(
-		'/api/users/:id/requests/incoming',
+		// '/api/users/:id/requests/incoming',
+		'/api/me/requests/incoming',
 		{
-			schema: {
-				tags: ['friends'],
-				params: { type: 'object', required: ['id'], properties: { id: { type: 'integer' } } },
-				response: {
-					200: {
-						type: 'array',
-						items: {
-							type: 'object',
-							properties: {
-								id: { type: 'integer' },
-								requester_id: { type: 'integer' },
-								recipient_id: { type: 'integer' },
-								status: { type: 'string' },
-								created_at: { type: 'integer' },
-								responded_at: { type: ['integer', 'null'] }
-							}
-						}
-					}
-				}
-			}
+			schema: incomingRequestsSchema
 		},
-		async (req) => listIncomingRequests(fastify, req.params.id)
+		async (req) => {
+			const userId = await getUserId(req);
+			const rows = await listIncomingRequests(fastify, userId);
+			return rows;
+		}
 	)
 
 	// b.2) Outgoing requests listen ---> sent request
 	fastify.get<{
-		Params: { id: number }
+		// Params: { id: number }
 		Reply: FriendRequestRow[]
 	}>(
-		'/api/users/:id/requests/outgoing',
+		// '/api/users/:id/requests/outgoing',
+		'/api/me/requests/outgoing',
 		{
-			schema: {
-				tags: ['friends'],
-				params: { type: 'object', required: ['id'], properties: { id: { type: 'integer' } } },
-				response: {
-					200: {
-						type: 'array',
-						items: {
-							type: 'object',
-							properties: {
-								id: { type: 'integer' },
-								requester_id: { type: 'integer' },
-								recipient_id: { type: 'integer' },
-								status: { type: 'string' },
-								created_at: { type: 'integer' },
-								responded_at: { type: ['integer', 'null'] }
-							}
-						}
-					}
-				}
-			}
+			schema: outgoingRequestsSchema
 		},
-		async (req) => listOutgoingRequests(fastify, req.params.id)
+		async (req) => {
+			const userId = await getUserId(req);
+			return listOutgoingRequests(fastify, userId);
+		}
 	)
 
 	// c) Anfrage annehmen
@@ -179,24 +110,33 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 	}>(
 		'/api/requests/:requestId/accept',
 		{
-			schema: {
-				tags: ['friends'],
-				params: { type: 'object', required: ['requestId'], properties: { requestId: { type: 'integer' } } },
-				response: {
-					200: { type: 'object', properties: { message: { type: 'string' } } },
-					404: { type: 'object', properties: { error: { type: 'string' } } }
-				}
-			}
+			schema: acceptFriendRequestSchema
 		},
 		async (req, reply) => {
+			const { requestId } = req.params
+			const authUserId = await getUserId(req);
+
+			const fr = await getFriendRequestById(fastify, requestId)
+			if (!fr) {
+				console.log(`Backend: /api/requests/${requestId}/accept error: `, 'friend request not found');
+				return reply.code(404).send({ error: 'Request not found' })
+			}
+			if (fr.recipient_id !== authUserId) {
+				return reply.code(403).send({ error: 'Forbidden' })
+			}
+			if (fr.responded_at !== null) {
+				return reply.code(409).send({ error: 'Already responded' })
+			}
 			try {
 				await acceptFriendRequest(fastify, req.params.requestId)
 				return { message: 'Friend request accepted' }
 			} catch (err: any) {
+				console.log(`Backend: /api/requests/${requestId}/accept error: `, err);
 				return reply.code(404).send({ error: err.message })
 			}
 		}
 	)
+
 	// d) Anfrage ablehnen
 	fastify.post<{
 		Params: { requestId: number }
@@ -204,16 +144,23 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 	}>(
 		'/api/requests/:requestId/reject',
 		{
-			schema: {
-				tags: ['friends'],
-				params: { type: 'object', required: ['requestId'], properties: { requestId: { type: 'integer' } } },
-				response: {
-					200: { type: 'object', properties: { message: { type: 'string' } } },
-					404: { type: 'object', properties: { error: { type: 'string' } } }
-				}
-			}
+			schema: rejectFriendRequestSchema
 		},
 		async (req, reply) => {
+			const { requestId } = req.params
+			const authUserId = await getUserId(req);
+
+			const fr = await getFriendRequestById(fastify, requestId)
+			if (!fr) {
+				return reply.code(404).send({ error: 'Request not found' })
+			}
+			if (fr.recipient_id !== authUserId) {
+				return reply.code(403).send({ error: 'Forbidden' })
+			}
+			if (fr.responded_at !== null) {
+				return reply.code(409).send({ error: 'Already responded' })
+			}
+
 			try {
 				await rejectFriendRequest(fastify, req.params.requestId)
 				return { message: 'Friend request rejected' }
@@ -224,83 +171,69 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 	)
 
 	fastify.delete<{
-		Params: { id: number; requestId: number }
+		// Params: { id: number; requestId: number }
+		Params: { requestId: number },
 		Reply: { message: string } | { error: string }
 	}>(
-		'/api/users/:id/requests/:requestId',
+		// '/api/users/:id/requests/:requestId',
+		'/api/me/requests/:requestId',
 		{
-			schema: {
-				tags: ['friends'],
-				params: {
-					type: 'object',
-					required: ['id', 'requestId'],
-					properties: {
-						id: { type: 'integer' },
-						requestId: { type: 'integer' }
-					}
-				},
-				response: {
-					200: {
-						type: 'object',
-						properties: { message: { type: 'string' } }
-					},
-					404: {
-						type: 'object',
-						properties: { error: { type: 'string' } }
-					}
-				}
-			}
+			schema: withdrawFriendRequestSchema
 		},
 		async (req, reply) => {
-			const requesterId = req.params.id
+			// const requesterId = req.params.id
+			const authUserId = await getUserId(req);
 			const requestId = req.params.requestId
+			console.log(`/api/me/requests/${requestId}`);
 
-			const ok = await withdrawFriendRequest(fastify, requesterId, requestId)
+			const fr = await getFriendRequestById(fastify, requestId)
+			if (!fr) {
+				return reply.code(404).send({ error: 'Request not found' })
+			}
+			if (fr.requester_id !== authUserId) {
+				return reply.code(403).send({ error: 'Forbidden' })
+			}
+			if (fr.responded_at !== null) {
+				return reply.code(409).send({ error: 'Already responded' })
+			}
+
+			const ok = await withdrawFriendRequest(fastify, authUserId, requestId)
 			if (!ok) {
 				return reply.code(404).send({ error: 'No pending request to withdraw' })
 			}
+			//notify user when "undo" was clicked
+			const payload = { type: 'friend_request_withdrawn', requestId, from: authUserId };
+			const targets = userSockets.get(fr.recipient_id);
+			if (targets?.size) {
+				for (const client of targets) {
+					if ((client as any).readyState === WebSocket.OPEN) {
+						try { client.send(JSON.stringify(payload)); } catch {}
+					}
+				}
+			}
+
 			return reply.code(200).send({ message: 'Friend request withdrawn' })
 		}
 	)
 	//POST -- BEGIN
 
 	//DELETE -- BEGIN
-	/* TEST:
-		curl -i -X DELETE http://localhost:3000/api/users/2/friends/5
-	 */
 	fastify.delete<{
-		Params: { id: number; friendId: number }
+		Params: { friendId: number }
+		// Params: { id: number; friendId: number }
 		Reply: { message: string } | { error: string }
 	}>(
-		'/api/users/:id/friends/:friendId',
+		// '/api/users/:id/friends/:friendId',
+		'/api/me/friends/:friendId',
 		{
-			schema: {
-				tags: ['friends'],
-				params: {
-					type: 'object',
-					required: ['id', 'friendId'],
-					properties: {
-						id: { type: 'integer' },
-						friendId: { type: 'integer' }
-					}
-				},
-				response: {
-					200: {
-						type: 'object',
-						properties: { message: { type: 'string' } }
-					},
-					404: {
-						type: 'object',
-						properties: { error: { type: 'string' } }
-					}
-				}
-			}
+			schema: removeFriendSchema
 		},
 		async (req, reply) => {
-			const userId = req.params.id
+			// const userId = req.params.id
+			const authUserId = await getUserId(req);
 			const friendId = req.params.friendId
 
-			const ok = await removeFriend(fastify, userId, friendId)
+			const ok = await removeFriend(fastify, authUserId, friendId)
 			if (!ok) {
 				return reply.code(404).send({ error: 'Friendship not found' })
 			}

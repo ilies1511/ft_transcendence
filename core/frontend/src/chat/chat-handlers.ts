@@ -200,7 +200,10 @@ export async function fetchUsersAndPopulate(myID: number): Promise<void> {
 	ul.innerHTML = '';
 
 	try {
-		const res = await fetch('/api/users');
+		const res = await fetch('/api/users', {
+			method: 'GET',
+			credentials: 'include',
+		});
 		if (!res.ok) throw new Error('Failed to fetch users');
 
 		const users = (await res.json()) as User[];
@@ -261,8 +264,16 @@ export function handleDirectMessage(ev: Event): void {
 	saveToHistory(fromID, fromID, data.content, data.ts);
 }
 
-//for offline users
+// //for offline users
+// export function handleChatError(ev: Event): void {
+// 	const { message } = (ev as CustomEvent).detail;
+// 	appendSystemMessage(message || 'User OFFLINE - message not delivered.');
+// }
+
 export function handleChatError(ev: Event): void {
-	const { message } = (ev as CustomEvent).detail;
-	appendSystemMessage(message || 'User OFFLINE - message not delivered.');
+	const { error, message, code } = (ev as CustomEvent).detail as {
+		error?: string; message?: string; code?: string;
+	};
+	const text = message ?? error ?? 'An unknown error occurred.';
+	appendSystemMessage(text);
 }

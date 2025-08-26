@@ -34,14 +34,14 @@ export class GameApi {
 			ai_count: ai_count,
 			display_name: display_name,
 		};
+
+		const headers = new Headers({ 'Content-Type': 'application/json' });
+		if (token) headers.set('X-CSRF-Token', token);
 		const response = await fetch('/api/enter_matchmaking', {
 			method: 'POST',
 			credentials: 'include',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-CSRF-Token': token,
-			},
-			body: JSON.stringify(req)
+			headers,
+			body: JSON.stringify(req),
 		});
 		const data: EnterMatchmakingResp = await response.json();
 		console.log("game: enter_matchmaking api response: ", data);
@@ -54,7 +54,8 @@ export class GameApi {
 	public static async get_display_names(match_id: number): Promise<LobbyDisplaynameResp>
 	{
 		const response = await fetch(`/game/${match_id}/display_names`, {
-			method: 'GET'
+			method: 'GET',
+			credentials: 'include',
 		});
 		const data: LobbyDisplaynameResp = await response.json();
 		console.log("Game: create_lobby api response: ", data);
@@ -72,14 +73,13 @@ export class GameApi {
 			client_id: client_id,
 		};
 
+		const headers = new Headers({ 'Content-Type': 'application/json' });
+		if (token) headers.set('X-CSRF-Token', token);
 		const response = await fetch('/api/create_lobby', {
 			method: 'POST',
 			credentials: 'include',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-CSRF-Token': token,
-			},
-			body: JSON.stringify(req)
+			headers,
+			body: JSON.stringify(req),
 		});
 		const data: CreateLobbyResp = await response.json();
 		console.log("Game: create_lobby api response: ", data);
@@ -103,13 +103,13 @@ export class GameApi {
 			password: password,
 			display_name: display_name,
 		};
+
+		const headers = new Headers({ 'Content-Type': 'application/json' });
+		if (token) headers.set('X-CSRF-Token', token);
 		const response = await fetch('/api/join_lobby', {
 			method: 'POST',
 			credentials: 'include',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-CSRF-Token': token,
-			},
+			headers,
 			body: JSON.stringify(req)
 		});
 		const data: ServerError = await response.text() as ServerError;
@@ -129,13 +129,12 @@ export class GameApi {
 			map_name: map_name,
 			password: password,
 		};
+		const headers = new Headers({ 'Content-Type': 'application/json' });
+		if (token) headers.set('X-CSRF-Token', token);
 		const response = await fetch('/api/create_tournament', {
 			method: 'POST',
 			credentials: 'include',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-CSRF-Token': token,
-			},
+			headers,
 			body: JSON.stringify(req)
 		});
 		const data: CreateTournamentResp = await response.json();
@@ -149,13 +148,12 @@ export class GameApi {
 		const req: ReconnectReq = {
 			client_id: client_id,
 		};
+		const headers = new Headers({ 'Content-Type': 'application/json' });
+		if (token) headers.set('X-CSRF-Token', token);
 		const response = await fetch('/api/reconnect', {
 			method: 'POST',
 			credentials: 'include',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-CSRF-Token': token,
-			},
+			headers,
 			body: JSON.stringify(req)
 		});
 		const data: ReconnectResp = await response.json();

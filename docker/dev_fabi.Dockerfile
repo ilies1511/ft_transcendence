@@ -1,59 +1,48 @@
-FROM debian:latest
+FROM ubuntu:latest
 
+# avoid interactive prompts during apt installs
+ENV DEBIAN_FRONTEND=noninteractive
 
 # basic tools
 RUN apt-get update && apt-get install -y \
-  git curl build-essential cmake sudo
+  git curl build-essential cmake sudo \
+  && rm -rf /var/lib/apt/lists/*
 
-#install node
-#RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-RUN curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash - 
-RUN apt install nodejs -y
-#RUN npm install -g typescript --save-dev
+# install Node.js 22
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash - \
+  && apt-get update && apt-get install -y nodejs \
+  && rm -rf /var/lib/apt/lists/*
 
-# Clipboard helpers for Neovim ---------------------
+# Clipboard helpers for Neovim
 RUN apt-get update && apt-get install -y \
-    wl-clipboard
+    wl-clipboard \
+  && rm -rf /var/lib/apt/lists/*
 
-#dependencies for my nvim config
-RUN apt-get install -y cargo
-RUN apt-get install -y ripgrep
-RUN apt-get install -y zip
-RUN apt-get install -y wget
-RUN apt-get install -y fd-find
+# dependencies for your nvim config
+RUN apt-get update && apt-get install -y \
+    cargo ripgrep zip wget fd-find \
+  && rm -rf /var/lib/apt/lists/*
 
 # nvim install
-RUN git clone https://github.com/neovim/neovim.git
-RUN cd neovim \
-	&& make CMAKE_BUILD_TYPE=RelWithDebInfo \
-	&& make install
+RUN git clone https://github.com/neovim/neovim.git /tmp/neovim \
+  && cd /tmp/neovim \
+  && make CMAKE_BUILD_TYPE=RelWithDebInfo \
+  && make install \
+  && rm -rf /tmp/neovim
 
+# global npm tools
 RUN npm install -g typescript typescript-language-server
 
-#RUN npm install -g http-server
-#RUN npm install -g express
-
+# create non-root user
 ARG USERNAME=frapp
 ARG UID=1000
 ARG GID=1000
-RUN groupadd -g $GID $USERNAME
-RUN useradd  -u $UID -g $GID -m $USERNAME
-RUN echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USERNAME
-RUN chown -R $UID:$GID /usr/local /opt /home/$USERNAME
-
-#ARG USERNAME=frapp
-#ARG UID=1000
-#ARG GID=1000
-#
-#RUN groupadd -g $GID $USERNAME \
-# && useradd -m -u $UID -g $GID -s /bin/bash $USERNAME \
-# && echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USERNAME \
-# && mkdir -p /home/$USERNAME/app /home/$USERNAME/.config/nvim \
-# && chown -R $UID:$GID /home/$USERNAME
-
+RUN groupadd -g $GID $USERNAME \
+  && useradd -u $UID -g $GID -m $USERNAME \
+  && echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USERNAME \
+  && chown -R $UID:$GID /usr/local /opt /home/$USERNAME
 
 USER $USERNAME
 ENV HOME=/home/$USERNAME
 WORKDIR /home/$USERNAME/app
 CMD ["bash"]
-

@@ -658,7 +658,7 @@ export class Game {
 			// results table
 			const table = document.createElement("table");
 			table.className =
-				"w-full mx-auto table-fixed border-collapse rounded-2xl overflow-hidden shadow-lg bg-[#221116]";
+				"w-full mx-auto table-fixed border-collapse overflow-hidden shadow-lg bg-[#221116]";
 
 			// head
 			const thead = document.createElement("thead");

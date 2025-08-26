@@ -11,9 +11,6 @@ export enum Effects {
 	RESETING = 3,
 };
 
-let i: number = 0;
-
-
 // serializable game state
 export class GameState {
 	public clients: SharedClient[];
@@ -21,10 +18,10 @@ export class GameState {
 	public walls: SharedWall[];
 	public game_timer: number;
 
-	constructor(game: GameEngine) {
-		this.clients = game.clients;
-		this.balls = game.balls;
-		this.walls = game.walls;
+	constructor(game: any) {
+		this.clients = game.clients!;
+		this.balls = game.balls!;
+		this.walls = game.walls!;
 		if (game.timer != undefined) {
 			this.game_timer = game.timer;
 		} else {

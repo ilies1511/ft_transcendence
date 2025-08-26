@@ -187,3 +187,16 @@ export async function updateUserAvatar(
 	return info.changes !== undefined && info.changes > 0
 }
 //PATCH -- END
+
+// HELPER
+export async function getUserId(request: any) {
+	return (request.user as any).id as number;
+}
+
+//Displays Live Player Count --> for Fabi
+export async function getLivePlayersCount(fastify: FastifyInstance): Promise<number> {
+	const row = await fastify.db.get<{ c: number }>(
+		'SELECT COUNT(*) AS c FROM users WHERE live = 1 AND is_deleted = 0'
+	);
+	return row?.c ?? 0;
+}

@@ -7,23 +7,25 @@ import { DEFAULT_AVATARS } from '../constants/avatars.ts';
 import { error } from 'console';
 import { validateCredentials, verify2FaToken } from '../functions/2fa.ts';
 import { setUserLive } from '../functions/user.ts';
+import { login2FASchema, loginSchema, logoutSchema, RegisterBodySchema } from '../schemas/auth.ts';
 
 const COST = 12  // bcrypt cost factor (2^12 ≈ 400 ms on laptop)
 
 export default async function authRoutes(app: FastifyInstance) {
 
 	app.post('/api/register', {
-		schema: {
-			body: {
-				type: 'object',
-				required: ['email', 'password', 'username'],
-				properties: {
-					email: { type: 'string', format: 'email' },
-					password: { type: 'string', minLength: 1 }, //TODO: update minLength on production
-					username: { type: 'string', minLength: 1 } //TODO: update minLength on production
-				}
-			}
-		}
+		// schema: {
+		// 	body: {
+		// 		type: 'object',
+		// 		required: ['email', 'password', 'username'],
+		// 		properties: {
+		// 			email: { type: 'string', format: 'email' },
+		// 			password: { type: 'string', minLength: 1 }, //TODO: update minLength on production
+		// 			username: { type: 'string', minLength: 1 } //TODO: update minLength on production
+		// 		}
+		// 	}
+		// }
+		schema: RegisterBodySchema
 	}, async (req, reply) => {
 		const { email, password, username } = req.body as {
 			email: string; password: string; username: string
@@ -58,7 +60,7 @@ export default async function authRoutes(app: FastifyInstance) {
 					client.send(JSON.stringify(payload));
 				}
 			}
-			
+
 			// Auto-login after registration
 			const token = await reply.jwtSign({ id: lastID, name: username })
 			reply.setCookie('token', token, {
@@ -97,36 +99,37 @@ export default async function authRoutes(app: FastifyInstance) {
 	}>(
 		'/api/login',
 		{
-			schema: {
-				description: 'Loggt einen Benutzer ein und liefert ein HTTP-Only Cookie',
-				tags: ['auth'],
-				body: {
-					type: 'object',
-					required: ['email', 'password'],
-					properties: {
-						email: { type: 'string', format: 'email' },
-						password: { type: 'string', minLength: 1 }
-						// token: { type: 'string'}
-					}
-				},
-				response: {
-					200: {
-						description: 'Successful login or 2FA required',
-						type: 'object',
-						properties: {
-							ok: { type: 'boolean', const: true },
-							twofa_required: { type: 'boolean' }
-						}
-					},
-					401: {
-						description: 'Invalid credentials',
-						type: 'object',
-						properties: {
-							error: { type: 'string' }
-						}
-					}
-				}
-			}
+			// schema: {
+			// 	description: 'Loggt einen Benutzer ein und liefert ein HTTP-Only Cookie',
+			// 	tags: ['auth'],
+			// 	body: {
+			// 		type: 'object',
+			// 		required: ['email', 'password'],
+			// 		properties: {
+			// 			email: { type: 'string', format: 'email' },
+			// 			password: { type: 'string', minLength: 1 }
+			// 			// token: { type: 'string'}
+			// 		}
+			// 	},
+			// 	response: {
+			// 		200: {
+			// 			description: 'Successful login or 2FA required',
+			// 			type: 'object',
+			// 			properties: {
+			// 				ok: { type: 'boolean', const: true },
+			// 				twofa_required: { type: 'boolean' }
+			// 			}
+			// 		},
+			// 		401: {
+			// 			description: 'Invalid credentials',
+			// 			type: 'object',
+			// 			properties: {
+			// 				error: { type: 'string' }
+			// 			}
+			// 		}
+			// 	}
+			// }
+			schema: loginSchema
 		},
 		async (req, reply) => {
 			const { email, password } = req.body
@@ -187,20 +190,48 @@ export default async function authRoutes(app: FastifyInstance) {
 	// 	reply.clearCookie('token', { path: '/' })
 	// 	reply.send({ ok: true })
 	// })
-	app.post('/api/logout', async (request: FastifyRequest, reply: FastifyReply) => {
+	app.post('/api/logout',
+		{
+			schema: logoutSchema
+		},
+		async (request: FastifyRequest, reply: FastifyReply) => {
 		const token = request.cookies.token;
-		if (token === undefined)
-			throw (error);
-		try {
-			const payload = await app.jwt.verify<{ id: number }>(token);
-			await setUserLive(app, payload.id, false);
-		} catch (err) {
-			//AUth missing --> do nothing
+		// if (token === undefined) // ISt dieser Case sowieso nicht unmoeglich ?
+		// {
+		// 	console.log('TOKEN UNDIFINED!!! In /api/logout in verify Block');
+		// 	throw (error);
+		// }
+		// try {
+		// 	const payload = await app.jwt.verify<{ id: number }>(token);
+		// 	console.log('TOKEN THERE !!! In /api/logout in verify Block');
+		// 	console.log('TOKEN THERE !!! In /api/logout in verify Block');
+		// 	console.log('TOKEN THERE !!! In /api/logout in verify Block');
+		// 	await setUserLive(app, payload.id, false); // TODO: 22.08 Add ws notification to other friends
+		// } catch (err) {
+		// 	//AUth missing --> do nothing
+		// 	console.log('ERROR Block!!! In /api/logout in verify Block');
+		// }
+		if (token) {
+			try {
+				const payload = await app.jwt.verify<{ id: number }>(token);
+				console.log('TOKEN THERE !!! In /api/logout in verify Block');
+				console.log('TOKEN THERE !!! In /api/logout in verify Block');
+				console.log('TOKEN THERE !!! In /api/logout in verify Block');
+				await setUserLive(app, payload.id, false); // TODO: 22.08 Add ws notification to other friends
+			}
+			catch (error) {
+			}
 		}
-		reply.clearCookie('token', { path: '/' });
-		return reply.send({ ok: true });
+		// reply.clearCookie('token', { path: '/' }); // Needs to be replaced -> see below
+		reply.clearCookie('token', {
+			path: '/',
+			httpOnly: true,
+			sameSite: 'lax',
+			secure: false
+		})
+		return reply.code(200).send({ ok: true });
 	});
-	// TODO: When logging out, getting console log error: GET http://localhost:5173/api/me 401 (Unauthorized)
+	// TODO: 22.08 When logging out, getting console log error: GET http://localhost:5173/api/me 401 (Unauthorized)
 	app.get('/api/me', { preHandler: [app.auth] }, async (req: FastifyRequest) => {
 		const user = await app.db.get(
 			'SELECT id, username, nickname, avatar FROM users WHERE id = ?',
@@ -211,21 +242,23 @@ export default async function authRoutes(app: FastifyInstance) {
 
 	app.post<{
 		Body: { email: string; password?: string; token: string }
+		Reply: { ok: true } | { error: string }
 	}>(
 		'/api/login/2fa',
 		{
-			schema: {
-				tags: ['auth'],
-				body: {
-					type: 'object',
-					required: ['email', 'token'],
-					properties: {
-						email: { type: 'string', format: 'email' },
-						password: { type: 'string' },
-						token: { type: 'string' }
-					}
-				}
-			}
+			// schema: {
+			// 	tags: ['auth'],
+			// 	body: {
+			// 		type: 'object',
+			// 		required: ['email', 'token'],
+			// 		properties: {
+			// 			email: { type: 'string', format: 'email' },
+			// 			password: { type: 'string' },
+			// 			token: { type: 'string' }
+			// 		}
+			// 	}
+			// }
+			schema: login2FASchema
 		},
 		async (req, reply) => {
 			const { email, password, token } = req.body

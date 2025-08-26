@@ -3,6 +3,7 @@ import { router } from '../main';
 import type { PageModule } from '../router';
 import { getSession, clearSession } from '../services/session';
 import { showMsg } from '../utils/showMsg';
+import { token as CSRFToken } from '../services/session';
 
 const SettingsPage: PageModule & { renderWithParams?: Function } = {
 	render(root) {
@@ -20,7 +21,10 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 			return
 		}
 
-		const res = await fetch(`/api/users/${me.id}`)
+		const res = await fetch(`/api/users/${me.id}`, {
+			method: 'GET',
+			credentials: 'include',
+		})
 		if (!res.ok) { root.innerHTML = '<p>User not found</p>'; return }
 		const user = await res.json()
 
@@ -111,7 +115,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 			<!-- 2FA Section -->
 			<section class="w-full max-w-[400px] p-8 shadow-md rounded-[25px] bg-[#2b171e] space-y-4">
 				<h2 class="text-center text-white text-xl font-bold mb-4">Two-Factor Authentication</h2>
-				
+
 				<div id="twofa-status" class="text-center">
 					<p class="text-[#b99da6] mb-4">Loading 2FA status...</p>
 				</div>
@@ -264,9 +268,20 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 			fd.append('avatar', avatarFile)
 
 			try {
-				const uploadResponse = await fetch(`/api/users/${me.id}/avatar`, { method: 'POST', body: fd })
+				// const uploadResponse = await fetch(`/api/users/${me.id}/avatar`, { method: 'POST', body: fd })
+				const headers = new Headers({ 'Content-Type': 'application/json' });
+				if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
+				const uploadResponse = await fetch('/api/me/avatar', {
+					method: 'POST',
+					credentials: 'include',
+					headers,
+					body: fd,
+				});
 				if (uploadResponse.ok) {
-					const userResponse = await fetch(`/api/users/${me.id}`);
+					const userResponse = await fetch(`/api/users/${me.id}`, {
+						method: 'GET',
+						credentials: 'include',
+					});
 					const updatedUser = await userResponse.json();
 					avatarPreview.src = updatedUser.avatar + `?t=${Date.now()}`;
 					showMsg(avatarMsg, 'Avatar updated!', true)
@@ -318,9 +333,12 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 			}
 
 			try {
+				const headers = new Headers({ 'Content-Type': 'application/json' });
+				if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
 				const r = await fetch(`/api/me`, {
 					method: 'PATCH',
-					headers: { 'Content-Type': 'application/json' },
+					credentials: 'include',
+					headers,
 					body: JSON.stringify(data)
 				})
 				if (r.ok) {
@@ -362,9 +380,12 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 			}
 
 			try {
+				const headers = new Headers({ 'Content-Type': 'application/json' });
+				if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
 				const r = await fetch(`/api/me`, {
 					method: 'PATCH',
-					headers: { 'Content-Type': 'application/json' },
+					credentials: 'include',
+					headers,
 					body: JSON.stringify({ password: data.password, currentPassword: data.currentPassword })
 				})
 				if (r.ok) {
@@ -435,9 +456,12 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 			try {
 				showMsg(twofaSetupMsg, 'Generating QR code...')
 
+				const headers = new Headers();
+				if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
 				const res = await fetch('/api/2fa/generate', {
 					method: 'POST',
-					credentials: 'include'
+					credentials: 'include',
+					headers,
 				})
 
 				if (!res.ok) {
@@ -476,9 +500,11 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 				verifyBtn.disabled = true
 				showMsg(twofaSetupMsg, 'Verifying code...')
 
+				const headers = new Headers({ 'Content-Type': 'application/json' });
+				if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
 				const res = await fetch('/api/2fa/verify', {
 					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
+					headers,
 					credentials: 'include',
 					body: JSON.stringify({ token: code })
 				})
@@ -528,9 +554,12 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 				disableBtn.disabled = true
 				showMsg(twofaMsg, 'Disabling 2FA...')
 
+				const headers = new Headers({ 'Content-Type': 'application/json' });
+				if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
 				const res = await fetch('/api/2fa/disable', {
 					method: 'POST',
-					credentials: 'include'
+					credentials: 'include',
+					headers,
 				})
 
 				if (!res.ok) {
@@ -583,9 +612,12 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 			if (!confirm('Anonymize your personal data? This action cannot be undone.')) return
 			showMsg(accountMsg, 'Processing...')
 			try {
+				const headers = new Headers({ 'Content-Type': 'application/json' });
+				if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
 				const r = await fetch('/api/me/anonymize', {
 					method: 'POST',
-					credentials: 'include'
+					credentials: 'include',
+					headers,
 				})
 				if (r.ok) {
 					showMsg(accountMsg, 'Data anonymized.', true)
@@ -608,9 +640,12 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 		}
 		showMsg(accountMsg, 'Deleting account...')
 		try {
+			const headers = new Headers();
+			if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
 			const r = await fetch('/api/me', {
 				method: 'DELETE',
-				credentials: 'include'
+				credentials: 'include',
+				headers
 			})
 		if (r.ok) {
 			showMsg(accountMsg, 'Account deleted. Redirecting...', true)
@@ -648,7 +683,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
                 url += '&includeMedia=true'
             }
             try {
-                const r = await fetch(url, { credentials: 'include' })
+                const r = await fetch(url, { method: 'GET', credentials: 'include' })
                 if (!r.ok) {
                     const { error } = await r.json().catch(() => ({ error: 'Export failed' }))
                     showMsg(accountMsg, error || 'Export failed')

@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { type UpdateProfile, anonymizeUser, deleteUserAndData, getUserData, jsonGZHandler, jsonHandler, zipHandler, updateMyProfile } from '../functions/gdpr.ts';
+import { type UpdateProfile, anonymizeUser, deleteUserAndData, getUserData, jsonGZHandler, jsonHandler, zipHandler, updateMyProfile, anonymizeAndSetPassword, issueFreshAuthCookie } from '../functions/gdpr.ts';
 import { collectUserExport } from '../functions/gdpr.ts';
 import { Readable } from 'node:stream';
 import { createGzip } from 'node:zlib';
@@ -8,6 +8,11 @@ import path from 'node:path'
 import fs from "fs";
 import { fileURLToPath } from 'node:url'
 import { extractFilename, resolveAvatarFsPath, resolvePublicPath } from '../functions/gdpr.ts';
+import { getUserId } from '../functions/user.ts';
+import { anonymizeAndSetPwSchema, anonymizeMeSchema, meDataSchema, meDeleteSchema, meExportSchema, mePatchSchema, ogExportSchema } from '../schemas/gdpr.ts';
+import { notifyFriendStatus } from '../functions/wsHandler/connectHandler.ts';
+import { userSockets } from '../types/wsTypes.ts';
+import { setUserLive } from '../functions/user.ts';
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -16,32 +21,48 @@ const BACKEND_ROOT = path.resolve(__dirname, '../..')
 export const PUBLIC_DIR = process.env.PUBLIC_DIR ?? path.resolve(BACKEND_ROOT, '../frontend/public')
 export const AVATAR_SUBDIR = process.env.AVATAR_SUBDIR ?? 'avatars'
 
-
 export const gdprRoutes: FastifyPluginAsync = async fastify => {
 
-	fastify.get('/api/me/data', { preHandler: [fastify.auth] }, async (req, reply) => {
-		const userId = (req.user as any).id;
-		const data = await getUserData(fastify, userId);
-		return reply.send(data);
-	});
-
-	// fastify.get('/api/me', { preHandler: [fastify.auth] }, async (req, reply) => {
-	// 	const userId = (req.user as any).id;
-	// 	const data = await getUserData(fastify, userId);
-	// 	return reply.send(data);
-	// });
-
-	// fastify.post('/api/me/anonymize', { preHandler: [fastify.auth] },
-	fastify.post('/api/me/anonymize',
+	fastify.get('/api/me/data',
 		{
-			schema: {
-				tags: ['gdpr'],
-			}
+			schema: meDataSchema
 		},
 		async (req, reply) => {
-			const userId = (req.user as any).id;
-			await anonymizeUser(fastify, userId);
-			return reply.send({ message: 'Your personal data has been anonymized.' });
+			const userId = await getUserId(req);
+
+			const data = await getUserData(fastify, userId);
+			if (!data) {
+				return reply.code(404).send({ error: 'User not found' })
+			}
+			return reply.send(data);
+		});
+
+	// BEGIN -- OLD
+	// fastify.post('/api/me/anonymize',
+	// 	{
+	// 		schema: anonymizeMeSchema
+	// 	},
+	// 	async (req, reply) => {
+	// 		const userId = await getUserId(req);
+	// 		await anonymizeUser(fastify, userId);
+	// 		return reply.send({ message: 'Your personal data has been anonymized.' });
+	// 	});
+	// END -- OLD
+	fastify.post('/api/me/anonymize',
+		{
+			schema: anonymizeAndSetPwSchema
+		},
+		async (req, reply) => {
+			const userId = await getUserId(req);
+			const { newPassword } = req.body as { newPassword: string };
+
+			const { pseudoUsername, pseudoEmail } =
+				await anonymizeAndSetPassword(fastify, userId, newPassword);
+			// await issueFreshAuthCookie(fastify, reply, userId, pseudoUsername);
+			return reply.send({
+				message: 'Your data has been anonymized and your password was updated.',
+				pseudoEmail,
+			});
 		});
 
 	// fastify.delete('/api/me',
@@ -60,28 +81,40 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 
 	fastify.delete('/api/me',
 		{
-			preHandler: [fastify.auth],
-			schema: {
-				tags: ['gdpr'],
-				response: {
-					200: { type: 'object', properties: { message: { type: 'string' } } },
-					404: { type: 'object', properties: { error: { type: 'string' } } },
-					409: { type: 'object', properties: { error: { type: 'string' } } }
-				}
-			}
+			schema: meDeleteSchema
 		},
 		async (req, reply) => {
-			const userId = (req.user as any).id
+			// const userId = (req.user as any).id
+			const userId = await getUserId(req);
+
+			await setUserLive(fastify, userId, false);
+			await notifyFriendStatus(fastify, userSockets, userId, false);
+
 			try {
-				// await deleteUserAndData(fastify, userId)
 				await deleteUserAndData(fastify, userId);
+
+				//remove user from the open sockets
+				const set = userSockets.get(userId);
+				if (set) {
+					for (const sock of set) {
+						try { sock.close(1000, 'Account deleted'); } catch {}
+					}
+					userSockets.delete(userId);
+				}
+				//notify other users that user account was deleted, so FE can be updated
+				const payload = { type: 'user_deleted', userId };
+				for (const client of fastify.websocketServer.clients) {
+					if ((client as any).readyState === WebSocket.OPEN) {
+						try { client.send(JSON.stringify(payload)); } catch {}
+					}
+				}
+
 				reply.clearCookie('token', {
 					path: '/',
 					httpOnly: true,
 					sameSite: 'lax',
 					secure: false
 				})
-				// await deleteUserAndData(fastify, userId);
 				return reply.send({ message: 'Your account and all associated data have been permanently deleted.' })
 			} catch (error: any) {
 				if (error?.statusCode) {
@@ -101,67 +134,10 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 	}>(
 		'/api/me',
 		{
-			// schema: {
-			// 	tags: ['gdpr'],
-			// 	body: {
-			// 		type: 'object',
-			// 		minProperties: 1,
-			// 		properties: {
-			// 			username: { type: 'string', minLength: 1 },
-			// 			nickname: { type: 'string', minLength: 1 },
-			// 			email: { type: 'string', format: 'email' },
-			// 			password: { type: 'string', minLength: 8 },
-			// 			currentPassword: { type: 'string', minLength: 8 }
-
-			// 		},
-			// 		allOf: [
-			// 			{
-			// 				if: { required: ['password'] },
-			// 				then: { required: ['currentPassword'] }
-			// 			}
-			// 		]
-			// 	},
-			// 	response: {
-			// 		200: { type: 'object', properties: { ok: { type: 'boolean' } } },
-			// 		400: { type: 'object', properties: { error: { type: 'string' } } }
-			// 	}
-			// }
-			preHandler: [fastify.auth],
-			schema: {
-				tags: ['gdpr'],
-				body: {
-					type: 'object',
-					minProperties: 1,
-					properties: {
-						username: { type: 'string', minLength: 1 },
-						nickname: { type: 'string', minLength: 1 },
-						email: { type: 'string', format: 'email' },
-						password: { type: 'string', minLength: 1 },
-						currentPassword: { type: 'string', minLength: 1 }
-					},
-					allOf: [
-						{ if: { required: ['password'] }, then: { required: ['currentPassword'] } },
-						{ if: { required: ['currentPassword'] }, then: { required: ['password'] } }
-					]
-				},
-				response: {
-					200: { type: 'object', properties: { ok: { type: 'boolean' } } },
-					400: { type: 'object', properties: { error: { type: 'string' } } },
-					401: { type: 'object', properties: { error: { type: 'string' } } },
-					409: { type: 'object', properties: { error: { type: 'string' } } },
-					500: { type: 'object', properties: { error: { type: 'string' } } }
-				}
-			}
-
+			schema: mePatchSchema
 		},
-		// async (req, reply) => {
-		// 	const userId = (req.user as any).id
-		// 	const ok = await updateMyProfile(fastify, userId, req.body)
-		// 	if (!ok) return reply.code(400).send({ error: 'No valid fields to update' })
-		// 	return { ok: true }
-		// }
 		async (req, reply) => {
-			const userId = (req.user as any).id
+			const userId = await getUserId(req);
 			try {
 				const ok = await updateMyProfile(fastify, userId, req.body)
 				if (!ok) return reply.code(400).send({ error: 'Nothing to update or user not found.' })
@@ -219,31 +195,11 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 
 	fastify.get('/api/me/export',
 		{
-			preHandler: [fastify.auth],
-			schema: {
-				tags: ['gdpr'],
-				querystring: {
-					type: 'object',
-					properties: {
-						format: { type: 'string', enum: ['json', 'json.gz', 'zip'], default: 'json' },
-						// includeOtherUsers: { type: 'boolean', default: false },
-						includeMedia: { type: 'boolean', default: false }
-					}
-				},
-				response: {
-					200: {
-						content: {
-							'application/json': { schema: { type: 'string' } },
-							'application/gzip': { schema: { type: 'string', format: 'binary' } },
-							'application/zip': { schema: { type: 'string', format: 'binary' } }
-						}
-						// type: 'string'
-					}
-				}
-			}
+			schema: meExportSchema
+			// schema: ogExportSchema
 		},
 		async (req, reply) => {
-			const userId = (req.user as any).id
+			const userId = await getUserId(req);
 			const { format = 'json', includeMedia = false } = req.query as any
 
 			if (format !== 'zip' && includeMedia) {
@@ -256,10 +212,10 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 
 			// BEGIN -- HANDLERS
 			if (format === 'json') {
-				return jsonHandler(fastify,reply, data, userId, ts);
+				return jsonHandler(fastify, reply, data, userId, ts);
 			}
 			if (format === 'json.gz') {
-				return jsonGZHandler(fastify,reply, data, userId, ts);
+				return jsonGZHandler(fastify, reply, data, userId, ts);
 			}
 			if (format === 'zip') {
 				await zipHandler(fastify, reply, data, includeMedia, userId, ts);
@@ -317,45 +273,45 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 // BEGIN -- Backup Zip Handler
 
 
-	//// Works but no media
-	// 	fastify.get('/api/me/export',
-	// 		{
-	// 			// preHandler: [fastify.auth],
-	// 			schema: {
-	// 				tags: ['gdpr'],
-	// 				querystring: {
-	// 					type: 'object',
-	// 					properties: {
-	// 						format: { type: 'string', enum: ['json', 'json.gz'], default: 'json' },
-	// 						includeOtherUsers: { type: 'boolean', default: false },
-	// 						includeMedia: { type: 'boolean', default: false }
-	// 					}
-	// 				}
-	// 			}
-	// 		},
-	// 		async (req, reply) => {
-	// 			const userId = (req.user as any).id
-	// 			const { format = 'json', includeOtherUsers = false, includeMedia = false } = req.query as any
+//// Works but no media
+// 	fastify.get('/api/me/export',
+// 		{
+// 			// preHandler: [fastify.auth],
+// 			schema: {
+// 				tags: ['gdpr'],
+// 				querystring: {
+// 					type: 'object',
+// 					properties: {
+// 						format: { type: 'string', enum: ['json', 'json.gz'], default: 'json' },
+// 						includeOtherUsers: { type: 'boolean', default: false },
+// 						includeMedia: { type: 'boolean', default: false }
+// 					}
+// 				}
+// 			}
+// 		},
+// 		async (req, reply) => {
+// 			const userId = (req.user as any).id
+// 			const { format = 'json', includeOtherUsers = false, includeMedia = false } = req.query as any
 
-	// 			const data = await collectUserExport(fastify, userId, { includeOtherUsers, includeMedia })
-	// 			const pretty = JSON.stringify(data, null, 2)
-	// 			const ts = new Date().toISOString().replace(/[:.]/g, '_')
+// 			const data = await collectUserExport(fastify, userId, { includeOtherUsers, includeMedia })
+// 			const pretty = JSON.stringify(data, null, 2)
+// 			const ts = new Date().toISOString().replace(/[:.]/g, '_')
 
-	// 			if (format === 'json') {
-	// 				reply
-	// 					.header('Content-Type', 'application/json; charset=utf-8')
-	// 					.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.json"`)
-	// 				return reply.send(pretty)
-	// 			}
-	// 			reply
-	// 				.header('Content-Type', 'application/gzip')
-	// 				.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.json.gz"`)
+// 			if (format === 'json') {
+// 				reply
+// 					.header('Content-Type', 'application/json; charset=utf-8')
+// 					.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.json"`)
+// 				return reply.send(pretty)
+// 			}
+// 			reply
+// 				.header('Content-Type', 'application/gzip')
+// 				.header('Content-Disposition', `attachment; filename="user_${userId}_${ts}.json.gz"`)
 
-	// 			const stream = Readable.from(pretty)
-	// 			await new Promise<void>((resolve, reject) => {
-	// 				stream.pipe(createGzip()).pipe(reply.raw).on('finish', () => resolve()).on('error', reject)
-	// 			})
-	// 			return reply
-	// 		}
-	// 	)
-	// };
+// 			const stream = Readable.from(pretty)
+// 			await new Promise<void>((resolve, reject) => {
+// 				stream.pipe(createGzip()).pipe(reply.raw).on('finish', () => resolve()).on('error', reject)
+// 			})
+// 			return reply
+// 		}
+// 	)
+// };

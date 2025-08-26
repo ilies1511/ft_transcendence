@@ -10,9 +10,11 @@ import {
 	getUserById, setUserLive,
 	updateUser,
 	updateUserAvatar,
-	type UpdateUserData
+	type UpdateUserData,
+	getUserId
 } from "../functions/user.ts";
 import { type UserRow } from "../types/userTypes.ts";
+import { uploadAvatarSchema } from "../schemas/users.ts";
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -151,102 +153,102 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 	);
 	// GET -- END
 
-	// PUT -- BEGIN
-	// PUT (by ID)
-	fastify.put<{
-		Params: { id: number };
-		Body: { username?: string; password?: string; email?: string };
-		Reply: { message: string } | { error: string };
-	}>(
-		"/api/users/:id",
-		{
-			schema: {
-				params: {
-					type: "object",
-					required: ["id"],
-					properties: { id: { type: "integer" } },
-				},
-				body: {
-					type: "object",
-					properties: {
-						username: { type: "string" },
-						password: { type: "string" },
-						email: { type: "string" },
-					},
-					minProperties: 1,
-				},
-				response: {
-					200: {
-						type: "object",
-						properties: { message: { type: "string" } },
-					},
-					400: {
-						type: "object",
-						properties: { error: { type: "string" } },
-					},
-					404: {
-						type: "object",
-						properties: { error: { type: "string" } },
-					},
-				},
-			},
-		},
-		async (request, reply) => {
-			const id = request.params.id
-			const data = request.body as UpdateUserData
+	// // PUT -- BEGIN
+	// // PUT (by ID)
+	// fastify.put<{
+	// 	Params: { id: number };
+	// 	Body: { username?: string; password?: string; email?: string };
+	// 	Reply: { message: string } | { error: string };
+	// }>(
+	// 	"/api/users/:id",
+	// 	{
+	// 		schema: {
+	// 			params: {
+	// 				type: "object",
+	// 				required: ["id"],
+	// 				properties: { id: { type: "integer" } },
+	// 			},
+	// 			body: {
+	// 				type: "object",
+	// 				properties: {
+	// 					username: { type: "string" },
+	// 					password: { type: "string" },
+	// 					email: { type: "string" },
+	// 				},
+	// 				minProperties: 1,
+	// 			},
+	// 			response: {
+	// 				200: {
+	// 					type: "object",
+	// 					properties: { message: { type: "string" } },
+	// 				},
+	// 				400: {
+	// 					type: "object",
+	// 					properties: { error: { type: "string" } },
+	// 				},
+	// 				404: {
+	// 					type: "object",
+	// 					properties: { error: { type: "string" } },
+	// 				},
+	// 			},
+	// 		},
+	// 	},
+	// 	async (request, reply) => {
+	// 		const id = request.params.id
+	// 		const data = request.body as UpdateUserData
 
-			try {
-				const changed = await updateUser(fastify, id, data)
-				if (!changed) {
-					return reply.code(404).send({ error: 'User not found' })
-				}
-				return reply.code(200).send({ message: 'User updated successfully' })
-			} catch (err: any) {
-				if (err.message === 'NoFieldsToUpdate') {
-					return reply.code(400).send({ error: 'No fields to update' })
-				}
-				return reply.code(500).send({ error: 'Internal Server Error' })
-			}
-		}
-	);
+	// 		try {
+	// 			const changed = await updateUser(fastify, id, data)
+	// 			if (!changed) {
+	// 				return reply.code(404).send({ error: 'User not found' })
+	// 			}
+	// 			return reply.code(200).send({ message: 'User updated successfully' })
+	// 		} catch (err: any) {
+	// 			if (err.message === 'NoFieldsToUpdate') {
+	// 				return reply.code(400).send({ error: 'No fields to update' })
+	// 			}
+	// 			return reply.code(500).send({ error: 'Internal Server Error' })
+	// 		}
+	// 	}
+	// );
 
-	//
-	// DELETE (by ID)
-	//
-	fastify.delete<{
-		Params: { id: number };
-		Reply: { message: string } | { error: string };
-	}>(
-		"/api/users/:id",
-		{
-			schema: {
-				params: {
-					type: "object",
-					required: ["id"],
-					properties: { id: { type: "integer" } },
-				},
-				response: {
-					200: {
-						type: "object",
-						properties: { message: { type: "string" } },
-					},
-					404: {
-						type: "object",
-						properties: { error: { type: "string" } },
-					},
-				},
-			},
-		},
-		async (request, reply) => {
-			const { id } = request.params
-			const deleted = await deleteUserById(fastify, id)
+	// //
+	// // DELETE (by ID)
+	// //
+	// fastify.delete<{
+	// 	Params: { id: number };
+	// 	Reply: { message: string } | { error: string };
+	// }>(
+	// 	"/api/users/:id",
+	// 	{
+	// 		schema: {
+	// 			params: {
+	// 				type: "object",
+	// 				required: ["id"],
+	// 				properties: { id: { type: "integer" } },
+	// 			},
+	// 			response: {
+	// 				200: {
+	// 					type: "object",
+	// 					properties: { message: { type: "string" } },
+	// 				},
+	// 				404: {
+	// 					type: "object",
+	// 					properties: { error: { type: "string" } },
+	// 				},
+	// 			},
+	// 		},
+	// 	},
+	// 	async (request, reply) => {
+	// 		const { id } = request.params
+	// 		const deleted = await deleteUserById(fastify, id)
 
-			if (!deleted) {
-				return reply.code(404).send({ error: 'User not found' });
-			}
-			return reply.code(200).send({ message: 'User deleted successfully' });
-		}
-	);
+	// 		if (!deleted) {
+	// 			return reply.code(404).send({ error: 'User not found' });
+	// 		}
+	// 		return reply.code(200).send({ message: 'User deleted successfully' });
+	// 	}
+	// );
 
 	//PUT --END
 
@@ -271,47 +273,31 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 			return { message: 'Live status updated' }
 		}
 	)
-	//PATCH -- BEGIN
-	// TODO:
-	// JUST FOR TESTING PURPOSES. TO UPDATE THE NICKNAME FROM TEH USER SETTINGS PAGE
-	// UPDATE/REMOVE ON PRODUCTION
-	fastify.patch<{ Params: { id: string }, Body: { nickname: string } }>(
-		'/api/users/:id/nickname',
-		async (req, reply) => {
-			const { id } = req.params;
-			const { nickname } = req.body;
+	// //PATCH -- BEGIN
+	// // TODO:
+	// // JUST FOR TESTING PURPOSES. TO UPDATE THE NICKNAME FROM TEH USER SETTINGS PAGE
+	// // UPDATE/REMOVE ON PRODUCTION
+	// fastify.patch<{ Params: { id: string }, Body: { nickname: string } }>(
+	// 	'/api/users/:id/nickname',
+	// 	async (req, reply) => {
+	// 		const { id } = req.params;
+	// 		const { nickname } = req.body;
 
-			if (!nickname) {
-				return reply.code(400).send({ error: 'Nickname is required' });
-			}
+	// 		if (!nickname) {
+	// 			return reply.code(400).send({ error: 'Nickname is required' });
+	// 		}
 
-			await fastify.db.run('UPDATE users SET nickname = ? WHERE id = ?', [nickname, id]);
-			reply.send({ success: true });
-		}
-	)
-	fastify.post<{
-		Params: { id: number }
-	}>(
-		'/api/users/:id/avatar',
+	// 		await fastify.db.run('UPDATE users SET nickname = ? WHERE id = ?', [nickname, id]);
+	// 		reply.send({ success: true });
+	// 	}
+	// )
+	fastify.post(
+		'/api/me/avatar',
 		{
-			schema: {
-				params: {
-					type: 'object',
-					required: ['id'],
-					properties: { id: { type: 'integer' } }
-				},
-				response: {
-					200: {
-						type: 'object',
-						properties: { avatarUrl: { type: 'string' } }
-					},
-					400: { type: 'object', properties: { error: { type: 'string' } } },
-					404: { type: 'object', properties: { error: { type: 'string' } } }
-				}
-			}
+			schema: uploadAvatarSchema
 		},
 		async (request, reply) => {
-			const userId = request.params.id
+			const userId = await getUserId(request);
 
 			const data = await request.file({ limits: { fieldNameSize: 100 } })
 			if (!data) {
@@ -320,41 +306,6 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 			if (!data.filename.toLowerCase().endsWith('.png')) {
 				return reply.code(400).send({ error: 'Only .png allowed' })
 			}
-			// const filename = "NewUploadedAvatar.png";
-
-			// const filename = "NewUploadedAvatar" + `_${userId}`;
-
-			// const destPath = path.join(__dirname, '../../../frontend/public/', filename);
-			// await pipeline(data.file, createWriteStream(destPath));
-
-			// const destPath2 = path.join(process.env.PUBLIC_DIR
-			// 		?? '../../../frontend/public/', process.env.AVATAR_SUBDIR ?? 'avatars');
-			// // console.log('destPath2:' + destPath2);
-			// // console.log('destPath2:' + destPath2);
-			// // console.log('destPath2:' + destPath2);
-			// // console.log('destPath2:' + destPath2);
-			// const PUBLIC_DIR = process.env.PUBLIC_DIR;
-			// const AVATAR_SUBDIR = process.env.AVATAR_SUBDIR;
-
-			// const avatarDir = path.join(PUBLIC_DIR!, AVATAR_SUBDIR!)
-			// await fs.promises.mkdir(avatarDir, { recursive: true })
-
-			// // Sicheren Dateinamen wählen (nur Dateiname, keine Pfade)
-			// // const filename = `avatar_${userId}.png`
-			// // const filename = "NewUploadedAvatar" + `_${userId}`;
-			// const destPath = path.join(avatarDir, filename)
-
-			// await pipeline(data.file, createWriteStream(destPath));
-			// // await pipeline(data.file, createWriteStream(destPath2));
-			// const avatar = `../../${filename}`
-			// // const ok = await updateUserAvatar(fastify, userId, avatar)
-			// const ok = await updateUserAvatar(fastify, userId, filename)
-			// if (!ok) {
-			// 	return reply.code(404).send({ error: 'User not found' })
-			// }
-			// return reply.code(200).send({ avatar })
-
-
 			const PUBLIC_DIR = process.env.PUBLIC_DIR!;
 			const AVATAR_SUBDIR = process.env.AVATAR_SUBDIR!;
 

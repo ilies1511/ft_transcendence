@@ -5,8 +5,12 @@ import threading
 import requests
 import websocket
 
-BASE = "http://localhost:3000"
-HOST = "localhost:3000"
+#BASE = "http://localhost:3000"
+#HOST = "localhost:3000"
+
+HOST = f'{input("Server address:: ")}:3000'
+BASE = f'http://{HOST}'
+
 
 def _cookie_header_from(session: requests.Session) -> str:
     jar = requests.utils.dict_from_cookiejar(session.cookies)
@@ -128,7 +132,7 @@ class Game:
                 self._ws_thread.join(timeout=2)
             print("exiting...")
 
-def enter_matchmaking(session, user_id=2, display_name='CLI_DISPLAY_NAME', map_name='default'):
+def enter_matchmaking(session, csrf_token, user_id=2, display_name='CLI_DISPLAY_NAME', map_name='default'):
     print("\n=== Enter Matchmaking ===")
     payload = {
         "user_id": user_id,
@@ -136,8 +140,11 @@ def enter_matchmaking(session, user_id=2, display_name='CLI_DISPLAY_NAME', map_n
         "map_name": map_name,
         "ai_count": 0,
     }
+    headers = {
+        "X-CSRF-Token": csrf_token,
+    }
     try:
-        r2 = session.post(f"{BASE}/api/enter_matchmaking", json=payload)
+        r2 = session.post(f"{BASE}/api/enter_matchmaking", json=payload, headers=headers)
     except requests.RequestException as e:
         print(f"Network error during enter_matchmaking: {e}")
         sys.exit(1)
@@ -167,12 +174,27 @@ def whoami(session: requests.Session):
 def login():
     print("=== Login ===")
     email = input('email: ')
+
     password = input('password: ')
+
     #email = 'a@a.a'
     #password = 'a'
 
     with requests.Session() as session:
         try:
+            # 1. Get CSRF token
+            csrf_res = session.get("http://localhost:3000/api/csrf")  # adjust base URL
+            csrf_res.raise_for_status()
+            csrf_token = csrf_res.json().get("token")
+
+            if not csrf_token:
+                raise RuntimeError("Could not fetch CSRF token")
+
+            print("CSRF Token:", csrf_token)
+
+            headers = {
+                "X-CSRF-Token": csrf_token
+            }
             r = session.post(f"{BASE}/api/login", json={"email": email, "password": password})
         except requests.RequestException as e:
             print(f"Network error during login: {e}")
@@ -194,14 +216,16 @@ def login():
         print("Logged in")
         client_id = whoami(session)
         print(f'client_id: {client_id}')
-        mm_response = enter_matchmaking(session, user_id=client_id)
+        mm_response = enter_matchmaking(session, csrf_token, user_id=client_id)
         match_id = mm_response['match_id']
 
         cookie_header = _cookie_header_from(session)
-        headers = [f"Cookie: {cookie_header}"]
+        headers = [f"Cookie: {cookie_header}", f"X-CSRF-Token: {csrf_token}"]
         origin = BASE
 
         Game(host=HOST, game_id=match_id, client_id=client_id, headers=headers, origin=origin).run()
+
+
 
 def main():
     login()

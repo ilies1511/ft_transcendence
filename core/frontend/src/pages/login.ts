@@ -1,7 +1,7 @@
 // frontend/src/pages/login.ts
 import { router } from '../main';
 import type { PageModule } from '../router';
-import { clearSession } from '../services/session';
+import { token as CSRFToken, clearSession } from '../services/session';
 
 const template = /*html*/ `
 	<div class="w-full min-h-screen flex items-center justify-center bg-[#221116]">
@@ -158,12 +158,16 @@ const LoginPage: PageModule = {
 						body.password = password;
 					}
 
+					const headers = new Headers({ 'Content-Type': 'application/json' });
+					if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
 					const res = await fetch('/api/login/2fa', {
 						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
+						headers,
 						body: JSON.stringify(body),
 						credentials: 'include'
 					});
+
+
 
 					if (!res.ok) {
 						const { error } = await res.json().catch(() => ({}));
@@ -171,9 +175,11 @@ const LoginPage: PageModule = {
 					}
 				} else {
 					// Submit credentials
+					const headers = new Headers({ 'Content-Type': 'application/json' });
+					if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
 					const res = await fetch('/api/login', {
 						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
+						headers,
 						body: JSON.stringify({ email, password }),
 						credentials: 'include'
 					});
@@ -194,6 +200,7 @@ const LoginPage: PageModule = {
 
 				// Login successful (either directly or after 2FA)
 				clearSession();
+				globalThis.logged_in = true;
 				document.dispatchEvent(new Event('auth-change'));
 				router.go('/');
 

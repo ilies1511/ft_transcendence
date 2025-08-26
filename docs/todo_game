@@ -78,8 +78,7 @@ through socket was not open
 	-> case: 3 player tournament -> round 0: 2 players player the other leaves
 		-> the next round the last game starts and finishes instantly since one player left
 
-
-[ ]: frontend: 'D' input key is buggy sometimes?
+[x]: frontend: 'D' input key is buggy sometimes? -> browser extensions fked it up
 [x]: backend: reduce logging bloat to debug tournament
 [x]: bug: players can disconnect and join other games without leaving the first leading to a weird server state
 	-> [x]: create lobby api needs client_id to verify hes not in game

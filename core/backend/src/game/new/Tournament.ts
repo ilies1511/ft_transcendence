@@ -179,7 +179,7 @@ export class Tournament {
 			//lobby will handle this
 			const lobby: GameLobby | undefined = GameServer.lobbies.get(parti.lobby_id);
 			if (!lobby) {
-				console.log(`Error: client ${client_id} wanted to leave tournament ${this.id} but was in a game(${parti.lobby_id}) that does not exists`);
+				console.log(`Error: client ${client_id} wanted to leave tournament ${this._id} but was in a game(${parti.lobby_id}) that does not exists`);
 				return ("Internal Error");
 			}
 			lobby.leave(client_id);
@@ -370,7 +370,7 @@ export class Tournament {
 			throw ("game error: tournament game eneded without passing end_data");
 		}
 		if (end_data.placements.length != 2) {
-			throw ("game error: tournament game eneded != 2 player count: ", end_data.placements.length);
+			throw (`game error: tournament game eneded != 2 player count: ${end_data.placements.length}`);
 		}
 		let round_idx = 0;
 		while (round_idx < this._rounds.length) {

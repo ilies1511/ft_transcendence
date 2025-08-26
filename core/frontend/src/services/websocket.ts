@@ -13,7 +13,8 @@ type WsMessage =
 	| { type: 'friend_accepted'; friendId:number }
 	| { type: 'friend_rejected'; friendId:number }
 	| { type: 'friend_removed'; friendId:number }
-	| { type: 'user_registered'; user:any };
+	| { type: 'user_registered'; user:any }
+	| { type: 'user_deleted'; userId:number }
 	//TODO: add more messages for other ws things
 
 
@@ -66,6 +67,9 @@ export function initWs() {
 }
 
 function wsReconnection(): void {
+	if (!globalThis.logged_in) {
+		return ;
+	}
 	if (nextDelay > 60_000) {
 		console.warn('[WS] lost for ever..');
 		return;
