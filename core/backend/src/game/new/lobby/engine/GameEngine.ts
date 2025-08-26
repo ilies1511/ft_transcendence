@@ -61,16 +61,15 @@ export class GameEngine {
 		lobby_type: LobbyType,
 		game_lobby: GameLobby,
 		finish_callback: (end_data: GameToClientFinish) => undefined,
-		duration?: number,
 	) {
 		this._game_lobby = game_lobby;
 		this.update = this.update.bind(this);
 		this._finish_callback = finish_callback;
 		this.lobby_type = lobby_type;
-		this.timer = duration;
 
 		this.running = false;
 		const map: MapFile = new MapFile(map_name);
+		this.timer = map.max_time;
 		this._alive_player_count = map.clients.length;
 		this._next_obj_id = map.next_obj_id;
 
@@ -355,7 +354,7 @@ export class GameEngine {
 			this.timer -= delta_time;
 			if (this.timer <= 0) {
 				this.timer = 0;
-				if (this.lobby_type != LobbyType.TOURNAMENT) {
+				if (this.lobby_type != LobbyType.TOURNAMENT_GAME) {
 					this._finish_game();
 					return ;
 				}
