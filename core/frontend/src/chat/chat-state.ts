@@ -78,7 +78,11 @@ export function appendNewChatMessage(from: number, username: string, content: st
 	box.insertAdjacentHTML('beforeend', `
 		<div class="max-w-[80%] ${align}">
 			<div class="text-xs text-[#b99da6]">${username} . ${time}</div>
-			<div class="mt-0.5 rounded-lg px-3 py-2 ${chatLine}">${content}</div>
+			<div class="mt-0.5 rounded-lg px-3 py-2 ${chatLine}">
+				<p class="whitespace-pre-wrap wrap-anywhere break-words">
+					${content}
+				</p>
+			</div>
 		</div>
 	`);
 	box.scrollTop = box.scrollHeight;
