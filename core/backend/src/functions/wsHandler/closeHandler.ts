@@ -1,44 +1,36 @@
-import { type FastifyInstance } from 'fastify';
-import type { ExtendedWebSocket } from '../../types/wsTypes.ts';
-import { findUserWithFriends, setUserLive } from '../user.ts';
+import { WebSocket } from 'ws'
+import { type FastifyInstance } from 'fastify'
+import type { ExtendedWebSocket } from '../../types/wsTypes.ts'
+import { findUserWithFriends, setUserLive } from '../user.ts'
 
 export async function handleClose(
 	app: FastifyInstance,
 	userSockets: Map<number, Set<ExtendedWebSocket>>,
-	extSocket: ExtendedWebSocket): Promise<void>
-{
+	extSocket: ExtendedWebSocket
+): Promise<void> {
 	await setUserLive(app, extSocket.userId!, false)
 	const set = userSockets.get(extSocket.userId!)
 	if (set) {
 		set.delete(extSocket)
 		if (set.size === 0) userSockets.delete(extSocket.userId!)
 	}
-	const friends = await findUserWithFriends(app, extSocket.userId!)
-	console.log(friends);
-	if (!friends) {
-		// User may have been deleted (e.g. GDPR delete) -> skip notifying friends
-		app.log?.debug?.(`closeHandler: user ${extSocket.userId} not found (probably deleted); skipping notifications`)
-		return;
-	}
-	console.log("ALoo0");
-	for (const client of app.websocketServer.clients) {
-		const c = client as ExtendedWebSocket;
-		if (c.readyState !== WebSocket.OPEN || c.userId === undefined) {
-			continue;
-		}
 
-		console.log("ALoo1");
-		for (const friend of friends.friends) {
-			console.log(friend);
-			console.log(extSocket.userId);
-			console.log(c.userId);
-			if ((friend.id !== extSocket.userId && friend.id === c.userId)) {
-				console.log("ALoo2");
-				c.send(JSON.stringify({
+	const friends = await findUserWithFriends(app, extSocket.userId!)
+	if (!friends) {
+		app.log?.debug?.(`closeHandler: user ${extSocket.userId} not found (probably deleted); skipping notifications`)
+		return
+	}
+
+	for (const friend of friends.friends) {
+		const targets = userSockets.get(friend.id)
+		if (!targets) continue
+		for (const ws of targets) {
+			if (ws.readyState === WebSocket.OPEN) {
+				ws.send(JSON.stringify({
 					type: 'friend_status_update',
 					friendId: extSocket.userId,
 					online: 0
-				}));
+				}))
 			}
 		}
 	}
