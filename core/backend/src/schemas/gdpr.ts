@@ -9,7 +9,7 @@ export const MeDataResponseSchema = {
 		username: { type: 'string' },
 		nickname: { type: 'string' },
 		email: { type: ['string', 'null'] },
-		avatar: { type: 'string' },
+		avatar: { type: ['string', 'null'] },
 		created_at: { type: 'integer', minimum: 0 },
 	},
 } as const
@@ -24,7 +24,6 @@ export const meDataSchema = {
 
 export const anonymizeMeSchema = {
 	tags: ['gdpr'],
-	// body: EmptyBodySchema,
 	response: {
 		200: OkMessageResponse,
 		401: ErrorResponse,
@@ -242,3 +241,31 @@ export const meExportSchema = {
 // END -- /api/me/export
 
 
+export const anonymizeOkResponse = {
+	type: 'object',
+	additionalProperties: false,
+	required: ['message', 'pseudoEmail'],
+	properties: {
+		message: { type: 'string' },
+		pseudoEmail: { type: 'string' },
+	}
+}
+
+export const anonymizeAndSetPwSchemaBody = {
+	type: 'object',
+	additionalProperties: false,
+	required: ['newPassword'],
+	properties: {
+		newPassword: { type: 'string', minLength: 8, maxLength: 128 },
+	}
+}
+
+export const anonymizeAndSetPwSchema = {
+	tags: ['gdpr'],
+	body: anonymizeAndSetPwSchemaBody,
+	response: {
+		200: anonymizeOkResponse,
+		401: ErrorResponse,
+		500: ErrorResponse
+	},
+} as const;

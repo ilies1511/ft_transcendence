@@ -20,6 +20,51 @@ export async function getUserData(fastify: FastifyInstance, userId: number) {
 	return row;
 }
 
+// BEGIN -- NEW anonymize
+export function generatePseudo(userId: number) {
+	const username = `anonymous_user_${userId}`;
+	const email = `anonymous_user_${userId}@pong.de`;
+	return { username, email };
+}
+
+export async function anonymizeAndSetPassword(
+	app: FastifyInstance,
+	userId: number,
+	newPassword: string,
+): Promise<{ pseudoUsername: string; pseudoEmail: string }> {
+	const { username, email } = generatePseudo(userId);
+	const avatar = 'deleted_avatar.png';
+	const hash = await bcrypt.hash(newPassword, 12);
+
+	await app.db.run(
+		`UPDATE users SET
+		username = ?,
+		nickname = ?,
+		email = ?,
+		avatar = ?,
+		password = ? WHERE id = ?`,
+		// is_deleted = 1 WHERE id = ?`,
+		username, username, email, avatar,hash, userId
+	);
+	return { pseudoUsername: username, pseudoEmail: email };
+}
+
+export async function issueFreshAuthCookie(
+	app: FastifyInstance,
+	reply: FastifyReply,
+	userId: number,
+	displayName: string
+) {
+	const jwt = await reply.jwtSign({ id: userId, name: displayName });
+	reply.setCookie('token', jwt, {
+		path: '/',
+		httpOnly: true,
+		sameSite: 'lax',
+		secure: false,
+	});
+}
+// END -- NEW anonymize
+
 export async function anonymizeUser(fastify: FastifyInstance, userId: number) {
 	const pseudo = `anonymous_user_${userId}`;
 	// const pseudo = `deleted_user_${userId}`;
