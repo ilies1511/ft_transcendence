@@ -149,5 +149,6 @@ metrics conveniently. --> dilin (filter by mode)
 
 ## FINAL
 - [] Check Reject {"message":"Route GET:/api/me/requests/12/reject not found","error":"Not Found","statusCode":404}
-- [] {"message":"Route GET:/api/me/requests/3/accept not found","error":"Not Found","statusCode":404}
+- [] {"message":"Route GET:/api/me/requests/3/accept not found","error":"Not Found","statusCode":plugin 404}
+- [] Add rate Limit per User and not per IP --> register plugin after JWT
 
