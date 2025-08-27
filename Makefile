@@ -70,6 +70,18 @@ game_shared:
 #
 #
 
+prod-build:
+	docker compose build app edge
+
+prod-up: prod-build
+	docker compose up -d app edge
+
+prod-down:
+	docker compose down
+
+prod-logs:
+	docker compose logs -f edge app
+
 .PHONY: all \
 	build \
 	up \
@@ -88,6 +100,10 @@ game_shared:
 	dev_fabi \
 	game_shared \
 	i \
+	prod-build \
+	prod-up \
+	prod-down \
+	prod-logs \
 	run
 
 

@@ -7,6 +7,7 @@ export default defineConfig(({ mode }) => ({
 	resolve: {
 		alias: {
 			'@': path.resolve(__dirname, 'client'), // optional but useful for client code
+			// 'game_shared': path.resolve(__dirname, 'game_shared'),
 		}
 	},
 	build: {
