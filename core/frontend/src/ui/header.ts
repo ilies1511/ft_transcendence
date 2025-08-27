@@ -70,17 +70,18 @@ export async function refreshHeader() {
 		//router.go('/login');
 	};
 
-	if (!(span as any)._wsBound) {
-		const onUserUpdated = (ev: Event) => {
-			const { user: updated } = (ev as CustomEvent).detail || {}
-			if (!updated || updated.id !== user.id) return
-			const img = span.querySelector<HTMLImageElement>('#avatarBtn img')
-			const name = span.querySelector<HTMLSpanElement>('#avatarBtn .pr-1')
-			if (img) img.src = `${updated.avatar}?t=${Date.now()}`
-			if (name) name.textContent = updated.username
-		}
-		wsEvents.addEventListener('user_updated', onUserUpdated)
-		;(span as any)._wsBound = true
-	}
+	const onUserUpdated = async (ev: Event) => {
+		const { userId } = (ev as CustomEvent).detail || {};
+		if (!userId || userId !== user.id) return;
+		const r = await fetch(`/api/users/${userId}`, { credentials: 'include' });
+		if (!r.ok) return;
+		const updated = await r.json();
+		const img = span.querySelector<HTMLImageElement>('#avatarBtn img');
+		const name = span.querySelector<HTMLSpanElement>('#avatarBtn .pr-1');
+		if (img) img.src = `${updated.avatar}?t=${Date.now()}`;
+		if (name) name.textContent = updated.username;
+	};
+	wsEvents.addEventListener('user_updated', onUserUpdated);
+
 }
 

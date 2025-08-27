@@ -9,6 +9,7 @@ import { refreshMenu } from './ui/menu';
 import { refreshHeader } from './ui/header';
 import { initFriendRequestWs, destroyFriendRequestWs } from './services/friend-ws.ts'
 import { getSession, clearSession } from './services/session';
+import { wsEvents } from './services/websocket';
 
 const root = document.querySelector<HTMLElement>('#app')!;
 export const router = new Router(root);
@@ -60,5 +61,5 @@ refreshMenu();
 // Event listeners
 document.addEventListener('auth-change', refreshHeader);
 document.addEventListener('auth-change', refreshMenu);
-document.addEventListener('settings-update', refreshHeader);
-document.addEventListener('settings-update', refreshMenu);  // TODO: Optional?
+wsEvents.addEventListener('settings-update', refreshHeader);
+wsEvents.addEventListener('settings-update', refreshMenu);  // TODO: Optional?

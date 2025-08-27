@@ -158,7 +158,7 @@ const FriendListPage:PageModule = {
 						}
 					).then(r => r.ok);
 					ok
-						? (li.remove(), document.dispatchEvent(new Event('friends-changed')))
+						? (li.remove(), wsEvents.dispatchEvent(new CustomEvent('friends-changed')))
 						: (alert('Server error'), btn.disabled = false);
 				};
 			});
@@ -183,7 +183,7 @@ const FriendListPage:PageModule = {
 					).then(r => r.ok);
 
 					ok
-						? document.dispatchEvent(new Event('friends-changed'))
+						? wsEvents.dispatchEvent(new CustomEvent('friends-changed'))
 						: (alert('Server error'), btn.disabled = false);
 				};
 			});
@@ -194,7 +194,7 @@ const FriendListPage:PageModule = {
 
 		// live updates
 		const onChange = () => refresh();
-		document.addEventListener('friends-changed', onChange);
+		wsEvents.addEventListener('friends-changed', onChange);
 		wsEvents.addEventListener('new_friend_request', onChange);
 		wsEvents.addEventListener('friend_accepted', onChange);
 		wsEvents.addEventListener('friend_rejected', onChange);
@@ -205,7 +205,7 @@ const FriendListPage:PageModule = {
 
 		// cleanup
 		(root as any).onDestroy = () => {
-			document.removeEventListener('friends-changed', onChange);
+			wsEvents.removeEventListener('friends-changed', onChange);
 			wsEvents.removeEventListener('new_friend_request', onChange);
 			wsEvents.removeEventListener('friend_accepted', onChange);
 			wsEvents.removeEventListener('friend_rejected', onChange);

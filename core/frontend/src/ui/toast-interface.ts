@@ -1,5 +1,6 @@
 // src/ui/toast-interface.ts
 import { icons } from './icons';
+import { wsEvents } from '../services/websocket';
 
 interface ToastOptions {
 	title: string;
@@ -60,7 +61,7 @@ export function showToast(toast: ToastOptions):HTMLDivElement {
 	if (btnAccept) {
 		btnAccept.addEventListener('click', async () => {
 			const ok = await toast.onAccept?.();
-			if (ok) document.dispatchEvent(new Event('friends-changed'));
+			if (ok) wsEvents.dispatchEvent(new Event('friends-changed'));
 			close();
 		});
 	}
@@ -69,7 +70,7 @@ export function showToast(toast: ToastOptions):HTMLDivElement {
 	if (btnReject) {
 		btnReject.addEventListener('click', async () => {
 			const ok = await toast.onReject?.();
-			if (ok) document.dispatchEvent(new Event('friends-changed'));
+			if (ok) wsEvents.dispatchEvent(new Event('friends-changed'));
 			close();
 		});
 	}

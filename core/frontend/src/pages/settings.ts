@@ -4,6 +4,8 @@ import type { PageModule } from '../router';
 import { getSession, clearSession } from '../services/session';
 import { showMsg } from '../utils/showMsg';
 import { token as CSRFToken } from '../services/session';
+import { wsEvents } from '../services/websocket';
+import { refreshHeader } from '../ui/header';
 
 const SettingsPage: PageModule & { renderWithParams?: Function } = {
 	render(root) {
@@ -313,7 +315,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 					const updatedUser = await userResponse.json();
 					avatarPreview.src = updatedUser.avatar + `?t=${Date.now()}`;
 					showMsg(avatarMsg, 'Avatar updated!', true)
-					document.dispatchEvent(new Event('settings-update'))
+					wsEvents.dispatchEvent(new CustomEvent('settings-update'))
 				} else {
 					const { error } = await uploadResponse.json()
 					showMsg(avatarMsg, error || 'Upload failed')
@@ -400,7 +402,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 				})
 				if (r.ok) {
 					showMsg(errorMsg, 'Profile updated!', true)
-					document.dispatchEvent(new Event('settings-update'))
+					wsEvents.dispatchEvent(new CustomEvent('settings-update'))
 					// Update user object to reflect changes
 					Object.assign(user, data)
 				} else {
@@ -713,6 +715,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 					anonymizeModal.classList.add('hidden')
 					showMsg(accountMsg, message || 'Data anonymized.', true)
 					setTimeout(() => router.go('/login'), 3000)
+					refreshHeader()
 				} else {
 					const { error } = await r.json().catch(() => ({ error: 'Anonymization failed' }))
 					showMsg(anonymizeModalMsg, error)

@@ -409,7 +409,7 @@ const onFriendsChanged = async () => {
 	}
 };
 
-document.addEventListener('friends-changed', onFriendsChanged, { once: true });
+wsEvents.addEventListener('friends-changed', onFriendsChanged, { once: true });
 
 const ProfilePage: PageModule & { renderWithParams?: Function } = {
 	render(root) {

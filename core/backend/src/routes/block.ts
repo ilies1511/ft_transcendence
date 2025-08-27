@@ -3,6 +3,7 @@ import { blockUser, unblockUser, getBlockedUsersList } from "../functions/block.
 import { areFriends, removeFriend } from "../functions/friends.ts";
 import { blockListSchema, blockUserSchema, unblockUserSchema } from "../schemas/block.ts";
 import { getUserId } from "../functions/user.ts";
+import { userSockets } from '../types/wsTypes.ts';
 
 export const blockRoutes: FastifyPluginAsync = async (fastify) => {
 	//block
@@ -34,11 +35,25 @@ export const blockRoutes: FastifyPluginAsync = async (fastify) => {
 				await removeFriend(fastify, authUserId, targetId);
 			}
 			// TODO: 25.08 dilin --> broadcast via websocket (FE & BE)
-			await fastify.db.run(
+			const updated = await fastify.db.run(
 				`DELETE FROM friend_requests WHERE responded_at IS NULL AND (
 				(requester_id = ? AND recipient_id = ?) OR
 				(requester_id = ? AND recipient_id = ?) )`,
 				authUserId, targetId, targetId, authUserId)
+
+				if (updated) {
+					for (const [uid, sockets] of userSockets) {
+						for (const ws of sockets) {
+							if (ws.readyState === ws.OPEN) {
+								try {
+									ws.send(JSON.stringify({ type: 'user_updated', user: updated }));
+								} catch {
+									// optionally: sockets.delete(ws);
+								}
+							}
+						}
+					}
+				}	
 			return reply.send({ message: 'User blocked, friendship and pending requests removed' })
 		}
 	)

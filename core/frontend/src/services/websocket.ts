@@ -15,6 +15,12 @@ type WsMessage =
 	| { type: 'friend_removed'; friendId:number }
 	| { type: 'user_registered'; user:any }
 	| { type: 'user_deleted'; userId:number }
+	| { type: 'friends-changed'; userId:number }
+	| { type: 'block-changed'; userId:number }
+	| { type: 'user_updated'; userId:number }
+	| { type: 'friend_request_withdrawn'; userId:number }
+	// | { type: 'auth-change'; userId:number }
+	
 	//TODO: add more messages for other ws things
 
 

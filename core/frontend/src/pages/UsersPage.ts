@@ -191,7 +191,7 @@ const UsersPage: PageModule = {
 							}
 							throw new Error(await r.text());
 						}
-						document.dispatchEvent(new Event('friends-changed'));
+						wsEvents.dispatchEvent(new CustomEvent('friends-changed'));
 					} catch {
 						btn.disabled = false; btn.textContent = 'Invite';
 					}
@@ -212,7 +212,7 @@ const UsersPage: PageModule = {
 							credentials: 'include'
 						});
 						if (!r.ok) throw new Error(await r.text());
-						document.dispatchEvent(new Event('friends-changed'));
+						wsEvents.dispatchEvent(new CustomEvent('friends-changed'));
 					} catch {
 						btn.disabled = false; btn.textContent = 'Undo';
 					}
@@ -233,7 +233,7 @@ const UsersPage: PageModule = {
 							credentials: 'include'
 						});
 						if (!r.ok) throw new Error(await r.text());
-						document.dispatchEvent(new Event('friends-changed'));
+						wsEvents.dispatchEvent(new CustomEvent('friends-changed'));
 					} catch {
 						btn.disabled = false; btn.textContent = 'Accept';
 					}
@@ -254,7 +254,7 @@ const UsersPage: PageModule = {
 							credentials: 'include'
 						});
 						if (!r.ok) throw new Error(await r.text());
-						document.dispatchEvent(new Event('friends-changed'));
+						wsEvents.dispatchEvent(new CustomEvent('friends-changed'));
 					} catch {
 						btn.disabled = false; btn.textContent = 'Reject';
 					}
@@ -274,8 +274,8 @@ const UsersPage: PageModule = {
 							credentials: 'include'
 						});
 						if (!r.ok) throw new Error(await r.text());
-						document.dispatchEvent(new Event('block-changed'));
-						document.dispatchEvent(new Event('friends-changed')); // backend may remove friendship
+						wsEvents.dispatchEvent(new CustomEvent('block-changed'));
+						wsEvents.dispatchEvent(new CustomEvent('friends-changed')); // backend may remove friendship
 					} catch {
 						btn.disabled = false; btn.textContent = 'Block';
 					}
@@ -296,7 +296,7 @@ const UsersPage: PageModule = {
 							credentials: 'include'
 						});
 						if (!r.ok) throw new Error(await r.text());
-						document.dispatchEvent(new Event('block-changed'));
+						wsEvents.dispatchEvent(new CustomEvent('block-changed'));
 					} catch {
 						btn.disabled = false; btn.textContent = 'Unblock';
 					}
@@ -307,8 +307,8 @@ const UsersPage: PageModule = {
 		await refreshList();
 
 		const onChange = () => refreshList();
-		document.addEventListener('friends-changed', onChange);
-		document.addEventListener('block-changed', onChange);
+		wsEvents.addEventListener('friends-changed', onChange);
+		wsEvents.addEventListener('block-changed', onChange);
 		wsEvents.addEventListener('new_friend_request', onChange);
 		wsEvents.addEventListener('friend_accepted', onChange);
 		wsEvents.addEventListener('friend_rejected', onChange);
@@ -319,8 +319,8 @@ const UsersPage: PageModule = {
 		wsEvents.addEventListener('friend_request_withdrawn', onChange);
 
 		(root as any).onDestroy = () => {
-			document.removeEventListener('friends-changed', onChange);
-			document.removeEventListener('block-changed', onChange);
+			wsEvents.removeEventListener('friends-changed', onChange);
+			wsEvents.removeEventListener('block-changed', onChange);
 			wsEvents.removeEventListener('new_friend_request', onChange);
 			wsEvents.removeEventListener('friend_accepted', onChange);
 			wsEvents.removeEventListener('friend_rejected', onChange);

@@ -61,13 +61,23 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 			const { pseudoUsername, pseudoEmail } =
 				await anonymizeAndSetPassword(fastify, userId, newPassword);
 
-			userSockets.forEach((sockets, uid) => {
-				sockets.forEach((ws) => {
-					ws.send(JSON.stringify({
-						type: 'user_updated',
-					}))
-				});
-			});
+			const updated = await fastify.db.get(
+				'SELECT id, username, nickname, email, live, avatar FROM users WHERE id = ?',
+				[userId]
+			)
+
+			if (updated) {
+				for (const [uid, sockets] of userSockets) {
+					for (const ws of sockets) {
+						if (ws.readyState === WebSocket.OPEN) {
+							try {
+								ws.send(JSON.stringify({ type: 'user_updated', user: updated }))
+							} catch {}
+						}
+					}
+				}
+			}
+
 			// await issueFreshAuthCookie(fastify, reply, userId, pseudoUsername);
 			return reply.send({
 				message: 'Your data has been anonymized and your password was updated.',
@@ -174,20 +184,17 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 					[userId]
 				)
 				if (updated) {
-					// const payload = { type: 'user_updated', user: updated }
-					// for (const client of fastify.websocketServer.clients) {
-					// 	if (client.readyState === WebSocket.OPEN) {
-					// 		client.send(JSON.stringify(payload))
-					// 	}
-					// }
-					userSockets.forEach((sockets, uid) => {
-						sockets.forEach((ws) => {
-								ws.send(JSON.stringify({
-									type: 'user_updated',
-									user: updated
-								}))
-						});
-					});
+					for (const [uid, sockets] of userSockets) {
+						for (const ws of sockets) {
+							if (ws.readyState === ws.OPEN) {
+								try {
+									ws.send(JSON.stringify({ type: 'user_updated', user: updated }));
+								} catch {
+									// optionally: sockets.delete(ws);
+								}
+							}
+						}
+					}
 				}
 
 				return { ok: true }
