@@ -66,8 +66,8 @@ services:
       context: .
       dockerfile: docker/Caddyfile.prod.Dockerfile
     ports:
-      - "80:80"
-      - "443:443"
+      - "8080:80"
+      - "1433:443"
     volumes:
       - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
     depends_on:
