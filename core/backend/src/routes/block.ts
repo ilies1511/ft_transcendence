@@ -3,6 +3,8 @@ import { blockUser, unblockUser, getBlockedUsersList } from "../functions/block.
 import { areFriends, removeFriend } from "../functions/friends.ts";
 import { blockListSchema, blockUserSchema, unblockUserSchema } from "../schemas/block.ts";
 import { getUserId } from "../functions/user.ts";
+import { userSockets } from '../types/wsTypes.ts';
+import WebSocket from 'ws';
 
 export const blockRoutes: FastifyPluginAsync = async (fastify) => {
 	//block
@@ -39,6 +41,24 @@ export const blockRoutes: FastifyPluginAsync = async (fastify) => {
 				(requester_id = ? AND recipient_id = ?) OR
 				(requester_id = ? AND recipient_id = ?) )`,
 				authUserId, targetId, targetId, authUserId)
+
+			const blockerSockets = userSockets.get(authUserId);
+			if (blockerSockets) {
+				for (const ws of blockerSockets) {
+					if (ws.readyState === WebSocket.OPEN) {
+						ws.send(JSON.stringify({ type: 'block_changed', blockedId: targetId, am_blocker: true }));
+					}
+				}
+			}
+			const blockedSockets = userSockets.get(targetId);
+			if (blockedSockets) {
+				for (const ws of blockedSockets) {
+					if (ws.readyState === WebSocket.OPEN) {
+						ws.send(JSON.stringify({ type: 'block_changed', blockerId: authUserId, am_blocked: true }));
+					}
+				}
+			}
+
 			return reply.send({ message: 'User blocked, friendship and pending requests removed' })
 		}
 	)
@@ -68,6 +88,24 @@ export const blockRoutes: FastifyPluginAsync = async (fastify) => {
 			if (!ok) {
 				return reply.code(404).send({ error: 'No such block' })
 			}
+
+			const blockerSockets = userSockets.get(authUserId);
+			if (blockerSockets) {
+				for (const ws of blockerSockets) {
+					if (ws.readyState === WebSocket.OPEN) {
+						ws.send(JSON.stringify({ type: 'unblock_changed', unblockedId: targetId, am_unblocker: true }));
+					}
+				}
+			}
+			const unblockedSockets = userSockets.get(targetId);
+			if (unblockedSockets) {
+				for (const ws of unblockedSockets) {
+					if (ws.readyState === WebSocket.OPEN) {
+						ws.send(JSON.stringify({ type: 'unblock_changed', unblockerId: authUserId, am_unblocked: true }));
+					}
+				}
+			}
+
 			return reply.send({ message: 'User unblocked' })
 		}
 	)
