@@ -23,9 +23,9 @@ try {
 }
 export async function getSession():Promise <AuthUser | null> {
 	try {
-		if (!globalThis.logged_in) {
-			return null;
-		}
+		// if (!globalThis.logged_in) {
+		// 	return null;
+		// }
 		const user = await currentUser();
 		return user ?? null;
 	} catch {

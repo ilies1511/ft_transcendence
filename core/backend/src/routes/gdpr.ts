@@ -5,6 +5,7 @@ import { Readable } from 'node:stream';
 import { createGzip } from 'node:zlib';
 import archiver from 'archiver'
 import path from 'node:path'
+import { mkdir, unlink } from 'node:fs/promises';
 import fs from "fs";
 import { fileURLToPath } from 'node:url'
 import { extractFilename, resolveAvatarFsPath, resolvePublicPath } from '../functions/gdpr.ts';
@@ -56,7 +57,28 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 			const userId = await getUserId(req);
 			const { newPassword } = req.body as { newPassword: string };
 
-
+		const old = await fastify.db.get<{ avatar: string | null }>(
+			'SELECT avatar FROM users WHERE id = ?',
+			[userId]
+		);
+		const oldName = old?.avatar ?? null;
+		if (oldName) {
+			const looksCustom =
+				/^NewUploadedAvatar_\d+_\d+\.png$/i.test(oldName) ||
+				/^avatar_\d+_\d+\.png$/i.test(oldName);
+			if (looksCustom) {
+				const PUBLIC_DIR = process.env.PUBLIC_DIR!;
+				const avatarDir = PUBLIC_DIR;
+				const oldPath = path.join(avatarDir, oldName);
+				const resolvedOld = path.resolve(oldPath);
+				const resolvedDir = path.resolve(avatarDir) + path.sep;
+				if (resolvedOld.startsWith(resolvedDir)) {
+					await unlink(oldPath).catch(() => {});
+				}
+			}
+			// clear DB field regardless (use null/default avatar afterwards)
+			// await fastify.db.run('UPDATE users SET avatar = NULL WHERE id = ?', [userId]);
+		}
 
 			const { pseudoUsername, pseudoEmail } =
 				await anonymizeAndSetPassword(fastify, userId, newPassword);
@@ -70,7 +92,7 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 			});
 			// await issueFreshAuthCookie(fastify, reply, userId, pseudoUsername);
 			return reply.send({
-				message: 'Your data has been anonymized and your password was updated.',
+				message: 'Your data has been anonymized, your avatar removed, and your password was updated.',
 				pseudoEmail,
 			});
 		});
