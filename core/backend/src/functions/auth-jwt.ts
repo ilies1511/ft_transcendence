@@ -6,18 +6,13 @@ import 'dotenv/config'                 // loads JWT_SECRET & COOKIE_SECRET from 
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import csrfProtection from '@fastify/csrf-protection'
 import { CSRF } from '../index.js'
+import { sessionCookieOpts } from '../index.js'
 
 export default fp(async (app: FastifyInstance) => {
 	// parses & signs cookies
 	await app.register(cookie, {
 		secret: process.env.COOKIE_SECRET!,
 		parseOptions: {}
-		// parseOptions: {
-		// 	httpOnly: true,
-		// 	secure: process.env.NODE_ENV === 'production',
-		// 	sameSite: 'lax',
-		// 	path: '/'
-		// }
 	})
 
 	// POST Cookie PlugIn !
