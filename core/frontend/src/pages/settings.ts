@@ -757,6 +757,19 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 			}
 		}
 
+		window.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape') {
+				if (!exportModal.classList.contains('hidden')) {
+					exportModal.classList.add('hidden')
+					document.body.style.overflow = ''
+				}
+				if (!anonymizeModal.classList.contains('hidden')) {
+					anonymizeModal.classList.add('hidden')
+					document.body.style.overflow = ''
+				}
+			}
+		})
+
 	deleteBtn.onclick = async () => {
 		if (!confirm('Delete your account permanently? This CANNOT be undone!')) return
 		const confirmText = prompt('Type DELETE to confirm permanent deletion of your account:')
