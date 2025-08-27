@@ -16,12 +16,21 @@ export default fp(async (fastify: FastifyInstance) => {
 	// 	allowedHeaders: ['Content-Type', 'X-CSRF-Token', 'Authorization']
 	// })
 
+	// // BEGIN -- Very strict
+	// await fastify.register(rateLimit, {
+	// 	max: 160,
+	// 	timeWindow: '1 minute',
+	// 	ban: 0,
+	// 	hook: 'onRequest',
+	// 	allowList: ['127.0.0.1', '::1']
+	// })
+	// // END -- Very strict
+
 	await fastify.register(rateLimit, {
-		max: 160,
-		timeWindow: '1 minute',
-		ban: 0,
+		max: 600,
+		timeWindow: '300000',
 		hook: 'onRequest',
-		allowList: ['127.0.0.1', '::1']
+		// keyGenerator: (req) => (req.user as any).id as number ? `uid:${(req.user as any).id as number}` : req.ip
 	})
 
 	// // POST Cookie PlugIn !
