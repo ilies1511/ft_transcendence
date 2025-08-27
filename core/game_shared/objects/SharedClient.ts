@@ -1,5 +1,5 @@
-import { SharedVec2 } from './SharedVec2.ts';
-import { SharedWall } from './SharedWall.ts';
+import { SharedVec2 } from './SharedVec2.js';
+import { SharedWall } from './SharedWall.js';
 
 //todo: should include the display name
 export class SharedClient {
