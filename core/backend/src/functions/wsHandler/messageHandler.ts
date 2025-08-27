@@ -1,11 +1,11 @@
-import type { ExtendedWebSocket, Message } from '../../types/wsTypes.ts';
-import type { LobbyInvite } from '../../game/game_shared/message_types.ts';
-import { LobbyType } from '../../game/game_shared/message_types.ts';
-import type { ClientParticipation } from '../../game/new/GameServer.ts';
-import { GameServer } from '../../game/new/GameServer.ts';
+import type { ExtendedWebSocket, Message } from '../../types/wsTypes.js';
+import type { LobbyInvite } from '../../game/game_shared/message_types.js';
+import { LobbyType } from '../../game/game_shared/message_types.js';
+import type { ClientParticipation } from '../../game/new/GameServer.js';
+import { GameServer } from '../../game/new/GameServer.js';
 import { type FastifyInstance } from 'fastify'
-import { isBlocked } from '../block.ts';
-import { validateChat } from './wsValidate.ts';
+import { isBlocked } from '../block.js';
+import { validateChat } from './wsValidate.js';
 
 function ajvErrorToString(errors?: any[]) {
 	if (!errors?.length) {

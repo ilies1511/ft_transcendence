@@ -1,8 +1,8 @@
 import type { WebSocket } from '@fastify/websocket';
-import { GameServer } from '../GameServer.ts';
-import { WebsocketConnection } from '../WebsocketConnection.ts';
-import { GameEngine } from './engine/GameEngine.ts';
-import { MapFile } from './maps/Map.ts';
+import { GameServer } from '../GameServer.js';
+import { WebsocketConnection } from '../WebsocketConnection.js';
+import { GameEngine } from './engine/GameEngine.js';
+import { MapFile } from './maps/Map.js';
 
 import type {
 	ClientToGameInput,
@@ -15,9 +15,9 @@ import type {
 	LobbyToClient,
 	ServerError,
 	ServerToClientError
-} from '../../game_shared/message_types.ts';
+} from '../../game_shared/message_types.js';
 
-import { LobbyType } from '../../game_shared/message_types.ts';
+import { LobbyType } from '../../game_shared/message_types.js';
 
 
 type GameConnection = {
@@ -318,7 +318,7 @@ export class GameLobby {
 			return ;
 		}
 		let result: GameToClientFinish | undefined;
-		
+
 		if (!this.engine && this.lobby_type == LobbyType.TOURNAMENT_GAME) {
 			result = {
 				type: 'finish',
@@ -396,7 +396,7 @@ export class GameLobby {
 		const dummyWs = {
 			close: () => {},
 		} as unknown as WebSocket;
-	
+
 		const msg = {
 			type: 'leave',
 			client_id,
@@ -491,9 +491,9 @@ export class GameLobby {
 		this._clear_timeout(connection);
 		connection.timeout = setTimeout(() => {
 			if (this.lobby_type == LobbyType.TOURNAMENT_GAME) {
-				// todo: think of how this should behaive for tournament games 
-				//	(since there can not be a different player but also everyone is 
-				// waiting AND there must be a winner=> maybe skip the match and set 
+				// todo: think of how this should behaive for tournament games
+				//	(since there can not be a different player but also everyone is
+				// waiting AND there must be a winner=> maybe skip the match and set
 				// a connected player as winner?)
 
 				//currently no time outs for tournament games

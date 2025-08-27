@@ -1,0 +1,15 @@
+localhost {
+  tls internal
+  encode zstd gzip
+
+  @api path /api* /ws* /game* /tournament* /avatars*
+  handle @api {
+    reverse_proxy app:3000
+  }
+
+  handle {
+    root * /srv/public
+    try_files {path} /index.html
+    file_server
+  }
+}

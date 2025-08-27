@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import { type FastifyInstance } from "fastify";
 import speakeasy from 'speakeasy';
-import { type UserRow } from "../types/userTypes.ts";
+import { type UserRow } from "../types/userTypes.js";
 
 /*
 	for '/api/2fa/generate', --> if user wants 2FA

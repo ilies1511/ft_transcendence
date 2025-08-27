@@ -1,14 +1,26 @@
 import Fastify from 'fastify'
 import addFormats from 'ajv-formats'
 import ajvKeywords from 'ajv-keywords'
-import { GameServer } from './game/new/GameServer.ts';
-import plugins from './plugins/index.ts';
-import routes from './routes/index.ts';
+import { GameServer } from './game/new/GameServer.js';
+import plugins from './plugins/index.js';
+import routes from './routes/index.js';
 
 //Mit namespace
-import * as testRoutes from './routes/test_route.ts'
+import * as testRoutes from './routes/test_route.js'
+
+
+import type { CookieSerializeOptions } from '@fastify/cookie';
+
+export const sessionCookieOpts: CookieSerializeOptions = {
+	path: '/',
+	httpOnly: true,
+	sameSite: 'lax',
+	secure: process.env.NODE_ENV === 'production',
+	// maxAge: 60 * 60 * 24 * 7,
+};
 
 export const CSRF = true;
+export const isProd = process.env.NODE_ENV === 'production';
 
 async function main() {
 
@@ -18,9 +30,10 @@ async function main() {
 	// const fastify = Fastify({logger: { level: 'info' }})
 
 	const fastify = Fastify({
-		logger: false,
+		// logger: false,
 		// logger: { level: 'info' },
-		// logger: { level: 'debug' },
+		trustProxy: true,
+		logger: { level: 'debug' },
 		ajv: {
 			customOptions: {
 				removeAdditional: 'all',

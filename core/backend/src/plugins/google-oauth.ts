@@ -1,5 +1,5 @@
 import fp from 'fastify-plugin'
-import type{ FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import oauthPlugin from '@fastify/oauth2'
 import 'dotenv/config'
 import OAuth2, { type OAuth2Namespace } from "@fastify/oauth2";
@@ -16,6 +16,10 @@ import OAuth2, { type OAuth2Namespace } from "@fastify/oauth2";
 // 	/** String path to request an authorization code. Default to /oauth/authorize. */
 // 	authorizePath?: string | undefined;
 // }
+
+const PUBLIC_ORIGIN = process.env.PUBLIC_ORIGIN ?? 'https://localhost'
+const CALLBACK_PATH = '/api/auth/google/callback'
+const CALLBACK_URI = new URL(CALLBACK_PATH, PUBLIC_ORIGIN).toString()
 
 declare module 'fastify' {
 	interface FastifyInstance {
@@ -54,11 +58,28 @@ export default fp(async (fastify: FastifyInstance) => {
 			// // auth: oauthPlugin.GOOGLE_CONFIGURATION
 			// auth: GOOGLE_OAUTH2_CONFIG
 		},
-		startRedirectPath: '/api/auth/google', // entry for user
-		callbackUri: 'http://localhost:3000/api/auth/google/callback',
+		// BEGIN -- OLD
+		/* startRedirectPath: '/api/auth/google', // entry for user
+		// callbackUri: 'http://localhost:3000/api/auth/google/callback',
+		// callbackUri: 'https://localhost:3000/api/auth/google/callback',
+		callbackUri: 'https://localhost/api/auth/google/callback',
 		discovery: {
 			issuer: 'https://accounts.google.com',
+		}, */
+		// END -- OLD
+
+		// BEGIN -- NEW
+		startRedirectPath: '/api/auth/google',
+		callbackUri: CALLBACK_URI,
+		discovery: { issuer: 'https://accounts.google.com' },
+		pkce: 'S256',                // aktiviert PKCE mit S256
+		cookie: {
+			secure: true,
+			httpOnly: true,
+			sameSite: 'lax',
+			path: '/',
 		},
+		// BEGIN -- NEW
 		// generateStateFunction: (request: FastifyRequest, reply: FastifyReply) => {
 		// 	// @ts-ignore
 		// 	return request.query.state
@@ -71,6 +92,9 @@ export default fp(async (fastify: FastifyInstance) => {
 		// 	}
 		// 	callback(new Error('Invalid state'))
 		// }
+
+		// BEGIN -- DOCs https://www.npmjs.com/package/@fastify/oauth2
+		// END -- DOCs https://www.npmjs.com/package/@fastify/oauth2
 	})
 })
 

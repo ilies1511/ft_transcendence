@@ -1,11 +1,15 @@
 import fp from 'fastify-plugin'
 import { type FastifyInstance } from 'fastify'
 import { fpSqlitePlugin } from 'fastify-sqlite-typed'
-import { runMigrations } from '../db/db_init.ts'
+import { runMigrations } from '../db/db_init.js'
+import path from "node:path";
+
+const dbPath = "/app/core/backend/data/32_07.db";
 
 export default fp(async (fastify: FastifyInstance) => {
 	await fastify.register(fpSqlitePlugin, {
-		dbFilename: './data/32_07.db',     // DB-Datei
+		// dbFilename: './data/32_07.db',     // DB-Datei
+		dbFilename: dbPath,     // DB-Datei
 		// driverSettings: { /* optional: verbose, cache, trace */ }
 	})
 

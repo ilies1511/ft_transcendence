@@ -1,4 +1,4 @@
-// src/routes/users.ts
+// src/routes/users.js
 import type { FastifyPluginAsync } from "fastify";
 import { createWriteStream } from 'fs';
 import { mkdir, unlink } from 'node:fs/promises';
@@ -12,10 +12,10 @@ import {
 	updateUserAvatar,
 	type UpdateUserData,
 	getUserId
-} from "../functions/user.ts";
-import { type UserRow } from "../types/userTypes.ts";
-import { uploadAvatarSchema } from "../schemas/users.ts";
-import { userSockets } from '../types/wsTypes.ts';
+} from "../functions/user.js";
+import { type UserRow } from "../types/userTypes.js";
+import { uploadAvatarSchema } from "../schemas/users.js";
+import { userSockets } from '../types/wsTypes.js';
 
 
 
@@ -438,3 +438,4 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 
 
 };
+

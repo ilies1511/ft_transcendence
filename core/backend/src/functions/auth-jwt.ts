@@ -1,35 +1,35 @@
-// backend/src/plugins/auth-jwt.ts
+// backend/src/plugins/auth-jwt.js
 import fp from 'fastify-plugin'
 import cookie from '@fastify/cookie'
 import jwt from '@fastify/jwt'
 import 'dotenv/config'                 // loads JWT_SECRET & COOKIE_SECRET from .env
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import csrfProtection from '@fastify/csrf-protection'
-import { CSRF } from '../index.ts'
+import { CSRF } from '../index.js'
 
 export default fp(async (app: FastifyInstance) => {
 	// parses & signs cookies
 	await app.register(cookie, {
 		secret: process.env.COOKIE_SECRET!,
-		parseOptions: {}
-		// parseOptions: {
-		// 	httpOnly: true,
-		// 	secure: process.env.NODE_ENV === 'production',
-		// 	sameSite: 'lax',
-		// 	path: '/'
-		// }
+		// parseOptions: {}
+		parseOptions: {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === 'production',
+			sameSite: 'lax',
+			path: '/'
+		}
 	})
 
 	// POST Cookie PlugIn !
 	if (CSRF) {
 		await app.register(csrfProtection, {
-			// cookieOpts: {
-			// 	signed: false,
-			// 	sameSite: 'lax',
-			// 	path: '/',
-			// 	secure: process.env.NODE_ENV === 'production',
-			// 	httpOnly: true
-			// },
+			cookieOpts: {
+				path: '/',
+				// signed: true,
+				sameSite: 'lax',
+				secure: process.env.NODE_ENV === 'production',
+				httpOnly: true
+			},
 			getToken: (req: FastifyRequest) => req.headers['x-csrf-token'] as string
 		})
 	}
@@ -119,7 +119,7 @@ export default fp(async (app: FastifyInstance) => {
 
 /*
 Back-Up: FIX(auth): remove /api/me from whitelist
-// backend/src/plugins/auth-jwt.ts
+// backend/src/plugins/auth-jwt.js
 import fp from 'fastify-plugin'
 import cookie from '@fastify/cookie'
 import jwt from '@fastify/jwt'

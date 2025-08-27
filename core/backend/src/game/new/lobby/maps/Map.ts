@@ -1,8 +1,8 @@
-import { Effects } from '../../../game_shared/serialization.ts';
-import { ServerBall } from '../../../objects/ServerBall.ts';
-import { ServerClient } from '../../../objects/ServerClient.ts';
-import { ServerVec2 } from '../../../objects/ServerVec2.ts';
-import { ServerWall } from '../../../objects/ServerWall.ts';
+import { Effects } from '../../../game_shared/serialization.js';
+import { ServerBall } from '../../../objects/ServerBall.js';
+import { ServerClient } from '../../../objects/ServerClient.js';
+import { ServerVec2 } from '../../../objects/ServerVec2.js';
+import { ServerWall } from '../../../objects/ServerWall.js';
 
 import default_map from './default.json' with { type: "json" };
 import default_10m_100p from './default_10m_100p.json' with { type: "json" };
@@ -85,7 +85,7 @@ export class MapFile {
 				internal_map_name = `${base}${players}${variant ? `_${variant}` : ''}`;
 			}
 		}
-		
+
 		// Normalize 'default' to 'default_map' for the import object key
 		if (internal_map_name === 'default') {
 			internal_map_name = 'default_map';

@@ -6,12 +6,12 @@
 [x] The user should be able to block other users, preventing them from seeing any
 further messages from the blocked account.
 
-[] The user should be able to invite other users to play a Pong game through the
+[x] The user should be able to invite other users to play a Pong game through the
 chat interface. --> FABI
 
-[] The tournament system should be able to notify users about the next game. --> FABI
+[x] The tournament system should be able to notify users about the next game. --> FABI
 
-[-] The user should be able to access other players’ profiles through the chat
+[x] The user should be able to access other players’ profiles through the chat
 interface. --> Already given through Endpoints
 
 ## Major module: Implement remote authentication.
@@ -56,7 +56,7 @@ use of JSON Web Tokens (JWT).
 - [x]	Input sanitization (front -and Backend) --> BIG ONE
 - [] '/api/me/anonymize' FIX --> after doing that user needs new credential in
 order to not looses his account
-- [] HTTPs & wss
+- [~] HTTPs & wss
 - [x] IF enough time ANTI IDOR design (IDOR = Insecure Direct Object Reference) : change API design from
 	- Pattern: '/api/users/:id/....' --> '/api/me/....'
 	- [x] '/api/users/:id/matches'
@@ -76,12 +76,16 @@ to use JWT tokens, securing the site remains critical.
 - [] Add State Check to Google Sign In
 - [~] delete pending friend request upon block (like friendship)
 - [] try catch um SQL ops
-- [] getAllLiveUserCount
+- [x] getAllLiveUserCount
 - [] Help Makim with CSRF in FE
+- [] getLivePlayersCount() Create GET API
+- [] // "build2": "node --max-old-space-size=4096 node_modules/vite/bin/vite.js build", --> Add to package.json Frontend
+- [] Mr Proper Clean-UP
+
 
 ### csrfProtection
 - [x] BackEnd --> Plugin works
-- [] FrontEnd --> every route that sends JWT Token as Cookie (everywhere)
+- [x] FrontEnd --> every route that sends JWT Token as Cookie (everywhere)
 - [] Add more secure schemas to routes (cross module)
 
 - [x]	add remove friend endpoint
@@ -134,10 +138,10 @@ individual users and game sessions. Key features and objectives include:
 gaming statistics.
 - [x] Develop a separate dashboard for game sessions, showing detailed statistics,
 outcomes, and historical data for each match.
-- [] Ensure that the dashboards offer an intuitive and informative user interface
+- [x] Ensure that the dashboards offer an intuitive and informative user interface
 for tracking and analyzing data.
 - [x] Implement data visualization techniques, such as charts and graphs, to present
 statistics in a clear and visually appealing manner.
-- [] Allow users to access and explore their own gaming history and performance
+- [x] Allow users to access and explore their own gaming history and performance
 metrics conveniently. --> dilin (filter by mode)
-- [] Feel free to add any metrics you deem useful.
+- [x] Feel free to add any metrics you deem useful.

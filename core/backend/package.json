@@ -3,9 +3,9 @@
 	"version": "1.0.0",
 	"type": "module",
 	"main": "index.js",
-	  "compilerOptions": {
-    "noEmitOnError": false
-  },
+	"compilerOptions": {
+		"noEmitOnError": false
+	},
 	"scripts": {
 		"dev": "tsx watch src/index.ts",
 		"build": "tsc -p .",
@@ -23,13 +23,13 @@
 		"@types/speakeasy": "^2.0.10",
 		"@types/sqlite3": "^3.1.11",
 		"@types/ws": "^8.18.1",
-		"chalk": "^5.4.1",
 		"ts-node": "^10.9.2",
 		"ts-node-dev": "^2.0.0",
 		"tsx": "^4.19.4",
 		"typescript": "^5.8.3"
 	},
 	"dependencies": {
+		"chalk": "^5.4.1",
 		"@fastify/cookie": "^11.0.2",
 		"@fastify/cors": "11.1.0",
 		"@fastify/csrf": "^8.0.1",

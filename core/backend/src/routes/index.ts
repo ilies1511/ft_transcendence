@@ -1,14 +1,14 @@
 import { type FastifyInstance } from 'fastify'
 import fp from 'fastify-plugin'
-import { wsRoute } from './websocket.ts';
-import authRoutes from './auth.ts';
-import { userRoutes } from './users.ts';
-import { friendRoutes } from './friends.ts';
-import { matchRoutes } from './match.ts';
-import { blockRoutes } from './block.ts';
-import { twoFaRoutes } from './2fa.ts';
-import { googleAuthRoutes } from './auth-google.ts';
-import { gdprRoutes } from './gdpr.ts';
+import { wsRoute } from './websocket.js';
+import authRoutes from './auth.js';
+import { userRoutes } from './users.js';
+import { friendRoutes } from './friends.js';
+import { matchRoutes } from './match.js';
+import { blockRoutes } from './block.js';
+import { twoFaRoutes } from './2fa.js';
+import { googleAuthRoutes } from './auth-google.js';
+import { gdprRoutes } from './gdpr.js';
 
 export default fp(async(fastify: FastifyInstance) => {
 	await fastify.register(wsRoute);

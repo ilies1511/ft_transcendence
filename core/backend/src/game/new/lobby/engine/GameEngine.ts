@@ -7,7 +7,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 //import websocketPlugin, { SocketStream } from '@fastify/websocket'
 //import type { ClientToGameMessage } from '../../game_shared/message_types';
 import type { WebSocket } from '@fastify/websocket';
-import { LobbyType, type ClientToGame } from './../../../game_shared/message_types.ts';
+import { LobbyType, type ClientToGame } from './../../../game_shared/message_types.js';
 import type {
 	GameOptions,
 	LobbyToClientJson,
@@ -15,25 +15,25 @@ import type {
 	GameToClientFinish,
 	ClientToGameInput,
 	GameToClientInfo,
-} from './../../../game_shared/message_types.ts';
-import { SharedVec2 } from './../../../game_shared/objects/SharedVec2.ts';
+} from './../../../game_shared/message_types.js';
+import { SharedVec2 } from './../../../game_shared/objects/SharedVec2.js';
 
-import { GameLobby} from '../GameLobby.ts';
+import { GameLobby} from '../GameLobby.js';
 
 
-import { MapFile } from './../maps/Map.ts';
+import { MapFile } from './../maps/Map.js';
 
 //import type { GameOptions, GameStartInfo, ServerToClientJson, ServerToClientMessage } from '../../game_shared/message_types';
 
 import { Effects, GameState }
-	from './../../../game_shared/serialization.ts';
+	from './../../../game_shared/serialization.js';
 
-import { ServerVec2 } from './../../../objects/ServerVec2.ts';
-import { ServerWall } from './../../../objects/ServerWall.ts';
-import { ServerBall } from './../../../objects/ServerBall.ts';
-import { ServerClient } from './../../../objects/ServerClient.ts';
+import { ServerVec2 } from './../../../objects/ServerVec2.js';
+import { ServerWall } from './../../../objects/ServerWall.js';
+import { ServerBall } from './../../../objects/ServerBall.js';
+import { ServerClient } from './../../../objects/ServerClient.js';
 
-import * as ft_math from './../../../math.ts';
+import * as ft_math from './../../../math.js';
 
 const EPSILON: number = 1e-6;
 
@@ -296,7 +296,7 @@ export class GameEngine {
 				const r_to_hit = first_intersec.p.clone().sub(wall.center);
 				const wall_vel_at_hit = new ServerVec2(-wall.angular_vel * r_to_hit.y, wall.angular_vel * r_to_hit.x);
 				const rel_v = ball.speed.clone().sub(wall_vel_at_hit);
-				
+
 				// small positional slop; keep it tiny
 				const sign = ft_math.dot(rel_v, normal_hit) < 0 ? 1 : -1;
 				ball.pos.add(normal_hit.scale(sign * EPSILON));

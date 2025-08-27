@@ -60,7 +60,8 @@ export async function issueFreshAuthCookie(
 		path: '/',
 		httpOnly: true,
 		sameSite: 'lax',
-		secure: false,
+		// secure: false,
+		secure: process.env.NODE_ENV === 'production',
 	});
 }
 // END -- NEW anonymize

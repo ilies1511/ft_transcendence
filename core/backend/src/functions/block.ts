@@ -1,5 +1,5 @@
 import { type FastifyInstance } from "fastify"
-import type { FriendRequestRow } from "../types/userTypes.ts"
+import type { FriendRequestRow } from "../types/userTypes.js"
 
 // BEGIN -- (Un)Block USer
 export async function blockUser(
