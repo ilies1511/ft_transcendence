@@ -69,7 +69,7 @@ function renderUserRow(
 		: '';
 
 	return /*html*/`
-		<li class="user-row group ${isSelf ? 'bg-[#3a2229] border-l-2 border-gray-500' : ''}" data-uid="${u.id}">
+		<li class="user-row group ${isSelf ? 'bg-[#3a2229] border-l-2 border-gray-500' : 'border-b border-[#3a2229]/70'}" data-uid="${u.id}">
 			<a href="/profile/${u.id}" data-route
 				class="flex items-center gap-3 min-w-0 flex-1 pr-6 focus:outline-none"
 				aria-label="View profile of ${u.username}">
@@ -106,7 +106,7 @@ const UsersPage: PageModule = {
 						<div class="col-status">Status</div>
 						<div class="col-actions">Actions</div>
 					</div>
-					<ul id="users-list" class="divide-y divide-[#3a2229]/70"></ul>
+					<ul id="users-list"></ul>
 					<p id="empty-msg" class="text-center text-[#ca91a3] py-6">Loading...</p>
 				</div>
 			</div>`;
