@@ -99,9 +99,9 @@ const FriendListPage:PageModule = {
 				const users = await Promise.all(incoming.map(r => getUser(r.requester_id)));
 				$in.innerHTML = users.map((u, i) => row(u, /*html*/`
 					<div class="flex gap-2">
-						<button class="act px-3 py-1 rounded-md bg-[#0bda8e] hover:bg-[#0ac582]"
+						<button class="act cursor-pointer px-3 py-1 rounded-md bg-[#0bda8e] hover:bg-[#0ac582]"
 							data-id="${incoming[i].id}" data-act="accept">✓</button>
-						<button class="act px-3 py-1 rounded-md bg-[#D22B2B] hover:bg-[#b91c1c]"
+						<button class="act cursor-pointer px-3 py-1 rounded-md bg-[#D22B2B] hover:bg-[#b91c1c]"
 							data-id="${incoming[i].id}" data-act="reject">✗</button>
 					</div>`)).join('');
 				$iEmpty.textContent = '';
@@ -126,7 +126,7 @@ const FriendListPage:PageModule = {
 					? friends as UserPreview[]
 					: await Promise.all((friends as number[]).map(getUser));
 				$friends.innerHTML = users.map(u => row(u, /*html*/`
-					<button class="rm px-3 py-1 rounded-md bg-[#D22B2B] hover:bg-[#b91c1c]"
+					<button class="rm cursor-pointer px-3 py-1 rounded-md bg-[#D22B2B] hover:bg-[#b91c1c]"
 						data-id="${u.id}">Remove</button>`)).join('');
 				$fEmpty.textContent = '';
 			} else {
