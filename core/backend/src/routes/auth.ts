@@ -294,7 +294,8 @@ export default async function authRoutes(app: FastifyInstance) {
 				path: '/',
 				httpOnly: true,
 				sameSite: 'lax',
-				secure: false // in prod auf true setzen, wenn HTTPS aktiv
+				secure: process.env.NODE_ENV === 'production'
+				// secure: false // in prod auf true setzen, wenn HTTPS aktiv
 			})
 			setUserLive(app, user.id, true);
 			return reply.send({ ok: true });
