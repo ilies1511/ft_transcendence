@@ -13,6 +13,7 @@ import { anonymizeAndSetPwSchema, anonymizeMeSchema, meDataSchema, meDeleteSchem
 import { notifyFriendStatus } from '../functions/wsHandler/connectHandler.js';
 import { userSockets } from '../types/wsTypes.js';
 import { setUserLive } from '../functions/user.js';
+import { sessionCookieOpts } from '../index.js';
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -135,14 +136,15 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 
 
 
-				reply.clearCookie('token', {
-					path: '/',
-					httpOnly: true,
-					sameSite: 'lax',
-					// secure: false
-					secure: process.env.NODE_ENV === 'production',
+				reply.clearCookie('token', sessionCookieOpts)
+				// reply.clearCookie('token', {
+				// 	path: '/',
+				// 	httpOnly: true,
+				// 	sameSite: 'lax',
+				// 	// secure: false
+				// 	secure: process.env.NODE_ENV === 'production',
 
-				})
+				// })
 				return reply.send({ message: 'Your account and all associated data have been permanently deleted.' })
 			} catch (error: any) {
 				if (error?.statusCode) {

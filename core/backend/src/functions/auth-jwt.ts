@@ -18,13 +18,14 @@ export default fp(async (app: FastifyInstance) => {
 	// POST Cookie PlugIn !
 	if (CSRF) {
 		await app.register(csrfProtection, {
-			cookieOpts: {
-				path: '/',
-				// signed: true, // TODO: 27.08 Check if it breaks rest if on
-				sameSite: 'lax',
-				secure: process.env.NODE_ENV === 'production',
-				httpOnly: true
-			},
+			// cookieOpts: {
+			// 	path: '/',
+			// 	// signed: true, // TODO: 27.08 Check if it breaks rest if on
+			// 	sameSite: 'lax',
+			// 	secure: process.env.NODE_ENV === 'production',
+			// 	httpOnly: true
+			// },
+			cookieOpts: sessionCookieOpts,
 			getToken: (req: FastifyRequest) => req.headers['x-csrf-token'] as string
 		})
 	}

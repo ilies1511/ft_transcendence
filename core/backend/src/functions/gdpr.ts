@@ -6,6 +6,7 @@ import fs from "fs";
 import { fileURLToPath } from 'node:url'
 import { Readable } from 'node:stream';
 import { createGzip } from 'node:zlib';
+import { sessionCookieOpts } from '../index.js';
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -56,13 +57,14 @@ export async function issueFreshAuthCookie(
 	displayName: string
 ) {
 	const jwt = await reply.jwtSign({ id: userId, name: displayName });
-	reply.setCookie('token', jwt, {
-		path: '/',
-		httpOnly: true,
-		sameSite: 'lax',
-		// secure: false,
-		secure: process.env.NODE_ENV === 'production',
-	});
+	reply.setCookie('token', jwt, sessionCookieOpts);
+	// reply.setCookie('token', jwt, {
+	// 	path: '/',
+	// 	httpOnly: true,
+	// 	sameSite: 'lax',
+	// 	// secure: false,
+	// 	secure: process.env.NODE_ENV === 'production',
+	// });
 }
 // END -- NEW anonymize
 

@@ -3,6 +3,7 @@ import { type FastifyPluginAsync } from 'fastify';
 import { v4 as uuidv4 } from 'uuid';
 import { DEFAULT_AVATARS } from '../constants/avatars.js';
 import { setUserLive } from '../functions/user.js';
+import { sessionCookieOpts } from '../index.js';
 // import { createUser, /* Vielleicht updateUser */ } from '../functions/user.js'
 
 export const googleAuthRoutes: FastifyPluginAsync = async fastify => {
@@ -81,13 +82,14 @@ export const googleAuthRoutes: FastifyPluginAsync = async fastify => {
 		//TODO: 14.08 2FA for google Users --> add if condtions to check if 2Fa is om
 
 		return reply
-			.setCookie('token', token, {
-				path: '/',
-				httpOnly: true,
-				sameSite: 'lax',
-				// secure: false // TODO: in prod auf true setzen, wenn HTTPS aktiv
-				secure: process.env.NODE_ENV === 'production',
-			})
+			// .setCookie('token', token, {
+			// 	path: '/',
+			// 	httpOnly: true,
+			// 	sameSite: 'lax',
+			// 	// secure: false // TODO: in prod auf true setzen, wenn HTTPS aktiv
+			// 	secure: process.env.NODE_ENV === 'production',
+			// })
+			.setCookie('token', token, sessionCookieOpts)
 			// .redirect('/') // TODO: to be decided with Maksim
 			// .redirect(`http://localhost:5173/profile/${user.id}`) // TODO: to be decided with Maksim
 			// .redirect(`https://localhost/profile/${user.id}`) // TODO: to be decided with Maksim
