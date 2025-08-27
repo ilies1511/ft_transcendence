@@ -49,8 +49,8 @@ export function initWs() {
 		wsReconnection();
 	};
 
-	// ws.onerror = (err) => console.error('WS error:', err);
-	ws.onerror = (ev: Event) => console.error('WS error:', ev);
+	// ws.onerror = (err) => console.log('WS error:', err);
+	ws.onerror = (ev: Event) => console.log('WS error:', ev);
 
 	ws.onmessage = (ev: MessageEvent<string>) => {
 		try {
@@ -61,7 +61,7 @@ export function initWs() {
 			// Dispatch as CustomEvent named after data.type (e.g., 'direct_message', 'friend_status_update', 'error')
 			wsEvents.dispatchEvent(new CustomEvent(data.type, { detail: data }));
 		} catch (err) {
-			console.error('Bad WS message:', err);
+			console.log('Bad WS message:', err);
 		}
 	};
 }

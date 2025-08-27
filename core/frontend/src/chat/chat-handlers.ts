@@ -226,7 +226,7 @@ export async function fetchUsersAndPopulate(myID: number): Promise<void> {
 
 		wireUserListDelegation();
 	} catch (err) {
-		console.error(err);
+		console.log(err);
 		ul.innerHTML = '<li class="text-[#b99da6]">Error loading users. Try again.</li>';
 	} finally {
 		updateMainBadge();

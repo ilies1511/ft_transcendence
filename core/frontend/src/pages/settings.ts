@@ -532,7 +532,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 
 				twofaControls.classList.remove('hidden')
 			} catch (error) {
-				console.error('2FA status check error:', error)
+				console.log('2FA status check error:', error)
 				twofaStatus.innerHTML = '<p class="text-red-400">Failed to load 2FA status</p>'
 			}
 		}

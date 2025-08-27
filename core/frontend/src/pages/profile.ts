@@ -185,7 +185,7 @@ async function fetchUserStats(userId: number) {
 		// console.log('⭐ user stats', data);
 		return data;
 	} catch (err) {
-		console.error('Failed to load stats:', err);
+		console.log('Failed to load stats:', err);
 		return null; // Or fallback data
 	}
 }
@@ -214,7 +214,7 @@ async function fetchMatchHistory(userId: number) {
 		// console.log('📜 match history', data);
 		return data;
 	} catch (err) {
-		console.error('Failed to load history:', err);
+		console.log('Failed to load history:', err);
 		return []; // Empty array as fallback
 	}
 }
@@ -228,7 +228,7 @@ async function fetchMatchParticipants(matchId: number) {
 			if (!res.ok) throw new Error(`participants ${res.status}`);
 			return await res.json(); // always return data
 		} catch (err) {
-			console.error('Failed to load participants for match', matchId, err);
+			console.log('Failed to load participants for match', matchId, err);
 			return [];
 		}
 }
