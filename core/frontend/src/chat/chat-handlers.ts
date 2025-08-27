@@ -204,7 +204,11 @@ export async function fetchUsersAndPopulate(myID: number): Promise<void> {
 			method: 'GET',
 			credentials: 'include',
 		});
-		if (!res.ok) throw new Error('Failed to fetch users');
+		if (!res.ok) {
+			console.log('Failed to fetch users')
+			return
+		}
+
 
 		const users = (await res.json()) as User[];
 		const others = users.filter(u => u.id !== myID);
