@@ -204,6 +204,9 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 				if (err.code === 'NO_LOCAL_PASSWORD') {
 					return reply.code(400).send({ error: 'Your account has no local password. Use the set password flow.' })
 				}
+				if (err.code === 'OAUTH_EMAIL_READONLY') {
+					return reply.code(400).send({ error: 'Email for Google accounts is managed by Google and cannot be changed.' })
+				}
 				if (err.code === 'SQLITE_CONSTRAINT' && String(err.message).includes('users.username')) {
 					return reply.code(409).send({ error: 'Username is already taken.' })
 				}

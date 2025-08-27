@@ -76,9 +76,21 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 
 				<label class="block">
 					<span class="text-sm font-medium text-[#b99da6]">Email</span>
-				<input name="email" type="email" placeholder="Email" value="${user.email ?? ''}"
-					maxlength="50"
-					class="mt-1 w-full h-12 rounded-xl bg-[#48232f] p-4 text-white placeholder:text-[#ca91a3] focus:outline-none" />
+					<input
+						name="email"
+						type="email"
+						placeholder="Email"
+						value="${user.email ?? ''}"
+						maxlength="50"
+						${user.is_oauth ? 'disabled aria-disabled="true" title="Email is managed by Google and cannot be changed."' : ''}
+						class="mt-1 w-full h-12 rounded-xl p-4 focus:outline-none
+							${user.is_oauth
+								? 'bg-[#3a2029] text-[#b99da6] placeholder:text-[#9c6f7e] cursor-not-allowed opacity-70 select-none'
+								: 'bg-[#48232f] text-white placeholder:text-[#ca91a3]'}"
+					/>
+					${user.is_oauth
+						? '<p class="text-xs text-[#b99da6] mt-2 flex items-center gap-2"><span>🔒</span><span>Email is managed by Google and cannot be changed.</span></p>'
+						: ''}
 				</label>
 
 				<button class="w-full h-10 rounded-xl bg-[#f22667] text-white font-bold tracking-wide
@@ -351,7 +363,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 
 		// Function to toggle button state based on input
 		const updateButtonState = () => {
-			const emailTooLong = emailInput.value.trim().length > 50
+			const emailTooLong = !user.is_oauth && emailInput.value.trim().length > 50
 			emailInput.setCustomValidity(emailTooLong ? 'Max 50 characters' : '')
 			submitBtn.disabled = nicknameInput.value.trim() === ''
 		}
@@ -381,14 +393,15 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 				showMsg(errorMsg, 'Nickname must be at most 10 characters.')
 				return
 			}
-			if (email !== user.email && email.length > 50) {
-				showMsg(errorMsg, 'Email must be at most 50 characters.')
-				return
-			}
-
-			if (email !== user.email && email && !emailInput.checkValidity()) {
-				showMsg(errorMsg, 'Please enter a valid email address.')
-				return
+			if (!user.is_oauth) {
+				if (email !== user.email && email.length > 50) {
+					showMsg(errorMsg, 'Email must be at most 50 characters.')
+					return
+				}
+				if (email !== user.email && email && !emailInput.checkValidity()) {
+					showMsg(errorMsg, 'Please enter a valid email address.')
+					return
+				}
 			}
 
 			const formData = new FormData(settingsForm)
@@ -397,7 +410,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 			// Only include fields that have changed from the initial user data
 			if (formData.get('username') !== user.username) data.username = formData.get('username')
 			if (formData.get('nickname') !== user.nickname) data.nickname = formData.get('nickname')
-			if (formData.get('email') !== user.email) data.email = formData.get('email')
+			if (!user.is_oauth && formData.get('email') !== user.email) data.email = formData.get('email')
 
 			if (Object.keys(data).length === 0) {
 				showMsg(errorMsg, 'No changes to update.', true)

@@ -191,7 +191,13 @@ export async function updateMyProfile(
 
 	if (data.username) { updates.push('username = ?'); values.push(data.username) }
 	if (data.nickname) { updates.push('nickname = ?'); values.push(data.nickname) }
-	if (data.email) { updates.push('email = ?'); values.push(data.email) }
+	// Prevent changing email for OAuth users
+	if (data.email !== undefined) {
+		if (user.is_oauth) {
+			const e: any = new Error('email is managed by oauth'); e.code = 'OAUTH_EMAIL_READONLY'; throw e
+		}
+		updates.push('email = ?'); values.push(data.email)
+	}
 
 	if (typeof data.password === 'string') {
 		if (!data.currentPassword) {
