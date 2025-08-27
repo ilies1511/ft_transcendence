@@ -67,11 +67,7 @@ services:
       dockerfile: docker/Caddyfile.prod.Dockerfile
     ports:
       - "8080:80"
-<<<<<<< HEAD
-      - "1433:443"
-=======
       - "1443:443"
->>>>>>> maksim7
     volumes:
       - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
     depends_on:
