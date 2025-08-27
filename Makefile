@@ -71,8 +71,11 @@ game_shared:
 #
 #
 
-# eval: prod-build prod-up prod-logs
-eval: prod-build prod-up
+init:
+	cd core && make && cd ../ make eval
+
+eval: prod-build prod-up prod-logs
+# eval: prod-build prod-up
 
 prod-re: prod-down eval
 
@@ -111,4 +114,5 @@ prod-logs:
 	prod-down \
 	prod-logs \
 	eval \
+	init \
 	run
