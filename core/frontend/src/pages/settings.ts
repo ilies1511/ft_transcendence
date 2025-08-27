@@ -5,6 +5,7 @@ import { getSession, clearSession } from '../services/session';
 import { showMsg } from '../utils/showMsg';
 import { token as CSRFToken } from '../services/session';
 import { refreshHeader } from '../ui/header';
+import { closeWs } from '../services/websocket';
 
 const SettingsPage: PageModule & { renderWithParams?: Function } = {
 	render(root) {
@@ -793,6 +794,8 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 			return
 		}
 		showMsg(accountMsg, 'Deleting account...')
+		globalThis.logged_in = false;
+		closeWs();
 		globalThis.game?.leave();
 		globalThis.tournament?.leave();
 		try {
