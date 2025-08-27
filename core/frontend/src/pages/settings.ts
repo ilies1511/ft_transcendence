@@ -4,6 +4,7 @@ import type { PageModule } from '../router';
 import { getSession, clearSession } from '../services/session';
 import { showMsg } from '../utils/showMsg';
 import { token as CSRFToken } from '../services/session';
+import { refreshHeader } from '../ui/header';
 
 const SettingsPage: PageModule & { renderWithParams?: Function } = {
 	render(root) {
@@ -761,6 +762,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 					document.body.style.overflow = ''
 					showMsg(accountMsg, message || 'Data anonymized.', true)
 					setTimeout(() => router.go('/login'), 3000)
+					refreshHeader(); // DO NOT REMOVE THIS. For header image refresh
 				} else {
 					const { error } = await r.json().catch(() => ({ error: 'Anonymization failed' }))
 					showMsg(anonymizeModalMsg, error)

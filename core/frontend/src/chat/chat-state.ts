@@ -79,7 +79,7 @@ export function appendNewChatMessage(from: number, username: string, content: st
 		<div class="max-w-[80%] ${align}">
 			<div class="text-xs text-[#b99da6]">${username} . ${time}</div>
 			<div class="mt-0.5 rounded-lg px-3 py-2 ${chatLine}">
-				<p class="whitespace-pre-wrap wrap-anywhere break-words">
+				<p class="wrap-anywhere break-words">
 					${content}
 				</p>
 			</div>
