@@ -5,9 +5,9 @@ import type { AuthUser } from '../types/types';
 
 export async function currentUser(): Promise<AuthUser | null> {
 	try {
-		const res = await fetch('/api/me', { method: 'GET', credentials: 'include' });
+		const res = await fetch('/api/session', { method: 'GET', credentials: 'include' });
+		if (res.status === 204) return null;     // not logged in, no console errors
 		if (!res.ok) return null;
-
 		return await res.json() as AuthUser;
 	} catch {
 		return null;  // Handle JSON parse errors gracefully

@@ -233,7 +233,24 @@ export default async function authRoutes(app: FastifyInstance) {
 		})
 		return reply.code(200).send({ ok: true });
 	});
-	// TODO: 22.08 When logging out, getting console log error: GET http://localhost:5173/api/me 401 (Unauthorized)
+	// Soft session probe (never 401): returns user if logged-in, else 204
+	app.get('/api/session', async (req, reply) => {
+		const token = (req as any).cookies?.token;
+		if (!token) return reply.code(204).send();
+
+		try {
+			const payload = await app.jwt.verify<{ id: number }>(token);
+			const user = await app.db.get(
+				'SELECT id, username, nickname, avatar, is_oauth FROM users WHERE id = ?',
+				[payload.id]
+			);
+			if (!user) return reply.code(204).send();
+			return reply.send(user);
+		} catch {
+			return reply.code(204).send();
+		}
+	});
+
 	app.get('/api/me', { preHandler: [app.auth] }, async (req: FastifyRequest) => {
 		const user = await app.db.get(
 			'SELECT id, username, nickname, avatar FROM users WHERE id = ?',

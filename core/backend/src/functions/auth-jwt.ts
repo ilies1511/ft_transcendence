@@ -51,6 +51,7 @@ export default fp(async (app: FastifyInstance) => {
 		'/api/auth/google',
 		'/api/auth/google/callback',
 		'/api/csrf',
+		'/api/session', // allow soft session probe without 401
 		// END -- prod
 
 		// BEGIN -- dev
