@@ -202,7 +202,24 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 					Anonymize Data
 				</button>
 
-				<div class="space-y-3">
+				<button id="export-data-btn"
+					class="w-full h-10 rounded-xl bg-gray-600 text-white font-bold tracking-wide
+						hover:bg-gray-500 active:bg-gray-400 cursor-pointer"
+					type="button">
+					Export Data
+				</button>
+
+				<p id="account-msg" class="form-msg"></p>
+			</section>
+
+			<!-- Export Data Modal -->
+			<div id="export-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+				<div id="export-modal-content" class="bg-[#2b171e] p-8 rounded-[25px] w-full max-w-[400px] space-y-4 mx-4">
+					<h2 class="text-center text-white text-xl font-bold">Export Your Data</h2>
+					<p class="text-[#b99da6] text-sm text-center">
+						Select the format for your data export. You can choose to include your media files if you select the ZIP format.
+					</p>
+					<div class="space-y-3">
 						<label class="block">
 								<span class="text-sm font-medium text-[#b99da6]">Export Format</span>
 								<select id="export-format"
@@ -216,17 +233,14 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 								<input id="export-include-media" type="checkbox" class="h-4 w-4" disabled />
 								<span>Include media (only for ZIP)</span>
 						</label>
+					</div>
+					<div class="flex space-x-4">
+						<button id="export-cancel-btn" class="w-full h-10 rounded-xl bg-gray-600 text-white font-bold hover:bg-gray-500">Cancel</button>
+						<button id="export-confirm-btn" class="w-full h-10 rounded-xl bg-gray-600 text-white font-bold hover:bg-gray-500">Export</button>
+					</div>
+					<p id="export-modal-msg" class="form-msg"></p>
 				</div>
-
-				<button id="export-data-btn"
-					class="w-full h-10 rounded-xl bg-gray-600 text-white font-bold tracking-wide
-						hover:bg-gray-500 active:bg-gray-400 cursor-pointer"
-					type="button">
-					Export Data
-				</button>
-
-				<p id="account-msg" class="form-msg"></p>
-			</section>
+			</div>
 
 			<!-- Anonymize Modal -->
 			<div id="anonymize-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
@@ -666,6 +680,23 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 		const formatSelect = root.querySelector('#export-format') as HTMLSelectElement
 		const includeMediaCheckbox = root.querySelector('#export-include-media') as HTMLInputElement
 
+		// Export modal logic
+		const exportModal = root.querySelector('#export-modal') as HTMLDivElement
+		const exportConfirmBtn = root.querySelector('#export-confirm-btn') as HTMLButtonElement
+		const exportCancelBtn = root.querySelector('#export-cancel-btn') as HTMLButtonElement
+		const exportModalMsg = root.querySelector('#export-modal-msg') as HTMLParagraphElement
+
+		exportBtn.onclick = () => {
+			showMsg(exportModalMsg, '')
+			exportModal.classList.remove('hidden')
+			document.body.style.overflow = 'hidden'
+		}
+
+		exportCancelBtn.onclick = () => {
+			exportModal.classList.add('hidden')
+			document.body.style.overflow = ''
+		}
+
 		// Anonymize modal logic
 		const anonymizeModal = root.querySelector('#anonymize-modal') as HTMLDivElement
 		const anonymizePasswordInput = root.querySelector('#anonymize-password') as HTMLInputElement
@@ -771,8 +802,8 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
         formatSelect.onchange = syncMediaCheckbox
         syncMediaCheckbox()
 
-        exportBtn.onclick = async () => {
-            showMsg(accountMsg, 'Preparing export...')
+        exportConfirmBtn.onclick = async () => {
+            showMsg(exportModalMsg, 'Preparing export...')
             const format = formatSelect.value
             const includeMedia = includeMediaCheckbox.checked
             let url = `/api/me/export?format=${encodeURIComponent(format)}`
@@ -783,7 +814,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
                 const r = await fetch(url, { method: 'GET', credentials: 'include' })
                 if (!r.ok) {
                     const { error } = await r.json().catch(() => ({ error: 'Export failed' }))
-                    showMsg(accountMsg, error || 'Export failed')
+                    showMsg(exportModalMsg, error || 'Export failed')
                     return
                 }
                 const blob = await r.blob()
@@ -802,9 +833,13 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
                     URL.revokeObjectURL(a.href)
                     a.remove()
                 }, 0)
-                showMsg(accountMsg, 'Export downloaded.', true)
+                showMsg(exportModalMsg, 'Export downloaded.', true)
+                setTimeout(() => {
+                    exportModal.classList.add('hidden')
+                    document.body.style.overflow = ''
+                }, 1500)
             } catch {
-                showMsg(accountMsg, 'Network error')
+                showMsg(exportModalMsg, 'Network error')
             }
         }
 
