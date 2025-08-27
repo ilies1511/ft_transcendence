@@ -679,10 +679,12 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 			anonymizePasswordConfirmInput.value = ''
 			showMsg(anonymizeModalMsg, '')
 			anonymizeModal.classList.remove('hidden')
+			document.body.style.overflow = 'hidden'
 		}
 
 		anonymizeCancelBtn.onclick = () => {
 			anonymizeModal.classList.add('hidden')
+			document.body.style.overflow = ''
 		}
 
 		anonymizeConfirmBtn.onclick = async () => {
@@ -712,6 +714,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 				if (r.ok) {
 					const { message } = await r.json()
 					anonymizeModal.classList.add('hidden')
+					document.body.style.overflow = ''
 					showMsg(accountMsg, message || 'Data anonymized.', true)
 					setTimeout(() => router.go('/login'), 3000)
 				} else {
