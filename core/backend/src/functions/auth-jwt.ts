@@ -20,7 +20,7 @@ export default fp(async (app: FastifyInstance) => {
 		await app.register(csrfProtection, {
 			cookieOpts: {
 				path: '/',
-				// signed: true,
+				// signed: true, // TODO: 27.08 Check if it breaks rest if on
 				sameSite: 'lax',
 				secure: process.env.NODE_ENV === 'production',
 				httpOnly: true

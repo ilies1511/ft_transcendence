@@ -62,7 +62,7 @@ export default fp(async (fastify: FastifyInstance) => {
 		callbackUri: CALLBACK_URI,
 		discovery: { issuer: 'https://accounts.google.com' },
 
-		// TODO: BEGIN 27.08 post down
+		// TODO: BEGIN 27.08 post down --> caused {"statusCode":500,"error":"Internal Server Error","message":"Invalid state"}
 		// pkce: 'S256',
 		// cookie: {
 		// 	// secure: process.env.NODE_ENV === 'production',
