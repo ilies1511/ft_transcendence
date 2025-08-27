@@ -1,4 +1,5 @@
-.DEFAULT_GOAL := shell
+.DEFAULT_GOAL := eval
+# .DEFAULT_GOAL := shell
 
 build:
 	docker compose build app
@@ -70,6 +71,8 @@ game_shared:
 #
 #
 
+eval: prod-build prod-up
+
 prod-build:
 	docker compose build app edge
 
@@ -104,10 +107,5 @@ prod-logs:
 	prod-up \
 	prod-down \
 	prod-logs \
+	eval \
 	run
-
-
-
-
-
-
