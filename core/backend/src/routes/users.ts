@@ -1,7 +1,7 @@
 // src/routes/users.ts
 import type { FastifyPluginAsync } from "fastify";
 import { createWriteStream } from 'fs';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, unlink } from 'node:fs/promises';
 import path from 'path';
 import { pipeline } from 'stream/promises';
 import { fileURLToPath } from 'url';
@@ -16,6 +16,9 @@ import {
 import { type UserRow } from "../types/userTypes.ts";
 import { uploadAvatarSchema } from "../schemas/users.ts";
 import { userSockets } from '../types/wsTypes.ts';
+
+
+
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -296,61 +299,142 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 
 
 
+	// fastify.post(
+	// 	'/api/me/avatar',
+	// 	{
+	// 		schema: uploadAvatarSchema
+	// 	},
+	// 	async (request, reply) => {
+	// 		const userId = await getUserId(request);
+
+	// 	const oldAvatar = await fastify.db.get<{ avatar: string | null }>(
+	// 		'SELECT avatar FROM users WHERE id = ?',
+	// 		[userId]
+	// 	);
+
+	// 	console.log(oldAvatar);
+	// 		const data = await request.file({ limits: { fieldNameSize: 100 } })
+	// 		if (!data) {
+	// 			return reply.code(400).send({ error: 'No file uploaded' })
+	// 		}
+	// 		if (!data.filename.toLowerCase().endsWith('.png')) {
+	// 			return reply.code(400).send({ error: 'Only .png allowed' })
+	// 		}
+	// 		const PUBLIC_DIR = process.env.PUBLIC_DIR!;
+	// 		// const AVATAR_SUBDIR = process.env.AVATAR_SUBDIR!;
+
+	// 		// const avatarDir = path.join(PUBLIC_DIR, AVATAR_SUBDIR)
+	// 		const avatarDir = PUBLIC_DIR;
+	// 		console.log(avatarDir)
+	// 		await mkdir(avatarDir, { recursive: true })
+			
+
+
+	// 		const tsNumber = Date.now(); 
+	// 		const filename = "NewUploadedAvatar" + `_${userId}` + `_${tsNumber}.png`;
+	// 					// const filename = "NewUploadedAvatar" + `_${userId}` + `_${tsNumber}.png`;
+	// 		// const filename = "NewUploadedAvatar" + `_${userId}.png`;
+	// 		const destPath = path.join(avatarDir, filename)
+
+	// 		await pipeline(data.file, createWriteStream(destPath))
+
+	// 		const ok = await updateUserAvatar(fastify, userId, filename)
+	// 		if (!ok) {
+	// 			return reply.code(404).send({ error: 'User not found' })
+	// 		}
+
+	// 		// Broadcast updated user to all WS clients
+	// 		const updated = await fastify.db.get(
+	// 			'SELECT id, username, nickname, email, live, avatar FROM users WHERE id = ?',
+	// 			[request.params.id]
+	// 		)
+	// 		if (updated) {
+	
+	// 			userSockets.forEach((sockets, uid) => {
+	// 				sockets.forEach((ws) => {
+	// 					ws.send(JSON.stringify({
+	// 						type: 'user_updated',
+	// 						user: updated
+	// 					}))
+	// 				});
+	// 			});
+	// 		}
+	// 		// console.log(`AVATAR SUBDIR ${AVATAR_SUBDIR}`);
+	// 		const avatarUrl = `/${filename}`
+	// 		return reply.code(200).send({ avatarUrl })
+	// 	}
+	// )
+
+
 	fastify.post(
 		'/api/me/avatar',
-		{
-			schema: uploadAvatarSchema
-		},
-		async (request, reply) => {
-			const userId = await getUserId(request);
+	{ schema: uploadAvatarSchema },
+	async (request, reply) => {
+		const userId = await getUserId(request);
 
-			const data = await request.file({ limits: { fieldNameSize: 100 } })
-			if (!data) {
-				return reply.code(400).send({ error: 'No file uploaded' })
-			}
-			if (!data.filename.toLowerCase().endsWith('.png')) {
-				return reply.code(400).send({ error: 'Only .png allowed' })
-			}
-			const PUBLIC_DIR = process.env.PUBLIC_DIR!;
-			const AVATAR_SUBDIR = process.env.AVATAR_SUBDIR!;
+		// fetch current avatar filename first
+		const old = await fastify.db.get<{ avatar: string | null }>(
+			'SELECT avatar FROM users WHERE id = ?',
+			[userId]
+		);
 
-			// const avatarDir = path.join(PUBLIC_DIR, AVATAR_SUBDIR)
-			const avatarDir = PUBLIC_DIR;
-			console.log(avatarDir)
-			await mkdir(avatarDir, { recursive: true })
-
-			const filename = "NewUploadedAvatar" + `_${userId}.png`;
-			const destPath = path.join(avatarDir, filename)
-
-			await pipeline(data.file, createWriteStream(destPath))
-
-			const ok = await updateUserAvatar(fastify, userId, filename)
-			if (!ok) {
-				return reply.code(404).send({ error: 'User not found' })
-			}
-
-			// Broadcast updated user to all WS clients
-			const updated = await fastify.db.get(
-				'SELECT id, username, nickname, email, live, avatar FROM users WHERE id = ?',
-				[request.params.id]
-			)
-			if (updated) {
-	
-				userSockets.forEach((sockets, uid) => {
-					sockets.forEach((ws) => {
-						ws.send(JSON.stringify({
-							type: 'user_updated',
-							user: updated
-						}))
-					});
-				});
-			}
-			console.log(`AVATAR SUBDIR ${AVATAR_SUBDIR}`);
-			const avatarUrl = `/${AVATAR_SUBDIR}/${filename}`
-			return reply.code(200).send({ avatarUrl })
+		const data = await request.file({ limits: { fieldNameSize: 100, fileSize: 1_000_000 } });
+		if (!data) return reply.code(400).send({ error: 'No file uploaded' });
+		if (!data.filename.toLowerCase().endsWith('.png')) {
+			return reply.code(400).send({ error: 'Only .png allowed' });
 		}
-	)
 
+		const PUBLIC_DIR = process.env.PUBLIC_DIR!;
+		const avatarDir = PUBLIC_DIR;
+		// await mkdir(avatarDir, { recursive: true });
+
+		// write new file
+		const ts = Date.now();
+		const filename = `NewUploadedAvatar_${userId}_${ts}.png`;
+		const destPath = path.join(avatarDir, filename);
+		await pipeline(data.file, createWriteStream(destPath));
+
+		if (data.file.truncated) { await unlink(destPath).catch(() => {}); return reply.code(413).send({ error: 'File too large' }); }
+
+		// update DB
+		const ok = await updateUserAvatar(fastify, userId, filename);
+		if (!ok) {
+			// cleanup new file if DB update failed
+			await unlink(destPath).catch(() => {});
+			return reply.code(404).send({ error: 'User not found' });
+		}
+
+		const oldName = old?.avatar ?? null;
+		if (oldName) {
+			const looksCustom = /^NewUploadedAvatar_\d+_\d+\.png$/i.test(oldName) || /^avatar_\d+_\d+\.png$/i.test(oldName);
+			if (looksCustom) {
+				const oldPath = path.join(avatarDir, oldName);
+				const resolvedOld = path.resolve(oldPath);
+				const resolvedDir = path.resolve(avatarDir) + path.sep;
+				if (resolvedOld.startsWith(resolvedDir)) {
+					await unlink(oldPath).catch(() => {}); // ignore ENOENT, etc.
+				}
+			}
+		}
+
+		// broadcast using userId (route has no :id param)
+		const updated = await fastify.db.get(
+			'SELECT id, username, nickname, email, live, avatar FROM users WHERE id = ?',
+			[userId]
+		);
+		if (updated) {
+			userSockets.forEach((sockets) => {
+				sockets.forEach((ws) => {
+					ws.send(JSON.stringify({ type: 'user_updated', user: updated }));
+				});
+			});
+		}
+
+		// since PUBLIC_DIR is the web root, file is exposed at /<filename>
+		const avatarUrl = `/${filename}`;
+		return reply.code(200).send({ avatarUrl });
+	}
+);
 
 
 };
