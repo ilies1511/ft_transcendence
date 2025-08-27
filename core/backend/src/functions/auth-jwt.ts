@@ -11,13 +11,13 @@ export default fp(async (app: FastifyInstance) => {
 	// parses & signs cookies
 	await app.register(cookie, {
 		secret: process.env.COOKIE_SECRET!,
-		// parseOptions: {}
-		parseOptions: {
-			httpOnly: true,
-			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'lax',
-			path: '/'
-		}
+		parseOptions: {}
+		// parseOptions: {
+		// 	httpOnly: true,
+		// 	secure: process.env.NODE_ENV === 'production',
+		// 	sameSite: 'lax',
+		// 	path: '/'
+		// }
 	})
 
 	// POST Cookie PlugIn !

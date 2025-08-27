@@ -21,10 +21,16 @@ import { userSockets } from '../types/wsTypes.js'
 function originGuard(req: any, reply: any, done: any) {
 	const allowed = new Set(
 		[
+			// BEGIN -- Prod
+			'http://localhost',
+			'https://localhost',
+			'https://localhost:3000',
+			// END -- Prod
+
+			// BEGIN -- DEV
 			'http://localhost:5173',
-			'http://localhost:3000',
-			'https://localhost:5173',
-			'https://localhost:3000'
+			'http://localhost:3000'
+			// END -- DEV
 		])
 	const origin = req.headers.origin
 	if (!origin || !allowed.has(origin)) {
