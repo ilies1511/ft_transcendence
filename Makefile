@@ -1,17 +1,21 @@
 .DEFAULT_GOAL := eval
 # .DEFAULT_GOAL := shell
 
+# BEGIN -- DEV
+
+dev: shell
+
 build:
-	docker compose build app
+	docker compose build app_dev
 
 up: build
-	docker compose up app
+	docker compose up app_dev
 
 up-detach: build
-	docker compose up -d app
+	docker compose up -d app_dev
 
 shell: build
-	docker compose run --rm --service-ports app sh
+	docker compose run --rm --service-ports app_dev sh
 
 clean:
 	docker compose down --rmi all --volumes --remove-orphans
@@ -64,6 +68,7 @@ game_shared:
 	rm -rf client/game/shared_game
 	cp -r game_shared client/game
 
+
 #dev_fabi:
 #	docker compose build --build-arg UID=$(id -u) --build-arg GID=$(id -g) \
 #		&& docker compose up dev_fabi -d \
@@ -71,6 +76,10 @@ game_shared:
 #
 #
 
+# END -- DEV
+
+
+# BEGIN -- PROD
 init:
 	cd core && make && cd ../ make eval
 
@@ -90,6 +99,7 @@ prod-down:
 
 prod-logs:
 	docker compose logs -f edge app
+# END -- PROD
 
 .PHONY: all \
 	build \

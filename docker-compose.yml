@@ -1,5 +1,5 @@
 services:
-  app2:
+  app_dev:
     build:
       context: .
       dockerfile: docker/Dockerfile.dev
