@@ -128,8 +128,30 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 				return reply.code(409).send({ error: 'Already responded' })
 			}
 			try {
-				await acceptFriendRequest(fastify, req.params.requestId)
-				return { message: 'Friend request accepted' }
+				await acceptFriendRequest(fastify, requestId)
+
+				// notify original requester (they sent the invite)
+				{
+					const payload = { type: 'friend_accepted', friendId: authUserId }
+					const targets = userSockets.get(fr.requester_id)
+					if (targets?.size) {
+						for (const ws of targets) {
+							try { ws.send(JSON.stringify(payload)) } catch {}
+						}
+					}
+				}
+				// notify recipient's own tabs (this user) so other tabs refresh immediately
+				{
+					const payload = { type: 'friend_accepted', friendId: fr.requester_id }
+					const targets = userSockets.get(authUserId)
+					if (targets?.size) {
+						for (const ws of targets) {
+							try { ws.send(JSON.stringify(payload)) } catch {}
+						}
+					}
+				}
+
+				return reply.code(200).send({ message: 'Friend request accepted' })
 			} catch (err: any) {
 				console.log(`Backend: /api/requests/${requestId}/accept error: `, err);
 				return reply.code(404).send({ error: err.message })
@@ -162,8 +184,30 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 			}
 
 			try {
-				await rejectFriendRequest(fastify, req.params.requestId)
-				return { message: 'Friend request rejected' }
+				await rejectFriendRequest(fastify, requestId)
+
+				// notify original requester
+				{
+					const payload = { type: 'friend_rejected', friendId: authUserId }
+					const targets = userSockets.get(fr.requester_id)
+					if (targets?.size) {
+						for (const ws of targets) {
+							try { ws.send(JSON.stringify(payload)) } catch {}
+						}
+					}
+				}
+				// notify recipient's own tabs
+				{
+					const payload = { type: 'friend_rejected', friendId: fr.requester_id }
+					const targets = userSockets.get(authUserId)
+					if (targets?.size) {
+						for (const ws of targets) {
+							try { ws.send(JSON.stringify(payload)) } catch {}
+						}
+					}
+				}
+
+				return reply.code(200).send({ message: 'Friend request rejected' })
 			} catch (err: any) {
 				return reply.code(404).send({ error: err.message })
 			}
@@ -206,6 +250,15 @@ export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 			const targets = userSockets.get(fr.recipient_id);
 			if (targets?.size) {
 				for (const client of targets) {
+					if ((client as any).readyState === WebSocket.OPEN) {
+						try { client.send(JSON.stringify(payload)); } catch {}
+					}
+				}
+			}
+			// also notify the requester tabs so other open tabs can update their outgoing list
+			const requesterSockets = userSockets.get(authUserId);
+			if (requesterSockets?.size) {
+				for (const client of requesterSockets) {
 					if ((client as any).readyState === WebSocket.OPEN) {
 						try { client.send(JSON.stringify(payload)); } catch {}
 					}

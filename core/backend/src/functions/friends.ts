@@ -100,6 +100,21 @@ export async function sendFriendRequest(
 			}
 		}
 	}
+
+	// also notify the requester tabs so other open tabs can update the outgoing list
+	const requesterSockets = userSockets.get(requesterId);
+	if (requesterSockets?.size) {
+		for (const ws of requesterSockets) {
+			try {
+				ws.send(JSON.stringify({
+					type: 'friend_request_created',
+					requestId: row.id,
+					to: recipientId
+				}));
+			} catch {}
+		}
+	}
+
 	return { type: 'pending', request: row }
 }
 

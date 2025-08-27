@@ -196,6 +196,7 @@ const FriendListPage:PageModule = {
 		const onChange = () => refresh();
 		document.addEventListener('friends-changed', onChange);
 		wsEvents.addEventListener('new_friend_request', onChange);
+		wsEvents.addEventListener('friend_request_created', onChange);
 		wsEvents.addEventListener('friend_accepted', onChange);
 		wsEvents.addEventListener('friend_rejected', onChange);
 		wsEvents.addEventListener('friend_removed', onChange);
@@ -207,6 +208,7 @@ const FriendListPage:PageModule = {
 		(root as any).onDestroy = () => {
 			document.removeEventListener('friends-changed', onChange);
 			wsEvents.removeEventListener('new_friend_request', onChange);
+			wsEvents.removeEventListener('friend_request_created', onChange);
 			wsEvents.removeEventListener('friend_accepted', onChange);
 			wsEvents.removeEventListener('friend_rejected', onChange);
 			wsEvents.removeEventListener('friend_removed', onChange);
