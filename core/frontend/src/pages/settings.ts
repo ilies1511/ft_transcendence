@@ -60,15 +60,16 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 				<h2 class="text-center text-white text-2xl font-bold">Update Profile</h2>
 
 				<label class="block">
-					<span class="text-sm font-medium text-[#b99da6]">Username</span>
-						<input name="username" type="text" placeholder="Username (for login)" value="${user.username ?? ''}"
+					<span class="text-sm font-medium text-[#b99da6]">Username (For Login)</span>
+						<input name="username" type="text" placeholder="johndoe" value="${user.username ?? ''}"
 							maxlength="10"
 							class="mt-1 w-full h-12 rounded-xl bg-[#48232f] p-4 text-white placeholder:text-[#ca91a3] focus:outline-none" />
 
 				</label>
 
 				<label class="block">
-					<input name="nickname" type="text" placeholder="Nickname (public)" value="${user.nickname ?? ''}"
+					<span class="text-sm font-medium text-[#b99da6]">Nickname (Public)</span>
+					<input name="nickname" type="text" placeholder="John Doe" value="${user.nickname ?? ''}"
 						maxlength="10"
 						class="mt-1 w-full h-12 rounded-xl bg-[#48232f] p-4 text-white placeholder:text-[#ca91a3] focus:outline-none" />
 				</label>
