@@ -639,7 +639,7 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 				disableBtn.disabled = true
 				showMsg(twofaMsg, 'Disabling 2FA...')
 
-				const headers = new Headers({ 'Content-Type': 'application/json' });
+				const headers = new Headers();
 				if (CSRFToken) headers.set('X-CSRF-Token', CSRFToken);
 				const res = await fetch('/api/2fa/disable', {
 					method: 'POST',
