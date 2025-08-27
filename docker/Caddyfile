@@ -1,4 +1,10 @@
-localhost {
+:80 {
+  encode zstd gzip
+  # Redirect to the externally-published HTTPS port
+  redir https://10.13.6.4:1443{uri}
+}
+
+https://localhost, https://3-F-4.42heilbronn.de {
   tls internal
   encode zstd gzip
 
