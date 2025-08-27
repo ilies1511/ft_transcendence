@@ -89,8 +89,9 @@ const template =`
 						</div>
 					</div>
 					<!-- Reconnect Button -->
-					<div id="reconnect-container" class="flex justify-center">
-						<button id="btn-reconnect" class="rounded bg-[#b99da6] px-4 py-2 text-white cursor-pointer">or reconnect to existing game</button>
+					<div id="reconnect-container" class="flex flex-col items-center gap-4">
+						<div class="text-[#b99da6] text-sm">— or —</div>
+						<button id="btn-reconnect" class="rounded bg-transparent border border-[#b99da6] hover:bg-[#b99da6]/20 px-4 py-2 text-white cursor-pointer transition-colors">Reconnect to existing game</button>
 					</div>
 				</div>
 
