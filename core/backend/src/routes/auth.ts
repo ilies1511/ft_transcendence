@@ -9,6 +9,7 @@ import { validateCredentials, verify2FaToken } from '../functions/2fa.js';
 import { setUserLive } from '../functions/user.js';
 import { login2FASchema, loginSchema, logoutSchema, RegisterBodySchema } from '../schemas/auth.js';
 import { userSockets } from '../types/wsTypes.js';
+import { sessionCookieOpts } from '../index.js';
 
 const COST = 12  // bcrypt cost factor (2^12 ≈ 400 ms on laptop)
 
@@ -65,13 +66,14 @@ export default async function authRoutes(app: FastifyInstance) {
 
 			// Auto-login after registration
 			const token = await reply.jwtSign({ id: lastID, name: username })
-			reply.setCookie('token', token, {
-				path: '/',
-				httpOnly: true,
-				sameSite: 'lax',
-				secure: process.env.NODE_ENV === 'production',
-				// secure: false // in prod auf true setzen, wenn HTTPS aktiv
-			})
+			reply.setCookie('token', token, sessionCookieOpts)
+			// reply.setCookie('token', token, {
+			// 	path: '/',
+			// 	httpOnly: true,
+			// 	sameSite: 'lax',
+			// 	secure: process.env.NODE_ENV === 'production',
+			// 	// secure: false // in prod auf true setzen, wenn HTTPS aktiv
+			// })
 			await setUserLive(app, lastID, true);
 			return reply.code(201).send({ ok: true, userId: lastID })
 
@@ -173,13 +175,14 @@ export default async function authRoutes(app: FastifyInstance) {
 
 			const token = await reply.jwtSign({ id: user.id, name: user.username })
 
-			reply.setCookie('token', token, {
-				path: '/',
-				httpOnly: true,
-				sameSite: 'lax',
-				secure: process.env.NODE_ENV === 'production',
-				// secure: false // in prod auf true setzen, wenn HTTPS aktiv
-			})
+			reply.setCookie('token', token, sessionCookieOpts)
+			// reply.setCookie('token', token, {
+			// 	path: '/',
+			// 	httpOnly: true,
+			// 	sameSite: 'lax',
+			// 	secure: process.env.NODE_ENV === 'production',
+			// 	// secure: false // in prod auf true setzen, wenn HTTPS aktiv
+			// })
 			setUserLive(app, user.id, true);
 			return reply.send({ ok: true })
 		}
@@ -227,13 +230,14 @@ export default async function authRoutes(app: FastifyInstance) {
 			}
 		}
 		// reply.clearCookie('token', { path: '/' }); // Needs to be replaced -> see below
-		reply.clearCookie('token', {
-			path: '/',
-			httpOnly: true,
-			sameSite: 'lax',
-			secure: process.env.NODE_ENV === 'production'
-			// secure: false
-		})
+		reply.clearCookie('token', sessionCookieOpts)
+		// reply.clearCookie('token', {
+		// 	path: '/',
+		// 	httpOnly: true,
+		// 	sameSite: 'lax',
+		// 	secure: process.env.NODE_ENV === 'production'
+		// 	// secure: false
+		// })
 		return reply.code(200).send({ ok: true });
 	});
 	// Soft session probe (never 401): returns user if logged-in, else 204
@@ -307,12 +311,14 @@ export default async function authRoutes(app: FastifyInstance) {
 				return reply.code(500).send({ error: 'Internal Server Error' })
 			}
 			const jwt = await reply.jwtSign({ id: user.id, name: user.username })
-			reply.setCookie('token', jwt, {
-				path: '/',
-				httpOnly: true,
-				sameSite: 'lax',
-				secure: false // in prod auf true setzen, wenn HTTPS aktiv
-			})
+			reply.setCookie('token', jwt, sessionCookieOpts)
+			// reply.setCookie('token', jwt, {
+			// 	path: '/',
+			// 	httpOnly: true,
+			// 	sameSite: 'lax',
+			// 	secure: process.env.NODE_ENV === 'production'
+			// 	// secure: false // in prod auf true setzen, wenn HTTPS aktiv
+			// })
 			setUserLive(app, user.id, true);
 			return reply.send({ ok: true });
 	// 		const jwt = await reply.jwtSign({ id: user.id, name: user.username })

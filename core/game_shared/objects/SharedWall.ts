@@ -60,7 +60,7 @@ export class SharedWall {
 
 	public get_endpoints(): {p1: SharedVec2, p2: SharedVec2} {
 		return {
-			p1: new SharedVec2(this._endpoint1.x, this._endpoint1.y), 
+			p1: new SharedVec2(this._endpoint1.x, this._endpoint1.y),
 			p2: new SharedVec2(this._endpoint2.x, this._endpoint2.y)
 		};
 	}

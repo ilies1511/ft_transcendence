@@ -6,30 +6,26 @@ import 'dotenv/config'                 // loads JWT_SECRET & COOKIE_SECRET from 
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import csrfProtection from '@fastify/csrf-protection'
 import { CSRF } from '../index.js'
+import { sessionCookieOpts } from '../index.js'
 
 export default fp(async (app: FastifyInstance) => {
 	// parses & signs cookies
 	await app.register(cookie, {
 		secret: process.env.COOKIE_SECRET!,
-		// parseOptions: {}
-		parseOptions: {
-			httpOnly: true,
-			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'lax',
-			path: '/'
-		}
+		parseOptions: {}
 	})
 
 	// POST Cookie PlugIn !
 	if (CSRF) {
 		await app.register(csrfProtection, {
-			cookieOpts: {
-				path: '/',
-				// signed: true,
-				sameSite: 'lax',
-				secure: process.env.NODE_ENV === 'production',
-				httpOnly: true
-			},
+			// cookieOpts: {
+			// 	path: '/',
+			// 	// signed: true, // TODO: 27.08 Check if it breaks rest if on
+			// 	sameSite: 'lax',
+			// 	secure: process.env.NODE_ENV === 'production',
+			// 	httpOnly: true
+			// },
+			cookieOpts: sessionCookieOpts,
 			getToken: (req: FastifyRequest) => req.headers['x-csrf-token'] as string
 		})
 	}

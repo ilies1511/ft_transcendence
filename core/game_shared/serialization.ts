@@ -51,7 +51,7 @@ export class GameState {
 			ballBuffers.push(buf);
 			ballCount++;
 		}
-		
+
 		const wallBuffers: ArrayBuffer[] = [];
 		let wallCount = 0;
 		for (const wall of this.walls) {
