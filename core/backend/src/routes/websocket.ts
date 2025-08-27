@@ -18,29 +18,32 @@ import { userSockets } from '../types/wsTypes.js'
 // const userSockets = new Map<number, Set<ExtendedWebSocket>>()
 
 
-function originGuard(req: any, reply: any, done: any) {
-	const allowed = new Set(
-		[
-			'http://localhost:5173',
-			'http://localhost:3000',
-			'https://localhost:5173',
-			'https://localhost:3000'
-		])
-	const origin = req.headers.origin
-	if (!origin || !allowed.has(origin)) {
-		return reply.code(403).send({ error: 'Forbidden origin' })
-	}
-	done()
-}
+// function originGuard(req: any, reply: any, done: any) {
+// 	const allowed = new Set(
+// 		[
+// 			'http://localhost',
+// 			'https://localhost',
+// 			'http://localhost:5173',
+// 			'http://localhost:3000',
+// 			'https://localhost:5173',
+// 			'https://localhost:3000'
+// 		])
+// 	const origin = req.headers.origin
+// 	if (!origin || !allowed.has(origin)) {
+// 		return reply.code(403).send({ error: 'Forbidden origin' })
+// 	}
+// 	done()
+// }
 
 export const wsRoute = async function (app: FastifyInstance) {
 	app.get('/ws',
 		{
 			websocket: true,
-			preHandler: [app.auth, originGuard]
+			preHandler: [app.auth]
 		},
 		async (socket: WebSocket, req) => {
 			const authUserId = await getUserId(req);
+			
 			// const raw = req.headers.cookie || ''
 			// const { token } = cookie.parse(raw)
 

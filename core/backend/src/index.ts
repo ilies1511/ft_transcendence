@@ -63,7 +63,7 @@ async function main() {
 	GameServer.init(fastify);
 
 	await fastify.listen({ port: 3000, host: '0.0.0.0' })
-	console.log('[BACK-END PART] Fastify WebSocket server running on ws://localhost:3000/ws')
+	// console.log('[BACK-END PART] Fastify WebSocket server running on ws://localhost:3000/ws')
 }
 
 main().catch(err => {

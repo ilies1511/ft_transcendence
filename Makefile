@@ -71,8 +71,8 @@ game_shared:
 #
 #
 
-# eval: prod-build prod-up prod-logs
-eval: prod-build prod-up
+eval: prod-build prod-up prod-logs
+# eval: prod-build prod-up
 
 prod-re: prod-down eval
 
