@@ -11,7 +11,7 @@ export async function init2FA(
 	fastify: FastifyInstance,
 	userId: number): Promise<{ base32: string, otpAuthUrl: string }> {
 	const secret = speakeasy.generateSecret({
-		name: `MyApp (${userId})`,
+		name: `ft_transcendence`,
 		length: 20
 	})
 	await fastify.db.run(
