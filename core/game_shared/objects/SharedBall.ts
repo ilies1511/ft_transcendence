@@ -1,5 +1,5 @@
-import { SharedVec2 } from './SharedVec2.ts'
-import { Effects } from '../serialization.ts'
+import { SharedVec2 } from './SharedVec2.js'
+import { Effects } from '../serialization.js'
 
 //todo: add radius to serialization
 export class SharedBall {

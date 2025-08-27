@@ -1,7 +1,7 @@
-import { SharedVec2 } from './objects/SharedVec2.ts'
-import { SharedBall } from './objects/SharedBall.ts'
-import { SharedWall } from './objects/SharedWall.ts'
-import { SharedClient } from './objects/SharedClient.ts'
+import { SharedVec2 } from './objects/SharedVec2.js'
+import { SharedBall } from './objects/SharedBall.js'
+import { SharedWall } from './objects/SharedWall.js'
+import { SharedClient } from './objects/SharedClient.js'
 
 //placeholder
 export enum Effects {
@@ -51,7 +51,7 @@ export class GameState {
 			ballBuffers.push(buf);
 			ballCount++;
 		}
-		
+
 		const wallBuffers: ArrayBuffer[] = [];
 		let wallCount = 0;
 		for (const wall of this.walls) {
