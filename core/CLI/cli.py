@@ -1,3 +1,4 @@
+import ssl
 import json
 import sys
 import select
@@ -8,8 +9,9 @@ import websocket
 #BASE = "http://localhost:3000"
 #HOST = "localhost:3000"
 
-HOST = f'{input("Server address:: ")}:3000'
-BASE = f'http://{HOST}'
+#HOST = f'{input("Server address:: ")}:1443'
+HOST = f'localhost:1433'
+BASE = f'https://{HOST}'
 
 
 def _cookie_header_from(session: requests.Session) -> str:
@@ -18,7 +20,7 @@ def _cookie_header_from(session: requests.Session) -> str:
 
 class Game:
     def __init__(self, host: str, game_id: int | str, client_id: int | str,
-                 secure: bool = False, headers: list[str] | None = None, origin: str | None = None):
+                 secure: bool = True, headers: list[str] | None = None, origin: str | None = None):
         scheme = "wss" if secure else "ws"
         self.route = f"{scheme}://{host}/game/{game_id}"
         self.client_id = client_id
@@ -62,7 +64,15 @@ class Game:
             on_close=on_close,
             on_error=on_error,
         )
-        t = threading.Thread(target=self._ws.run_forever, kwargs={"origin": self._origin}, daemon=True)
+
+        t = threading.Thread(
+            target=self._ws.run_forever,
+            kwargs={
+                "origin": self._origin,
+                "sslopt": {"cert_reqs": ssl.CERT_NONE, "check_hostname": False},
+            },
+            daemon=True,
+        )
         t.start()
 
     def _send_input(self, key: str, type_: str):
@@ -132,7 +142,7 @@ class Game:
                 self._ws_thread.join(timeout=2)
             print("exiting...")
 
-def enter_matchmaking(session, csrf_token, user_id=2, display_name='CLI_DISPLAY_NAME', map_name='default'):
+def enter_matchmaking(session, csrf_token, user_id=2, display_name='CLI_DISPLAY_NAME', map_name='default_2'):
     print("\n=== Enter Matchmaking ===")
     payload = {
         "user_id": user_id,
@@ -177,13 +187,11 @@ def login():
 
     password = input('password: ')
 
-    #email = 'a@a.a'
-    #password = 'a'
 
     with requests.Session() as session:
+        session.verify = False
         try:
-            # 1. Get CSRF token
-            csrf_res = session.get("http://localhost:3000/api/csrf")  # adjust base URL
+            csrf_res = session.get(f"{BASE}/api/csrf")
             csrf_res.raise_for_status()
             csrf_token = csrf_res.json().get("token")
 

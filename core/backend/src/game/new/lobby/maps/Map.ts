@@ -68,6 +68,7 @@ export class MapFile {
 	public max_time: number; //seconds
 
 	constructor(map_name: string = 'default_3m_30p') {
+		console.log(map_name);
 		let map_data: any;
 		// The frontend will send names like "default_2_3m_30p"
 		// We need to convert it to the format the backend understands
