@@ -72,7 +72,11 @@ game_shared:
 #
 
 eval: prod-build prod-up prod-logs
+<<<<<<< HEAD
 #eval: prod-build prod-up
+=======
+# eval: prod-build prod-up
+>>>>>>> maksim7
 
 prod-re: prod-down eval
 

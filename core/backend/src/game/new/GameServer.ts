@@ -193,7 +193,7 @@ export class GameServer {
 
 		GameServer._rcv_game_msg = GameServer._rcv_game_msg.bind(GameServer);
 		GameServer._close_socket_lobby_handler = GameServer._close_socket_lobby_handler.bind(GameServer);
-		GameServer._fastify.get('/game/:game_id', { websocket: true }, (socket: WebSocket, req: FastifyRequest) => {
+		GameServer._fastify.get('/game/:game_id', { websocket: true, preHandler: [GameServer._fastify.auth] }, (socket: WebSocket, req: FastifyRequest) => {
 			const { game_id } = req.params as { game_id: string };
 			socket.on('message', (raw) => {
 				GameServer._rcv_game_msg(game_id, raw.toString(), socket);
@@ -203,7 +203,7 @@ export class GameServer {
 			});
 		});
 
-		GameServer._fastify.get('/tournament/:tournament_id_str', { websocket: true }, (socket: WebSocket, req: FastifyRequest) => {
+		GameServer._fastify.get('/tournament/:tournament_id_str', { websocket: true, preHandler: [GameServer._fastify.auth] }, (socket: WebSocket, req: FastifyRequest) => {
 			const { tournament_id_str } = req.params as { tournament_id_str: string };
 			socket.on('message', (raw) => {
 				try {
