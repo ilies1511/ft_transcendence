@@ -3,21 +3,21 @@ import type { fastifyWebsocket } from '@fastify/websocket';
 import websocketPlugin from '@fastify/websocket';
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import type { WebSocket } from '@fastify/websocket';
-import { GameLobby } from './lobby/GameLobby.ts';
-import { Tournament } from './Tournament.ts';
-import { WebsocketConnection } from './WebsocketConnection.ts';
+import { GameLobby } from './lobby/GameLobby.js';
+import { Tournament } from './Tournament.js';
+import { WebsocketConnection } from './WebsocketConnection.js';
 
-import { createMatchMeta, completeMatch, } from '../../functions/match.ts';
-import type { NewMatch } from '../../functions/match.ts';
-import { GameServer } from './GameServer.ts';
-import type { ClientParticipation } from './GameServer.ts';
+import { createMatchMeta, completeMatch, } from '../../functions/match.js';
+import type { NewMatch } from '../../functions/match.js';
+import { GameServer } from './GameServer.js';
+import type { ClientParticipation } from './GameServer.js';
 
 import type {
 	LeaveReq,
 	StateReq,
 	StartReq,
 	TournamentState,
-} from '../game_shared/TournamentApiTypes.ts';
+} from '../game_shared/TournamentApiTypes.js';
 
 import type {
 	GameOptions,
@@ -37,10 +37,10 @@ import type {
 	GameToClientFinish,
 	ClientToTournament,
 	DefaultResp,
-} from '../game_shared/message_types.ts';
+} from '../game_shared/message_types.js';
 
-import { LobbyType } from '../game_shared/message_types.ts';
-import { is_ServerError } from '../game_shared/message_types.ts';
+import { LobbyType } from '../game_shared/message_types.js';
+import { is_ServerError } from '../game_shared/message_types.js';
 
 const join_schema = {
 	body: {

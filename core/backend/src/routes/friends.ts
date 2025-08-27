@@ -7,16 +7,16 @@ import {
 	rejectFriendRequest, removeFriend,
 	sendFriendRequest,
 	withdrawFriendRequest
-} from "../functions/friends.ts";
-import { findUserWithFriends, getUserId} from "../functions/user.ts";
-import { type FriendRequestRow, type UserWithFriends } from "../types/userTypes.ts";
+} from "../functions/friends.js";
+import { findUserWithFriends, getUserId} from "../functions/user.js";
+import { type FriendRequestRow, type UserWithFriends } from "../types/userTypes.js";
 import {
 	acceptFriendRequestSchema, IncomingRequestsResponseSchema,
 	incomingRequestsSchema, listFriendsSchema, outgoingRequestsSchema,
 	rejectFriendRequestSchema, removeFriendSchema, sendFriendRequestSchema,
 	SendFRResponse201, withdrawFriendRequestSchema
-} from "../schemas/friends.ts";
-import { userSockets } from '../types/wsTypes.ts';
+} from "../schemas/friends.js";
+import { userSockets } from '../types/wsTypes.js';
 
 export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 	// GET -- BEGIN

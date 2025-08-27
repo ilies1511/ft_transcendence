@@ -1,8 +1,8 @@
 import type { WebSocket } from '@fastify/websocket';
 import assert from 'assert';
 
-import { Tournament } from './Tournament.ts';
-import { GameLobby } from './lobby/GameLobby.ts';
+import { Tournament } from './Tournament.js';
+import { GameLobby } from './lobby/GameLobby.js';
 
 import type {
 	ServerToClientError,
@@ -11,7 +11,7 @@ import type {
 	ServerError,
     ClientToTournament,
     ClientToMatch,
-} from '../game_shared/message_types.ts';
+} from '../game_shared/message_types.js';
 
 
 

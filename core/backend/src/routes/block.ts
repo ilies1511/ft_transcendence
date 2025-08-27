@@ -1,8 +1,8 @@
 import type { FastifyPluginAsync } from "fastify";
-import { blockUser, unblockUser, getBlockedUsersList } from "../functions/block.ts";
-import { areFriends, removeFriend } from "../functions/friends.ts";
-import { blockListSchema, blockUserSchema, unblockUserSchema } from "../schemas/block.ts";
-import { getUserId } from "../functions/user.ts";
+import { blockUser, unblockUser, getBlockedUsersList } from "../functions/block.js";
+import { areFriends, removeFriend } from "../functions/friends.js";
+import { blockListSchema, blockUserSchema, unblockUserSchema } from "../schemas/block.js";
+import { getUserId } from "../functions/user.js";
 
 export const blockRoutes: FastifyPluginAsync = async (fastify) => {
 	//block

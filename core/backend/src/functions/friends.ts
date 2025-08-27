@@ -1,9 +1,9 @@
 import chalk from 'chalk';
 import type { FastifyInstance } from 'fastify';
-import type { FriendRequestRow } from '../types/userTypes.ts';
-import { userSockets } from '../types/wsTypes.ts';
-// import { userSockets } from '../types/wsTypes.ts'
-import { isBlocked } from './block.ts';
+import type { FriendRequestRow } from '../types/userTypes.js';
+import { userSockets } from '../types/wsTypes.js';
+// import { userSockets } from '../types/wsTypes.js'
+import { isBlocked } from './block.js';
 
 export enum FriendRequestMsg {
 	RecipientNotFound = 'RecipientNotFound',

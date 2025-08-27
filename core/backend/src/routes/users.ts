@@ -1,4 +1,4 @@
-// src/routes/users.ts
+// src/routes/users.js
 import type { FastifyPluginAsync } from "fastify";
 import { createWriteStream } from 'fs';
 import { mkdir } from 'node:fs/promises';
@@ -12,10 +12,10 @@ import {
 	updateUserAvatar,
 	type UpdateUserData,
 	getUserId
-} from "../functions/user.ts";
-import { type UserRow } from "../types/userTypes.ts";
-import { uploadAvatarSchema } from "../schemas/users.ts";
-import { userSockets } from '../types/wsTypes.ts';
+} from "../functions/user.js";
+import { type UserRow } from "../types/userTypes.js";
+import { uploadAvatarSchema } from "../schemas/users.js";
+import { userSockets } from '../types/wsTypes.js';
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -332,10 +332,10 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 			// Broadcast updated user to all WS clients
 			const updated = await fastify.db.get(
 				'SELECT id, username, nickname, email, live, avatar FROM users WHERE id = ?',
-				[request.params.id]
+				[userId]
 			)
 			if (updated) {
-	
+
 				userSockets.forEach((sockets, uid) => {
 					sockets.forEach((ws) => {
 						ws.send(JSON.stringify({
@@ -351,6 +351,6 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 		}
 	)
 
-
-
+	fastify.get("/api/health", async () => ({ ok: true }));
 };
+

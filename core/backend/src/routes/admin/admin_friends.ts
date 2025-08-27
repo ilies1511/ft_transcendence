@@ -6,9 +6,9 @@ import {
 	rejectFriendRequest, removeFriend,
 	sendFriendRequest,
 	withdrawFriendRequest
-} from "../../functions/friends.ts";
-import { type FriendRequestRow, type UserWithFriends } from "../../types/userTypes.ts";
-import { listFriendsSchema } from "../../schemas/friends.ts";
+} from "../../functions/friends.js";
+import { type FriendRequestRow, type UserWithFriends } from "../../types/userTypes.js";
+import { listFriendsSchema } from "../../schemas/friends.js";
 
 export const friendRoutes: FastifyPluginAsync = async (fastify) => {
 	// GET -- BEGIN

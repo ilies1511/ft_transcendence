@@ -1,9 +1,9 @@
 import bcrypt from 'bcrypt'
 import type { FastifyInstance } from 'fastify'
-import type { FriendInfo, UserRow, UserWithFriends } from '../types/userTypes.ts'
-// import { DEFAULT_AVATARS } from '../constants/avatars.ts'
-// import { DEFAULT_AVATARS } from '../../constants/avatars.ts'
-import { DEFAULT_AVATARS } from '../constants/avatars.ts'
+import type { FriendInfo, UserRow, UserWithFriends } from '../types/userTypes.js'
+// import { DEFAULT_AVATARS } from '../constants/avatars.js'
+// import { DEFAULT_AVATARS } from '../../constants/avatars.js'
+import { DEFAULT_AVATARS } from '../constants/avatars.js'
 export interface NewUser {
 	username: string
 	password: string

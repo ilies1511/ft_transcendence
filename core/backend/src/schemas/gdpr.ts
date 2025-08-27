@@ -1,4 +1,4 @@
-import { ErrorResponse, OkMessageResponse, EmptyBodySchema } from "./shared.ts"
+import { ErrorResponse, OkMessageResponse, EmptyBodySchema } from "./shared.js"
 
 export const MeDataResponseSchema = {
 	type: 'object',

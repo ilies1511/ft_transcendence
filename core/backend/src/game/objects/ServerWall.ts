@@ -1,6 +1,6 @@
-import { SharedWall } from '../game_shared/objects/SharedWall.ts'
-import { ServerVec2 } from './ServerVec2.ts';
-import { Effects } from '../game_shared/serialization.ts';
+import { SharedWall } from '../game_shared/objects/SharedWall.js'
+import { ServerVec2 } from './ServerVec2.js';
+import { Effects } from '../game_shared/serialization.js';
 
 export class ServerWall extends SharedWall {
 	public angular_vel: number;

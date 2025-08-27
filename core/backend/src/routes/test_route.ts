@@ -1,5 +1,5 @@
 // import type { FastifyInstance } from 'fastify'
-// import { db } from '../db/db.ts';
+// import { db } from '../db/db.js';
 
 // async function randomRoute(fastify: FastifyInstance) {
 // 	fastify.get('/api/random', (request, reply) => {
@@ -29,9 +29,9 @@
 // }
 
 
-// // src/routes/test_route.ts
+// // src/routes/test_route.js
 // import type { fastify, FastifyPluginAsync } from 'fastify'
-// import { db } from '../db/db.ts'
+// import { db } from '../db/db.js'
 
 // export const randomRoute: FastifyPluginAsync = async fastify => {
 //   fastify.get('/api/random', (request, reply) => {
@@ -62,7 +62,7 @@
 // }
 
 
-// z.B. src/routes/test_route.ts
+// z.B. src/routes/test_route.js
 import type { FastifyPluginAsync } from 'fastify'
 
 export const randomRoute: FastifyPluginAsync = async fastify => {

@@ -1,4 +1,4 @@
-import { ErrorResponse, OkMessageResponse } from "./shared.ts"
+import { ErrorResponse, OkMessageResponse } from "./shared.js"
 
 export const Params = {
 	type: "object",

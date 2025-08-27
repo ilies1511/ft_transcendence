@@ -71,7 +71,10 @@ game_shared:
 #
 #
 
+# eval: prod-build prod-up prod-logs
 eval: prod-build prod-up
+
+prod-re: prod-down eval
 
 prod-build:
 	docker compose build app edge

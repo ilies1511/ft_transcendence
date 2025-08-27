@@ -1,7 +1,7 @@
 import { WebSocket } from 'ws'
 import { type FastifyInstance } from 'fastify'
-import type { ExtendedWebSocket } from '../../types/wsTypes.ts'
-import { findUserWithFriends, setUserLive } from '../user.ts'
+import type { ExtendedWebSocket } from '../../types/wsTypes.js'
+import { findUserWithFriends, setUserLive } from '../user.js'
 
 export async function handleClose(
 	app: FastifyInstance,

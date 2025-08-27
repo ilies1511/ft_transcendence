@@ -1,6 +1,6 @@
 import AjvModule from 'ajv'
 import ajvKeywordsModule from 'ajv-keywords'
-import { ChatSchema } from '../../schemas/wsSchema.ts'
+import { ChatSchema } from '../../schemas/wsSchema.js'
 
 const Ajv = (AjvModule as any).default ?? AjvModule
 const ajvKeywords = (ajvKeywordsModule as any).default ?? ajvKeywordsModule

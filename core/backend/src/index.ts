@@ -8,7 +8,19 @@ import routes from './routes/index.js';
 //Mit namespace
 import * as testRoutes from './routes/test_route.js'
 
+
+import type { CookieSerializeOptions } from '@fastify/cookie';
+
+export const sessionCookieOpts: CookieSerializeOptions = {
+	path: '/',
+	httpOnly: true,
+	sameSite: 'lax',
+	secure: process.env.NODE_ENV === 'production',
+	// maxAge: 60 * 60 * 24 * 7,
+};
+
 export const CSRF = true;
+export const isProd = process.env.NODE_ENV === 'production';
 
 async function main() {
 

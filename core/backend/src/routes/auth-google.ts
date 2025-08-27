@@ -1,14 +1,14 @@
 import bcrypt from 'bcrypt';
 import { type FastifyPluginAsync } from 'fastify';
 import { v4 as uuidv4 } from 'uuid';
-import { DEFAULT_AVATARS } from '../constants/avatars.ts';
-import { setUserLive } from '../functions/user.ts';
+import { DEFAULT_AVATARS } from '../constants/avatars.js';
+import { setUserLive } from '../functions/user.js';
 // import { createUser, /* Vielleicht updateUser */ } from '../functions/user.js'
 
 export const googleAuthRoutes: FastifyPluginAsync = async fastify => {
 	// 1 /api/auth/google -> automatic redirect to GOogle (Plugin)
 
-	// 2, Callback after Google Login --> see callbackUri in google-oauth.ts
+	// 2, Callback after Google Login --> see callbackUri in google-oauth.js
 	fastify.get('/api/auth/google/callback', async (request, reply) => {
 		const tokenSet = await fastify.googleOAuth2.getAccessTokenFromAuthorizationCodeFlow(request)
 		const userinfo = await fastify.googleOAuth2.userinfo(tokenSet.token.access_token)
@@ -79,15 +79,19 @@ export const googleAuthRoutes: FastifyPluginAsync = async fastify => {
 		setUserLive(fastify, user.id, true);
 		//TODO: 14.08 2FA for google Users --> add if condtions to check if 2Fa is om
 
+		const redirectPath = process.env.PUBLIC_ORIGIN
 		return reply
 			.setCookie('token', token, {
 				path: '/',
 				httpOnly: true,
 				sameSite: 'lax',
-				secure: false // TODO: in prod auf true setzen, wenn HTTPS aktiv
+				// secure: false // TODO: in prod auf true setzen, wenn HTTPS aktiv
+				secure: process.env.NODE_ENV === 'production',
 			})
 			// .redirect('/') // TODO: to be decided with Maksim
-			.redirect(`http://localhost:5173/profile/${user.id}`) // TODO: to be decided with Maksim
+			// .redirect(`http://localhost:5173/profile/${user.id}`) // TODO: to be decided with Maksim
+			// .redirect(`https://localhost/profile/${user.id}`) // TODO: to be decided with Maksim
+			.redirect(`${redirectPath}/profile/${user.id}`) // TODO: to be decided with Maksim
 			// .send({ ok: true })
 	})
 }

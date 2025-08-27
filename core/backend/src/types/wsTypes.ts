@@ -1,5 +1,5 @@
 import type { WebSocket } from '@fastify/websocket'
-import type { LobbyInvite } from '../../src/game/game_shared/message_types.ts';
+import type { LobbyInvite } from '../../src/game/game_shared/message_types.js';
 
 export const userSockets = new Map<number, Set<ExtendedWebSocket>>()
 

@@ -3,13 +3,13 @@ import { type FastifyInstance } from 'fastify'
 // import websocket from '@fastify/websocket'
 import type { WebSocket } from '@fastify/websocket' // <-- use 'import type'
 import cookie from 'cookie'            // npm install cookie
-import { getUserId, setUserLive } from '../functions/user.ts'
+import { getUserId, setUserLive } from '../functions/user.js'
 import { error } from 'console'
-import { notifyFriendStatus } from '../functions/wsHandler/connectHandler.ts'
-import type { ExtendedWebSocket } from '../types/wsTypes.ts'
-import { handleWsMessage } from '../functions/wsHandler/messageHandler.ts'
-import { handleClose } from '../functions/wsHandler/closeHandler.ts'
-import { userSockets } from '../types/wsTypes.ts'
+import { notifyFriendStatus } from '../functions/wsHandler/connectHandler.js'
+import type { ExtendedWebSocket } from '../types/wsTypes.js'
+import { handleWsMessage } from '../functions/wsHandler/messageHandler.js'
+import { handleClose } from '../functions/wsHandler/closeHandler.js'
+import { userSockets } from '../types/wsTypes.js'
 
 /*
 	FOr Live Chat, where every user can send msgs to other users and not only friends

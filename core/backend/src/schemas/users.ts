@@ -1,4 +1,4 @@
-import { ErrorResponse, OkMessageResponse, EmptyBodySchema } from "./shared.ts"
+import { ErrorResponse, OkMessageResponse, EmptyBodySchema } from "./shared.js"
 // BEGIN -- POST Avatar file updload
 // schema: {
 // 	params: {
