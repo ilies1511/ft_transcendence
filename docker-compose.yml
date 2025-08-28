@@ -72,6 +72,9 @@ services:
       - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
     depends_on:
       - app
+    environment:
+      - LOCAL_IP=${LOCAL_IP}
+      - HOSTNAME=${HOSTNAME}
     restart: unless-stopped
 
 volumes:

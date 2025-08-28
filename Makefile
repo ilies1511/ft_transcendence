@@ -1,4 +1,5 @@
 .DEFAULT_GOAL := eval
+
 # .DEFAULT_GOAL := shell
 
 build:
@@ -64,22 +65,16 @@ game_shared:
 	rm -rf client/game/shared_game
 	cp -r game_shared client/game
 
-#dev_fabi:
-#	docker compose build --build-arg UID=$(id -u) --build-arg GID=$(id -g) \
-#		&& docker compose up dev_fabi -d \
-#		&& docker exec -it dev_fabi bas
-#
-#
 
 eval: prod-build prod-up prod-logs
 #eval: prod-build prod-up
 
 prod-re: prod-down eval
 
-prod-build:
+prod-build: update-env
 	docker compose build app edge
 
-prod-up: prod-build
+prod-up: update-env prod-build
 	docker compose up -d app edge
 
 prod-down:
@@ -87,6 +82,24 @@ prod-down:
 
 prod-logs:
 	docker compose logs -f edge app
+
+update-env:
+	@HOSTNAME=$$(hostname) ; \
+	LOCAL_IP=$$(ip route get 1.1.1.1 | grep -oP 'src \K[0-9.]+' ) ; \
+	echo $$HOSTNAME; \
+	echo $$LOCAL_IP; \
+	if grep -q '^HOSTNAME=' .env; then \
+		sed -i "s/^HOSTNAME=.*/HOSTNAME=$$HOSTNAME/" .env; \
+	else \
+		echo "HOSTNAME=$$HOSTNAME" >> .env; \
+	fi; \
+	if grep -q '^LOCAL_IP=' .env; then \
+		sed -i "s/^LOCAL_IP=.*/LOCAL_IP=$$LOCAL_IP/" .env; \
+	else \
+		echo "LOCAL_IP=$$LOCAL_IP" >> .env; \
+	fi; \
+	echo "Updated .env with HOSTNAME=$$HOSTNAME and LOCAL_IP=$$LOCAL_IP"
+
 
 .PHONY: all \
 	build \
@@ -111,4 +124,5 @@ prod-logs:
 	prod-down \
 	prod-logs \
 	eval \
-	run
+	run  \
+	update-env \
