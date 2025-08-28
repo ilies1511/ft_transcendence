@@ -1,9 +1,9 @@
-import { ServerVec2 } from './ServerVec2.ts'
-import { ServerWall } from './ServerWall.ts'
-import { ServerBall } from './ServerBall.ts'
-import { SharedClient } from '../game_shared/objects/SharedClient.ts';
+import { ServerVec2 } from './ServerVec2.js'
+import { ServerWall } from './ServerWall.js'
+import { ServerBall } from './ServerBall.js'
+import { SharedClient } from '../game_shared/objects/SharedClient.js';
 import type { WebSocket } from '@fastify/websocket';
-import { Effects } from '../game_shared/serialization.ts';
+import { Effects } from '../game_shared/serialization.js';
 
 export class ServerClient extends SharedClient {
 	public socket?: WebSocket = undefined;

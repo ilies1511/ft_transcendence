@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import type { WebSocket } from '@fastify/websocket' // <-- use 'import type'
-import { findUserWithFriends, setUserLive } from '../../functions/user.ts'
-import { type ExtendedWebSocket } from '../../types/wsTypes.ts'
+import { findUserWithFriends, setUserLive } from '../../functions/user.js'
+import { type ExtendedWebSocket } from '../../types/wsTypes.js'
 
 // interface ExtendedWebSocket extends WebSocket {
 // 	userId?: number

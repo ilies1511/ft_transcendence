@@ -7,13 +7,14 @@ export default defineConfig(({ mode }) => ({
 	resolve: {
 		alias: {
 			'@': path.resolve(__dirname, 'client'), // optional but useful for client code
+			// 'game_shared': path.resolve(__dirname, 'game_shared'),
 		}
 	},
 	build: {
 		target: 'es2022',
 	},
 	esbuild: { // REMOVES CONSOLE, DEBUGGER LOGS FROM PRODUCTION
-		drop: mode === 'production' ? ['console', 'debugger'] : [],
+		// drop: mode === 'production' ? ['console', 'debugger'] : [],
 		// pure: mode === 'production' ? ['console.log'] : [],
 	},
 	server: {
@@ -25,39 +26,37 @@ export default defineConfig(({ mode }) => ({
 		host: true,
 		port: 5173,
 		allowedHosts: ['2-h-5.42heilbronn.de', '2-h-9.42heilbronn.de'],
-		proxy: {
-			'/api': { target: 'http://localhost:3000', changeOrigin: true, secure: false },
+		// proxy: {
+		// 	'/api': { target: 'http://localhost:3000', changeOrigin: true, secure: false },
 
-			'/ws':         { target: 'ws://localhost:3000', ws: true, changeOrigin: true },
-			'/game':       { target: 'ws://localhost:3000', ws: true, changeOrigin: true },
-			'/tournament': { target: 'ws://localhost:3000', ws: true, changeOrigin: true },
+		// 	'/ws':         { target: 'ws://localhost:3000', ws: true, changeOrigin: true },
+		// 	'/game':       { target: 'ws://localhost:3000', ws: true, changeOrigin: true },
+		// 	'/tournament': { target: 'ws://localhost:3000', ws: true, changeOrigin: true },
 
-			'/avatars': 'http://localhost:3000',
-		}
-		//proxy: {
-		//	'/api': {
-		//		target: 'http://localhost:3000',
-		//		changeOrigin: true,
-		//		secure: false
-		//	},
-		//	'/ws': {
-		//		target: 'ws://localhost:3000',
-		//		ws: true
-		//	},
-		//	'/game': {
-		//		target: 'ws://localhost:3000',
-		//		ws: true
-		//	},
-		//	'/tournament': {
-		//		target: 'ws://localhost:3000',
-		//		ws: true
-		//	},
-		//	'/friends': {
-		//		target: 'ws://localhost:3000',
-		//		ws: true
-		//	},
-		//	'/avatars': 'http://localhost:3000',
-		//}
+		// 	'/avatars': 'http://localhost:3000',
+		// },
+				proxy: {
+			'/ws': {
+				target: 'ws://localhost:3000',
+				ws: true,
+				changeOrigin: true,
+				rewriteWsOrigin: true,
+			},
+			'/game': {
+				target: 'ws://localhost:3000',
+				ws: true,
+				changeOrigin: true,
+				rewriteWsOrigin: true,
+			},
+			'/tournament': {
+				target: 'ws://localhost:3000',
+				ws: true,
+				changeOrigin: true,
+				rewriteWsOrigin: true,
+			},
+		},
+
+		
 	}
 }))
 

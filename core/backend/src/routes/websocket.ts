@@ -3,13 +3,13 @@ import { type FastifyInstance } from 'fastify'
 // import websocket from '@fastify/websocket'
 import type { WebSocket } from '@fastify/websocket' // <-- use 'import type'
 import cookie from 'cookie'            // npm install cookie
-import { getUserId, setUserLive } from '../functions/user.ts'
+import { getUserId, setUserLive } from '../functions/user.js'
 import { error } from 'console'
-import { notifyFriendStatus } from '../functions/wsHandler/connectHandler.ts'
-import type { ExtendedWebSocket } from '../types/wsTypes.ts'
-import { handleWsMessage } from '../functions/wsHandler/messageHandler.ts'
-import { handleClose } from '../functions/wsHandler/closeHandler.ts'
-import { userSockets } from '../types/wsTypes.ts'
+import { notifyFriendStatus } from '../functions/wsHandler/connectHandler.js'
+import type { ExtendedWebSocket } from '../types/wsTypes.js'
+import { handleWsMessage } from '../functions/wsHandler/messageHandler.js'
+import { handleClose } from '../functions/wsHandler/closeHandler.js'
+import { userSockets } from '../types/wsTypes.js'
 
 /*
 	FOr Live Chat, where every user can send msgs to other users and not only friends
@@ -18,29 +18,33 @@ import { userSockets } from '../types/wsTypes.ts'
 // const userSockets = new Map<number, Set<ExtendedWebSocket>>()
 
 
-function originGuard(req: any, reply: any, done: any) {
-	const allowed = new Set(
-		[
-			'http://localhost:5173',
-			'http://localhost:3000',
-			'https://localhost:5173',
-			'https://localhost:3000'
-		])
-	const origin = req.headers.origin
-	if (!origin || !allowed.has(origin)) {
-		return reply.code(403).send({ error: 'Forbidden origin' })
-	}
-	done()
-}
+// function originGuard(req: any, reply: any, done: any) {
+// 	const allowed = new Set(
+// 		[
+// 			'http://localhost',
+// 			'https://localhost',
+// 			'http://localhost:5173',
+// 			'http://localhost:3000',
+// 			'https://localhost:5173',
+// 			'https://localhost:3000'
+// 		])
+// 	const origin = req.headers.origin
+// 	if (!origin || !allowed.has(origin)) {
+// 		return reply.code(403).send({ error: 'Forbidden origin' })
+// 	}
+// 	done()
+// }
 
 export const wsRoute = async function (app: FastifyInstance) {
 	app.get('/ws',
 		{
 			websocket: true,
-			preHandler: [app.auth, originGuard]
+			// preHandler: [app.auth, originGuard]
+			preHandler: [app.auth]
 		},
 		async (socket: WebSocket, req) => {
 			const authUserId = await getUserId(req);
+
 			// const raw = req.headers.cookie || ''
 			// const { token } = cookie.parse(raw)
 

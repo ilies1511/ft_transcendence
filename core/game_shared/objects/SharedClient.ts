@@ -1,5 +1,5 @@
-import { SharedVec2 } from './SharedVec2.ts';
-import { SharedWall } from './SharedWall.ts';
+import { SharedVec2 } from './SharedVec2.js';
+import { SharedWall } from './SharedWall.js';
 
 //todo: should include the display name
 export class SharedClient {
@@ -7,7 +7,7 @@ export class SharedClient {
 	public obj_id: number;
 	public paddle: SharedWall;
 	public base: SharedWall;
-	public score: number = 0;//todo: needs to be serialized 
+	public score: number = 0;//todo: needs to be serialized
 	public changed: boolean = true;
 
 	constructor(

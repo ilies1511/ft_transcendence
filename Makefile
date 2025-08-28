@@ -1,16 +1,22 @@
-.DEFAULT_GOAL := shell
+ .DEFAULT_GOAL := init
+# .DEFAULT_GOAL := eval
+# .DEFAULT_GOAL := shell
+
+# BEGIN -- DEV
+
+dev: shell
 
 build:
-	docker compose build app
+	docker compose build app_dev
 
 up: build
-	docker compose up app
+	docker compose up app_dev
 
 up-detach: build
-	docker compose up -d app
+	docker compose up -d app_dev
 
 shell: build
-	docker compose run --rm --service-ports app sh
+	docker compose run --rm --service-ports app_dev sh
 
 clean:
 	docker compose down --rmi all --volumes --remove-orphans
@@ -63,12 +69,41 @@ game_shared:
 	rm -rf client/game/shared_game
 	cp -r game_shared client/game
 
+
 #dev_fabi:
 #	docker compose build --build-arg UID=$(id -u) --build-arg GID=$(id -g) \
 #		&& docker compose up dev_fabi -d \
 #		&& docker exec -it dev_fabi bas
 #
 #
+
+# END -- DEV
+
+
+# BEGIN -- PROD
+init:
+	cd core && make && \
+	docker compose build app edge && \
+	docker compose up -d app edge && \
+	docker compose logs -f edge app
+
+eval: prod-build prod-up prod-logs
+# eval: prod-build prod-up
+
+prod-re: prod-down eval
+
+prod-build:
+	docker compose build app edge
+
+prod-up: prod-build
+	docker compose up -d app edge
+
+prod-down:
+	docker compose down
+
+prod-logs:
+	docker compose logs -f edge app
+# END -- PROD
 
 .PHONY: all \
 	build \
@@ -88,10 +123,10 @@ game_shared:
 	dev_fabi \
 	game_shared \
 	i \
+	prod-build \
+	prod-up \
+	prod-down \
+	prod-logs \
+	eval \
+	init \
 	run
-
-
-
-
-
-

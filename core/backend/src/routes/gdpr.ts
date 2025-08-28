@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { type UpdateProfile, anonymizeUser, deleteUserAndData, getUserData, jsonGZHandler, jsonHandler, zipHandler, updateMyProfile, anonymizeAndSetPassword, issueFreshAuthCookie } from '../functions/gdpr.ts';
-import { collectUserExport } from '../functions/gdpr.ts';
+import { type UpdateProfile, anonymizeUser, deleteUserAndData, getUserData, jsonGZHandler, jsonHandler, zipHandler, updateMyProfile, anonymizeAndSetPassword, issueFreshAuthCookie } from '../functions/gdpr.js';
+import { collectUserExport } from '../functions/gdpr.js';
 import { Readable } from 'node:stream';
 import { createGzip } from 'node:zlib';
 import archiver from 'archiver'
@@ -8,12 +8,13 @@ import path from 'node:path'
 import { mkdir, unlink } from 'node:fs/promises';
 import fs from "fs";
 import { fileURLToPath } from 'node:url'
-import { extractFilename, resolveAvatarFsPath, resolvePublicPath } from '../functions/gdpr.ts';
-import { getUserId } from '../functions/user.ts';
-import { anonymizeAndSetPwSchema, anonymizeMeSchema, meDataSchema, meDeleteSchema, meExportSchema, mePatchSchema, ogExportSchema } from '../schemas/gdpr.ts';
-import { notifyFriendStatus } from '../functions/wsHandler/connectHandler.ts';
-import { userSockets } from '../types/wsTypes.ts';
-import { setUserLive } from '../functions/user.ts';
+import { extractFilename, resolveAvatarFsPath, resolvePublicPath } from '../functions/gdpr.js';
+import { getUserId } from '../functions/user.js';
+import { anonymizeAndSetPwSchema, anonymizeMeSchema, meDataSchema, meDeleteSchema, meExportSchema, mePatchSchema, ogExportSchema } from '../schemas/gdpr.js';
+import { notifyFriendStatus } from '../functions/wsHandler/connectHandler.js';
+import { userSockets } from '../types/wsTypes.js';
+import { setUserLive } from '../functions/user.js';
+import { sessionCookieOpts } from '../index.js';
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -157,12 +158,15 @@ export const gdprRoutes: FastifyPluginAsync = async fastify => {
 
 
 
-				reply.clearCookie('token', {
-					path: '/',
-					httpOnly: true,
-					sameSite: 'lax',
-					secure: false
-				})
+				reply.clearCookie('token', sessionCookieOpts)
+				// reply.clearCookie('token', {
+				// 	path: '/',
+				// 	httpOnly: true,
+				// 	sameSite: 'lax',
+				// 	// secure: false
+				// 	secure: process.env.NODE_ENV === 'production',
+
+				// })
 				return reply.send({ message: 'Your account and all associated data have been permanently deleted.' })
 			} catch (error: any) {
 				if (error?.statusCode) {

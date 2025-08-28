@@ -1,9 +1,9 @@
 import type { FastifyPluginAsync } from "fastify";
-import { blockUser, unblockUser, getBlockedUsersList } from "../functions/block.ts";
-import { areFriends, removeFriend } from "../functions/friends.ts";
-import { blockListSchema, blockUserSchema, unblockUserSchema } from "../schemas/block.ts";
-import { getUserId } from "../functions/user.ts";
-import { userSockets } from '../types/wsTypes.ts';
+import { blockUser, unblockUser, getBlockedUsersList } from "../functions/block.js";
+import { areFriends, removeFriend } from "../functions/friends.js";
+import { blockListSchema, blockUserSchema, unblockUserSchema } from "../schemas/block.js";
+import { getUserId } from "../functions/user.js";
+import { userSockets } from '../types/wsTypes.js';
 import WebSocket from 'ws';
 
 export const blockRoutes: FastifyPluginAsync = async (fastify) => {

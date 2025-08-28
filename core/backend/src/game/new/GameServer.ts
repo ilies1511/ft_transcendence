@@ -3,13 +3,13 @@ import type { fastifyWebsocket } from '@fastify/websocket';
 import websocketPlugin from '@fastify/websocket';
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import type { WebSocket } from '@fastify/websocket';
-import { GameLobby } from './lobby/GameLobby.ts';
-import { Tournament } from './Tournament.ts';
-import { WebsocketConnection } from './WebsocketConnection.ts';
+import { GameLobby } from './lobby/GameLobby.js';
+import { Tournament } from './Tournament.js';
+import { WebsocketConnection } from './WebsocketConnection.js';
 
-import { createMatchMeta, completeMatch, } from '../../functions/match.ts';
-import type { NewMatch } from '../../functions/match.ts';
-import { TournamentApi } from './TournamentApi.ts';
+import { createMatchMeta, completeMatch, } from '../../functions/match.js';
+import type { NewMatch } from '../../functions/match.js';
+import { TournamentApi } from './TournamentApi.js';
 
 
 import type {
@@ -29,10 +29,10 @@ import type {
 	LobbyDisplaynameResp,
 	GameToClientFinish,
 	ClientToTournament,
-} from '../game_shared/message_types.ts';
+} from '../game_shared/message_types.js';
 
-import { LobbyType } from '../game_shared/message_types.ts';
-import { is_ServerError } from '../game_shared/message_types.ts';
+import { LobbyType } from '../game_shared/message_types.js';
+import { is_ServerError } from '../game_shared/message_types.js';
 
 import { randomBytes } from "crypto";
 
@@ -44,7 +44,7 @@ export function generate_password(length: number = 16): string {
 	for (let i = 0; i < length; i++) {
 		password += chars[bytes[i] % chars.length];
 	}
-	
+
 	return (password);
 }
 
@@ -193,7 +193,7 @@ export class GameServer {
 
 		GameServer._rcv_game_msg = GameServer._rcv_game_msg.bind(GameServer);
 		GameServer._close_socket_lobby_handler = GameServer._close_socket_lobby_handler.bind(GameServer);
-		GameServer._fastify.get('/game/:game_id', { websocket: true }, (socket: WebSocket, req: FastifyRequest) => {
+		GameServer._fastify.get('/game/:game_id', { websocket: true, preHandler: [GameServer._fastify.auth] }, (socket: WebSocket, req: FastifyRequest) => {
 			const { game_id } = req.params as { game_id: string };
 			socket.on('message', (raw) => {
 				GameServer._rcv_game_msg(game_id, raw.toString(), socket);
@@ -203,7 +203,7 @@ export class GameServer {
 			});
 		});
 
-		GameServer._fastify.get('/tournament/:tournament_id_str', { websocket: true }, (socket: WebSocket, req: FastifyRequest) => {
+		GameServer._fastify.get('/tournament/:tournament_id_str', { websocket: true, preHandler: [GameServer._fastify.auth] }, (socket: WebSocket, req: FastifyRequest) => {
 			const { tournament_id_str } = req.params as { tournament_id_str: string };
 			socket.on('message', (raw) => {
 				try {
@@ -356,7 +356,7 @@ export class GameServer {
 				return (response);
 			}
 		}
-	
+
 		try {
 			const lobby_id: number = await GameServer.create_lobby(LobbyType.MATCHMAKING,
 				map_name, ai_count)
@@ -492,7 +492,7 @@ export class GameServer {
 				return ({error: 'Not Found', data: []});
 			}
 			return (lobby.get_lobby_displaynames());
-			
+
 		} catch (e) {
 			console.log("game: lobby key invalid: ", game_id_str, "; _display_names_api");
 			return ({error: 'Not Found', data: []});

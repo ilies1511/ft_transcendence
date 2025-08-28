@@ -1,0 +1,21 @@
+:80 {
+  encode zstd gzip
+  # Redirect to the externally-published HTTPS port
+  redir https://10.13.6.4:1443{uri}
+}
+
+https://localhost, https://3-F-4.42heilbronn.de {
+  tls internal
+  encode zstd gzip
+
+  @api path /api* /ws* /game* /tournament* /avatars*
+  handle @api {
+    reverse_proxy app:3000
+  }
+
+  handle {
+    root * /srv/public
+    try_files {path} /index.html
+    file_server
+  }
+}

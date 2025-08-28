@@ -1,11 +1,11 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { getMatchHistory, getUserStats, createMatchMeta, completeMatch,
-	getParticipantsForMatch } from '../../functions/match.ts'
-import { type UserStats } from '../../types/userTypes.ts'
+	getParticipantsForMatch } from '../../functions/match.js'
+import { type UserStats } from '../../types/userTypes.js'
 
 // BEGIN -- TESTING
-import { type NewMatch } from '../../functions/match.ts'
-import { createMatch } from '../../functions/match.ts'
+import { type NewMatch } from '../../functions/match.js'
+import { createMatch } from '../../functions/match.js'
 // END -- TESTING
 
 export const matchRoutes: FastifyPluginAsync = async fastify => {

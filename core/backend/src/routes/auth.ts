@@ -1,14 +1,15 @@
-// backend/src/auth.ts
+// backend/src/auth.js
 import bcrypt from 'bcrypt';
 // import { fastify, type FastifyInstance } from 'fastify'
 import { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify';
-import { DEFAULT_AVATARS } from '../constants/avatars.ts';
-// backend/src/auth.ts
+import { DEFAULT_AVATARS } from '../constants/avatars.js';
+// backend/src/auth.js
 import { error } from 'console';
-import { validateCredentials, verify2FaToken } from '../functions/2fa.ts';
-import { setUserLive } from '../functions/user.ts';
-import { login2FASchema, loginSchema, logoutSchema, RegisterBodySchema } from '../schemas/auth.ts';
-import { userSockets } from '../types/wsTypes.ts';
+import { validateCredentials, verify2FaToken } from '../functions/2fa.js';
+import { setUserLive } from '../functions/user.js';
+import { login2FASchema, loginSchema, logoutSchema, RegisterBodySchema } from '../schemas/auth.js';
+import { userSockets } from '../types/wsTypes.js';
+import { sessionCookieOpts } from '../index.js';
 
 const COST = 12  // bcrypt cost factor (2^12 ≈ 400 ms on laptop)
 
@@ -65,12 +66,14 @@ export default async function authRoutes(app: FastifyInstance) {
 
 			// Auto-login after registration
 			const token = await reply.jwtSign({ id: lastID, name: username })
-			reply.setCookie('token', token, {
-				path: '/',
-				httpOnly: true,
-				sameSite: 'lax',
-				secure: false // in prod auf true setzen, wenn HTTPS aktiv
-			})
+			reply.setCookie('token', token, sessionCookieOpts)
+			// reply.setCookie('token', token, {
+			// 	path: '/',
+			// 	httpOnly: true,
+			// 	sameSite: 'lax',
+			// 	secure: process.env.NODE_ENV === 'production',
+			// 	// secure: false // in prod auf true setzen, wenn HTTPS aktiv
+			// })
 			await setUserLive(app, lastID, true);
 			return reply.code(201).send({ ok: true, userId: lastID })
 
@@ -131,7 +134,14 @@ export default async function authRoutes(app: FastifyInstance) {
 			// 		}
 			// 	}
 			// }
-			schema: loginSchema
+			schema: loginSchema,
+			config: {
+				rateLimit: {
+					timeWindow: '1 minute',
+					max: 10,
+					keyGenerator: (req) => `ip:${req.ip}`,
+				}
+			}
 		},
 		async (req, reply) => {
 			const { email, password } = req.body
@@ -172,12 +182,14 @@ export default async function authRoutes(app: FastifyInstance) {
 
 			const token = await reply.jwtSign({ id: user.id, name: user.username })
 
-			reply.setCookie('token', token, {
-				path: '/',
-				httpOnly: true,
-				sameSite: 'lax',
-				secure: false // in prod auf true setzen, wenn HTTPS aktiv
-			})
+			reply.setCookie('token', token, sessionCookieOpts)
+			// reply.setCookie('token', token, {
+			// 	path: '/',
+			// 	httpOnly: true,
+			// 	sameSite: 'lax',
+			// 	secure: process.env.NODE_ENV === 'production',
+			// 	// secure: false // in prod auf true setzen, wenn HTTPS aktiv
+			// })
 			setUserLive(app, user.id, true);
 			return reply.send({ ok: true })
 		}
@@ -225,12 +237,14 @@ export default async function authRoutes(app: FastifyInstance) {
 			}
 		}
 		// reply.clearCookie('token', { path: '/' }); // Needs to be replaced -> see below
-		reply.clearCookie('token', {
-			path: '/',
-			httpOnly: true,
-			sameSite: 'lax',
-			secure: false
-		})
+		reply.clearCookie('token', sessionCookieOpts)
+		// reply.clearCookie('token', {
+		// 	path: '/',
+		// 	httpOnly: true,
+		// 	sameSite: 'lax',
+		// 	secure: process.env.NODE_ENV === 'production'
+		// 	// secure: false
+		// })
 		return reply.code(200).send({ ok: true });
 	});
 	// Soft session probe (never 401): returns user if logged-in, else 204
@@ -304,12 +318,14 @@ export default async function authRoutes(app: FastifyInstance) {
 				return reply.code(500).send({ error: 'Internal Server Error' })
 			}
 			const jwt = await reply.jwtSign({ id: user.id, name: user.username })
-			reply.setCookie('token', jwt, {
-				path: '/',
-				httpOnly: true,
-				sameSite: 'lax',
-				secure: false // in prod auf true setzen, wenn HTTPS aktiv
-			})
+			reply.setCookie('token', jwt, sessionCookieOpts)
+			// reply.setCookie('token', jwt, {
+			// 	path: '/',
+			// 	httpOnly: true,
+			// 	sameSite: 'lax',
+			// 	secure: process.env.NODE_ENV === 'production'
+			// 	// secure: false // in prod auf true setzen, wenn HTTPS aktiv
+			// })
 			setUserLive(app, user.id, true);
 			return reply.send({ ok: true });
 	// 		const jwt = await reply.jwtSign({ id: user.id, name: user.username })

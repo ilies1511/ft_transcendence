@@ -1,4 +1,4 @@
-import {EPSILON} from '../math.ts';
+import {EPSILON} from '../math.js';
 
 export class SharedVec2 {
 	public x: number;

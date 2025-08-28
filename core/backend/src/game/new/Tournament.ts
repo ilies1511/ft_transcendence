@@ -1,7 +1,7 @@
 import type { WebSocket } from '@fastify/websocket';
-import { GameLobby } from './lobby/GameLobby.ts';
-import { GameServer } from './GameServer.ts';
-import type { ClientParticipation } from './GameServer.ts';
+import { GameLobby } from './lobby/GameLobby.js';
+import { GameServer } from './GameServer.js';
+import type { ClientParticipation } from './GameServer.js';
 
 import type {
 	ClientToTournament,
@@ -14,7 +14,7 @@ import type {
 	BracketPlayer,
 	TournamentState,
 	TournamentPlayerList,
-} from '../game_shared/TournamentMsg.ts';
+} from '../game_shared/TournamentMsg.js';
 
 import type {
 	ServerToClientError,
@@ -22,9 +22,9 @@ import type {
 	ServerError,
 	GameToClientFinish,
 	LobbyInvite,
-} from '../game_shared/message_types.ts';
+} from '../game_shared/message_types.js';
 
-import { LobbyType } from '../game_shared/message_types.ts';
+import { LobbyType } from '../game_shared/message_types.js';
 
 type TournamentPlayer = {
 	client_id: number;
@@ -303,7 +303,7 @@ export class Tournament {
 			//	//round.players[player_idx + 1].placement = this._next_placement--;
 			//	//this._advance_player_to_round(round.players[player_idx], this._round_idx + 1);
 			//} else {
-			
+
 				// creates game lobby even if player left but makes the player leave that
 				game_lobby.join(round.players[player_idx].client_id, round.players[player_idx].display_name, this.password);
 				game_lobby.join(round.players[player_idx + 1].client_id, round.players[player_idx + 1].display_name, this.password);
@@ -485,7 +485,7 @@ export class Tournament {
 				//console.log("sending ", player_list);
 			} else if (player.ws) {
 				console.log("tried to send ", player_list, ", but ws was not open");
-			} else { 
+			} else {
 				console.log("tried to send ", player_list, ", but there was no ws");
 			}
 		}
