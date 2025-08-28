@@ -71,7 +71,6 @@ services:
       - "1443:443"
     volumes:
       - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./core/frontend/dist:/srv/public:ro
     depends_on:
       - app
     environment:
