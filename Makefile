@@ -74,7 +74,7 @@ game_shared:
 
 
 # BEGIN -- PROD
-init:
+init: update-env
 	cd core && make && \
 	docker compose build app edge && \
 	docker compose up -d app edge && \
