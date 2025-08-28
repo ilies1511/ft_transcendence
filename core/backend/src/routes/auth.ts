@@ -134,7 +134,14 @@ export default async function authRoutes(app: FastifyInstance) {
 			// 		}
 			// 	}
 			// }
-			schema: loginSchema
+			schema: loginSchema,
+			config: {
+				rateLimit: {
+					timeWindow: '1 minute',
+					max: 10,
+					keyGenerator: (req) => `ip:${req.ip}`,
+				}
+			}
 		},
 		async (req, reply) => {
 			const { email, password } = req.body
