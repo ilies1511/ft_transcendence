@@ -13,6 +13,7 @@ const __dirname = path.dirname(__filename)
 const BACKEND_ROOT = path.resolve(__dirname, '../..')
 export const PUBLIC_DIR = process.env.PUBLIC_DIR ?? path.resolve(BACKEND_ROOT, '../frontend/public')
 export const AVATAR_SUBDIR = process.env.AVATAR_SUBDIR ?? 'avatars'
+const DEFAULTS_DIR = path.resolve(BACKEND_ROOT, 'public') // copied in Dockerfile
 
 export async function getUserData(fastify: FastifyInstance, userId: number) {
 	const row = await fastify.db.get(
@@ -34,7 +35,7 @@ export async function anonymizeAndSetPassword(
 	newPassword: string,
 ): Promise<{ pseudoUsername: string; pseudoEmail: string }> {
 	const { username, email } = generatePseudo(userId);
-	const avatar = 'deleted_avatar.png';
+	const avatar = '/deleted_avatar.png';
 	const hash = await bcrypt.hash(newPassword, 12);
 
 	await app.db.run(
@@ -455,7 +456,7 @@ export function resolveAvatarFsPath(filename?: string | null): string | null {
 	console.log('In resolveAvatarFsPath:\n')
 	console.log('base: ' + base)
 
-	// 1) Try PUBLIC_DIR root (where uploads are currently stored)
+	// 1) Try PUBLIC_DIR root (uploads)
 	const publicRoot = path.resolve(PUBLIC_DIR) + path.sep
 	const direct = path.resolve(PUBLIC_DIR, base)
 	console.log('publicRoot: ' + publicRoot)
@@ -469,7 +470,7 @@ export function resolveAvatarFsPath(filename?: string | null): string | null {
 		return direct
 	}
 
-	// 2) Try PUBLIC_DIR/AVATAR_SUBDIR (legacy/default location)
+	// 2) Try PUBLIC_DIR/AVATAR_SUBDIR (legacy)
 	const subRoot = path.resolve(PUBLIC_DIR, AVATAR_SUBDIR) + path.sep
 	const inSubdir = path.resolve(PUBLIC_DIR, AVATAR_SUBDIR, base)
 	console.log('subRoot: ' + subRoot)
@@ -481,6 +482,13 @@ export function resolveAvatarFsPath(filename?: string | null): string | null {
 	console.log({ inSubdir, exists: existsInSubdir }, 'avatar path (subdir)')
 	if (existsInSubdir) {
 		return inSubdir
+
+	// 3) Try backend defaults (default_*.png, deleted_avatar.png)
+	if (/^(default_\d+\.png|deleted_avatar\.png)$/i.test(base)) {
+		const defaultsRoot = path.resolve(DEFAULTS_DIR) + path.sep
+		const inDefaults = path.resolve(DEFAULTS_DIR, base)
+		if (!inDefaults.startsWith(defaultsRoot)) throw new Error('Invalid avatar path')
+		if (fs.existsSync(inDefaults)) return inDefaults
 	}
 
 	// Fallback: return subdir path for clearer diagnostics
