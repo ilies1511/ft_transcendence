@@ -362,6 +362,9 @@ export class Tournament {
 
 
 	public render_tournament_state() {
+		if (globalThis.game) {
+			return ;
+		}
 		if (!this.latest_tournament_state) {
 			console.log("Warning: No latest_tournament_state when tring to render it, either only 1 player tournament or bug");
 			return ;
@@ -447,6 +450,9 @@ export class Tournament {
 	private _render_player_list() {
 		const container = this._get_container();
 		if (!container) {
+			return ;
+		}
+		if (globalThis.game) {
 			return ;
 		}
 		const esc = (s?: string): string => {

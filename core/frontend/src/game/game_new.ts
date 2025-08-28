@@ -109,6 +109,7 @@ export class Game {
 		password: string,
 		lobby_type: LobbyType,
 	) {
+		container = this._get_container();
 		if (globalThis.game !== undefined) {
 			console.log("WARNING: Game constructor called while globalThis.game !== undefined");
 			// If this is the same lobby, don't send a 'leave' to the server.
