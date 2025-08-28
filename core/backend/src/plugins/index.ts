@@ -7,10 +7,12 @@ import swaggerPlugin from './swagger.js'
 import type { FastifyInstance } from 'fastify'
 import googleOauth from './google-oauth.js'
 import security from './security.js'
+import rateLimit from './rate_limit.js'
 
 export default fp(async (fastify: FastifyInstance) => {
 	await fastify.register(security);
 	await fastify.register(authPlugin);
+	await fastify.register(rateLimit);
 	await fastify.register(googleOauth);
 	await fastify.register(multipartPlugin);
 	await fastify.register(websocketPlugin);

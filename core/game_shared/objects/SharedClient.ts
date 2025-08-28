@@ -7,7 +7,7 @@ export class SharedClient {
 	public obj_id: number;
 	public paddle: SharedWall;
 	public base: SharedWall;
-	public score: number = 0;//todo: needs to be serialized 
+	public score: number = 0;//todo: needs to be serialized
 	public changed: boolean = true;
 
 	constructor(

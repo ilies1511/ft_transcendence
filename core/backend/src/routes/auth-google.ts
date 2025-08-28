@@ -3,10 +3,11 @@ import { type FastifyPluginAsync } from 'fastify';
 import { v4 as uuidv4 } from 'uuid';
 import { DEFAULT_AVATARS } from '../constants/avatars.js';
 import { setUserLive } from '../functions/user.js';
+import { sessionCookieOpts } from '../index.js';
 // import { createUser, /* Vielleicht updateUser */ } from '../functions/user.js'
 
 export const googleAuthRoutes: FastifyPluginAsync = async fastify => {
-	// 1 /api/auth/google -> automatic redirect to GOogle (Plugin)
+	const originPath = process.env.PUBLIC_ORIGIN
 
 	// 2, Callback after Google Login --> see callbackUri in google-oauth.js
 	fastify.get('/api/auth/google/callback', async (request, reply) => {
@@ -71,7 +72,8 @@ export const googleAuthRoutes: FastifyPluginAsync = async fastify => {
 		if (user.twofa_enabled) {
 			const email = encodeURIComponent(user.email);
 			// Redirect to login page to complete 2FA
-			return reply.redirect(`http://localhost:5173/login?2fa_required=true&email=${email}`);
+			// return reply.redirect(`http://localhost:5173/login?2fa_required=true&email=${email}`);
+			return reply.redirect(`${originPath}/login?2fa_required=true&email=${email}`);
 		}
 
 		const idToken = tokenSet.token.id_token! // TODO: JWT from Google --> later
@@ -79,19 +81,19 @@ export const googleAuthRoutes: FastifyPluginAsync = async fastify => {
 		setUserLive(fastify, user.id, true);
 		//TODO: 14.08 2FA for google Users --> add if condtions to check if 2Fa is om
 
-		const redirectPath = process.env.PUBLIC_ORIGIN
 		return reply
-			.setCookie('token', token, {
-				path: '/',
-				httpOnly: true,
-				sameSite: 'lax',
-				// secure: false // TODO: in prod auf true setzen, wenn HTTPS aktiv
-				secure: process.env.NODE_ENV === 'production',
-			})
+			// .setCookie('token', token, {
+			// 	path: '/',
+			// 	httpOnly: true,
+			// 	sameSite: 'lax',
+			// 	// secure: false // TODO: in prod auf true setzen, wenn HTTPS aktiv
+			// 	secure: process.env.NODE_ENV === 'production',
+			// })
+			.setCookie('token', token, sessionCookieOpts)
 			// .redirect('/') // TODO: to be decided with Maksim
 			// .redirect(`http://localhost:5173/profile/${user.id}`) // TODO: to be decided with Maksim
 			// .redirect(`https://localhost/profile/${user.id}`) // TODO: to be decided with Maksim
-			.redirect(`${redirectPath}/profile/${user.id}`) // TODO: to be decided with Maksim
+			.redirect(`${originPath}/profile/${user.id}`) // TODO: to be decided with Maksim
 			// .send({ ok: true })
 	})
 }

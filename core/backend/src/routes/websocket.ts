@@ -39,11 +39,12 @@ export const wsRoute = async function (app: FastifyInstance) {
 	app.get('/ws',
 		{
 			websocket: true,
+			// preHandler: [app.auth, originGuard]
 			preHandler: [app.auth]
 		},
 		async (socket: WebSocket, req) => {
 			const authUserId = await getUserId(req);
-			
+
 			// const raw = req.headers.cookie || ''
 			// const { token } = cookie.parse(raw)
 

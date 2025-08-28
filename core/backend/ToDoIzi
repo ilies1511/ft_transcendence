@@ -65,7 +65,7 @@ order to not looses his account
 	- [x] '/api/users/:id/block', --> '/api/me/block/:targetId',
 - [x] Any password stored in your database, if applicable, must be hashed.
 - [] Your website must be protected against SQL injections/XSS attacks.
-- [] If you have a backend or any other features, it is mandatory to enable an HTTPS
+- [x] If you have a backend or any other features, it is mandatory to enable an HTTPS
 connection for all aspects (use wss instead of ws for example).
 - [x] You must implement validation mechanisms for forms and any user input, either on
 the base page if no backend is used, or on the server side if a backend is employed.
@@ -145,3 +145,11 @@ statistics in a clear and visually appealing manner.
 - [x] Allow users to access and explore their own gaming history and performance
 metrics conveniently. --> dilin (filter by mode)
 - [x] Feel free to add any metrics you deem useful.
+
+
+## FINAL
+- [] Check Reject {"message":"Route GET:/api/me/requests/12/reject not found","error":"Not Found","statusCode":404}
+- [] {"message":"Route GET:/api/me/requests/3/accept not found","error":"Not Found","statusCode":plugin 404}
+- [] Add rate Limit per User and not per IP --> register plugin after JWT
+- [] GDPR Export with media does not include the media
+

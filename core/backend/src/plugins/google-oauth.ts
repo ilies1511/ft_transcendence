@@ -36,7 +36,8 @@ const GOOGLE_OAUTH2_CONFIG = {
 }
 
 export default fp(async (fastify: FastifyInstance) => {
-	fastify.register(oauthPlugin, {
+	fastify.register(oauthPlugin,
+		{
 		name: 'googleOAuth2',
 		// scope: ['openid', 'profile', 'email'],
 		scope: ['openid', 'profile', 'email'],
@@ -45,18 +46,6 @@ export default fp(async (fastify: FastifyInstance) => {
 				id: process.env.GOOGLE_CLIENT_ID!,
 				secret: process.env.GOOGLE_CLIENT_SECRET!
 			},
-			// auth: {
-			// 	authorizeHost: 'https://accounts.google.com',
-			// 	authorizePath: '/o/oauth2/v2/auth',
-			// 	tokenHost: 'https://oauth2.googleapis.com',
-			// 	tokenPath: '/token'
-			// }
-			/*
-				siehe Unten
-			 */
-
-			// // auth: oauthPlugin.GOOGLE_CONFIGURATION
-			// auth: GOOGLE_OAUTH2_CONFIG
 		},
 		// BEGIN -- OLD
 		/* startRedirectPath: '/api/auth/google', // entry for user
@@ -72,13 +61,19 @@ export default fp(async (fastify: FastifyInstance) => {
 		startRedirectPath: '/api/auth/google',
 		callbackUri: CALLBACK_URI,
 		discovery: { issuer: 'https://accounts.google.com' },
-		pkce: 'S256',                // aktiviert PKCE mit S256
-		cookie: {
-			secure: true,
-			httpOnly: true,
-			sameSite: 'lax',
-			path: '/',
-		},
+
+		// TODO: BEGIN 27.08 post down --> caused {"statusCode":500,"error":"Internal Server Error","message":"Invalid state"}
+		// pkce: 'S256',
+		// cookie: {
+		// 	// secure: process.env.NODE_ENV === 'production',
+		// 	secure: false,
+		// 	// httpOnly: true,
+		// 	// sameSite: 'lax',
+		// 	sameSite: 'none',
+		// 	path: '/',
+		// },
+		// TODO: BEGIN 27.08 post down
+
 		// BEGIN -- NEW
 		// generateStateFunction: (request: FastifyRequest, reply: FastifyReply) => {
 		// 	// @ts-ignore
