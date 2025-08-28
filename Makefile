@@ -97,41 +97,41 @@ prod-down:
 prod-logs:
 	docker compose logs -f edge app
 
+.PHONY: update-env
+
+OS := $(shell uname)
+
+ifeq ($(OS),Darwin)
+	PORT1 ?= 123
+	PORT2 ?= 321
+	HOSTNAME ?= $$(hostname)
+	LOCAL_IP ?= $$(route -n get 1.1.1.1 2>/dev/null | awk '/ifaddr:/{print $$2; exit}')
+else
+	PORT1 ?= 8080
+	PORT2 ?= 1443
+	HOSTNAME ?= $$(hostname)
+	LOCAL_IP ?= $$(ip route get 1.1.1.1 2>/dev/null | awk '/src/{for(i=1;i<=NF;i++) if ($$i=="src") {print $$(i+1); exit}}')
+endif
+
+define SED_INPLACE
+if sed --version >/dev/null 2>&1; then sed -i "$1" "$2"; else sed -i '' "$1" "$2"; fi
+endef
+
+define UPDATE_KV
+tmp=$$(mktemp); \
+awk -v k="$(1)" -v v="$(2)" 'BEGIN{set=0} \
+	$$0 ~ "^"k"=" {print k"="v; set=1; next} \
+	{print} \
+END{if(!set) print k"="v}' .env > $$tmp && mv $$tmp .env
+endef
+
 update-env:
-	@HOSTNAME=$$(hostname) ; \
-	LOCAL_IP=$$(ip route get 1.1.1.1 | grep -oP 'src \K[0-9.]+' ) ; \
-	echo $$HOSTNAME; \
-	echo $$LOCAL_IP; \
-	if grep -q '^HOSTNAME=' .env; then \
-		sed -i "s/^HOSTNAME=.*/HOSTNAME=$$HOSTNAME/" .env; \
-	else \
-		echo "HOSTNAME=$$HOSTNAME" >> .env; \
-	fi; \
-	if grep -q '^LOCAL_IP=' .env; then \
-		sed -i "s/^LOCAL_IP=.*/LOCAL_IP=$$LOCAL_IP/" .env; \
-	else \
-		echo "LOCAL_IP=$$LOCAL_IP" >> .env; \
-	fi; \
-	echo "Updated .env with HOSTNAME=$$HOSTNAME and LOCAL_IP=$$LOCAL_IP"
-
-
-update-env:
-	@HOSTNAME=$$(hostname) ; \
-	LOCAL_IP=$$(ip route get 1.1.1.1 | grep -oP 'src \K[0-9.]+' ) ; \
-	echo $$HOSTNAME; \
-	echo $$LOCAL_IP; \
-	if grep -q '^HOSTNAME=' .env; then \
-		sed -i "s/^HOSTNAME=.*/HOSTNAME=$$HOSTNAME/" .env; \
-	else \
-		echo "HOSTNAME=$$HOSTNAME" >> .env; \
-	fi; \
-	if grep -q '^LOCAL_IP=' .env; then \
-		sed -i "s/^LOCAL_IP=.*/LOCAL_IP=$$LOCAL_IP/" .env; \
-	else \
-		echo "LOCAL_IP=$$LOCAL_IP" >> .env; \
-	fi; \
-	echo "Updated .env with HOSTNAME=$$HOSTNAME and LOCAL_IP=$$LOCAL_IP"
-
+	@touch .env
+	@$(call UPDATE_KV,HOSTNAME,$(HOSTNAME))
+	@$(call UPDATE_KV,LOCAL_IP,$(LOCAL_IP))
+	@$(call UPDATE_KV,PORT1,$(PORT1))
+	@$(call UPDATE_KV,PORT2,$(PORT2))
+	@echo "Updated .env with HOSTNAME=$(HOSTNAME), LOCAL_IP=$(LOCAL_IP), PORT1=$(PORT1), PORT2=$(PORT2)"
 
 .PHONY: all \
 	build \
