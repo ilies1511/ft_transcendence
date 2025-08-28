@@ -386,7 +386,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 
 		const PUBLIC_DIR = process.env.PUBLIC_DIR!;
 		const avatarDir = PUBLIC_DIR;
-		// await mkdir(avatarDir, { recursive: true });
+		await mkdir(avatarDir, { recursive: true });
 
 		// write new file
 		const ts = Date.now();

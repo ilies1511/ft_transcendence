@@ -451,17 +451,40 @@ export function resolveAvatarFsPath(filename?: string | null): string | null {
 		return null
 	}
 	const base = path.basename(filename)
-	console.log('In resolveAvatarFsPath: \n');
-	console.log('base: ' + base);
-	const target = path.resolve(PUBLIC_DIR, AVATAR_SUBDIR, base)
-	console.log('target: ' + target);
 
-	const root = path.resolve(PUBLIC_DIR, AVATAR_SUBDIR) + path.sep
-	console.log('root: ' + root);
-	if (!target.startsWith(root)) {
+	console.log('In resolveAvatarFsPath:\n')
+	console.log('base: ' + base)
+
+	// 1) Try PUBLIC_DIR root (where uploads are currently stored)
+	const publicRoot = path.resolve(PUBLIC_DIR) + path.sep
+	const direct = path.resolve(PUBLIC_DIR, base)
+	console.log('publicRoot: ' + publicRoot)
+	console.log('direct: ' + direct)
+	if (!direct.startsWith(publicRoot)) {
 		throw new Error('Invalid avatar path')
 	}
-	return target
+	const existsDirect = fs.existsSync(direct)
+	console.log({ direct, exists: existsDirect }, 'avatar path (root)')
+	if (existsDirect) {
+		return direct
+	}
+
+	// 2) Try PUBLIC_DIR/AVATAR_SUBDIR (legacy/default location)
+	const subRoot = path.resolve(PUBLIC_DIR, AVATAR_SUBDIR) + path.sep
+	const inSubdir = path.resolve(PUBLIC_DIR, AVATAR_SUBDIR, base)
+	console.log('subRoot: ' + subRoot)
+	console.log('inSubdir: ' + inSubdir)
+	if (!inSubdir.startsWith(subRoot)) {
+		throw new Error('Invalid avatar path')
+	}
+	const existsInSubdir = fs.existsSync(inSubdir)
+	console.log({ inSubdir, exists: existsInSubdir }, 'avatar path (subdir)')
+	if (existsInSubdir) {
+		return inSubdir
+	}
+
+	// Fallback: return subdir path for clearer diagnostics
+	return inSubdir
 }
 
 export function extractFilename(input?: string | null): string | null {
