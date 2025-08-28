@@ -8,7 +8,7 @@ https://localhost, https://{$HOSTNAME} {
   tls internal
   encode zstd gzip
 
-  @api path /api* /ws* /game* /tournament* /avatars*
+  @api path /api* /ws* /game* /tournament*
   handle @api {
     reverse_proxy app:3000
   }
