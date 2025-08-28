@@ -59,6 +59,7 @@ services:
       - "3000"
     volumes:
       - sqlite_data:/app/core/backend/data
+      - ./core/frontend/public:/app/core/frontend/public:ro
     restart: unless-stopped
 
   edge:
