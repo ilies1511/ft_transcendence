@@ -16,6 +16,11 @@ import {
 import { type UserRow } from "../types/userTypes.js";
 import { uploadAvatarSchema } from "../schemas/users.js";
 import { userSockets } from '../types/wsTypes.js';
+import {
+	getMatchHistory, getUserStats, createMatchMeta, completeMatch,
+	getParticipantsForMatch
+} from '../functions/match.js'
+import type { UserStats } from '../types/userTypes.js';
 
 
 
@@ -327,7 +332,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 	// 		const avatarDir = PUBLIC_DIR;
 	// 		console.log(avatarDir)
 	// 		await mkdir(avatarDir, { recursive: true })
-			
+
 
 
 	// 		const tsNumber = Date.now(); 
@@ -349,7 +354,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 	// 			[request.params.id]
 	// 		)
 	// 		if (updated) {
-	
+
 	// 			userSockets.forEach((sockets, uid) => {
 	// 				sockets.forEach((ws) => {
 	// 					ws.send(JSON.stringify({
@@ -368,31 +373,29 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 
 	fastify.post(
 		'/api/me/avatar',
-	{ schema: uploadAvatarSchema },
-	async (request, reply) => {
-		const userId = await getUserId(request);
+		{ schema: uploadAvatarSchema },
+		async (request, reply) => {
+			const userId = await getUserId(request);
 
-		// fetch current avatar filename first
-		const old = await fastify.db.get<{ avatar: string | null }>(
-			'SELECT avatar FROM users WHERE id = ?',
-			[userId]
-		);
+			const old = await fastify.db.get<{ avatar: string | null }>(
+				'SELECT avatar FROM users WHERE id = ?',
+				[userId]
+			);
 
-		const data = await request.file({ limits: { fieldNameSize: 100, fileSize: 1_000_000 } });
-		if (!data) return reply.code(400).send({ error: 'No file uploaded' });
-		if (!data.filename.toLowerCase().endsWith('.png')) {
-			return reply.code(400).send({ error: 'Only .png allowed' });
-		}
+			const data = await request.file({ limits: { fieldNameSize: 100, fileSize: 1_000_000 } });
+			if (!data) return reply.code(400).send({ error: 'No file uploaded' });
+			if (!data.filename.toLowerCase().endsWith('.png')) {
+				return reply.code(400).send({ error: 'Only .png allowed' });
+			}
 
 		const PUBLIC_DIR = process.env.PUBLIC_DIR!;
 		const avatarDir = PUBLIC_DIR;
 		await mkdir(avatarDir, { recursive: true });
 
-		// write new file
-		const ts = Date.now();
-		const filename = `NewUploadedAvatar_${userId}_${ts}.png`;
-		const destPath = path.join(avatarDir, filename);
-		await pipeline(data.file, createWriteStream(destPath));
+			const ts = Date.now();
+			const filename = `NewUploadedAvatar_${userId}_${ts}.png`;
+			const destPath = path.join(avatarDir, filename);
+			await pipeline(data.file, createWriteStream(destPath));
 
 		if (data.file.truncated) {
 			await unlink(destPath).catch(() => {});
@@ -425,23 +428,67 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 			}
 		}
 
-		// broadcast using userId (route has no :id param)
-		const updated = await fastify.db.get(
-			'SELECT id, username, nickname, email, live, avatar FROM users WHERE id = ?',
-			[userId]
-		);
-		if (updated) {
-			userSockets.forEach((sockets) => {
-				sockets.forEach((ws) => {
-					ws.send(JSON.stringify({ type: 'user_updated', user: updated }));
+			const updated = await fastify.db.get(
+				'SELECT id, username, nickname, email, live, avatar FROM users WHERE id = ?',
+				[userId]
+			);
+			if (updated) {
+				userSockets.forEach((sockets) => {
+					sockets.forEach((ws) => {
+						ws.send(JSON.stringify({ type: 'user_updated', user: updated }));
+					});
 				});
-			});
-		}
+			}
 
 		return reply.code(200).send({ avatarUrl: publicUrl });
 	}
 );
 
+	fastify.get<{
+		Params: { id: number }
+		Reply: UserStats | { error: string }
+	}>(
+		'/api/users/:id/stats',
+		{
+			schema: {
+				tags: ['match'],
+				params: {
+					type: 'object',
+					additionalProperties: false,
+					required: ['id'],
+					properties: { id: { type: 'integer', minimum: 1 } }
+				}
+			}
+		},
+		async (request) => {
+			return getUserStats(fastify, request.params.id)
+		}
+	)
+
+	fastify.get<{
+		Params: { id: number }
+		Reply: Array<{
+			match: { id: number; mode: number; duration: number; created_at: number }
+			score: number
+			result: 'win' | 'loss' | 'draw'
+		}>
+	}>(
+		'/api/users/:id/matches',
+		{
+			schema: {
+				tags: ['match'],
+				params: {
+					type: 'object',
+					additionalProperties: false,
+					required: ['id'],
+					properties: { id: { type: 'integer', minimum: 1 } }
+				}
+			}
+		},
+		async (request) => {
+			return getMatchHistory(fastify, request.params.id)
+		}
+	)
 
 };
 

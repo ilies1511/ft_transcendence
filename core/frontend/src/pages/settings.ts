@@ -479,10 +479,15 @@ const SettingsPage: PageModule & { renderWithParams?: Function } = {
 					showMsg(passwordMsg, 'Password changed successfully!', true)
 					passwordForm.reset()
 				} else {
-					const { error } = await r.json().catch(() => ({ error: 'Update failed' }))
-					showMsg(passwordMsg, error || 'Update failed')
+					//const { error } = await r.json().catch(() => ({ error: 'Update failed' }))
+					//showMsg(passwordMsg, error || 'Update failed')
+					const rj = await r.json()
+					if (rj && rj.error == 'Bad Request') {
+						showMsg(passwordMsg, 'Password must be atleast 8 charecters long')
+					}
 				}
-			} catch {
+			} catch (e) {
+				console.log('err: ', e)
 				showMsg(passwordMsg, 'Network error')
 			}
 		}

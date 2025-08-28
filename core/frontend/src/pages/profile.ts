@@ -141,7 +141,7 @@ async function renderProfile(root: HTMLElement, user: ApiUser) {
 	if (stats) {
 		renderStats(stats);
 	}
-	const history = await fetchMatchHistory(user.id);
+	let history = await fetchMatchHistory(user.id);
 	(root as any)._fullHistory = history; // cache
 	initModeFilter(history, user.id, root);
 	await renderMatchHistory(history, user.id);
@@ -174,16 +174,16 @@ async function renderProfile(root: HTMLElement, user: ApiUser) {
 // Helper function for stats
 async function fetchUserStats(userId: number) {
 	try {
-		// const res = await fetch(`/api/users/${userId}/stats`);
-		// const res = await fetch(`/api/me/stats`);
-		const res = await fetch('/api/me/stats', {
+		const me = await getSession();
+		const path = me?.id === userId
+			? '/api/me/stats'
+			: `/api/users/${userId}/stats`;
+		const res = await fetch(path, {
 			method: 'GET',
 			credentials: 'include',
 		});
 		if (!res.ok) throw new Error(`stats ${res.status}`);
-		const data = await res.json();
-		// console.log('⭐ user stats', data);
-		return data;
+		return await res.json();
 	} catch (err) {
 		console.log('Failed to load stats:', err);
 		return null; // Or fallback data
@@ -204,15 +204,16 @@ function renderStats(stats: { totalGames: number; wins: number; losses: number; 
 // Helper function for history
 async function fetchMatchHistory(userId: number) {
 	try {
-				// const res = await fetch(`/api/users/${userId}/matches`);
-		const res = await fetch(`/api/me/matches`, {
+		const me = await getSession();
+		const path = me?.id === userId
+			? '/api/me/matches'
+			: `/api/users/${userId}/matches`;
+		const res = await fetch(path, {
 			method: 'GET',
 			credentials: 'include',
 		});
 		if (!res.ok) throw new Error(`matches ${res.status}`);
-		const data = await res.json();
-		// console.log('📜 match history', data);
-		return data;
+		return await res.json();
 	} catch (err) {
 		console.log('Failed to load history:', err);
 		return []; // Empty array as fallback

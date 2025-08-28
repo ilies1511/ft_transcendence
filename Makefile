@@ -1,4 +1,5 @@
-.DEFAULT_GOAL := eval
+ .DEFAULT_GOAL := init
+# .DEFAULT_GOAL := eval
 # .DEFAULT_GOAL := shell
 
 # BEGIN -- DEV
@@ -69,29 +70,25 @@ game_shared:
 	cp -r game_shared client/game
 
 
-#dev_fabi:
-#	docker compose build --build-arg UID=$(id -u) --build-arg GID=$(id -g) \
-#		&& docker compose up dev_fabi -d \
-#		&& docker exec -it dev_fabi bas
-#
-#
-
 # END -- DEV
 
 
 # BEGIN -- PROD
-init:
-	cd core && make && cd ../ make eval
+init: update-env
+	cd core && make && \
+	docker compose build app edge && \
+	docker compose up -d app edge && \
+	docker compose logs -f edge app
 
 eval: prod-build prod-up prod-logs
 # eval: prod-build prod-up
 
 prod-re: prod-down eval
 
-prod-build:
+prod-build: update-env
 	docker compose build app edge
 
-prod-up: prod-build
+prod-up: update-env prod-build
 	docker compose up -d app edge
 
 prod-down:
@@ -99,7 +96,42 @@ prod-down:
 
 prod-logs:
 	docker compose logs -f edge app
-# END -- PROD
+
+.PHONY: update-env
+
+OS := $(shell uname)
+
+ifeq ($(OS),Darwin)
+	PORT1 ?= 123
+	PORT2 ?= 321
+	HOSTNAME ?= $$(hostname)
+	LOCAL_IP ?= $$(route -n get 1.1.1.1 2>/dev/null | awk '/ifaddr:/{print $$2; exit}')
+else
+	PORT1 ?= 8080
+	PORT2 ?= 1443
+	HOSTNAME ?= $$(hostname)
+	LOCAL_IP ?= $$(ip route get 1.1.1.1 2>/dev/null | awk '/src/{for(i=1;i<=NF;i++) if ($$i=="src") {print $$(i+1); exit}}')
+endif
+
+define SED_INPLACE
+if sed --version >/dev/null 2>&1; then sed -i "$1" "$2"; else sed -i '' "$1" "$2"; fi
+endef
+
+define UPDATE_KV
+tmp=$$(mktemp); \
+awk -v k="$(1)" -v v="$(2)" 'BEGIN{set=0} \
+	$$0 ~ "^"k"=" {print k"="v; set=1; next} \
+	{print} \
+END{if(!set) print k"="v}' .env > $$tmp && mv $$tmp .env
+endef
+
+update-env:
+	@touch .env
+	@$(call UPDATE_KV,HOSTNAME,$(HOSTNAME))
+	@$(call UPDATE_KV,LOCAL_IP,$(LOCAL_IP))
+	@$(call UPDATE_KV,PORT1,$(PORT1))
+	@$(call UPDATE_KV,PORT2,$(PORT2))
+	@echo "Updated .env with HOSTNAME=$(HOSTNAME), LOCAL_IP=$(LOCAL_IP), PORT1=$(PORT1), PORT2=$(PORT2)"
 
 .PHONY: all \
 	build \
@@ -124,5 +156,7 @@ prod-logs:
 	prod-down \
 	prod-logs \
 	eval \
+	run  \
+	update-env \
 	init \
 	run
