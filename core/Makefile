@@ -1,5 +1,7 @@
 .PHONY: run game_shared clean_modules modules remodules
 
+init : game_shared
+
 run2: modules game_shared
 
 run: modules game_shared
