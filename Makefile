@@ -1,5 +1,5 @@
-.DEFAULT_GOAL := eval
-
+ .DEFAULT_GOAL := init
+# .DEFAULT_GOAL := eval
 # .DEFAULT_GOAL := shell
 
 # BEGIN -- DEV
@@ -75,7 +75,10 @@ game_shared:
 
 # BEGIN -- PROD
 init:
-	cd core && make && cd ../ make eval
+	cd core && make && \
+	docker compose build app edge && \
+	docker compose up -d app edge && \
+	docker compose logs -f edge app
 
 eval: prod-build prod-up prod-logs
 # eval: prod-build prod-up
