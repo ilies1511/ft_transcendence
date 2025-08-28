@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => ({
 		target: 'es2022',
 	},
 	esbuild: { // REMOVES CONSOLE, DEBUGGER LOGS FROM PRODUCTION
-		// drop: mode === 'production' ? ['console', 'debugger'] : [],
+		drop: mode === 'production' ? ['console', 'debugger'] : [],
 		// pure: mode === 'production' ? ['console.log'] : [],
 	},
 	server: {
