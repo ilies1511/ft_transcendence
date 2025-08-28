@@ -482,7 +482,7 @@ export function resolveAvatarFsPath(filename?: string | null): string | null {
 	console.log({ inSubdir, exists: existsInSubdir }, 'avatar path (subdir)')
 	if (existsInSubdir) {
 		return inSubdir
-
+	}
 	// 3) Try backend defaults (default_*.png, deleted_avatar.png)
 	if (/^(default_\d+\.png|deleted_avatar\.png)$/i.test(base)) {
 		const defaultsRoot = path.resolve(DEFAULTS_DIR) + path.sep
