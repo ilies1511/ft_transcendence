@@ -32,7 +32,7 @@ WORKDIR /app
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 COPY core/frontend/package*.json core/frontend/
-RUN cd core/frontend && npm ci --no-audit --fund=false
+RUN cd core/frontend && npm i --no-audit --fund=false
 
 COPY core ./core
 
