@@ -17,7 +17,7 @@ export default fp(async (fastify: FastifyInstance) => {
 	// })
 
 	await fastify.register(rateLimit, {
-		max: 160,
+		max: 500,
 		timeWindow: '1 minute',
 		ban: 0,
 		hook: 'onRequest',
