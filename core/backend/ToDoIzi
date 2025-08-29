@@ -26,7 +26,7 @@ secure login.
 tices and security standards.
 	[x] On top off QR, add Raw Secret --> provides both
 
-[] Ensure the secure exchange of authentication tokens and user information
+[x] Ensure the secure exchange of authentication tokens and user information
 between the web application and the authentication provider.
 
 This major module aims to provide a remote user authentication, offering users a
@@ -54,7 +54,7 @@ use of JSON Web Tokens (JWT).
 
 ## MISC
 - [x]	Input sanitization (front -and Backend) --> BIG ONE
-- [] '/api/me/anonymize' FIX --> after doing that user needs new credential in
+- [x] '/api/me/anonymize' FIX --> after doing that user needs new credential in
 order to not looses his account
 - [~] HTTPs & wss
 - [x] IF enough time ANTI IDOR design (IDOR = Insecure Direct Object Reference) : change API design from
@@ -78,8 +78,8 @@ to use JWT tokens, securing the site remains critical.
 - [] try catch um SQL ops
 - [x] getAllLiveUserCount
 - [] Help Makim with CSRF in FE
-- [] getLivePlayersCount() Create GET API
-- [] // "build2": "node --max-old-space-size=4096 node_modules/vite/bin/vite.js build", --> Add to package.json Frontend
+- [x] getLivePlayersCount() Create GET API
+- [x] // "build2": "node --max-old-space-size=4096 node_modules/vite/bin/vite.js build", --> Add to package.json Frontend
 - [] Mr Proper Clean-UP
 
 
