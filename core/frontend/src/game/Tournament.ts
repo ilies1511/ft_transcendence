@@ -257,7 +257,7 @@ export class Tournament {
 							return false;
 						},
 						onReject: () => false
-					}, -1);
+					}, 10000);
 				}
 				// Only try to attach when already on /modes
 				if (onModes) {
