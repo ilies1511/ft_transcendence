@@ -397,26 +397,36 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 			const destPath = path.join(avatarDir, filename);
 			await pipeline(data.file, createWriteStream(destPath));
 
-			if (data.file.truncated) { await unlink(destPath).catch(() => { }); return reply.code(413).send({ error: 'File too large' }); }
+		if (data.file.truncated) {
+			await unlink(destPath).catch(() => {});
+			return reply.code(413).send({ error: 'File too large' });
+		}
 
-			const ok = await updateUserAvatar(fastify, userId, filename);
-			if (!ok) {
-				await unlink(destPath).catch(() => { });
-				return reply.code(404).send({ error: 'User not found' });
-			}
+		// store the public URL path in DB (served by Caddy under /uploads)
+		const publicUrl = `/uploads/${filename}`;
+		const ok = await updateUserAvatar(fastify, userId, publicUrl);
+		if (!ok) {
+			// cleanup new file if DB update failed
+			await unlink(destPath).catch(() => {});
+			return reply.code(404).send({ error: 'User not found' });
+		}
 
-			const oldName = old?.avatar ?? null;
-			if (oldName) {
-				const looksCustom = /^NewUploadedAvatar_\d+_\d+\.png$/i.test(oldName) || /^avatar_\d+_\d+\.png$/i.test(oldName);
-				if (looksCustom) {
-					const oldPath = path.join(avatarDir, oldName);
-					const resolvedOld = path.resolve(oldPath);
-					const resolvedDir = path.resolve(avatarDir) + path.sep;
-					if (resolvedOld.startsWith(resolvedDir)) {
-						await unlink(oldPath).catch(() => { }); // ignore ENOENT, etc.
-					}
+		// best-effort delete of old custom avatar
+		const oldName = old?.avatar ?? null;
+		if (oldName) {
+			const oldBase = path.basename(oldName); // strips any '/uploads/'
+			const looksCustom =
+				/^NewUploadedAvatar_\d+_\d+\.png$/i.test(oldBase) ||
+				/^avatar_\d+_\d+\.png$/i.test(oldBase);
+			if (looksCustom) {
+				const oldPath = path.join(avatarDir, oldBase);
+				const resolvedOld = path.resolve(oldPath);
+				const resolvedDir = path.resolve(avatarDir) + path.sep;
+				if (resolvedOld.startsWith(resolvedDir)) {
+					await unlink(oldPath).catch(() => {}); // ignore ENOENT, etc.
 				}
 			}
+		}
 
 			const updated = await fastify.db.get(
 				'SELECT id, username, nickname, email, live, avatar FROM users WHERE id = ?',
@@ -430,10 +440,9 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
 				});
 			}
 
-			const avatarUrl = `/${filename}`;
-			return reply.code(200).send({ avatarUrl });
-		}
-	);
+		return reply.code(200).send({ avatarUrl: publicUrl });
+	}
+);
 
 	fastify.get<{
 		Params: { id: number }

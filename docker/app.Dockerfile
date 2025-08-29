@@ -19,5 +19,10 @@ RUN cd core/backend && npm i --omit=dev \
 	&& npm i chalk@5 --no-audit --fund=false
 # dist
 COPY --from=be /app/core/backend/dist ./core/backend/dist
+
+# Copy default avatars for GDPR ZIP export (backend reads from filesystem)
+COPY core/frontend/public/default_*.png ./core/backend/public/
+COPY core/frontend/public/deleted_avatar.png ./core/backend/public/
+
 EXPOSE 3000
 CMD ["node", "core/backend/dist/index.js"]

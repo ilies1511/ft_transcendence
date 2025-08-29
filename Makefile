@@ -117,6 +117,15 @@ define SED_INPLACE
 if sed --version >/dev/null 2>&1; then sed -i "$1" "$2"; else sed -i '' "$1" "$2"; fi
 endef
 
+define UPDATE_KV_PROD
+tmp=$$(mktemp); \
+awk -v k="$(1)" -v v="$(2)" 'BEGIN{set=0} \
+	$$0 ~ "^"k"=" {print k"="v; set=1; next} \
+	{print} \
+END{if(!set) print k"="v}' .env.prod > $$tmp && mv $$tmp .env.prod
+endef
+
+
 define UPDATE_KV
 tmp=$$(mktemp); \
 awk -v k="$(1)" -v v="$(2)" 'BEGIN{set=0} \
@@ -128,6 +137,7 @@ endef
 update-env:
 	@touch .env
 	@$(call UPDATE_KV,HOSTNAME,$(HOSTNAME))
+	@$(call UPDATE_KV_PROD,PUBLIC_ORIGIN,https://$(HOSTNAME):1443)
 	@$(call UPDATE_KV,LOCAL_IP,$(LOCAL_IP))
 	@$(call UPDATE_KV,PORT1,$(PORT1))
 	@$(call UPDATE_KV,PORT2,$(PORT2))
