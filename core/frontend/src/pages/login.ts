@@ -184,10 +184,15 @@ const LoginPage: PageModule = {
 						credentials: 'include'
 					});
 
-					const data = await res.json().catch(() => ({}));
+					// const data = await res.json().catch(() => ({}));
+					const data = await res.json().catch(() => ({} as any));
 
 					if (!res.ok) {
-						throw new Error(data.error ?? 'Login failed');
+						const uiMsg =
+							res.status === 401 || res.status === 400
+								? 'Invalid email or password'
+								: (data?.message as string) || (data?.error as string) || 'Something went wrong. Please try again.';
+						throw new Error(uiMsg);
 					}
 
 					if (data.twofa_required) {
