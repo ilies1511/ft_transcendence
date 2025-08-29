@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { DEFAULT_AVATARS } from '../constants/avatars.js';
 import { setUserLive } from '../functions/user.js';
 import { sessionCookieOpts } from '../index.js';
+import { userSockets } from '../types/wsTypes.js';
 // import { createUser, /* Vielleicht updateUser */ } from '../functions/user.js'
 
 export const googleAuthRoutes: FastifyPluginAsync = async fastify => {
@@ -31,6 +32,7 @@ export const googleAuthRoutes: FastifyPluginAsync = async fastify => {
 		const hash = await bcrypt.hash(randomPass, 12);
 
 		let user = await fastify.db.get('SELECT * FROM users WHERE email = ?', profile.email)
+		let justCreated = false;
 		if (!user) {
 			try {
 				const info = await fastify.db.run(
@@ -49,6 +51,7 @@ export const googleAuthRoutes: FastifyPluginAsync = async fastify => {
 					1                 // set OAuth to 1 because it is a Google account
 				)
 				user = { id: info.lastID, username: profile.name, email: profile.email, twofa_enabled: 0, is_oauth: 1 }
+				justCreated = true;
 			} catch (err: any) {
 				console.error('INSERT-ERROR:', {
 					code: err.code, // 'SQLITE_CONSTRAINT'
@@ -80,6 +83,25 @@ export const googleAuthRoutes: FastifyPluginAsync = async fastify => {
 		const token = await reply.jwtSign({ id: user.id, name: user.username })
 		setUserLive(fastify, user.id, true);
 		//TODO: 14.08 2FA for google Users --> add if condtions to check if 2Fa is om
+
+		if (justCreated) {
+			// Send a JSON text frame to all tracked sockets [9]
+			userSockets.forEach((sockets) => {
+				sockets.forEach((ws) => {
+					try {
+						ws.send(JSON.stringify({
+							type: 'user_registered',
+							user: {
+								id: user.id,
+								username: user.username,
+								avatar: avatar
+							}
+						}));
+					} catch {
+						// ignore individual socket send errors [9]
+					}
+				});
+			});
 
 		return reply
 			// .setCookie('token', token, {
