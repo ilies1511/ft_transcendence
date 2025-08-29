@@ -85,7 +85,7 @@ export const googleAuthRoutes: FastifyPluginAsync = async fastify => {
 		//TODO: 14.08 2FA for google Users --> add if condtions to check if 2Fa is om
 
 		if (justCreated) {
-			// Send a JSON text frame to all tracked sockets [9]
+			// notify users on new created google account via ws
 			userSockets.forEach((sockets) => {
 				sockets.forEach((ws) => {
 					try {
@@ -98,11 +98,11 @@ export const googleAuthRoutes: FastifyPluginAsync = async fastify => {
 							}
 						}));
 					} catch {
-						// ignore individual socket send errors [9]
+						// ignore individual socket send errors
 					}
 				});
 			});
-
+		}
 		return reply
 			// .setCookie('token', token, {
 			// 	path: '/',
