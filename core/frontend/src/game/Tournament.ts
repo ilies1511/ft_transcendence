@@ -365,9 +365,12 @@ export class Tournament {
 		if (globalThis.game) {
 			return ;
 		}
+		// If tournament hasn't started yet, render the player list into the container
 		if (!this.latest_tournament_state) {
-			console.log("Warning: No latest_tournament_state when tring to render it, either only 1 player tournament or bug");
-			return ;
+			this._get_container();
+			if (!this._match_container) return;
+			this._render_player_list();
+			return;
 		}
 		this._get_container();
 		if (!this._match_container) {

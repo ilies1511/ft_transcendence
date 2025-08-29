@@ -721,6 +721,9 @@ function setupGameModes(root: HTMLElement): void {
 	// Start the reactive UI updater right away so invited users (who didn’t click a mode here)
 	// still see the correct controls when a Game/Tournament exists.
 	startUiUpdater();
+
+	// Kick an initial render if we already have a tournament (pre-start)
+	;(globalThis as any).tournament?.render_tournament_state();
 }
 
 
