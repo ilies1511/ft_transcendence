@@ -1,5 +1,5 @@
-// ok = true  ➜ green (“msg-ok”)
-// ok = false ➜ red (“msg-error”)
+// ok = true - green (“msg-ok”)
+// ok = false - red (“msg-error”)
 
 export function showMsg(
 	el: HTMLElement,
