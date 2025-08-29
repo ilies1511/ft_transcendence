@@ -174,6 +174,9 @@ export class GameLobby {
 				console.log("GameLobby: user already joined, ignoring duplicate join for", user_id);
 				return ("");
 			}
+			if (c.display_name == display_name) {
+				return ('Nickname allready taken in game');
+			}
 		}
 
 		console.log("Game: User", user_id, " joing lobby ", this.id);

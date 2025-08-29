@@ -122,6 +122,7 @@ export type ServerError =
 	| 'Allready in tournament'
 	| 'Allready connected in a different session'
 	| 'Nickname allready taken in tournament'
+	| 'Nickname allready taken in game'
 	| ''
 ;
 
@@ -146,6 +147,7 @@ export function is_ServerError(data: unknown): ServerError | undefined {
 		'Allready in tournament',
 		'Allready connected in a different session',
 		'Nickname allready taken in tournament',
+		'Nickname allready taken in game',
 	 '',
 		].includes(data)
 	) {

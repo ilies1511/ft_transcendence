@@ -526,6 +526,7 @@ export class Game {
 			case ('Allready started'):
 				break ;
 			case ('Nickname allready taken in tournament'):
+			case ('Nickname allready taken in game'):
 				showToast({
 					title: error
 				});
