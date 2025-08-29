@@ -1,7 +1,7 @@
 :80 {
   encode zstd gzip
   # Redirect to the externally-published HTTPS port
-  redir https://{$LOCAL_IP}:1443{uri}
+  redir https://{$HOSTNAME}:1443{uri}
 }
 
 https://localhost, https://{$HOSTNAME} {

@@ -19,7 +19,7 @@ export async function refreshHeader() {
 							border-2 border-[#5a2e3b] hover:border-[#824155]
 							rounded-lg px-3 py-0.5 shadow-sm hover:shadow
 							transition-colors duration-150">
-				<img src="/${user.avatar}"
+				<img src="${user.avatar}"
 					 class="h-7 w-7 rounded-full object-cover">
 				<span class="pr-1">${user.username}</span>
 			</button>
