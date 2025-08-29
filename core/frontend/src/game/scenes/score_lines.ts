@@ -49,7 +49,7 @@ export class ScorePanel {
 
 		this.timer_text = new GUI.TextBlock();
 		this.timer_text.fontSize = 54;
-		this.timer_text.height = "64px";
+		this.timer_text.height = "70px";
 		this.timer_text.textHorizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
 		this.timer_text.color = "#ffffff";
 		this.timer_text.isVisible = false;
