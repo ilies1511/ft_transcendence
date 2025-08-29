@@ -550,8 +550,8 @@ function setupGameModes(root: HTMLElement): void {
 
 				// First, if a game exists, decide purely by game state
 				if (game) {
-					const activeName = (game as any)?._active_scene?.constructor?.name;
-					const gameSceneActive = activeName === 'GameScene';
+					// Use stable flag from Game instead of class name (minifiers can mangle names)
+					const gameSceneActive = !!(game as any)?.in_game;
 
 					if (gameSceneActive) {
 						// Game has started -> ensure hidden and clear pending flag

@@ -93,6 +93,9 @@ export class Game {
 
 	public lobby_type: LobbyType;
 
+	// Indicates whether the actual match (GameScene) is running.
+	public in_game: boolean = false;
+
 	public container_selector: string = '#game-container';
 
 	private _display_names: Map<number, string> | undefined = undefined;
@@ -261,6 +264,7 @@ export class Game {
 			return ;
 		}
 		this.finished = true;
+		this.in_game = false;
 		if (!this._socket || this._socket.readyState !== WebSocket.OPEN) {
 			this._open_socket();
 		}
@@ -283,6 +287,7 @@ export class Game {
 
 	public disconnect() {
 		this.finished = true;
+		this.in_game = false;
 		if (this._local_player) {
 			this._local_player.disconnect();
 		}
@@ -469,6 +474,7 @@ export class Game {
 			this._local_player.start_game();
 		}
 		this._active_scene = this._game_scene;
+		this.in_game = true;
 	}
 
 	public static process_server_error(error: ServerError, game?: Game) {
