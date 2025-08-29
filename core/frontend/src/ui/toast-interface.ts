@@ -8,7 +8,7 @@ interface ToastOptions {
 	onReject?: ()=>Promise<boolean> | boolean;
 }
 
-export function showToast(toast: ToastOptions):HTMLDivElement {
+export function showToast(toast: ToastOptions, timeout_time: number = 5000 /* -1 for no timeout */):HTMLDivElement {
 	const box = document.createElement('div');
 	box.id = "toast";
 
@@ -74,7 +74,9 @@ export function showToast(toast: ToastOptions):HTMLDivElement {
 		});
 	}
 
-	setTimeout(close, 5000);
+	if (timeout_time >= 0) {
+		setTimeout(close, timeout_time);
+	}
 
 	return box;
 }
