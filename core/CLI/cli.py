@@ -8,7 +8,7 @@ import websocket
 
 #BASE = "http://localhost:3000"
 #HOST = "localhost:3000"
-HOST = f'{input("Server address:: ")}:1443'
+HOST = f'{input("Server host name:: ")}:1443'
 #HOST = f'localhost:1433'
 
 BASE = f'https://{HOST}'
