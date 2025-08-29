@@ -220,7 +220,14 @@ export class Tournament {
 				this.finished = true;
 				globalThis.game?.leave();
 				if (!globalThis.game) {
-					this.render_tournament_state();
+					// Only render a bracket when there actually is one.
+					if (this.latest_tournament_state && this.latest_tournament_state.total_players >= 2) {
+						this.render_tournament_state();
+					} else {
+						// Single-player tournament: clear stale UI.
+						const container = this._get_container();
+						if (container) container.innerHTML = '';
+					}
 				} else {
 					console.log("Error: globalThis.game was defined when wanting to render tournament state after tournament");
 				}
@@ -477,6 +484,17 @@ export class Tournament {
 				<ul>${items}</ul>
 			</div>
 		`;
+	}
+
+	public get_player_count(): number {
+		// Before start we rely on the player_list; after start we have state.
+		return this.latest_tournament_state
+			? this.latest_tournament_state.total_players
+			: this._player_list.length;
+	}
+
+	public is_started(): boolean {
+		return this.latest_tournament_state?.started === true;
 	}
 };
 

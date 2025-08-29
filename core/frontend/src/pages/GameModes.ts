@@ -533,11 +533,19 @@ function setupGameModes(root: HTMLElement): void {
 			{
 				const startBtn = document.getElementById('btn-start_tournament');
 				if (tournament) {
-					const tournamentStarted = tournament.latest_tournament_state?.started === true;
-					if (tournamentStarted) {
-						startBtn?.classList.add('hidden');
-					} else {
+					const started =
+						typeof tournament.is_started === 'function'
+							? tournament.is_started()
+							: (tournament.latest_tournament_state?.started === true);
+					const players =
+						typeof tournament.get_player_count === 'function'
+							? tournament.get_player_count()
+							: (tournament.latest_tournament_state?.total_players ?? 0);
+
+					if (!started && players >= 2) {
 						startBtn?.classList.remove('hidden');
+					} else {
+						startBtn?.classList.add('hidden');
 					}
 				} else {
 					startBtn?.classList.add('hidden');
