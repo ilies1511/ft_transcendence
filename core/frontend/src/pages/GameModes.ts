@@ -556,43 +556,50 @@ function setupGameModes(root: HTMLElement): void {
 			{
 				const addBtn = document.getElementById('btn-add-local-player');
 
-				// First, if a game exists, decide purely by game state
-				if (game) {
-					// Use stable flag from Game instead of class name (minifiers can mangle names)
-					const gameSceneActive = !!(game as any)?.in_game;
+				// Guard: never allow adding a local player while a tournament context exists
+				if (tournament) {
+					addBtn?.classList.add('hidden');
+					// clear wiring while tournament is active
+					wiredLocalPlayerForGameId = null;
+				} else {
+					// First, if a game exists, decide purely by game state
+					if (game) {
+						// Use stable flag from Game instead of class name (minifiers can mangle names)
+						const gameSceneActive = !!(game as any)?.in_game;
 
-					if (gameSceneActive) {
-						// Game has started -> ensure hidden and clear pending flag
-						addBtn?.classList.add('hidden');
-						pendingCustomLobby = false;
-						// In a custom lobby and game not started yet -> show
-						// clear wiring when game starts
-						wiredLocalPlayerForGameId = null;
-					} else if (isCustomLobby(game) || isMatchmaking(game)) {
-						addBtn?.classList.remove('hidden');
+						if (gameSceneActive) {
+							// Game has started -> ensure hidden and clear pending flag
+							addBtn?.classList.add('hidden');
+							pendingCustomLobby = false;
+							// In a custom lobby and game not started yet -> show
+							// clear wiring when game starts
+							wiredLocalPlayerForGameId = null;
+						} else if (isCustomLobby(game) || isMatchmaking(game)) {
+							addBtn?.classList.remove('hidden');
 
-						// Wire the button exactly once per game_id
-						if (wiredLocalPlayerForGameId !== game.game_id) {
-							try {
-								wireLocalPlayerButton(game);
-								wiredLocalPlayerForGameId = game.game_id;
-							} catch (e) {
-								console.warn('Failed to wire Add Local Player button:', e);
+							// Wire the button exactly once per game_id
+							if (wiredLocalPlayerForGameId !== game.game_id) {
+								try {
+									wireLocalPlayerButton(game);
+									wiredLocalPlayerForGameId = game.game_id;
+								} catch (e) {
+									console.warn('Failed to wire Add Local Player button:', e);
+								}
 							}
+						} else {
+							// Not a custom lobby (matchmaking/tournament lobbies) -> hide
+							addBtn?.classList.add('hidden');
 						}
 					} else {
-						// Not a custom lobby (matchmaking/tournament lobbies) -> hide
-						addBtn?.classList.add('hidden');
+						// No game yet
+						if (pendingCustomLobby) {
+							addBtn?.classList.remove('hidden');
+						} else {
+							addBtn?.classList.add('hidden');
+						}
+						// clear wiring when no game
+						wiredLocalPlayerForGameId = null;
 					}
-				} else {
-					// No game yet
-					if (pendingCustomLobby) {
-						addBtn?.classList.remove('hidden');
-					} else {
-						addBtn?.classList.add('hidden');
-					}
-					// clear wiring when no game
-					wiredLocalPlayerForGameId = null;
 				}
 			}
 		}, 200);
