@@ -6,9 +6,9 @@ export const RegisterBodySchema = {
 		required: ['email', 'username', 'password'],
 		properties: {
 			email: { type: 'string', format: 'email', maxLength: 254, transform: ['trim', 'toLowerCase'] },
-			username: { type: 'string', minLength: 1, maxLength: 24, pattern: '^[a-zA-Z0-9_]+$', transform: ['trim'] },
+			username: { type: 'string', minLength: 3, maxLength: 24, pattern: '^[a-zA-Z0-9_]+$', transform: ['trim'] },
 			//password: { type: 'string', minLength: 8, maxLength: 128 }
-			password: { type: 'string', minLength: 1, maxLength: 128 } //TODO: UPDATE THIS
+			password: { type: 'string', minLength: 8, maxLength: 128 } //TODO: UPDATE THIS
 		}
 	}
 } as const
@@ -42,7 +42,7 @@ export const LoginBodySchema = {
 		},
 		password: {
 			type: 'string',
-			minLength: 1,
+			minLength: 8,
 			maxLength: 128,
 			transform: ['trim'],
 		},
