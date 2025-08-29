@@ -10,11 +10,11 @@ export class LobbyScene extends BaseScene {
 	private _player_count_text: GUI.TextBlock;
 	private _loaded_player_count_text: GUI.TextBlock;
 	private _header: GUI.TextBlock;
-	private _global_player_count_text: GUI.TextBlock;
+	//private _global_player_count_text: GUI.TextBlock;
 
-	private _global_player_count_placeholder = 0;
+	//private _global_player_count_placeholder = 0;
 
-	private _global_player_count_timeout: NodeJS.Timeout;
+	//private _global_player_count_timeout: NodeJS.Timeout;
 
 
 	constructor(engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
@@ -62,27 +62,27 @@ export class LobbyScene extends BaseScene {
 		this._loaded_player_count_text.fontSize = 36;
 		panel.addControl(this._loaded_player_count_text);
 
-		this._global_player_count_text = new GUI.TextBlock();
-		this._global_player_count_text.color = "white";
-		this._global_player_count_text.height = "60px";
-		this._global_player_count_text.text = '';
-		this._global_player_count_text.fontSize = 36;
-		panel.addControl(this._global_player_count_text);
+		//this._global_player_count_text = new GUI.TextBlock();
+		//this._global_player_count_text.color = "white";
+		//this._global_player_count_text.height = "60px";
+		//this._global_player_count_text.text = '';
+		//this._global_player_count_text.fontSize = 36;
+		//panel.addControl(this._global_player_count_text);
 
-		this._update_global_player_count = this._update_global_player_count.bind(this);
-		//directly fetch the data async
-		this._global_player_count_timeout = this._update_global_player_count(0);
+		//this._update_global_player_count = this._update_global_player_count.bind(this);
+		////directly fetch the data async
+		//this._global_player_count_timeout = this._update_global_player_count(0);
 	}
 
-	private _update_global_player_count(timeout_duration: number = 4000): NodeJS.Timeout {
-		return (setTimeout(
-			() => {
-				this._global_player_count_text.text = `There are currently ${this._global_player_count_placeholder++} players online.`;
-				this._global_player_count_timeout =  this._update_global_player_count();
-			}
-			,timeout_duration)
-		);
-	}
+	//private _update_global_player_count(timeout_duration: number = 4000): NodeJS.Timeout {
+	//	return (setTimeout(
+	//		() => {
+	//			this._global_player_count_text.text = `There are currently ${this._global_player_count_placeholder++} players online.`;
+	//			this._global_player_count_timeout =  this._update_global_player_count();
+	//		}
+	//		,timeout_duration)
+	//	);
+	//}
 
 	public update(info: GameLobbyUpdate) {
 		this._player_count_text.text = `Players: ${info.player_count}/${info.target_player_count}`;
@@ -100,7 +100,7 @@ export class LobbyScene extends BaseScene {
 	public cleanup() {
 		super.cleanup();
 		this._gui.dispose();
-		clearTimeout(this._global_player_count_timeout);
+		//clearTimeout(this._global_player_count_timeout);
 	}
 	
 	loop(): void {
