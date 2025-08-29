@@ -1,18 +1,14 @@
 import { getSession } from './services/session';
 
 const GUEST_ONLY_ROUTES = ['/login', '/register']; // only for logged-out users
-const OPEN_ROUTES = ['/terms', '/privacy'];         // accessible to everyone
+const OPEN_ROUTES = ['/terms', '/privacy']; // accessible to everyone
 const LOGIN_REDIRECT = '/login'; // where guests are sent
 
 export type PageModule = { // contract every page must fulfil
 	render(root: HTMLElement): void;
-	// optional clean-up.
-	// Still need to implement it.
-	// Might need to remove listenders, awaits and so on fron the pages.
-	// Need to research more about it.
 	destroy?(): void;
-	afterRender?(root: HTMLElement): void // ← optional hook
-	renderWithParams?(root: HTMLElement, params: Record<string, string>): void | Promise<void>; //just a test for now 1144
+	afterRender?(root: HTMLElement): void
+	renderWithParams?(root: HTMLElement, params: Record<string, string>): void | Promise<void>; //for settings nad profiles
 };
 
 type Loader = () => Promise<PageModule>

@@ -74,7 +74,7 @@ export function showToast(toast: ToastOptions):HTMLDivElement {
 		});
 	}
 
-	setTimeout(close, 10000);
+	setTimeout(close, 5000);
 
 	return box;
 }
