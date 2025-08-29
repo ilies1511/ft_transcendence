@@ -13,7 +13,6 @@ try {
 
 	if (data && typeof data.token === 'string' && data.token.length > 0) {
 		token = data.token;
-		console.log(`csrf token: ${token}`); //TODO: REMOVE THIS
 	} else {
 		token = undefined;
 	}
