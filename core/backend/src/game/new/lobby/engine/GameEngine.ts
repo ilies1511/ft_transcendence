@@ -441,13 +441,17 @@ export class GameEngine {
 			type: 'info',
 			text: `player ${this._game_lobby.display_name_of(client_id)} left the game`,
 		};
+		let local_player: ServerClient | undefined = undefined;
 		for (const client of this.clients) {
-			if (client.global_id == client_id || client.global_id == client_id * -1) {
+			if (client.global_id == client_id) {
 				client.loose();
 				client.final_placement = this._alive_player_count;
 				this._alive_player_count--;
 				console.log(`GameEngine: clinet ${client.global_id} lost duo to leaving`);
 				continue ;
+			}
+			if (client.global_id == client_id * -1) {
+				local_player = client;
 			}
 			if (client.global_id <= 0) {
 				continue ;
@@ -455,6 +459,18 @@ export class GameEngine {
 			if (client.socket && client.socket.readyState === client.socket.OPEN) {
 				console.log('sending : ', msg);
 				client.socket.send(JSON.stringify(msg));
+			}
+		}
+		if (this._alive_player_count == 1) {
+			this._finish_game();
+		}
+		// check for lokcal player seperatly so main player ad a chance to loose
+		if (local_player) {
+			if (local_player.global_id == client_id * -1) {
+				local_player.loose();
+				local_player.final_placement = this._alive_player_count;
+				this._alive_player_count--;
+				console.log(`GameEngine: clinet ${local_player.global_id} lost duo to leaving`);
 			}
 		}
 		if (this._alive_player_count == 1) {
