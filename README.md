@@ -1,113 +1,171 @@
-## Fastify_Vite_TS_Setup
-Fastify, Vite, and TypeScript Setup
+<div align="center">
+  <a href="https://github.com/ThibaultGiraudon/transcendence">
+    <img src="badge_transcendence.png" alt="Logo" width="150" height="150">
+  </a>
+  <h3 align="center">Transcendence</h3>
+  
+  Our final project of the 42 School core curriculum.
+  
+  ![Score](https://img.shields.io/badge/Score-125%25-brightgreen?style=for-the-badge)
+</div>
 
-## Problem 1
-The current profile page (`frontend/src/pages/profile.ts`) still uses **mocked numbers and static match history** in its HTML template.
-While the backend already provides working API endpoints for user stats and match history, the frontend does not yet display this real data.
+## 🎯 Project Overview
 
----
+Welcome to **ft_transcendence**! This is a full-stack web application featuring a real-time 3D Pong game with multiplayer capabilities, user management, chat functionality, tournaments, and much more.
 
-## Goals
-1. **Replace all static profile stats** with data from:
-	- `GET /api/users/:id/stats`
-2. **Replace the static match history table** with data from:
-	- `GET /api/users/:id/matches`
-3. **Show opponent names** in the Match History table by requesting:
-	- `GET /api/matches/:matchId/participants`
+### Key Features
 
-## Problem 2
-Different languages. This module was not even started, so nothing to add here.
+- 🎮 **3D Pong Game** with Babylon.js
+- 🌐 **Real-time Multiplayer** gaming
+- 🏆 **Tournament System** with matchmaking
+- 💬 **Live Chat** and messaging
+- 👥 **User Management** with profiles and friends
+- 🔐 **Security** with 2FA and OAuth
+- 📱 **Responsive Design** across all browsers
+- 🚀 **Containerized** deployment with Docker
 
-## Problem 3
-2FA. Backend already implemented, but from the frontend perpective nothing yet.
+## 📸 Screenshots
 
-## Problem 4
-GDPR aka General Data Protection Regulation. Don't know anything about it.
+*[TODO: Add screenshots here that show the game interface, user profiles, chat system, and tournament brackets]*
 
-## Problem 5
-Game frontend.
-1. Create buttons for the game and attach them to the game functions.
-2. We will have 3 gamemodes:
-	**Matchmaking**
-	**Custom loby.**
-	**Tornament.**
+## 🛠️ Tech Stack
 
-	We need to create a sequence on how user is entering a game.
-	1. Go to the Game mode (might be changed to "Play").
-	2. You selecting one of the game modes.
-	3. When you open the game mode, you then selection options for that specific game mode.
-		a. Map. Might be more, like speed, colors and so on.
-	4. When you selected the options, you enter the match.
-	Differences between gamemodes.
-		- Matchmaking.
-			If somebody already created a loby whit the same options you selected, you will enter that loby.
-			If there is no loby avaible with your options, the new loby will be created. Other peope who are searching for the game with the same options will automatically join your game loby.
-			Also, you you can invite other people to join the loby.
+| Category | Technology |
+|----------|------------|
+| **Frontend** | TypeScript, Vite, Tailwind CSS, Babylon.js, SPA |
+| **Backend** | Node.js, Fastify, SQLite |
+| **Security** | JWT, OAuth 2.0, 2FA (TOTP), bcrypt, HTTPS, WSS |
+| **Real-time** | WebSockets (ws library) |
+| **Infrastructure** | Docker, Docker Compose, Caddy |
+| **Development** | ESLint, Prettier, Hot Reload |
 
-		- Custom loby.
-			With password. You create a loby and you create a password. Only people who knows the password, can join. You can also invite friends (or everybody, not sure yet) to this custom loby.
-			Same as Machmaking, you can select options for the game, like MAP, speed and score maybe, time. Not avaire of full available options.
+## 🚀 Quick Start
 
-		- Tournament.
-			Not sure about behavior of this. Tournament will be simmilar to custom lobby.
-			There is a map selection of a sub set of all the maps (only 1v1 maps).
-			After that the tournament is allready created and you can invite people the same way as to a lobby. Right now there is no UI for that part and it might be glitchy. At any point any participant of the tournament can start the tournament, after which no more people can be invited.
+### Prerequisites
+- Docker
+- Docker Compose
+- Make
 
-4. If you leave the gamemode page, you disconnect from the game.
+### Environment Setup
 
-5. Game invite should be using "/core/frontend/src/ui/gameInviteToast.ts".
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd ft_transcendence
+   ```
 
+2. **Configure environment variables**
+   ```bash
+   cp .env.prod.example .env.prod
+   # Edit .env.prod with your secrets (JWT_SECRET, COOKIE_SECRET, Google OAuth credentials)
+   ```
 
-3. Create/design end game screen. Then the game ends, what are we looking at?
+3. **Generate secrets** (if needed)
+   ```bash
+   # JWT Secret (64 characters)
+   openssl rand -hex 32
+   
+   # Cookie Secret (32 characters)
+   openssl rand -hex 16
+   ```
 
-## Problem 6
-UPDATE EVERYTHING TO HTTPS/WSS
+### 🎮 Running the Application
 
-## Problem 7
-Update NPM, so we dont see this warning anymore:
-![alt text](docs/screenshots/npm_error.png)
+#### Production Mode
+```bash
+# Start the application
+make prod-up
 
-## Problem 8
-Protecting backend endpoints? This what we talk about already before.
+# View logs
+make prod-logs
 
-## Problem 9
-Move the "All users" bubble to be visible only on Game Modes/Play page.
-If we have better solution how to see all user list without leaving the gamemode page, I'm listening.
+# Stop the application
+make prod-down
 
-## Problem 10
-Need to fully test the Live Chat/Live status/friend invites. If everything is updating live via ws correctly.
+# Alternatively: restart the application
+make prod-re
+```
 
-## Problem 11
-1. Fix frontend menu, make texts bigger.
-2. Change all the unicode emojies to SVG icons from core/frontend/src/ui/icons.ts
-3. Add new info to footer. Developers Names, Lastnames, Linkedin (icon), Github (icon), might be something else.
-4.
+#### Development Mode
+```bash
+# Start development environment
+make dev
 
-## Problem 12
-Clean makefile, compose file,
+# Clean up development containers
+make clean
+```
 
-## Problem 13
-All the console logs should be in english.
+#### Utility Commands
+```bash
+# Complete Docker cleanup
+make ff_clean_docker
 
+# Update environment variables
+make update-env
+```
 
+#### Project Structure
+```
+ft_transcendence/
+├── core/
+│   ├── frontend/          # Vite + TypeScript frontend
+│   ├── backend/           # Fastify + Node.js backend
+│   └── game_shared/       # Shared game logic
+├── docker/                # Docker configurations
+└── docker-compose.yml     # Container orchestration
+```
 
-ipconfig getifaddr en0
-# Maksim Notes
-- [x] Avatar insta update via ws for other users.
-- [x] Main page text update from lorem ipsum.
-- [x] When the game ends, its not possible to click logout button. Need to add z-index.
-- [ ] Refactor CSS, have default styles from the styles.css. Make same sizes for different pages.
-- [x] Check how many modules we have. We have to have 7 major modules.
-- [x] Update game end page. Fix it a bit, add corners back so it feels better.
-- [ ] Add notification on disconnect, when the player disconnects from the game.
-- [x] Prevent spam clicking invite to the game to all users. (localstorage and map)
-- [ ] Fix mobile menu
-- [x] Make all friends bubble scrollable
-- [x] Update every page to use session instead of currentUser
-- [x] When user live chat another user, you can console log that user is not online. Prob should give notification, that user is not online or smth.
-- [x] When you click on the user profile from "All users" / "Registered Users" page, the avatar on the profile page is not showing.
-- [x] When user deletes his account, the All users page and Live Chat list is not updated via WS.
-- [ ] controling the game, the "D" button does not work.
-- [x] chat military time
-- [ ] Clean up all TODO:
-- [ ] Go throuhght every file and see nothing shitty left.
+### 🌐 Access the Application
+
+- **Production**: `https://localhost:443` or `https://<your-hostname>:1443`
+- **Development**: `http://localhost:5173` (Frontend) + `http://localhost:3000` (Backend)
+
+## 🎯 Implemented Modules
+
+This project fulfilled all mandatory requirements and includes multiple bonus modules from the 42 School ft_transcendence subject.
+
+**Final Score: 125/100** 🎉
+
+### 🌐 Web Development
+- ✅ **Frontend Framework**: TypeScript-based development
+- ✅ **Single Page Application**: Complete SPA architecture
+- ✅ **Browser Compatibility**: Firefox, Chrome, Brave, Safari support
+- ✅ **Containerization**: Docker deployment with single command
+
+### 🎮 Game Features
+- ✅ **Live Multiplayer Pong**: Real-time gameplay
+- ✅ **Local & Remote Play**: Same keyboard or different players
+- ✅ **Tournament System**: Multi-player tournaments with matchmaking
+- ✅ **Server-Side Game Logic**: Anti-cheat protection
+- ✅ **3D Graphics**: Immersive Babylon.js rendering with camera controls
+- ✅ **Game Customization**: Adjustable game parameters
+
+### 👤 User Management
+- ✅ **Secure Authentication**: Hashed passwords with strong algorithms
+- ✅ **OAuth Integration**: Google Sign-In support
+- ✅ **User Profiles**: Custom avatars, usernames, display names
+- ✅ **Statistics Tracking**: Win/loss records and match history
+- ✅ **Two-Factor Authentication**: Enhanced security with 2FA
+- ✅ **GDPR Compliance**: Data export, anonymization, and deletion
+
+### 💬 Social Features
+- ✅ **Real-time Chat**: Direct messaging between users
+- ✅ **Friends System**: Add friends and view online status
+- ✅ **User Blocking**: Block unwanted interactions
+- ✅ **Game Invitations**: Invite friends to matches
+
+### 🔒 Security & Infrastructure
+- ✅ **HTTPS/WSS**: End-to-end encryption
+- ✅ **Input Validation**: Frontend and backend validation
+- ✅ **Protected Routes**: Secure access control
+- ✅ **CSRF Protection**: Cross-site request forgery prevention
+
+## 👥 Team
+
+| Name | Role | Profile |
+|------|------|---------|
+| **Fabian Rapp** | Game | <a href="https://www.linkedin.com/in/-fabian-rapp">LinkedIn</a> |
+| **Iliès Ziane** | Backend | <a href="https://www.linkedin.com/in/ilies-ziane-19703a23a/">LinkedIn</a> |
+| **Maksim Volkmann** | Frontend | <a href="https://www.linkedin.com/in/maksim-volkmann-93165383/">LinkedIn</a> |
+| **Daniel Ilin** | Frontend | <a href="https://www.linkedin.com/in/ilindaniel/">LinkedIn</a> \| <a href="https://ilindaniel.com/">Website</a> |
+
