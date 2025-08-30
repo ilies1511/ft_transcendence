@@ -9,6 +9,15 @@
   ![Score](https://img.shields.io/badge/Score-125%25-brightgreen?style=for-the-badge)
 </div>
 
+## 📚 Table of Contents
+
+- [Project Overview](#-project-overview)
+- [Screenshots](#-screenshots)
+- [Tech Stack](#️-tech-stack)
+- [Quick Start](#-quick-start)
+- [Implemented Modules](#-implemented-modules)
+- [Team](#-team)
+
 ## 🎯 Project Overview
 
 Welcome to **ft_transcendence**! This is a full-stack web application featuring a real-time 3D Pong game with multiplayer capabilities, user management, chat functionality, tournaments, and much more.
@@ -21,12 +30,46 @@ Welcome to **ft_transcendence**! This is a full-stack web application featuring 
 - 💬 **Live Chat** and messaging
 - 👥 **User Management** with profiles and friends
 - 🔐 **Security** with 2FA and OAuth
-- 📱 **Responsive Design** across all browsers
+- 📱 **Compatibility** with all browsers
 - 🚀 **Containerized** deployment with Docker
 
 ## 📸 Screenshots
 
-*[TODO: Add screenshots here that show the game interface, user profiles, chat system, and tournament brackets]*
+<div align="center">
+  <table>
+    <tr>
+      <td align="center">
+        <img src="screenshot_1.png" alt="Login Page" width="400"><br>
+        <strong>🔐 Authentication</strong><br>
+        <em>Secure login (Password or OAuth)</em>
+      </td>
+      <td align="center">
+        <img src="screenshot_2.png" alt="Game Selection" width="400"><br>
+        <strong>🎮 Game</strong><br>
+        <em>Map selector & game modes</em>
+      </td>
+    </tr>
+    <tr>
+      <td align="center">
+        <img src="screenshot_3.png" alt="Live Gameplay" width="400"><br>
+        <strong>🏓 Live Gameplay</strong><br>
+        <em>3D Pong with live chat</em>
+      </td>
+      <td align="center">
+        <img src="screenshot_4.png" alt="User Profile" width="400"><br>
+        <strong>📊 User Profile</strong><br>
+        <em>Stats & match history</em>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" colspan="2">
+        <img src="screenshot_5.png" alt="Settings Page" width="400"><br>
+        <strong>⚙️ Settings & Privacy</strong><br>
+        <em>Avatar upload, 2FA, GDPR features</em>
+      </td>
+    </tr>
+  </table>
+</div>
 
 ## 🛠️ Tech Stack
 
@@ -37,7 +80,6 @@ Welcome to **ft_transcendence**! This is a full-stack web application featuring 
 | **Security** | JWT, OAuth 2.0, 2FA (TOTP), bcrypt, HTTPS, WSS |
 | **Real-time** | WebSockets (ws library) |
 | **Infrastructure** | Docker, Docker Compose, Caddy |
-| **Development** | ESLint, Prettier, Hot Reload |
 
 ## 🚀 Quick Start
 
@@ -122,17 +164,17 @@ ft_transcendence/
 
 ## 🎯 Implemented Modules
 
-This project fulfilled all mandatory requirements and includes multiple bonus modules from the 42 School ft_transcendence subject.
+This project fulfilled all mandatory requirements and includes multiple bonus modules from the subject.
 
 **Final Score: 125/100** 🎉
 
-### 🌐 Web Development
-- ✅ **Frontend Framework**: TypeScript-based development
+### Web Development
+- ✅ **Frontend Framework**: TypeScript
 - ✅ **Single Page Application**: Complete SPA architecture
-- ✅ **Browser Compatibility**: Firefox, Chrome, Brave, Safari support
+- ✅ **Browser Compatibility**: Firefox, Chrome, Brave
 - ✅ **Containerization**: Docker deployment with single command
 
-### 🎮 Game Features
+### Game Features
 - ✅ **Live Multiplayer Pong**: Real-time gameplay
 - ✅ **Local & Remote Play**: Same keyboard or different players
 - ✅ **Tournament System**: Multi-player tournaments with matchmaking
@@ -140,7 +182,7 @@ This project fulfilled all mandatory requirements and includes multiple bonus mo
 - ✅ **3D Graphics**: Immersive Babylon.js rendering with camera controls
 - ✅ **Game Customization**: Adjustable game parameters
 
-### 👤 User Management
+### User Management
 - ✅ **Secure Authentication**: Hashed passwords with strong algorithms
 - ✅ **OAuth Integration**: Google Sign-In support
 - ✅ **User Profiles**: Custom avatars, usernames, display names
@@ -148,13 +190,13 @@ This project fulfilled all mandatory requirements and includes multiple bonus mo
 - ✅ **Two-Factor Authentication**: Enhanced security with 2FA
 - ✅ **GDPR Compliance**: Data export, anonymization, and deletion
 
-### 💬 Social Features
+### Social Features
 - ✅ **Real-time Chat**: Direct messaging between users
 - ✅ **Friends System**: Add friends and view online status
 - ✅ **User Blocking**: Block unwanted interactions
 - ✅ **Game Invitations**: Invite friends to matches
 
-### 🔒 Security & Infrastructure
+### Security & Infrastructure
 - ✅ **HTTPS/WSS**: End-to-end encryption
 - ✅ **Input Validation**: Frontend and backend validation
 - ✅ **Protected Routes**: Secure access control
@@ -168,4 +210,3 @@ This project fulfilled all mandatory requirements and includes multiple bonus mo
 | **Iliès Ziane** | Backend | <a href="https://www.linkedin.com/in/ilies-ziane-19703a23a/">LinkedIn</a> |
 | **Maksim Volkmann** | Frontend | <a href="https://www.linkedin.com/in/maksim-volkmann-93165383/">LinkedIn</a> |
 | **Daniel Ilin** | Frontend | <a href="https://www.linkedin.com/in/ilindaniel/">LinkedIn</a> \| <a href="https://ilindaniel.com/">Website</a> |
-
