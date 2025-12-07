@@ -1,7 +1,5 @@
 <div align="center">
-  <a href="https://github.com/ThibaultGiraudon/transcendence">
-    <img src="badge_transcendence.png" alt="Logo" width="150" height="150">
-  </a>
+  <img src="badge_transcendence.png" alt="Logo" width="150" height="150">
   <h3 align="center">Transcendence</h3>
   
   Our final project of the 42 School core curriculum.
